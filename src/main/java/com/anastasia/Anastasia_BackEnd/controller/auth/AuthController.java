@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.interfaces.UserServices;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,10 +24,9 @@ public class AuthController {
     // here user mapper is used to map between UserEntity and UserDTO
     // Finally return the userDTO with http status of OK
     @PostMapping("/sign-up")
-    public ResponseEntity<UserDTO> signUp(@RequestBody UserDTO userDTO){
+    public ResponseEntity<AuthenticationResponse> signUp(@RequestBody UserDTO userDTO){
         UserEntity userEntity = userServices.convertToEntity(userDTO);
-        UserEntity savedUserEntity = userServices.createUser(userEntity);
-        return ResponseEntity.ok(userServices.convertToDTO(savedUserEntity));
+        return new ResponseEntity<>(userServices.createUser(userEntity), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")

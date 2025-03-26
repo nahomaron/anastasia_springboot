@@ -12,7 +12,7 @@ public interface UserServices {
 
     UserDTO convertToDTO(UserEntity savedUserEntity);
 
-    UserEntity createUser(UserEntity userEntity);
+    AuthenticationResponse createUser(UserEntity userEntity);
 
     AuthenticationResponse authenticate(AuthenticationRequest request);
 }
