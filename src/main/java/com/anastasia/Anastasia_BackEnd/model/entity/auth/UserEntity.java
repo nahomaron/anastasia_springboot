@@ -21,18 +21,15 @@ public class UserEntity extends BaseEntity {
     private UUID uuid;
 
     @Column(nullable = false)
-    private String firstName;
-
-    @Column(nullable = false)
-    private String lastName;
+    private String fullName;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
     private String password;
 
     private String googleId;
+
     private String facebookId;
 
     @ManyToMany(fetch = FetchType.EAGER)

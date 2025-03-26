@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.security;
 
 import com.anastasia.Anastasia_BackEnd.filter.JwtFilter;
+import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +20,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -31,6 +37,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
+    private final UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -38,13 +45,16 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/v1/auth/sign-up", "/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/sign-up", "/api/v1/auth/login", "/oauth2/**").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
-//                .oauth2Login(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/api/v1/auth/dashboard", true)  // Redirect after login
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
+                        .logoutSuccessUrl("/")
                         .addLogoutHandler(logoutHandler)
                         .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -68,4 +78,28 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
+
+    @Bean
+    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService(UserRepository userRepository) {
+        return userRequest -> {
+            OAuth2User oauthUser = new DefaultOAuth2UserService().loadUser(userRequest);
+
+            String googleId = oauthUser.getAttribute("sub");
+            String name = oauthUser.getAttribute("name");
+            String email = oauthUser.getAttribute("email");
+            String picture = oauthUser.getAttribute("picture");
+
+            UserEntity user = UserEntity.builder()
+                    .googleId(googleId)
+                    .fullName(name)
+                    .email(email)
+                    .build();
+
+            userRepository.findByGoogleId(googleId)
+                    .orElseGet(() -> userRepository.save(user));
+
+            return oauthUser;
+        };
+    }
+
 }
