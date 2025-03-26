@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.security;
 
+import com.anastasia.Anastasia_BackEnd.filter.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 @Configuration
@@ -27,7 +29,8 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
-//    private final LogoutHandler logoutHandler;
+    private final JwtFilter jwtFilter;
+    private final LogoutHandler logoutHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,11 +43,11 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults())
 //                .oauth2Login(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .logout(logout -> logout
-//                        .logoutUrl("/logout")
-//                        .addLogoutHandler(logoutHandler)
-//                        .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()))
-                        ;
+                .logout(logout -> logout
+                        .logoutUrl("/api/v1/auth/logout")
+                        .addLogoutHandler(logoutHandler)
+                        .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
