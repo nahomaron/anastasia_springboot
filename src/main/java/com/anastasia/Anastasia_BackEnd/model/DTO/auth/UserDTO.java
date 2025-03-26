@@ -15,8 +15,7 @@ import java.util.UUID;
 @Builder
 public class UserDTO {
 
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private String email;
     private String password;
 //    private String googleId;
