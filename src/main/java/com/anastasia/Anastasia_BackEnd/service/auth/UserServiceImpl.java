@@ -11,6 +11,9 @@ import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.interfaces.UserServices;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,6 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
+import java.io.IOException;
+import java.net.http.HttpHeaders;
 import java.util.ArrayList;
 
 @Service
@@ -86,6 +91,42 @@ public class UserServiceImpl implements UserServices {
                 .build();
     }
 
+    @Override
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        final String authHeader = request.getHeader("Authorization");
+        String refreshToken = null;
+        String username = null;
+
+        if(authHeader != null && authHeader.startsWith("Bearer ")){
+            refreshToken = authHeader.substring(7);
+            username = jwtService.extractUsername(refreshToken);
+        }
+
+        if(username != null){
+            UserEntity user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Invalid, User doesn't exist"));
+
+            UserPrincipal userPrincipal = new UserPrincipal(user);
+
+            if(jwtService.isTokenValid(refreshToken, userPrincipal)){
+                var accessToken = jwtService.generateAccessToken(userPrincipal);
+                revokeAllValidUserTokens(user);
+                saveUserToken(accessToken, user, TokenType.BEARER);
+
+                var authResponse = AuthenticationResponse.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build();
+
+                try {
+                    new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
     // method to build and save refresh token into the database
     public void saveUserToken(String theToken, UserEntity user, TokenType tokenType){
         var token = Token.builder()
@@ -112,5 +153,7 @@ public class UserServiceImpl implements UserServices {
         });
         tokenRepository.saveAll(validUserTokens);
     }
+
+
 
 }
