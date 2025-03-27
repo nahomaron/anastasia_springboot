@@ -1,13 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.service.auth;
 
+import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
+import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
+import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
@@ -23,8 +25,6 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.net.http.HttpHeaders;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +39,7 @@ public class UserServiceImpl implements UserServices {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
+    private final TenantMapper tenantMapper;
 
     @Override
     public UserEntity convertToEntity(UserDTO userDTO) {
@@ -47,8 +48,12 @@ public class UserServiceImpl implements UserServices {
 
     @Override
     public UserDTO convertToDTO(UserEntity userEntity) {
+//        System.out.println("Converting UserEntity to DTO: " + userEntity);
         return usersMapper.userEntityToUserDTO(userEntity);
     }
+
+
+
 
     @Override
     public AuthenticationResponse createUser(UserEntity userEntity) {
@@ -77,14 +82,15 @@ public class UserServiceImpl implements UserServices {
         return userRepository.save(user);
     }
 
-    @Override
-    public UserEntity subscribeUserAsTenant(UUID userId, TenantDetails tenantDetails) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("user doesn't exist"));
+//    @Override
+//    public UserEntity subscribeUserAsTenant(UUID userId, TenantDetails tenantDetails) {
+//        UserEntity user = userRepository.findById(userId)
+//                .orElseThrow(() -> new RuntimeException("user doesn't exist"));
+//
+//        user.setTenantDetails(tenantDetails);
+//        return userRepository.save(user);
+//    }
 
-        user.setTenantDetails(tenantDetails);
-
-        return userRepository.save(user);
-    }
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) {

@@ -1,10 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.service.interfaces;
 
+import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
+import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
@@ -33,5 +34,6 @@ public interface UserServices {
 
     UserEntity updateUser(UserEntity user);
 
-    UserEntity subscribeUserAsTenant(UUID userId, TenantDetails tenantDetails);
+//    UserEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity);
+
 }

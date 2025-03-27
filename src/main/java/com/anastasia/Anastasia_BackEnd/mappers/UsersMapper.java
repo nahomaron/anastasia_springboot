@@ -9,12 +9,10 @@ import org.mapstruct.Mapping;
  Since we don't want to expose the entity to any external transactions through controller, we use mapper
  to expose only the DTO
  */
-@Mapper(componentModel = "spring", uses = TenantDetailsMapper.class)
+@Mapper(componentModel = "spring")
 public interface UsersMapper {
 
-    @Mapping(source = "tenantDetails", target = "tenantDetails" )
     UserDTO userEntityToUserDTO(UserEntity userEntity);
 
-    @Mapping(source = "tenantDetails", target = "tenantDetails")
     UserEntity userDTOToUserEntity(UserDTO userDTO);
 }

@@ -1,10 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.controller.auth;
 
+import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
+import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.service.interfaces.UserServices;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -98,18 +99,6 @@ public class AuthController {
 
 
 
-    @PutMapping("/users/{userId}/subscribe-as-tenant")
-    public ResponseEntity<UserDTO> subscribeAsTenant(@PathVariable UUID userId,
-                                                        @RequestBody TenantDetails tenantDetails) {
 
-        if(userServices.exists(userId)){
-            UserEntity updatedUser = userServices.subscribeUserAsTenant(userId, tenantDetails);
-            return new ResponseEntity<>(userServices.convertToDTO(updatedUser), HttpStatus.OK);
-        }else{
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-
-    }
 
 }
