@@ -1,6 +1,5 @@
 package com.anastasia.Anastasia_BackEnd.model.entity;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
 import com.anastasia.Anastasia_BackEnd.model.entity.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.base.BaseEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
+import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -48,6 +48,12 @@ public class UserEntity {
     @JoinColumn(name = "church_id") // Users can choose a Church later
     private ChurchEntity church;
 
-    @Embedded
-    private TenantDetails tenantDetails; // Embedded TenantDetails
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JsonManagedReference
+    private TenantEntity tenant; // Linked tenant details
+
+    public void becomeTenant(TenantEntity tenantEntity) {
+        this.tenant = tenantEntity;
+        tenantEntity.setUser(this); // Set the relationship
+    }
 }

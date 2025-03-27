@@ -1,20 +1,20 @@
 package com.anastasia.Anastasia_BackEnd.model.DTO;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
+import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TenantDetailsDTO {
+public class TenantDTO {
 
-    private boolean activeTenant;
+    private boolean isActiveTenant;
 
     private String phoneNumber;
 
