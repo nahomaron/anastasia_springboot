@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
@@ -24,6 +25,9 @@ import lombok.RequiredArgsConstructor;
 import java.io.IOException;
 import java.net.http.HttpHeaders;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -62,9 +66,24 @@ public class UserServiceImpl implements UserServices {
 
         // After a successful sign-up we send access and refresh token to the client
         return AuthenticationResponse.builder()
+                .userId(user.getUuid())
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Override
+    public UserEntity updateUser(UserEntity user) {
+        return userRepository.save(user);
+    }
+
+    @Override
+    public UserEntity subscribeUserAsTenant(UUID userId, TenantDetails tenantDetails) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("user doesn't exist"));
+
+        user.setTenantDetails(tenantDetails);
+
+        return userRepository.save(user);
     }
 
     @Override
@@ -126,6 +145,23 @@ public class UserServiceImpl implements UserServices {
             }
         }
     }
+
+    @Override
+    public List<UserEntity> findAllUsers() {
+        return userRepository.findAll().stream().toList();
+    }
+
+    @Override
+    public Optional<UserEntity> findOne(UUID userId) {
+        return userRepository.findById(userId);
+    }
+
+    @Override
+    public boolean exists(UUID userId) {
+        return userRepository.existsById(userId);
+    }
+
+
 
     // method to build and save refresh token into the database
     public void saveUserToken(String theToken, UserEntity user, TokenType tokenType){
