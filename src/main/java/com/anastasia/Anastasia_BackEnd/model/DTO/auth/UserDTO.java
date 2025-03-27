@@ -1,6 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.model.DTO.auth;
 
+import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDetailsDTO;
+import com.anastasia.Anastasia_BackEnd.model.entity.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
+import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
+import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +23,8 @@ public class UserDTO {
     private String fullName;
     private String email;
     private String password;
-//    private String googleId;
-//    private String facebookId;
+    private String googleId;
+    private String facebookId;
+    private TenantDetailsDTO tenantDetails; // Embedded TenantDetails
 
 }

@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
+import com.anastasia.Anastasia_BackEnd.model.entity.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.entity.base.BaseEntity;
+import com.anastasia.Anastasia_BackEnd.model.entity.embeded.TenantDetails;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -8,14 +10,13 @@ import lombok.experimental.SuperBuilder;
 import java.util.Set;
 import java.util.UUID;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
 @Entity
 @Table(name = "users")
-public class UserEntity extends BaseEntity {
+public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
@@ -42,4 +43,11 @@ public class UserEntity extends BaseEntity {
 
     @OneToMany(mappedBy = "user")
     private Set<Token> tokens;
+
+    @ManyToOne
+    @JoinColumn(name = "church_id") // Users can choose a Church later
+    private ChurchEntity church;
+
+    @Embedded
+    private TenantDetails tenantDetails; // Embedded TenantDetails
 }
