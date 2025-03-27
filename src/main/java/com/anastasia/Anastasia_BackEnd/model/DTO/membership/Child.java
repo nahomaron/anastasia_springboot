@@ -12,11 +12,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MemberDTO {
-
+public class Child {
     private UUID userId;
     private UUID tenantId;
     private Long churchId;
+    private UUID parentId;
     private String status;
     private String idCardNumber;
     private boolean deacon;
@@ -40,14 +40,8 @@ public class MemberDTO {
     private String whatsApp;
     private String emergencyContactNumber;
     private String contactRelation;
-    private String eritreaContact;
-    private String postalCode;
-    private String maritalStatus;
-    private String children;
     private String firstLanguage;
     private String secondLanguage;
-    private String profession;
     private String levelOfEducation;
     private String fatherOfConfession;
-    private String spouseId;
 }
