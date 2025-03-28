@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.service.interfaces;
+package com.anastasia.Anastasia_BackEnd.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.model.DTO.membership.MemberDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.membership.MemberEntity;

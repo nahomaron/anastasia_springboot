@@ -2,7 +2,6 @@ package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
 import com.anastasia.Anastasia_BackEnd.model.entity.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -33,6 +32,10 @@ public class UserEntity {
 
     private String facebookId;
 
+    private boolean accountLocked;
+
+    private boolean verified;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
@@ -51,6 +54,14 @@ public class UserEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 //    @JsonManagedReference
     private TenantEntity tenant; // Linked tenant details
+
+//    @CreatedDate
+//    @Column(nullable = false, updatable = false)
+//    private LocalDateTime createdDate;
+//
+//    @LastModifiedDate
+//    @Column(insertable = false)
+//    private LocalDateTime lastModifiedDate;
 
     public void becomeTenant(TenantEntity tenantEntity) {
         this.tenant = tenantEntity;

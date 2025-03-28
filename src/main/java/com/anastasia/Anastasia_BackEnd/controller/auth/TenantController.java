@@ -1,12 +1,9 @@
-package com.anastasia.Anastasia_BackEnd.controller;
+package com.anastasia.Anastasia_BackEnd.controller.auth;
 
 import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
-import com.anastasia.Anastasia_BackEnd.service.interfaces.TenantService;
-import com.anastasia.Anastasia_BackEnd.service.interfaces.UserServices;
-import jakarta.transaction.Transactional;
+import com.anastasia.Anastasia_BackEnd.service.tenant.TenantService;
+import com.anastasia.Anastasia_BackEnd.service.auth.UserServices;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +13,6 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
 public class TenantController {
 
     private final TenantService tenantService;
