@@ -4,7 +4,6 @@ import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.model.DTO.membership.MemberDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.membership.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
-import com.anastasia.Anastasia_BackEnd.service.interfaces.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

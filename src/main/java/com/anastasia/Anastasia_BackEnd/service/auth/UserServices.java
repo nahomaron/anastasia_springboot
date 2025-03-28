@@ -1,11 +1,10 @@
-package com.anastasia.Anastasia_BackEnd.service.interfaces;
+package com.anastasia.Anastasia_BackEnd.service.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
@@ -20,9 +19,9 @@ public interface UserServices {
 
     UserDTO convertToDTO(UserEntity savedUserEntity);
 
-    AuthenticationResponse createUser(UserEntity userEntity);
+    void createUser(UserEntity userEntity) throws MessagingException;
 
-    AuthenticationResponse authenticate(AuthenticationRequest request);
+    AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException;
 
     void refreshToken(HttpServletRequest request, HttpServletResponse response);
 
@@ -33,6 +32,8 @@ public interface UserServices {
     boolean exists(UUID userId);
 
     UserEntity updateUser(UserEntity user);
+
+    void activateAccount(String token) throws MessagingException;
 
 //    UserEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity);
 

@@ -2,19 +2,19 @@ package com.anastasia.Anastasia_BackEnd.service.auth;
 
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
-import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.interfaces.UserServices;
+import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
+import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,13 +25,15 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserServices {
+public class AuthenticationService implements UserServices {
 
     private final UsersMapper usersMapper;
     private final UserRepository userRepository;
@@ -40,6 +42,8 @@ public class UserServiceImpl implements UserServices {
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final TenantMapper tenantMapper;
+    private final EmailService emailService;
+
 
     @Override
     public UserEntity convertToEntity(UserDTO userDTO) {
@@ -52,29 +56,57 @@ public class UserServiceImpl implements UserServices {
         return usersMapper.userEntityToUserDTO(userEntity);
     }
 
-
-
-
     @Override
-    public AuthenticationResponse createUser(UserEntity userEntity) {
+    public void createUser(UserEntity userEntity) throws MessagingException {
+        // todo -> make role fetching and assigning method
+
         userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
-        var user = userRepository.save(userEntity);
-        UserPrincipal userPrincipal = new UserPrincipal(user);
+        userRepository.save(userEntity);
+        sendValidationEmail(userEntity);
+    }
 
+    private void sendValidationEmail(UserEntity user) throws MessagingException {
+        var newToken = generateAndSaveActivationToken(user);
+        // send email
 
-        var jwtToken = jwtService.generateAccessToken(userPrincipal);
-        var refreshToken = jwtService.generateRefreshToken(userPrincipal);
+        String activationUrl = "http://localhost:3000/activate-account";
 
-        saveUserToken(jwtToken, user, TokenType.BEARER);
-        saveUserToken(refreshToken, user, TokenType.REFRESH);
+        emailService.sendEmail(
+                user.getEmail(),
+                user.getFullName(),
+                EmailTemplateName.ACTIVATE_ACCOUNT,
+                activationUrl,
+                newToken,
+                "Account Activation"
+        );
 
+    }
 
-        // After a successful sign-up we send access and refresh token to the client
-        return AuthenticationResponse.builder()
-                .userId(user.getUuid())
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
+    private String generateAndSaveActivationToken(UserEntity user) {
+        String generatedToken = generateActivationCode(6);
+        var token = Token.builder()
+                .token(generatedToken)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .user(user)
                 .build();
+
+        tokenRepository.save(token);
+
+        return generatedToken;
+    }
+
+    private String generateActivationCode(int length) {
+        String characters = "01234456789";
+        StringBuilder codeBuilder = new StringBuilder();
+        SecureRandom secureRandom = new SecureRandom();
+
+        for (int i = 0; i < length; i++) {
+            int randomIndex = secureRandom.nextInt(characters.length());
+            codeBuilder.append(characters.charAt(randomIndex));
+        }
+
+        return codeBuilder.toString();
     }
 
     @Override
@@ -82,23 +114,38 @@ public class UserServiceImpl implements UserServices {
         return userRepository.save(user);
     }
 
-//    @Override
-//    public UserEntity subscribeUserAsTenant(UUID userId, TenantDetails tenantDetails) {
-//        UserEntity user = userRepository.findById(userId)
-//                .orElseThrow(() -> new RuntimeException("user doesn't exist"));
-//
-//        user.setTenantDetails(tenantDetails);
-//        return userRepository.save(user);
-//    }
+//    @Transactional
+    @Override
+    public void activateAccount(String token) throws MessagingException {
+        Token savedToken = tokenRepository.findByToken(token)
+                // todo - exception
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
+            sendValidationEmail(savedToken.getUser());
+            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
+        }
+
+        var user = userRepository.findById(savedToken.getUser().getUuid())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setVerified(true);
+        userRepository.save(user);
+        savedToken.setValidatedAt(LocalDateTime.now());
+    }
 
 
     @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
+    public AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException {
+        var auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if(!user.isVerified()){
+            throw new RuntimeException("Account is not verified. Please find the token sent to you for verification!");
+        }
+
         UserPrincipal userPrincipal = new UserPrincipal(user);
 
         var jwtToken = jwtService.generateAccessToken(userPrincipal);
@@ -111,6 +158,7 @@ public class UserServiceImpl implements UserServices {
         saveUserToken(refreshToken, user, TokenType.REFRESH);
 
         return AuthenticationResponse.builder()
+                .userId(user.getUuid())
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -166,7 +214,6 @@ public class UserServiceImpl implements UserServices {
     public boolean exists(UUID userId) {
         return userRepository.existsById(userId);
     }
-
 
 
     // method to build and save refresh token into the database

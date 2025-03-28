@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.service.interfaces;
+package com.anastasia.Anastasia_BackEnd.service.tenant;
 
 import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;

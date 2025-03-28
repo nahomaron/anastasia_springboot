@@ -1,16 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.controller.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.service.interfaces.UserServices;
+import com.anastasia.Anastasia_BackEnd.service.auth.UserServices;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import io.github.bucket4j.local.LocalBucket;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,16 +38,16 @@ public class AuthController {
     // here user mapper is used to map between UserEntity and UserDTO
     // Finally return the userDTO with http status of OK
     @PostMapping("/sign-up")
-    public ResponseEntity<AuthenticationResponse> signUp(@RequestBody UserDTO userDTO){
+    public ResponseEntity<?> signUp(@RequestBody UserDTO userDTO) throws MessagingException {
         UserEntity userEntity = userServices.convertToEntity(userDTO);
-        return new ResponseEntity<>(userServices.createUser(userEntity), HttpStatus.CREATED);
+        userServices.createUser(userEntity);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request){
+    public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) throws MessagingException {
         return ResponseEntity.ok(userServices.authenticate(request));
     }
-
 
     private final ConcurrentMap<String, LocalBucket> buckets = new ConcurrentHashMap<>();
     private Bucket getBucket(String key) {
@@ -95,6 +94,11 @@ public class AuthController {
         }).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
+    }
+
+    @GetMapping("/activate-account")
+    public void confirm(@RequestParam String token) throws MessagingException {
+        userServices.activateAccount(token);
     }
 
 
