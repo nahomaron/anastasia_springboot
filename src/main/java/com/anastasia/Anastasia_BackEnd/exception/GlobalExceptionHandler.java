@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(LockedException.class)
+    @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ExceptionResponse> handleException(DisabledException exp){
         return ResponseEntity.status(UNAUTHORIZED).body(
                 ExceptionResponse.builder()
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(LockedException.class)
+    @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ExceptionResponse> handleException(BadCredentialsException exp){
         return ResponseEntity.status(UNAUTHORIZED).body(
                 ExceptionResponse.builder()
