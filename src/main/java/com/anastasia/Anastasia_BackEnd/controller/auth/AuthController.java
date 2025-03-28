@@ -12,6 +12,7 @@ import io.github.bucket4j.local.LocalBucket;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,14 +39,17 @@ public class AuthController {
     // here user mapper is used to map between UserEntity and UserDTO
     // Finally return the userDTO with http status of OK
     @PostMapping("/sign-up")
-    public ResponseEntity<?> signUp(@RequestBody UserDTO userDTO) throws MessagingException {
+    public ResponseEntity<?> signUp(@Valid @RequestBody UserDTO userDTO) throws MessagingException {
+        if(!userDTO.isPasswordMatch()){
+            return ResponseEntity.badRequest().body("Password do not match");
+        }
         UserEntity userEntity = userServices.convertToEntity(userDTO);
         userServices.createUser(userEntity);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) throws MessagingException {
+    public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody AuthenticationRequest request) throws MessagingException {
         return ResponseEntity.ok(userServices.authenticate(request));
     }
 

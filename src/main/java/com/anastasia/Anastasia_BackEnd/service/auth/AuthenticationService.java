@@ -59,7 +59,6 @@ public class AuthenticationService implements UserServices {
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
         // todo -> make role fetching and assigning method
-
         userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
         userRepository.save(userEntity);
         sendValidationEmail(userEntity);
