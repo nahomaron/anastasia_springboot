@@ -215,7 +215,6 @@ public class AuthenticationService implements UserServices {
         return userRepository.existsById(userId);
     }
 
-
     // method to build and save refresh token into the database
     public void saveUserToken(String theToken, UserEntity user, TokenType tokenType){
         var token = Token.builder()
