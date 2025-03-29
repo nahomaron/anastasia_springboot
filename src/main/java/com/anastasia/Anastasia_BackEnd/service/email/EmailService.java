@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.service.email;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -21,14 +22,16 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.mail.javamail.MimeMessageHelper.MULTIPART_MODE_MIXED;
 
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
-    @Value("${spring.mail.from}")
-    private String senderEmail;
+    @Autowired
+    public EmailService(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
+        this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
+    }
 
     @Async
     public void sendEmail(String to, String username,
@@ -56,6 +59,8 @@ public class EmailService {
         Context context = new Context();
         context.setVariables(properties);
 
+        // @Value("${spring.mail.from}")
+        String senderEmail = "info@anastasia.com";
         helper.setFrom(senderEmail);
         helper.setTo(to);
         helper.setSubject(subject);

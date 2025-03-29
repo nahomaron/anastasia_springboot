@@ -17,6 +17,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,15 +36,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthenticationService implements UserServices {
 
+
+    private final JwtService jwtService;
     private final UsersMapper usersMapper;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final TenantMapper tenantMapper;
     private final EmailService emailService;
-
 
     @Override
     public UserEntity convertToEntity(UserDTO userDTO) {
@@ -133,6 +134,8 @@ public class AuthenticationService implements UserServices {
     }
 
 
+
+
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException {
         var auth = authenticationManager.authenticate(
@@ -200,13 +203,18 @@ public class AuthenticationService implements UserServices {
     }
 
     @Override
-    public List<UserEntity> findAllUsers() {
-        return userRepository.findAll().stream().toList();
+    public Page<UserEntity> findAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
     }
 
     @Override
     public Optional<UserEntity> findOne(UUID userId) {
         return userRepository.findById(userId);
+    }
+
+    @Override
+    public Optional<UserEntity> findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     @Override
@@ -240,7 +248,6 @@ public class AuthenticationService implements UserServices {
         });
         tokenRepository.saveAll(validUserTokens);
     }
-
 
 
 }

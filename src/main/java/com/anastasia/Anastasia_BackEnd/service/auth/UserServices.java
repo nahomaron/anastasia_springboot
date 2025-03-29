@@ -7,9 +7,12 @@ import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,7 +28,7 @@ public interface UserServices {
 
     void refreshToken(HttpServletRequest request, HttpServletResponse response);
 
-    List<UserEntity> findAllUsers();
+    Page<UserEntity> findAllUsers(Pageable pageable);
 
     Optional<UserEntity> findOne(UUID userId);
 
@@ -34,6 +37,8 @@ public interface UserServices {
     UserEntity updateUser(UserEntity user);
 
     void activateAccount(String token) throws MessagingException;
+
+    Optional<UserEntity> findUserByEmail(@NotBlank(message = "Email is required") @Email(message = "Invalid Email format") String email);
 
 //    UserEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity);
 

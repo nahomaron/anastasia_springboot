@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.filter.JwtFilter;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,7 +38,6 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
-    private final UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -51,9 +51,9 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
-                .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/api/v1/auth/dashboard", true)  // Redirect after login
-                )
+//                .oauth2Login(oauth2 -> oauth2
+//                        .defaultSuccessUrl("/api/v1/auth/dashboard", true)  // Redirect after login
+//                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
