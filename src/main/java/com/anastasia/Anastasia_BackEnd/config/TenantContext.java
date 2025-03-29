@@ -1,5 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.config;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class TenantContext {
 
     private static final ThreadLocal<String> tenantId = new ThreadLocal<>();

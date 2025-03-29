@@ -37,4 +37,5 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
         """)
     void markExpiredTokens();
 
+    Token findByUserUuid(UUID uuid);
 }

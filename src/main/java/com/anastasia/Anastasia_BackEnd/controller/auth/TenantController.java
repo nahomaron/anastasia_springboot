@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.service.tenant.TenantService;
 import com.anastasia.Anastasia_BackEnd.service.auth.UserServices;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
