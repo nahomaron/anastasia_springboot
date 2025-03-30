@@ -2,20 +2,24 @@ package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
 import com.anastasia.Anastasia_BackEnd.model.entity.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.model.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Set;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "users")
-public class UserEntity {
+public class UserEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
@@ -54,14 +58,6 @@ public class UserEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 //    @JsonManagedReference
     private TenantEntity tenant; // Linked tenant details
-
-//    @CreatedDate
-//    @Column(nullable = false, updatable = false)
-//    private LocalDateTime createdDate;
-//
-//    @LastModifiedDate
-//    @Column(insertable = false)
-//    private LocalDateTime lastModifiedDate;
 
     public void becomeTenant(TenantEntity tenantEntity) {
         this.tenant = tenantEntity;
