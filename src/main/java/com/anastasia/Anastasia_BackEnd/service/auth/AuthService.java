@@ -17,10 +17,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public interface UserServices {
-    UserEntity convertToEntity(UserDTO userDTO);
+public interface AuthService {
 
-    UserDTO convertToDTO(UserEntity savedUserEntity);
 
     void createUser(UserEntity userEntity) throws MessagingException;
 
@@ -28,18 +26,10 @@ public interface UserServices {
 
     void refreshToken(HttpServletRequest request, HttpServletResponse response);
 
-    Page<UserEntity> findAllUsers(Pageable pageable);
-
-    Optional<UserEntity> findOne(UUID userId);
-
     boolean exists(UUID userId);
-
-    UserEntity updateUser(UserEntity user);
 
     void activateAccount(String token) throws MessagingException;
 
     Optional<UserEntity> findUserByEmail(@NotBlank(message = "Email is required") @Email(message = "Invalid Email format") String email);
-
-//    UserEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity);
 
 }

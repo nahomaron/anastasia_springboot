@@ -34,11 +34,10 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService implements UserServices {
+public class AuthServiceImpl implements AuthService {
 
 
     private final JwtService jwtService;
-    private final UsersMapper usersMapper;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -46,16 +45,7 @@ public class AuthenticationService implements UserServices {
     private final TenantMapper tenantMapper;
     private final EmailService emailService;
 
-    @Override
-    public UserEntity convertToEntity(UserDTO userDTO) {
-        return usersMapper.userDTOToUserEntity(userDTO);
-    }
 
-    @Override
-    public UserDTO convertToDTO(UserEntity userEntity) {
-//        System.out.println("Converting UserEntity to DTO: " + userEntity);
-        return usersMapper.userEntityToUserDTO(userEntity);
-    }
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
@@ -109,10 +99,6 @@ public class AuthenticationService implements UserServices {
         return codeBuilder.toString();
     }
 
-    @Override
-    public UserEntity updateUser(UserEntity user) {
-        return userRepository.save(user);
-    }
 
 //    @Transactional
     @Override
@@ -200,16 +186,6 @@ public class AuthenticationService implements UserServices {
                 }
             }
         }
-    }
-
-    @Override
-    public Page<UserEntity> findAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
-    }
-
-    @Override
-    public Optional<UserEntity> findOne(UUID userId) {
-        return userRepository.findById(userId);
     }
 
     @Override

@@ -8,11 +8,9 @@ import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
-import com.anastasia.Anastasia_BackEnd.service.auth.UserServices;
+import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -20,13 +18,10 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,7 +38,7 @@ public class AuthControllerIT {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
     private final TokenRepository tokenRepository;
-    private final UserServices userServices;
+    private final AuthService authService;
 
     @Mock
     private RateLimiterConfig rateLimiterConfig;
@@ -61,11 +56,11 @@ public class AuthControllerIT {
     }
 
     @Autowired
-    public AuthControllerIT(MockMvc mockMvc, ObjectMapper objectMapper, TokenRepository tokenRepository, Bucket bucket, UserServices userServices) {
+    public AuthControllerIT(MockMvc mockMvc, ObjectMapper objectMapper, TokenRepository tokenRepository, Bucket bucket, AuthService authService) {
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
         this.tokenRepository = tokenRepository;
-        this.userServices = userServices;
+        this.authService = authService;
     }
 
     @Test
@@ -85,7 +80,7 @@ public class AuthControllerIT {
     public void testThatLoginReturnsHttpStatus200OnSuccess() throws Exception {
         UserEntity user = TestDataUtil.createTestUserEntityA();
         user.setVerified(true);
-        userServices.createUser(user);
+        authService.createUser(user);
 
         AuthenticationRequest testAuth = TestDataUtil.createTestAuthenticationRequest();
         String testAuthJson = objectMapper.writeValueAsString(testAuth);
@@ -104,7 +99,7 @@ public class AuthControllerIT {
     public void testThatActivateAccountReturnsHttpStatus200Ok() throws Exception {
 
         UserEntity user = TestDataUtil.createTestUserEntityA();
-        userServices.createUser(user);
+        authService.createUser(user);
 
         UserDTO testUserDTOA = TestDataUtil.createTestUserDTO();
 
@@ -133,7 +128,7 @@ public class AuthControllerIT {
                 status().isCreated()
         );
 
-        UserEntity createdUser  = userServices.findUserByEmail(testUserDTOA.getEmail()).orElseThrow();
+        UserEntity createdUser  = authService.findUserByEmail(testUserDTOA.getEmail()).orElseThrow();
         Token token = tokenRepository.findByUserUuid(createdUser.getUuid());
         String verificationTokenCode = token.getToken();
 

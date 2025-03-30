@@ -14,8 +14,11 @@ public class EmailConfig {
         // Set your SMTP server configurations
         mailSender.setHost("smtp.mailtrap.io");
         mailSender.setPort(2525);
-        mailSender.setUsername(System.getenv("MAIL_USERNAME"));
-        mailSender.setPassword(System.getenv("MAIL_PASSWORD"));
+//        mailSender.setUsername(System.getenv("MAIL_USERNAME"));
+//        mailSender.setPassword(System.getenv("MAIL_PASSWORD"));
+        mailSender.setUsername("319d5bf13c8d5c");
+        mailSender.setPassword("4675f8e0b6d44e");
+
 
         // Optional configuration
         mailSender.setProtocol("smtp");
