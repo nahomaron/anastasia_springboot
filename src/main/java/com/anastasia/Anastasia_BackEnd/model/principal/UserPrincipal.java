@@ -1,7 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.model.principal;
 
+import com.anastasia.Anastasia_BackEnd.model.entity.auth.Permission;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,8 +17,12 @@ public class UserPrincipal implements UserDetails {
 
     private final UserEntity user;
 
+    @Getter
+    private final UUID tenantId;
+
     public UserPrincipal(UserEntity user) {
         this.user = user;
+        this.tenantId = user.getTenant().getId();
     }
 
     @Override
@@ -24,11 +30,15 @@ public class UserPrincipal implements UserDetails {
 
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-        // add roles as authorities
-        for (Role role : user.getRoles()){
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
-        }
+        // Add roles
+        for (Role role : user.getRoles()) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
 
+            // Add permissions from role
+            for (Permission permission : role.getPermissions()) {
+                authorities.add(new SimpleGrantedAuthority(permission.getName().getName()));
+            }
+        }
         return authorities;
     }
 

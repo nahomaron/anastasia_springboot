@@ -6,7 +6,7 @@ import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.auth.UserService;
+import com.anastasia.Anastasia_BackEnd.service.user.UserService;
 import io.github.bucket4j.Bucket;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;

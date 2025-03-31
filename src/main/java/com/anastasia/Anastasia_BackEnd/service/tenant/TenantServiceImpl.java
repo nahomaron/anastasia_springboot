@@ -30,23 +30,23 @@ public class TenantServiceImpl implements TenantService {
         return tenantMapper.tenantEntityToDTO(tenantEntity);
     }
 
-
-    @Transactional
-    public TenantEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.getTenant() != null) {
-            throw new RuntimeException("User is already a tenant");
-        }
-        tenantEntity.setUser(user);
-        tenantEntity.setActiveTenant(true);
-
-        // Link tenant to user
-        user.becomeTenant(tenantEntity);
-
-        return tenantRepository.save(tenantEntity);
-    }
+//
+//    @Transactional
+//    public TenantEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity) {
+//        UserEntity user = userRepository.findById(userId)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//        if (user.getTenant() != null) {
+//            throw new RuntimeException("User is already a tenant");
+//        }
+//        tenantEntity.setUser(user);
+//        tenantEntity.setActiveTenant(true);
+//
+//        // Link tenant to user
+//        user.becomeTenant(tenantEntity);
+//
+//        return tenantRepository.save(tenantEntity);
+//    }
 
 
 }

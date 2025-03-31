@@ -1,10 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.service.auth;
 
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
-import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
@@ -13,12 +11,11 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
+import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -37,7 +34,7 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
 
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -136,8 +133,8 @@ public class AuthServiceImpl implements AuthService {
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
 
-        var jwtToken = jwtService.generateAccessToken(userPrincipal);
-        var refreshToken = jwtService.generateRefreshToken(userPrincipal);
+        var jwtToken = jwtUtil.generateAccessToken(userPrincipal);
+        var refreshToken = jwtUtil.generateRefreshToken(userPrincipal);
 
         // first make sure the existing tokens are revoked
         revokeAllValidUserTokens(user);
@@ -160,7 +157,7 @@ public class AuthServiceImpl implements AuthService {
 
         if(authHeader != null && authHeader.startsWith("Bearer ")){
             refreshToken = authHeader.substring(7);
-            username = jwtService.extractUsername(refreshToken);
+            username = jwtUtil.extractUsername(refreshToken);
         }
 
         if(username != null){
@@ -169,8 +166,8 @@ public class AuthServiceImpl implements AuthService {
 
             UserPrincipal userPrincipal = new UserPrincipal(user);
 
-            if(jwtService.isTokenValid(refreshToken, userPrincipal)){
-                var accessToken = jwtService.generateAccessToken(userPrincipal);
+            if(jwtUtil.isTokenValid(refreshToken, userPrincipal)){
+                var accessToken = jwtUtil.generateAccessToken(userPrincipal);
                 revokeAllValidUserTokens(user);
                 saveUserToken(accessToken, user, TokenType.BEARER);
 

@@ -1,30 +1,29 @@
 package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.base.BaseEntity;
 import jakarta.persistence.*;
-import jdk.jfr.Enabled;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@SuperBuilder
-@Enabled
+@Builder
+//@Enabled
 @Table(name = "permissions")
-public class Permission extends BaseEntity {
+public class Permission {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "permission_seq")
-    @SequenceGenerator(name = "permission_seq", sequenceName = "permission_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(unique = true, nullable = false)
+    private PermissionType name;  // Enum instead of String
 
     private String description;
 
-
-
+    public Permission(PermissionType name) {
+        this.name = name;
+        this.description = name.getDescription(); // Automatically set description
+    }
 }

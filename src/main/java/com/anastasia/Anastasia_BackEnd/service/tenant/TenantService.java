@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Service
 public interface TenantService {
-    TenantEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity);
+//    TenantEntity subscribeUserAsTenant(UUID userId, TenantEntity tenantEntity);
 
     TenantEntity convertTenantToEntity(TenantDTO tenantDTO);
 

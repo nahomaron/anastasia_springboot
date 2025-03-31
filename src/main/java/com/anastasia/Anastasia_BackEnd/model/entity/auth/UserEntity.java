@@ -2,12 +2,13 @@ package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
 import com.anastasia.Anastasia_BackEnd.model.entity.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.model.entity.base.BaseEntity;
+import com.anastasia.Anastasia_BackEnd.model.entity.base.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ import java.util.UUID;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "users")
-public class UserEntity extends BaseEntity {
+public class UserEntity extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
@@ -46,7 +47,7 @@ public class UserEntity extends BaseEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user")
     private Set<Token> tokens;
@@ -55,12 +56,12 @@ public class UserEntity extends BaseEntity {
     @JoinColumn(name = "church_id") // Users can choose a Church later
     private ChurchEntity church;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonManagedReference
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", nullable = false)
     private TenantEntity tenant; // Linked tenant details
 
-    public void becomeTenant(TenantEntity tenantEntity) {
-        this.tenant = tenantEntity;
-        tenantEntity.setUser(this); // Set the relationship
-    }
+//    public void becomeTenant(TenantEntity tenantEntity) {
+//        this.tenant = tenantEntity;
+//        tenantEntity.setUser(this); // Set the relationship
+//    }
 }

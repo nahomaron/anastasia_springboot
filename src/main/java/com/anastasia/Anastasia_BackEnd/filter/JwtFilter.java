@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.filter;
 
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
-import com.anastasia.Anastasia_BackEnd.service.auth.JwtService;
+import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final TokenRepository tokenRepository;
 
@@ -41,7 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authHeader.startsWith("Bearer ")){
             token = authHeader.substring(7);
             try {
-                username = jwtService.extractUsername(token);
+                username = jwtUtil.extractUsername(token);
             } catch (Exception e) {
                 sendErrorResponse(response, "Invalid or expired token", HttpServletResponse.SC_UNAUTHORIZED);
                 return;
@@ -56,7 +56,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     .map(t -> !t.isExpired() && !t.isRevoked()).orElse(false);
 
 
-            if(jwtService.isTokenValid(token, userDetails) && isTokenStillValid){
+            if(jwtUtil.isTokenValid(token, userDetails) && isTokenStillValid){
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );
