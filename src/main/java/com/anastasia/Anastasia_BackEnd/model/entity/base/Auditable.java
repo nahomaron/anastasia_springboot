@@ -1,10 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.model.entity.base;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -21,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @SuperBuilder
 @MappedSuperclass
-public class BaseEntity {
+public abstract class Auditable {
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -31,12 +29,12 @@ public class BaseEntity {
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
 
-//    @CreatedBy
-//    @Column(nullable = false, updatable = false)
-//    private UUID createdBy;
-//
-//    @LastModifiedBy
-//    @Column(insertable = false)
-//    private UUID lastModifiedBy;
+    @CreatedBy
+    @Column(nullable = false, updatable = false)
+    private UUID createdBy;
+
+    @LastModifiedBy
+    @Column(insertable = false)
+    private UUID lastModifiedBy;
 
 }

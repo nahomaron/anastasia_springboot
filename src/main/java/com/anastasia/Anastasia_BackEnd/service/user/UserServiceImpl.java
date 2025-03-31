@@ -1,31 +1,36 @@
-package com.anastasia.Anastasia_BackEnd.service.auth;
+package com.anastasia.Anastasia_BackEnd.service.user;
 
+import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
+import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UsersMapper usersMapper;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
 
     @Override
@@ -107,6 +112,26 @@ public class UserServiceImpl implements UserService{
 
         // Update the password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    @Override
+    public void assignRolesToUser(UUID userId, Set<String> roleNames) {
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getTenant().getId().equals(TenantContext.getTenantId())) {
+            throw new IllegalStateException("No authorized tenant provided");
+        }
+
+        Set<Role> roles = roleRepository.findByTenantId(TenantContext.getTenantId())
+                .stream()
+                .filter(role -> roleNames.contains(role.getRoleName()))
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
+
         userRepository.save(user);
     }
 

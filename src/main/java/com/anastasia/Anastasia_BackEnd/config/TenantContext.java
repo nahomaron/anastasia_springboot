@@ -2,13 +2,15 @@ package com.anastasia.Anastasia_BackEnd.config;
 
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class TenantContext {
 
-    private static final ThreadLocal<String> tenantId = new ThreadLocal<>();
+    private static final ThreadLocal<UUID> tenantId = new ThreadLocal<>();
 
 
-    public static String getTenantId(){
+    public static UUID getTenantId(){
         return tenantId.get();
     }
 
@@ -16,7 +18,7 @@ public class TenantContext {
         return tenantId.get() != null;
     }
 
-    public static void setTenantId(String id){
+    public static void setTenantId(UUID id){
          tenantId.set(id);
     }
 

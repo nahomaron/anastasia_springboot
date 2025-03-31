@@ -1,11 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
+import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -20,7 +22,8 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Column(unique = true, nullable = false)
+    private String roleName;
 
     private String description;
 
@@ -30,5 +33,9 @@ public class Role {
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
-    private Set<Permission> permissions;
+    private Set<Permission> permissions = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private TenantEntity tenant;
 }

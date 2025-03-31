@@ -1,6 +1,5 @@
-package com.anastasia.Anastasia_BackEnd.service.auth;
+package com.anastasia.Anastasia_BackEnd.service.user;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;

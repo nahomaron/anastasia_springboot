@@ -1,10 +1,10 @@
-package com.anastasia.Anastasia_BackEnd.controller.auth;
+package com.anastasia.Anastasia_BackEnd.controller.admin;
 
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.auth.UserService;
+import com.anastasia.Anastasia_BackEnd.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -66,5 +67,11 @@ public class UserController {
         UserEntity user = userService.convertToEntity(userDTO);
         UserEntity updatedUser = userService.updateUserDetails(user, connectedUser);
         return new ResponseEntity<>(userService.convertToDTO(updatedUser), HttpStatus.ACCEPTED);
+    }
+
+    @PutMapping("/{userid}/roles")
+    public ResponseEntity<?> assignRolesToUser(@PathVariable UUID userId, @RequestBody Set<String> roleNames){
+        userService.assignRolesToUser(userId, roleNames);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

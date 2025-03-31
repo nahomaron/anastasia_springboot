@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.service.auth;
+package com.anastasia.Anastasia_BackEnd.service.user;
 
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -25,4 +26,6 @@ public interface UserService {
     UserEntity updateUserDetails(UserEntity user, Principal connectedUser);
 
     void changePassword(ChangePasswordRequest request, Principal connectedUser);
+
+    void assignRolesToUser(UUID userId, Set<String> roleNames);
 }
