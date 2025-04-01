@@ -1,14 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.model.entity;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -20,22 +16,28 @@ public class TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID tenantId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TenantType tenantType; // CHURCH or PRIEST
+
+    @Column(nullable = false, unique = true)
+    private String ownerName; // Can be a church name or a priest's full name
+
+    @Column(nullable = false, unique = true)
+    private String email; // Contact email (Church or Priest)
+
+    @Column(nullable = false)
+    private String phoneNumber; // Contact number (Church or Priest)
 
     private boolean isActiveTenant;
 
-    private String phoneNumber;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SubscriptionPlan subscriptionPlan; // Subscription Type
 
-    private String zipcode;
+    private boolean isPaymentConfirmed; // True if payment is confirmed
 
-//    @OneToOne
-//    @JoinColumn(name = "user_id", nullable = false, unique = true)
-//    private UserEntity user;
-
-    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<UserEntity> users = new HashSet<>();
-
-
-    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Role> roles = new HashSet<>();
 }
+

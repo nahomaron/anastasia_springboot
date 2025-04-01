@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.getTenant().getId().equals(TenantContext.getTenantId())) {
+        if (!user.getTenant().getTenantId().equals(TenantContext.getTenantId())) {
             throw new IllegalStateException("No authorized tenant provided");
         }
 

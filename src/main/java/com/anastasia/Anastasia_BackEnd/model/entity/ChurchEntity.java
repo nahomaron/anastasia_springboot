@@ -19,19 +19,26 @@ public class ChurchEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "church_seq")
     @SequenceGenerator(name = "church_seq", sequenceName = "church_id_seq", allocationSize = 1)
     private Long churchId;
-//
-//    @OneToOne(mappedBy = "church")
-//    private TenantDetails tenant;
+
+    @Column(unique = true, nullable = false)
+    private String churchNumber;
+
+    @OneToOne
+    @JoinColumn(name = "tenant_id", nullable = false, unique = true)
+    private TenantEntity tenant;
 
     @Column(nullable = false)
     private String churchName;
 
     private String prefix;
+    private String profilePicture;
+
     private String street;
     private String city;
     private String country;
     private String diocese;
     private String email;
+
     private String gpsLocation;
     private String websiteUrl;
     private String youtubePage;

@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -47,7 +48,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(
                                 "/api/v1/auth/**",
-                                "/oauth2/**"
+                                "/oauth2/**",
+                                "/api/v1/tenant/**"
                         ).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
@@ -55,6 +57,15 @@ public class SecurityConfig {
 //                        .defaultSuccessUrl("/api/v1/auth/dashboard", true)  // Redirect after login
 //                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers
+                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+//                        .frameOptions(frameOptions -> frameOptions.deny())
+//                        .httpStrictTransportSecurity(hsts -> hsts
+//                                .includeSubDomains(true)
+//                                .maxAgeInSeconds(31536000)
+//                                .preload(true)
+//                        )
+                )
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
                         .logoutSuccessUrl("/")
