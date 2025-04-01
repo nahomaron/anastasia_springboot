@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -38,4 +39,7 @@ public class Role {
     @ManyToOne
     @JoinColumn(name = "tenant_id", nullable = false)
     private TenantEntity tenant;
+
+    @Column(name = "tenant_id", insertable = false, updatable = false)
+    private UUID tenantId;
 }

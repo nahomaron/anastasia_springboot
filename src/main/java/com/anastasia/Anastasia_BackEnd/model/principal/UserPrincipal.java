@@ -22,7 +22,7 @@ public class UserPrincipal implements UserDetails {
 
     public UserPrincipal(UserEntity user) {
         this.user = user;
-        this.tenantId = user.getTenant().getId();
+        this.tenantId = user.getTenant().getTenantId();
     }
 
     @Override

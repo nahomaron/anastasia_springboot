@@ -1,6 +1,5 @@
 package com.anastasia.Anastasia_BackEnd.model.entity.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.entity.base.Auditable;
 import jakarta.persistence.*;
@@ -52,16 +51,12 @@ public class UserEntity extends Auditable {
     @OneToMany(mappedBy = "user")
     private Set<Token> tokens;
 
-    @ManyToOne
-    @JoinColumn(name = "church_id") // Users can choose a Church later
-    private ChurchEntity church;
 
     @ManyToOne
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @JoinColumn(name = "tenant_id")
     private TenantEntity tenant; // Linked tenant details
 
-//    public void becomeTenant(TenantEntity tenantEntity) {
-//        this.tenant = tenantEntity;
-//        tenantEntity.setUser(this); // Set the relationship
-//    }
+    @Column(name = "tenant_id", insertable = false, updatable = false)
+    private UUID tenantId;
+
 }

@@ -17,7 +17,8 @@ public enum BusinessErrorCodes {
     NEW_PASSWORD_DOES_NOT_MATCH(301, BAD_REQUEST, "New password doesn't match"),
     ACCOUNT_DISABLED(303, FORBIDDEN, "User account is disabled"),
     ACCOUNT_LOCKED(302, FORBIDDEN, "User account is locked"),
-    BAD_CREDENTIALS(304, FORBIDDEN, "Login username or password is incorrect")
+    BAD_CREDENTIALS(304, FORBIDDEN, "Login username or password is incorrect"),
+    DUPLICATE_EMAIL(305, CONFLICT, "The provided email is already in use. Please use a different email.")
     ;
 
     @Getter

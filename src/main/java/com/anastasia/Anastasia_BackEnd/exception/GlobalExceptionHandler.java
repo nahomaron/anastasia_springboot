@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.exception;
 
 import jakarta.mail.MessagingException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -81,6 +82,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST).body(
                 ExceptionResponse.builder()
                         .businessErrorDescription("Internal Error. Please contact admin")
+                        .error(exp.getMessage())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ExceptionResponse> handleDataIntegrityViolationException(DataIntegrityViolationException exp) {
+
+        return ResponseEntity.status(CONFLICT).body(
+                ExceptionResponse.builder()
+                        .businessErrorCode(DUPLICATE_EMAIL.getCode())
+                        .businessErrorDescription(DUPLICATE_EMAIL.getDescription())
                         .error(exp.getMessage())
                         .build()
         );
