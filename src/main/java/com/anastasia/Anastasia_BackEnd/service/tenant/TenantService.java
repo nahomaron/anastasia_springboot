@@ -1,7 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.service.tenant;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
-import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
+import jakarta.mail.MessagingException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public interface TenantService {
 
     TenantDTO convertTenantToDTO(TenantEntity tenantEntity);
 
-    TenantEntity subscribeTenant(TenantEntity tenantEntity);
+    void subscribeTenant(TenantDTO tenantDTO) throws MessagingException;
 
     Page<TenantEntity> findAll(Pageable pageable);
 

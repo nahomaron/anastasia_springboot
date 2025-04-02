@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
-import com.anastasia.Anastasia_BackEnd.model.DTO.membership.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.model.entity.membership.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

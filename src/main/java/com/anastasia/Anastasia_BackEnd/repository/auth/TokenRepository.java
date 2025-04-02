@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.repository.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
+import com.anastasia.Anastasia_BackEnd.model.token.Token;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

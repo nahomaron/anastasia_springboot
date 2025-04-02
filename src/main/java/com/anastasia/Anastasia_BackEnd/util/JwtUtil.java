@@ -1,7 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.util;
 
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -58,13 +57,14 @@ public class JwtUtil {
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("tenantId", userPrincipal.getTenantId()); // Store Tenant ID in JWT
+        claims.put("tenantId", (userPrincipal.getTenantId() != null) ? userPrincipal.getTenantId().toString() : "null"); //  Avoid storing `null`
         claims.put("roles", userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
 
         return claims;
     }
+
 
     public Claims extractAllClaims(String token){
         return Jwts.parser()
@@ -94,6 +94,10 @@ public class JwtUtil {
 
     public boolean isTokenExpired(String token){
         return extractExpiration(token).before(new Date());
+    }
+
+    public String extractTenantId(String token) {
+        return extractClaim(token, claims -> claims.get("tenantId", String.class));
     }
 
 }

@@ -1,13 +1,18 @@
 package com.anastasia.Anastasia_BackEnd.service.tenant;
 
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
-import com.anastasia.Anastasia_BackEnd.model.DTO.TenantDTO;
-import com.anastasia.Anastasia_BackEnd.model.entity.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
+import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
+import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -20,7 +25,8 @@ public class TenantServiceImpl implements TenantService {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final TenantMapper tenantMapper;
-
+    private final AuthService authService;
+    private final PasswordEncoder passwordEncoder;
     @Override
     public TenantEntity convertTenantToEntity(TenantDTO tenantDTO) {
         return tenantMapper.tenantDTOToEntity(tenantDTO);
@@ -31,10 +37,27 @@ public class TenantServiceImpl implements TenantService {
         return tenantMapper.tenantEntityToDTO(tenantEntity);
     }
 
+    @Transactional
     @Override
-    public TenantEntity subscribeTenant(TenantEntity tenantEntity) {
-        tenantEntity.setActiveTenant(true);
-         return tenantRepository.save(tenantEntity);
+    public void subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
+
+        TenantEntity tenantEntity = TenantEntity.builder()
+                .tenantType(tenantDTO.getTenantType())
+                .ownerName(tenantDTO.getOwnerName())
+                .phoneNumber(tenantDTO.getPhoneNumber())
+                .subscriptionPlan(tenantDTO.getSubscriptionPlan())
+                .build();
+
+        TenantEntity savedTenant = tenantRepository.save(tenantEntity);
+
+        UserEntity adminUser = UserEntity.builder()
+                .fullName(tenantDTO.getOwnerName())
+                .email(tenantDTO.getEmail())
+                .password(tenantDTO.getPassword())
+                .tenant(savedTenant)
+                .build();
+
+        authService.createUser(adminUser);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.repository.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

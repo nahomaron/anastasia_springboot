@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.repository.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Permission;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.PermissionType;
+import com.anastasia.Anastasia_BackEnd.model.permission.Permission;
+import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

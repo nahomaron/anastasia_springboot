@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.model.principal;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Permission;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.permission.Permission;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +22,7 @@ public class UserPrincipal implements UserDetails {
 
     public UserPrincipal(UserEntity user) {
         this.user = user;
-        this.tenantId = user.getTenant().getTenantId();
+        this.tenantId = (user.getTenant() != null) ? user.getTenant().getTenantId() : null; // Safe handling
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.service.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.RoleRequest;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

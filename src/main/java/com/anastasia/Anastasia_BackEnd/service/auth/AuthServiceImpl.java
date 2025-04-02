@@ -1,11 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.service.auth;
 
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Token;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.TokenType;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.model.token.Token;
+import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
@@ -47,12 +47,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
         // todo -> make role fetching and assigning method
-        userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
-        userRepository.save(userEntity);
-        sendValidationEmail(userEntity);
+        try {
+            userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+            UserEntity savedUser = userRepository.save(userEntity);
+
+            // Only send email if save was successful and no exceptions occurred
+            sendValidationEmail(savedUser);
+
+        } catch (Exception e) {
+            // Log the error for debugging
+            System.err.println("Error creating user: " + e.getMessage());
+            throw new RuntimeException("User creation failed: " + e.getMessage());
+        }
+
     }
 
-    private void sendValidationEmail(UserEntity user) throws MessagingException {
+    public void sendValidationEmail(UserEntity user) throws MessagingException {
         var newToken = generateAndSaveActivationToken(user);
         // send email
 
@@ -117,15 +127,21 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
-
-
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException {
-        var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
 
-        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        try {
+            var auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Authentication failed: " + e.getMessage());
+        }
+
+
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
 
         if(!user.isVerified()){
             throw new RuntimeException("Account is not verified. Please find the token sent to you for verification!");
