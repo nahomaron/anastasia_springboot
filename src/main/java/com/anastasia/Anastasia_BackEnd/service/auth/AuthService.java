@@ -1,16 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.service.auth;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

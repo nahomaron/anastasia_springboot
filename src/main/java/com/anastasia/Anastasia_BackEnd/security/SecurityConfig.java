@@ -1,10 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.security;
 
 import com.anastasia.Anastasia_BackEnd.filter.JwtFilter;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,6 +38,11 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
+    private final String[] WHITE_LIST_ENDPOINTS = {
+            "/api/v1/auth/**",
+            "/oauth2/**",
+            "/api/v1/tenant/**",
+    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,11 +50,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers(
-                                "/api/v1/auth/**",
-                                "/oauth2/**",
-                                "/api/v1/tenant/**"
-                        ).permitAll()
+                        .requestMatchers(WHITE_LIST_ENDPOINTS).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
 //                .oauth2Login(oauth2 -> oauth2
@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers
                                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                        // todo -> in production the below should replace the above frameOptions
 //                        .frameOptions(frameOptions -> frameOptions.deny())
 //                        .httpStrictTransportSecurity(hsts -> hsts
 //                                .includeSubDomains(true)

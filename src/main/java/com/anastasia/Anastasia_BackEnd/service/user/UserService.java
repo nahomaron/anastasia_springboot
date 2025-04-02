@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.service.user;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

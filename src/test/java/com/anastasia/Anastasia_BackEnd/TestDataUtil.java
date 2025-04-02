@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.AuthenticationRequest;
-import com.anastasia.Anastasia_BackEnd.model.DTO.auth.UserDTO;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 
 public class TestDataUtil {
 

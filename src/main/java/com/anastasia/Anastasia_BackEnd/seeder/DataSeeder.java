@@ -1,8 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.seeder;
 
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Permission;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.PermissionType;
-import com.anastasia.Anastasia_BackEnd.model.entity.auth.Role;
+import com.anastasia.Anastasia_BackEnd.model.permission.Permission;
+import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import jakarta.annotation.PostConstruct;
@@ -11,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.util.HashSet;
 
 @Component
 @RequiredArgsConstructor

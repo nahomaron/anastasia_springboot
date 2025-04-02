@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.service.registration;
 
-import com.anastasia.Anastasia_BackEnd.model.DTO.membership.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.model.entity.membership.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
