@@ -35,7 +35,7 @@ public class ChurchServiceImpl implements ChurchService{
     }
 
     @Override
-    public ChurchEntity createChurch(ChurchEntity churchEntity) {
+    public String createChurch(ChurchEntity churchEntity) {
 
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
@@ -48,7 +48,9 @@ public class ChurchServiceImpl implements ChurchService{
         churchEntity.setTenant(tenant);
 
         churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchName(), 5));
-        return churchRepository.save(churchEntity);
+         var savedChurch = churchRepository.save(churchEntity);
+
+         return savedChurch.getChurchNumber();
     }
 
     private String generateChurchNumber(String churchName, int length) {

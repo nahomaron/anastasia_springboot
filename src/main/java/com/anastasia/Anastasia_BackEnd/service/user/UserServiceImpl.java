@@ -3,6 +3,8 @@ package com.anastasia.Anastasia_BackEnd.service.user;
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
@@ -10,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -116,46 +119,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void assignRolesToUser(UUID userId, Set<String> roleNames) {
+    public void assignRolesToUser(UUID userId, AssignRolesRequest request) {
 
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.getTenant().getTenantId().equals(TenantContext.getTenantId())) {
-            throw new IllegalStateException("No authorized tenant provided");
+        UUID tenantId = TenantContext.getTenantId();
+
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID is not set in the context");
         }
 
-        Set<Role> roles = roleRepository.findByTenantId(TenantContext.getTenantId())
+
+//
+
+        Set<Role> roles = roleRepository.findAll()
                 .stream()
-                .filter(role -> roleNames.contains(role.getRoleName()))
+                .filter(role -> request.roleIds().contains(role.getId()))
                 .collect(Collectors.toSet());
+
+        System.out.println("Roles "+ roles);
 
         user.setRoles(roles);
 
         userRepository.save(user);
     }
 
-//    @Override
-//    public void changePassword(ChangePasswordRequest request, Principal connectedUser) {
-//        // Ensure that the Principal is of the expected type
-//        if (!(connectedUser instanceof Authentication)) {
-//            throw new IllegalStateException("Invalid user authentication");
-//        }
-//
-//        var user = (UserEntity) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-//
-//
-//        if(!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())){
-//            throw new BadCredentialsException("Incorrect password provided");
-//        }
-//
-//        if (!request.isPasswordMatch()){
-//            throw new BadCredentialsException("Password are not matching");
-//        }
-//
-//        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-//
-//        userRepository.save(user);
-//
-//    }
 }

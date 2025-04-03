@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.controller;
 
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
@@ -69,9 +70,9 @@ public class UserController {
         return new ResponseEntity<>(userService.convertToDTO(updatedUser), HttpStatus.ACCEPTED);
     }
 
-    @PutMapping("/{userid}/roles")
-    public ResponseEntity<?> assignRolesToUser(@PathVariable UUID userId, @RequestBody Set<String> roleNames){
-        userService.assignRolesToUser(userId, roleNames);
+    @PutMapping("/{userId}/assign-roles")
+    public ResponseEntity<?> assignRolesToUser(@PathVariable UUID userId, @RequestBody AssignRolesRequest request){
+        userService.assignRolesToUser(userId, request);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

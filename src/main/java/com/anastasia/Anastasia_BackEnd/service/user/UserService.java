@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.service.user;
 
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import org.springframework.data.domain.Page;
@@ -27,5 +28,5 @@ public interface UserService {
 
     void changePassword(ChangePasswordRequest request, Principal connectedUser);
 
-    void assignRolesToUser(UUID userId, Set<String> roleNames);
+    void assignRolesToUser(UUID userId, AssignRolesRequest request);
 }

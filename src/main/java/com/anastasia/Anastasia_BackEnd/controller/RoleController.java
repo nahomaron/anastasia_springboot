@@ -21,13 +21,8 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping("/roles")
-    public ResponseEntity<Role> createRole(@RequestBody RoleRequest request){
-
-        Role role = Role.builder()
-                .roleName(request.getRoleName())
-                .description(request.getDescription())
-                .build();
-
-        return new ResponseEntity<>(roleService.createRole(role), HttpStatus.CREATED);
+    public ResponseEntity<?> createRole(@RequestBody RoleRequest request){
+        roleService.createRole(request);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 }
