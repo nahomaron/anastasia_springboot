@@ -100,4 +100,9 @@ public class JwtUtil {
         return extractClaim(token, claims -> claims.get("tenantId", String.class));
     }
 
+    public List<String> extractRoles(String token){
+        return extractClaim(token, claims -> (List<String>) claims.get("roles"));
+
+    }
+
 }

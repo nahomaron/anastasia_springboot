@@ -20,11 +20,10 @@ public class ChurchController {
     private final ChurchService churchService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> createChurch(@Valid @RequestBody ChurchDTO churchDTO){
+    public ResponseEntity<String> createChurch(@Valid @RequestBody ChurchDTO churchDTO){
         ChurchEntity churchEntity = churchService.convertToEntity(churchDTO);
-        ChurchEntity savedChurch = churchService.createChurch(churchEntity);
-
-        return new ResponseEntity<>(churchService.convertToDTO(savedChurch), HttpStatus.CREATED);
+        String churchNumber =  churchService.createChurch(churchEntity);
+        return new ResponseEntity<>(churchNumber, HttpStatus.CREATED);
     }
 
 }

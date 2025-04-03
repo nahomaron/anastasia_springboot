@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public interface ChurchService {
     ChurchEntity convertToEntity(ChurchDTO churchDTO);
 
-    ChurchEntity createChurch(ChurchEntity churchEntity);
+    String createChurch(ChurchEntity churchEntity);
 
     ChurchDTO convertToDTO(ChurchEntity churchEntity);
 }
