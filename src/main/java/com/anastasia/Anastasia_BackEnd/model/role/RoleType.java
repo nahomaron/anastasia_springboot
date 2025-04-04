@@ -16,7 +16,7 @@ public enum RoleType {
 
     OWNER(
             Set.of(
-                    MANAGE_USERS,  MANAGE_ROLES
+                    OWN_SUBSCRIPTION
             ), "Owns the subscription"
     ),
 
@@ -27,7 +27,10 @@ public enum RoleType {
 
     ADMIN(
             Set.of(
-                    MANAGE_USERS,  MANAGE_ROLES
+                    MANAGE_USERS,  MANAGE_ROLES, MANAGE_MEMBERS,MANAGE_GROUPS,
+                    MANAGE_EVENTS, MANAGE_FOLLOWUPS,MANAGE_APPOINTMENT,MANAGE_FINANCE
+
+
             ), "Admin manages everything under the tenant"
     ),
     PRIEST(

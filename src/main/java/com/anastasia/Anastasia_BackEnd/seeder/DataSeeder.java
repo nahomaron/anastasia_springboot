@@ -85,21 +85,26 @@ public class DataSeeder {
 
     private void createRole(RoleType roleType) {
 
-        Set<String> permissionNames = roleType.getPermissions().stream()
-                .map(PermissionType::name) // Converts ENUM to String
-                .collect(Collectors.toSet());
+        if(!roleRepository.existsByRoleName(roleType.name())) {
 
-        Set<Permission> permissions = permissionRepository.findByNameIn(permissionNames);
 
-        logger.info("Permissions {}", permissions);
+            Set<String> permissionNames = roleType.getPermissions().stream()
+                    .map(PermissionType::name) // Converts ENUM to String
+                    .collect(Collectors.toSet());
 
-        Role role = Role.builder()
-                .roleName(roleType.name())
-                .description(roleType.getDescription())
-                .permissions(permissions)
-                .tenant(null) // Default roles are global
-                .build();
-        roleRepository.save(role);
+            Set<Permission> permissions = permissionRepository.findByNameIn(permissionNames);
+
+            logger.info("Permissions {}", permissions);
+
+            Role role = Role.builder()
+                    .roleName(roleType.name())
+                    .description(roleType.getDescription())
+                    .permissions(permissions)
+                    .tenant(null) // Default roles are global
+                    .build();
+
+            roleRepository.save(role);
+        }
     }
 
 }

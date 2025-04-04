@@ -8,39 +8,47 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
 
     private final UserEntity user;
 
+
     @Getter
     private final UUID tenantId;
+
+    @Getter
+    private Set<Role> roles;
 
     public UserPrincipal(UserEntity user) {
         this.user = user;
         this.tenantId = (user.getTenant() != null) ? user.getTenant().getTenantId() : null; //  Safe handling
+        this.roles = user.getRoles();
     }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
 
+    public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-        // Add roles
         for (Role role : user.getRoles()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName())); // Roles
 
-            // Add permissions from role
             for (Permission permission : role.getPermissions()) {
-                authorities.add(new SimpleGrantedAuthority(permission.getName().getName()));
+                authorities.add(new SimpleGrantedAuthority(permission.getName().name())); // Permissions
             }
         }
+
         return authorities;
     }
+
+    public boolean hasPermission(String permissionName) {
+        return getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equalsIgnoreCase(permissionName));
+    }
+
+
 
     public UUID getUserUuid(){
         return user.getUuid();
@@ -75,4 +83,21 @@ public class UserPrincipal implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    //    @Override
+//    public Collection<? extends GrantedAuthority> getAuthorities() {
+//
+//        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+//
+//        // Add roles
+//        for (Role role : user.getRoles()) {
+//            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
+//
+//            // Add permissions from role
+//            for (Permission permission : role.getPermissions()) {
+//                authorities.add(new SimpleGrantedAuthority(permission.getName().getName()));
+//            }
+//        }
+//        return authorities;
+//    }
 }

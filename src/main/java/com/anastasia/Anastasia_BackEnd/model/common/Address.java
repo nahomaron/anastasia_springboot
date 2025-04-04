@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.model.common;
 
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,5 +27,6 @@ public class Address {
     @NotBlank(message = "Country is required")
     private String country;
 
+    @Pattern(regexp = "^\\d{4,10}$", message = "Invalid postal code format")
     private String zipcode;
 }

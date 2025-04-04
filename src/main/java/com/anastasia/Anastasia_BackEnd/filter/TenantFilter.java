@@ -28,6 +28,9 @@ public class TenantFilter implements Filter {
                 String token = authHeader.substring(7);
                 try {
                     tenantIdString = jwtUtil.extractTenantId(token);  // Extract from JWT
+                    if ("null".equals(tenantIdString)) {
+                        tenantIdString = null; // Treat "null" as an actual null
+                    }
                 } catch (Exception e) {
                     throw new ServletException("Invalid JWT token: " + e.getMessage());
                 }

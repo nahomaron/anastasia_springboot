@@ -29,4 +29,5 @@ public interface AuthService {
 
     Optional<UserEntity> findUserByEmail(@NotBlank(message = "Email is required") @Email(message = "Invalid Email format") String email);
 
+    void resendActivationEmail(String email) throws MessagingException;
 }

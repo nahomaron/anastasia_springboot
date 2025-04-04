@@ -67,5 +67,19 @@ public class AuthController {
         authService.activateAccount(token);
     }
 
+    @PostMapping("/resend-activation")
+    public ResponseEntity<String> resendActivation(@RequestParam String email) {
+        try {
+            authService.resendActivationEmail(email);
+            return ResponseEntity.ok("Activation email resent successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (MessagingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send activation email");
+        }
+    }
+
 
 }

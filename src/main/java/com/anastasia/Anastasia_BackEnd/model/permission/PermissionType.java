@@ -7,11 +7,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PermissionType {
 
+    OWN_SUBSCRIPTION("own_subscription", "can configure or delete the subscription"),
     // User & Role Management
     MANAGE_USERS("manage_users", "Can create, update, and delete users"),
     MANAGE_ROLES("manage_roles", "Can create, update, and delete roles"),
 
     // Member Management
+    MANAGE_MEMBERS("manage_members", "can do everything with members"),
     VIEW_MEMBERS("view_members", "Can view member profiles"),
     ADD_MEMBERS("add_members", "Can add new members"),
     EDIT_MEMBERS("edit_members", "Can update member details"),
@@ -27,6 +29,7 @@ public enum PermissionType {
     VIEW_MEMBER_REPORTS("view_member_reports", "Can view member reports"),
 
     // Group Management
+    MANAGE_GROUPS("manage_groups", "can do everything with groups"),
     VIEW_GROUPS("view_groups", "Can view groups"),
     CREATE_GROUPS("create_groups", "Can create new groups"),
     EDIT_GROUPS("edit_groups", "Can edit existing groups"),
@@ -35,6 +38,7 @@ public enum PermissionType {
     MANAGE_REQUESTS("manage_requests", "Can manage group membership requests"),
 
     // Event Management
+    MANAGE_EVENTS("manage_events", "can do everything with events"),
     CREATE_EDIT_EVENTS("create_edit_events", "Can create and edit events"),
     VIEW_EVENTS("view_events", "Can view events"),
     DELETE_EVENTS("delete_events", "Can delete events"),
@@ -46,6 +50,7 @@ public enum PermissionType {
     CHECK_OUT_ATTENDANCE("check_out_attendance", "Can check out attendees at events"),
 
     // Follow-ups
+    MANAGE_FOLLOWUPS("manage_followup", "can do everything with follow ups"),
     VIEW_FOLLOWUP_ASSIGNED_TO_ME("view_followup_assigned_to_me", "Can view follow-ups assigned to self"),
     VIEW_FOLLOWUP_ASSIGNED_BY_ME("view_followup_assigned_by_me", "Can view follow-ups assigned by self"),
     VIEW_FOLLOWUP_ASSIGNED_TO_OTHERS("view_followup_assigned_to_others", "Can view follow-ups assigned to others"),
@@ -55,10 +60,12 @@ public enum PermissionType {
     MODIFY_FOLLOWUP_ACTIONS("modify_followup_actions", "Can modify follow-up actions"),
 
     // Appointments
+    MANAGE_APPOINTMENT("manage_appointment", "can do everything with bookings"),
     BOOK_APPOINTMENT("book_appointment", "Can book appointments"),
     CANCEL_APPOINTMENT("cancel_appointment", "Can cancel appointments"),
 
     // Finance Management
+    MANAGE_FINANCE("manage_finance", "can do everything with finance"),
     VIEW_FINANCE_REPORT("view_finance_report", "Can view financial reports"),
     GENERATE_FINANCE_REPORT("generate_finance_report", "Can generate financial reports"),
     MANAGE_DONATIONS("manage_donations", "Can record, edit, and delete donations"),

@@ -1,10 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.service.tenant;
 
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
+import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import jakarta.mail.MessagingException;
@@ -16,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -27,6 +31,7 @@ public class TenantServiceImpl implements TenantService {
     private final TenantMapper tenantMapper;
     private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
     @Override
     public TenantEntity convertTenantToEntity(TenantDTO tenantDTO) {
         return tenantMapper.tenantDTOToEntity(tenantDTO);
@@ -50,11 +55,16 @@ public class TenantServiceImpl implements TenantService {
 
         TenantEntity savedTenant = tenantRepository.save(tenantEntity);
 
+        Role ownerRole = roleRepository.findByRoleName("OWNER")
+                .orElseThrow(() -> new RuntimeException("Owner role not found"));
+
+
         UserEntity adminUser = UserEntity.builder()
                 .fullName(tenantDTO.getOwnerName())
                 .email(tenantDTO.getEmail())
                 .password(tenantDTO.getPassword())
                 .tenant(savedTenant)
+                .roles(Set.of(ownerRole))
                 .build();
 
         authService.createUser(adminUser);

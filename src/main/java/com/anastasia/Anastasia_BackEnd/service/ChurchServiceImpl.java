@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -23,6 +24,7 @@ public class ChurchServiceImpl implements ChurchService{
     private final ChurchRepository churchRepository;
     private final ChurchMapper churchMapper;
     private final TenantRepository tenantRepository;
+    private final SecurityUtils securityUtils;
 
     @Override
     public ChurchEntity convertToEntity(ChurchDTO churchDTO) {
@@ -53,37 +55,23 @@ public class ChurchServiceImpl implements ChurchService{
          return savedChurch.getChurchNumber();
     }
 
-    private String generateChurchNumber(String churchName, int length) {
+    private String generateUniqueChurchNumber(String churchName, int length) {
 
         String baseLetter = null;
 
         // Ensure a valid church name is provided
         if (churchName != null && !churchName.isBlank()) {
             if (churchName.startsWith("st.")) {
-                baseLetter = churchName.substring(3, 4).toUpperCase();
+                baseLetter = churchName.substring(3, 5).toUpperCase();
             } else {
-                baseLetter = churchName.substring(0, 1).toUpperCase();
+                baseLetter = churchName.substring(0, 2).toUpperCase();
             }
         }
 
-
-        String characters = "01234456789";
-        StringBuilder codeBuilder = new StringBuilder(baseLetter);
-        SecureRandom secureRandom = new SecureRandom();
-
-
-        for (int i = 0; i < length; i++) {
-            int randomIndex = secureRandom.nextInt(characters.length());
-            codeBuilder.append(characters.charAt(randomIndex));
-        }
-
-        return codeBuilder.toString();
-    }
-
-    private String generateUniqueChurchNumber(String churchName, int length) {
         String churchNumber;
+
         do {
-            churchNumber = generateChurchNumber(churchName, length);
+            churchNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
         } while (churchRepository.existsByChurchNumber(churchNumber)); // Keep generating if it already exists
         return churchNumber;
     }

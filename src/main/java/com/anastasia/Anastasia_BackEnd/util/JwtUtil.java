@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.util;
 
 
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -58,8 +59,8 @@ public class JwtUtil {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenantId", (userPrincipal.getTenantId() != null) ? userPrincipal.getTenantId().toString() : "null"); //  Avoid storing `null`
-        claims.put("roles", userPrincipal.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
+        claims.put("roles", userPrincipal.getRoles().stream()
+                .map(role -> "ROLE_" + role.getRoleName())
                 .collect(Collectors.toList()));
 
         return claims;

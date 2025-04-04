@@ -3,16 +3,20 @@ package com.anastasia.Anastasia_BackEnd.service.auth;
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
+import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.model.token.Token;
 import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,6 +31,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -41,14 +46,22 @@ public class AuthServiceImpl implements AuthService {
     private final TokenRepository tokenRepository;
     private final TenantMapper tenantMapper;
     private final EmailService emailService;
+    private final RoleRepository roleRepository;
 
 
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
         // todo -> make role fetching and assigning method
+
+        if (userRepository.existsByEmail(userEntity.getEmail())) {
+            throw new IllegalWriteException("The provided email is already in use. Please use a different email.");
+        }
+
         try {
+
             userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+
             UserEntity savedUser = userRepository.save(userEntity);
 
             // Only send email if save was successful and no exceptions occurred
@@ -144,6 +157,11 @@ public class AuthServiceImpl implements AuthService {
 
 
         if(!user.isVerified()){
+            if (user.getCreatedDate().isBefore(LocalDateTime.now().minusHours(24))) {
+                // The user was created more than 24 hours ago
+                sendValidationEmail(user);
+                throw new RuntimeException("Account is not verified. Please find a new token sent to you for verification!");
+            }
             throw new RuntimeException("Account is not verified. Please find the token sent to you for verification!");
         }
 
@@ -204,6 +222,21 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Optional<UserEntity> findUserByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public void resendActivationEmail(String email) throws MessagingException {
+        // Find the user by email
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User with this email does not exist"));
+
+        // Check if the user is already activated
+        if (user.isVerified()) {
+            throw new IllegalStateException("User is already verified");
+        }
+
+        // Generate and send a new activation email
+        sendValidationEmail(user);
     }
 
     @Override

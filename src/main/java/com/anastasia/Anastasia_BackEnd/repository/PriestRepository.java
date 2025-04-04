@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PriestRepository extends JpaRepository<PriestEntity, Long> {
+    boolean existsByPriestNumber(String priestNumber);
 }
