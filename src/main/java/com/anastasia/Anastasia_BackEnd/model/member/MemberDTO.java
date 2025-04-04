@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -57,9 +58,7 @@ public class MemberDTO {
     private String gender;
 
     @NotBlank(message = "Birthday is required")
-    @Pattern(regexp = "^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\\d{4}$",
-            message = "Birthday must be in the format DD-MM-YYYY")
-    private String birthday;
+    private LocalDate birthday; // Frontend sends "YYYY-MM-DD"
 
     @NotBlank(message = "Nationality is required")
     private String nationality;

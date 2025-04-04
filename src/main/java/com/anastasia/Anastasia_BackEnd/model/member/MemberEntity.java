@@ -9,6 +9,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 
@@ -74,7 +75,7 @@ public class MemberEntity extends Auditable {
     private String gender;
 
     @Column(nullable = false)
-    private String birthday;
+    private LocalDate birthday; // Stores YYYY-MM-DD
 
     private String nationality;
     private String placeOfBirth;
