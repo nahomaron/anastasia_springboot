@@ -5,13 +5,17 @@ import com.anastasia.Anastasia_BackEnd.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.model.priest.PriestStatus;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
+import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthServiceImpl;
+import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +24,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +39,8 @@ public class PriestServiceImpl implements PriestService{
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final AuthServiceImpl authService;
+    private final RoleRepository roleRepository;
+    private final SecurityUtils securityUtils;
 
     @Override
     public PriestEntity convertToEntity(PriestDTO priestDTO) {
@@ -52,12 +60,16 @@ public class PriestServiceImpl implements PriestService{
         // Try to find an existing user by email
         UserEntity priestUser = userRepository.findByEmail(priestDTO.getPersonalEmail()).orElse(null);
 
+        Role priestRole = roleRepository.findByRoleName(RoleType.PRIEST.name())
+                .orElseThrow(() -> new RuntimeException("Priest role not found"));
+
         if (priestUser == null) {
             // If user does not exist, create a new one
             priestUser = UserEntity.builder()
                     .fullName(priestDTO.getFirstName() + " " + priestDTO.getFatherName() + " " + priestDTO.getGrandFatherName())
                     .email(priestDTO.getPersonalEmail())
                     .password(passwordEncoder.encode(priestDTO.getPassword()))
+                    .roles(Set.of(priestRole))
                     .build();
 
             // Save the newly created priest user
@@ -67,8 +79,6 @@ public class PriestServiceImpl implements PriestService{
             } catch (Exception e) {
                 throw new RuntimeException("User creation failed: " + e.getMessage());
             }
-
-
         }
 
 
@@ -78,6 +88,7 @@ public class PriestServiceImpl implements PriestService{
         // Start building the PriestEntity
         PriestEntity.PriestEntityBuilder priestBuilder = PriestEntity.builder()
                 .user(priestUser)
+                .priestNumber(generateUniquePriestNumber(6))
                 .churchNumber(priestDTO.getChurchNumber())
                 .profilePicture(priestDTO.getProfilePicture())
                 .prefixes(priestDTO.getPrefixes())
@@ -122,7 +133,6 @@ public class PriestServiceImpl implements PriestService{
 
     }
 
-
     @Override
     public Page<PriestEntity> findAllPriests(Pageable pageable) {
         return priestRepository.findAll(pageable);
@@ -163,4 +173,15 @@ public class PriestServiceImpl implements PriestService{
     public void deletePriest(Long priestId) {
         priestRepository.deleteById(priestId);
     }
+
+    private String generateUniquePriestNumber(int length) {
+        String baseLetter = "K";
+
+        String priestNumber;
+        do {
+            priestNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
+        } while (priestRepository.existsByPriestNumber(priestNumber)); // Keep generating if it already exists
+        return priestNumber;
+    }
+
 }

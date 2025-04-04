@@ -35,7 +35,8 @@ public class Role {
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
-    private Set<Permission> permissions = new HashSet<>();
+
+    private Set<Permission> permissions;
 
     @ManyToOne
     @JoinColumn(name = "tenant_id", nullable = false)

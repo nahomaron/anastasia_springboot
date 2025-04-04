@@ -42,6 +42,7 @@ public class SecurityConfig {
             "/api/v1/auth/**",
             "/oauth2/**",
             "/api/v1/tenant/**",
+            "/api/v1/priests/register",
     };
 
     @Bean

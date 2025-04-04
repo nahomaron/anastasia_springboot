@@ -2,17 +2,28 @@ package com.anastasia.Anastasia_BackEnd.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public interface MemberService {
     MemberEntity convertToEntity(MemberDTO memberDTO);
 
-    MemberEntity registerMember(MemberEntity memberEntity);
+    MemberResponse registerMember(MemberEntity memberEntity);
 
     MemberDTO convertToDTO(MemberEntity savedMember);
 
-    List<MemberEntity> findAll();
+    Page<MemberEntity> findAll(Pageable pageable);
+
+    Optional<MemberEntity> findMemberById(Long memberId);
+
+    void updateMembershipDetails(Long memberId, MemberDTO request);
+
+    void deleteMembership(Long memberId);
 }

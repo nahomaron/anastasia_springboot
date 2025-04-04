@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +71,7 @@ public class UserController {
         return new ResponseEntity<>(userService.convertToDTO(updatedUser), HttpStatus.ACCEPTED);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @PutMapping("/{userId}/assign-roles")
     public ResponseEntity<?> assignRolesToUser(@PathVariable UUID userId, @RequestBody AssignRolesRequest request){
         userService.assignRolesToUser(userId, request);
