@@ -1,21 +1,23 @@
-package com.anastasia.Anastasia_BackEnd.model.member;
+package com.anastasia.Anastasia_BackEnd.model.child;
 
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class MemberDTO {
+public class ChildDTO {
 
     @NotBlank
     @Pattern(regexp = "^[A-Za-z]{1,2}\\d{5}$", message = "Invalid church number")
@@ -69,45 +71,28 @@ public class MemberDTO {
     @Email(message = "Invalid email format")
     private String email;
 
-    @NotBlank(message = "Phone number is required")
     @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid phone number format")
     private String phone;
 
     @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid WhatsApp number format")
     private String whatsApp;
 
-   // @NotBlank(message = "Emergency contact number is required")
+     @NotBlank(message = "Emergency contact number is required")
     @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid emergency contact number format")
     private String emergencyContactNumber;
 
     @NotBlank(message = "Emergency contact relation is required")
     private String contactRelation;
 
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid Eritrea contact number format")
-    private String eritreaContact;
-
-    @NotBlank(message = "Marital status is required")
-    @Pattern(regexp = "^(Single|Married|Divorced|Widowed)$", message = "Invalid marital status")
-    private String maritalStatus;
-
-    @Max(value = 14, message = "Invalid number of children")
-    private int numberOfChildren;
-
     @NotBlank(message = "First language is required")
     private String firstLanguage;
 
     private String secondLanguage;
 
-    @NotBlank(message = "Profession is required")
-    private String profession;
-
     private String levelOfEducation;
 
     @NotBlank(message = "Father of Confession is required")
     private String fatherOfConfession;
-
-
-    private String spouseIdNumber;
 
     @Valid
     private Address address;

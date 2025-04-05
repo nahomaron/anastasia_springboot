@@ -1,17 +1,19 @@
-package com.anastasia.Anastasia_BackEnd.model.member;
+package com.anastasia.Anastasia_BackEnd.model.child;
 
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.common.Auditable;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.util.UUID;
-
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -21,7 +23,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "members")
 @EntityListeners(AuditingEntityListener.class)
-public class MemberEntity extends Auditable {
+public class ChildEntity extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "member_seq")
@@ -82,31 +84,18 @@ public class MemberEntity extends Auditable {
 
     private String email;
 
-    @Column(nullable = false)
     private String phone;
 
     private String whatsApp;
     private String emergencyContactNumber;
-    private String contactRelation;
-    private String eritreaContact;
-
-    @Column(nullable = false)
-    private String maritalStatus;
-
-    private int numberOfChildren;
 
     private String firstLanguage;
     private String secondLanguage;
 
-    private String profession;
     private String levelOfEducation;
 
     @Column(nullable = false)
     private String fatherOfConfession;
-
-    private String spouseIdNumber;
-
-    private Address address;
 
     @OneToOne
     @JoinColumn(name = "user_id")
