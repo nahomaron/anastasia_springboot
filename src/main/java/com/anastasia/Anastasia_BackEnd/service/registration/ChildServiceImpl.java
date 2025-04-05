@@ -1,16 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.service.registration;
 
-import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.ChildMapper;
+import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
+import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.model.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberResponse;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.repository.registration.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,34 +17,32 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class MemberServiceImpl implements MemberService {
+public class ChildServiceImpl implements ChildService{
 
-    private final MemberRepository memberRepository;
+    private final ChildRepository childRepository;
     private final ChurchRepository churchRepository;
     private final UserRepository userRepository;
-    private final MemberMapper memberMapper;
+    private final ChildMapper childMapper;
     private final SecurityUtils securityUtils;
 
     @Override
-    public MemberEntity convertToEntity(MemberDTO memberDTO) {
-        return memberMapper.memberDTOToEntity(memberDTO);
+    public ChildEntity convertToEntity(ChildDTO childDTO) {
+        return childMapper.childDTOToEntity(childDTO);
     }
 
     @Override
-    public MemberDTO convertToDTO(MemberEntity memberEntity) {
-        return memberMapper.memberEntityToDTO(memberEntity);
+    public ChildDTO convertToDTO(ChildEntity childEntity) {
+        return childMapper.childEntityToDTO(childEntity);
     }
 
     @Override
-    public MemberResponse registerMember(MemberEntity memberEntity) {
-
+    public ChildResponse registerChild(ChildEntity childEntity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)){
             throw new IllegalStateException("User not authenticated");
@@ -54,23 +51,16 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
 
 
-        ChurchEntity church = churchRepository.findByChurchNumber(memberEntity.getChurchNumber())
+        ChurchEntity church = churchRepository.findByChurchNumber(childEntity.getChurchNumber())
                 .orElseThrow(() -> new IllegalStateException("No valid church number provided"));
 
-        // alternative
-        // Set user reference **without fetching from DB**
-//        UserEntity userReference = new UserEntity();
-//        userReference.setId(userPrincipal.getId());  // Only setting the ID, no need to load from DB
-//        memberEntity.setUser(userReference);
 
-        memberEntity.setMembershipNumber(generateUniqueMembershipNumber(6, memberEntity.isDeacon()));
-        memberEntity.setUser(user);
-        memberEntity.setChurch(church);
-        memberEntity.setApprovedByChurch(false);
-        memberEntity.setApprovedByPriest(false);
-        MemberEntity membership = memberRepository.save(memberEntity);
+        childEntity.setMembershipNumber(generateUniqueChildMembershipNumber(6, childEntity.isDeacon()));
+        childEntity.setUser(user);
+        childEntity.setChurch(church);
+        ChildEntity membership = childRepository.save(childEntity);
 
-        return MemberResponse.builder()
+        return ChildResponse.builder()
                 .name(membership.getFirstName() + " " + membership.getFatherName() + " " + membership.getGrandFatherName())
                 .membershipNumber(membership.getMembershipNumber())
                 .fatherOfConfession(membership.getFatherOfConfession())
@@ -78,18 +68,18 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Page<MemberEntity> findAll(Pageable pageable) {
-        return memberRepository.findAll(pageable);
+    public Page<ChildEntity> findAll(Pageable pageable) {
+        return childRepository.findAll(pageable);
     }
 
     @Override
-    public Optional<MemberEntity> findMemberById(Long memberId) {
-        return memberRepository.findById(memberId);
+    public Optional<ChildEntity> findChildById(Long memberId) {
+        return childRepository.findById(memberId);
     }
 
     @Override
-    public void updateMembershipDetails(Long memberId, MemberDTO request) {
-        memberRepository.findById(memberId).ifPresent(memberEntity -> {
+    public void updateChildDetails(Long memberId, ChildDTO request) {
+        childRepository.findById(memberId).ifPresent(memberEntity -> {
 
             Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
             Optional.ofNullable(request.getTitle()).ifPresent(memberEntity::setTitle);
@@ -111,62 +101,32 @@ public class MemberServiceImpl implements MemberService {
             Optional.ofNullable(request.getWhatsApp()).ifPresent(memberEntity::setWhatsApp);
             Optional.ofNullable(request.getEmergencyContactNumber()).ifPresent(memberEntity::setEmergencyContactNumber);
             Optional.ofNullable(request.getContactRelation()).ifPresent(memberEntity::setContactRelation);
-            Optional.ofNullable(request.getEritreaContact()).ifPresent(memberEntity::setEritreaContact);
-            Optional.ofNullable(request.getMaritalStatus()).ifPresent(memberEntity::setMaritalStatus);
-            Optional.of(request.getNumberOfChildren()).ifPresent(memberEntity::setNumberOfChildren); // primitive int
 
             Optional.ofNullable(request.getFirstLanguage()).ifPresent(memberEntity::setFirstLanguage);
             Optional.ofNullable(request.getSecondLanguage()).ifPresent(memberEntity::setSecondLanguage);
-            Optional.ofNullable(request.getProfession()).ifPresent(memberEntity::setProfession);
             Optional.ofNullable(request.getLevelOfEducation()).ifPresent(memberEntity::setLevelOfEducation);
             Optional.ofNullable(request.getFatherOfConfession()).ifPresent(memberEntity::setFatherOfConfession);
-            Optional.ofNullable(request.getSpouseIdNumber()).ifPresent(memberEntity::setSpouseIdNumber);
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
 
-            memberRepository.save(memberEntity);
+            childRepository.save(memberEntity);
         });
     }
 
     @Override
-    public void deleteMembership(Long memberId) {
-        memberRepository.deleteById(memberId);
+    public void deleteChildMembership(Long memberId) {
+        childRepository.deleteById(memberId);
+
     }
 
     @Override
-    public void approveByChurch(Long memberId) {
-        MemberEntity member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
-
-        member.setApprovedByPriest(true);
-
-        if(member.isApprovedByPriest() && member.isApprovedByChurch()){
-            member.setStatus(MemberStatus.APPROVED.name());
-        }
-
-        memberRepository.save(member);
+    public Page<ChildEntity> findAllBySpecification(Specification<ChildEntity> spec, Pageable pageable) {
+        return childRepository.findAll(spec, pageable);
     }
 
-    @Override
-    public void approveByPriest(Long memberId) {
-        MemberEntity member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
-        member.setApprovedByChurch(true);
+    private String generateUniqueChildMembershipNumber(int length, boolean isDeacon) {
 
-        if(member.isApprovedByPriest() && member.isApprovedByChurch()){
-            member.setStatus(MemberStatus.APPROVED.name());
-        }
-        memberRepository.save(member);
-    }
-
-    @Override
-    public Page<MemberEntity> findAllBySpecification(Specification<MemberEntity> spec, Pageable pageable) {
-        return memberRepository.findAll(spec, pageable);
-    }
-
-    private String generateUniqueMembershipNumber(int length, boolean isDeacon) {
-
-        String baseLetter = "M";
+        String baseLetter = "C";
 
         if(isDeacon){
             baseLetter = "D";
@@ -175,7 +135,7 @@ public class MemberServiceImpl implements MemberService {
         String membershipNumber;
         do {
             membershipNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
-        } while (memberRepository.existsByMembershipNumber(membershipNumber)); // Keep generating if it already exists
+        } while (childRepository.existsByMembershipNumber(membershipNumber)); // Keep generating if it already exists
         return membershipNumber;
     }
 

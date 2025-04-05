@@ -36,8 +36,10 @@ public class MemberEntity extends Auditable {
     @Column(nullable = false)
     private String status;
 
+    @Column(nullable = false)
     private boolean approvedByChurch;
 
+    @Column(nullable = false)
     private boolean approvedByPriest;
 
     private boolean deacon;

@@ -38,10 +38,6 @@ public class ChildEntity extends Auditable {
     @Column(nullable = false)
     private String status;
 
-    private boolean approvedByChurch;
-
-    private boolean approvedByPriest;
-
     private boolean deacon;
 
     private String title;
@@ -88,11 +84,14 @@ public class ChildEntity extends Auditable {
 
     private String whatsApp;
     private String emergencyContactNumber;
+    private String contactRelation;
 
     private String firstLanguage;
     private String secondLanguage;
 
     private String levelOfEducation;
+
+    private Address address;
 
     @Column(nullable = false)
     private String fatherOfConfession;
