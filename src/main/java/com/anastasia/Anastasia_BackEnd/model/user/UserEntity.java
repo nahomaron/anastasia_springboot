@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.model.user;
 
+import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.common.Auditable;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
@@ -55,6 +57,9 @@ public class UserEntity{
     @OneToMany(mappedBy = "user")
     private Set<Token> tokens;
 
+    @OneToOne
+    @JoinColumn(name = "membership_id")
+    private MemberEntity membership;
 
     @ManyToOne
     @JoinColumn(name = "tenant_id")
@@ -63,6 +68,8 @@ public class UserEntity{
     @Column(name = "tenant_id", insertable = false, updatable = false)
     private UUID tenantId;
 
+    @ManyToMany(mappedBy = "users")
+    private Set<GroupEntity> groups;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
