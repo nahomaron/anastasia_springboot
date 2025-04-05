@@ -26,4 +26,8 @@ public interface MemberService {
     void updateMembershipDetails(Long memberId, MemberDTO request);
 
     void deleteMembership(Long memberId);
+
+    void approveByChurch(Long memberId);
+
+    void approveByPriest(Long memberId);
 }

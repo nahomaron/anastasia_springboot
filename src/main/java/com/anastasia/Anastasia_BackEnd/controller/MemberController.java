@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,9 +59,24 @@ public class MemberController {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{memberId}/church-approve")
+    public ResponseEntity<?> approveByChurch(@PathVariable Long memberId){
+        memberService.approveByChurch(memberId);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
+    @PreAuthorize("hasRole('PRIEST')")
+    @PatchMapping("/{memberId}/priest-approve")
+    public ResponseEntity<?> approveByPriest(@PathVariable Long memberId){
+        memberService.approveByPriest(memberId);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
     @DeleteMapping("/{memberId}")
     public ResponseEntity<?> deleteMemberShip(@PathVariable Long memberId){
         memberService.deleteMembership(memberId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
 }

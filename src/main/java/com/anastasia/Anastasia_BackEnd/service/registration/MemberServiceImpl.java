@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberResponse;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -130,6 +132,32 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public void deleteMembership(Long memberId) {
         memberRepository.deleteById(memberId);
+    }
+
+    @Override
+    public void approveByChurch(Long memberId) {
+        MemberEntity member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
+
+        member.setApprovedByPriest(true);
+
+        if(member.isApprovedByPriest() && member.isApprovedByChurch()){
+            member.setStatus(MemberStatus.APPROVED.name());
+        }
+
+        memberRepository.save(member);
+    }
+
+    @Override
+    public void approveByPriest(Long memberId) {
+        MemberEntity member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
+        member.setApprovedByChurch(true);
+
+        if(member.isApprovedByPriest() && member.isApprovedByChurch()){
+            member.setStatus(MemberStatus.APPROVED.name());
+        }
+        memberRepository.save(member);
     }
 
     private String generateUniqueMembershipNumber(int length, boolean isDeacon) {
