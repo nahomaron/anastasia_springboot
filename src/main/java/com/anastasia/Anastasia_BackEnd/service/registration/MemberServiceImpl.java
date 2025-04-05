@@ -16,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -158,6 +159,11 @@ public class MemberServiceImpl implements MemberService {
             member.setStatus(MemberStatus.APPROVED.name());
         }
         memberRepository.save(member);
+    }
+
+    @Override
+    public Page<MemberEntity> findAllBySpecification(Specification<MemberEntity> spec, Pageable pageable) {
+        return memberRepository.findAll(spec, pageable);
     }
 
     private String generateUniqueMembershipNumber(int length, boolean isDeacon) {

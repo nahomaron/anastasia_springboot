@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,4 +31,6 @@ public interface MemberService {
     void approveByChurch(Long memberId);
 
     void approveByPriest(Long memberId);
+
+    Page<MemberEntity> findAllBySpecification(Specification<MemberEntity> spec, Pageable pageable);
 }
