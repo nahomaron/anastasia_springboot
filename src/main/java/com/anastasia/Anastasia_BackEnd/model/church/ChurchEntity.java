@@ -1,12 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.model.church;
 
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
+import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 
 @Data
@@ -46,4 +49,7 @@ public class ChurchEntity {
     private String websiteUrl;
     private String youtubePage;
     private String facebookPage;
+
+    @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventEntity> events;
 }
