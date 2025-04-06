@@ -33,6 +33,7 @@ public class GroupEntity {
     @Column(nullable = false)
     private String groupName;
 
+    @Lob
     private String description;
     private String avatar;
 

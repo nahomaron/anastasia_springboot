@@ -131,8 +131,6 @@ public class UserServiceImpl implements UserService {
         }
 
 
-//
-
         Set<Role> roles = roleRepository.findAll()
                 .stream()
                 .filter(role -> request.roleIds().contains(role.getId()))
