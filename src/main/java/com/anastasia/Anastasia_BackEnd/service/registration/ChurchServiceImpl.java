@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.service;
+package com.anastasia.Anastasia_BackEnd.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.ChurchMapper;
@@ -8,13 +8,13 @@ import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -37,6 +37,15 @@ public class ChurchServiceImpl implements ChurchService{
     }
 
     @Override
+    public Page<ChurchEntity> findAll(Pageable pageable) {
+        return churchRepository.findAll(pageable);
+    }
+
+    public List<ChurchEntity> getChurches(){
+        return churchRepository.findAll();
+    }
+
+    @Override
     public String createChurch(ChurchEntity churchEntity) {
 
         UUID tenantId = TenantContext.getTenantId();
@@ -49,8 +58,13 @@ public class ChurchServiceImpl implements ChurchService{
 
         churchEntity.setTenant(tenant);
 
+
         churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchName(), 5));
          var savedChurch = churchRepository.save(churchEntity);
+
+         // assign the church back to the tenant
+         tenant.assignChurch(savedChurch);
+         tenantRepository.save(tenant);
 
          return savedChurch.getChurchNumber();
     }

@@ -4,7 +4,7 @@ import com.anastasia.Anastasia_BackEnd.model.group.*;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
-import com.anastasia.Anastasia_BackEnd.service.user.UserService;
+import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

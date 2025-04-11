@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.service.user;
+package com.anastasia.Anastasia_BackEnd.service.auth.user;
 
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;

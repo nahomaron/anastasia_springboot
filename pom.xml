@@ -202,6 +202,11 @@
 			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>net.datafaker</groupId>
+			<artifactId>datafaker</artifactId>
+			<version>2.3.0</version>
+		</dependency>
 
 		<!-- open-api swagger -->
 		<dependency>

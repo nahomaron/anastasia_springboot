@@ -33,16 +33,19 @@ public class PriestEntity {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
 
-    @OneToOne
-    @JoinColumn(name = "tenant_id")
-    private TenantEntity tenant; // Only present if the priest is an independent tenant owner
-
-
     @ManyToOne
     @JoinColumn(name = "church_id")
     private ChurchEntity church;
 
     private String churchNumber;
+
+    @OneToOne
+    @JoinColumn(name = "tenant_id")
+    private TenantEntity tenant; // Only present if the priest is an independent tenant owner
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PriestStatus status;
 
     private String profilePicture;
 
@@ -74,10 +77,6 @@ public class PriestEntity {
 
     @Embedded
     private Address address;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PriestStatus status;
 
     private boolean isActive;
 

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +38,15 @@ public class TenantEntity {
     private SubscriptionPlan subscriptionPlan; // Subscription Type
 
     private boolean isPaymentConfirmed; // True if payment is confirmed
+
+    @OneToOne
+    private ChurchEntity church;
+
+    public void assignChurch(ChurchEntity church) {
+        this.setChurch(church);
+        church.setTenant(this);
+    }
+
 
 }
 

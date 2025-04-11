@@ -70,6 +70,11 @@ public class MemberServiceImpl implements MemberService {
         memberEntity.setApprovedByPriest(false);
         MemberEntity membership = memberRepository.save(memberEntity);
 
+        user.assignMembership(membership);
+        user.assignTenant(church.getTenant());
+        userRepository.save(user);
+
+
         return MemberResponse.builder()
                 .name(membership.getFirstName() + " " + membership.getFatherName() + " " + membership.getGrandFatherName())
                 .membershipNumber(membership.getMembershipNumber())

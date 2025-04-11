@@ -1,8 +1,7 @@
-package com.anastasia.Anastasia_BackEnd.service.tenant;
+package com.anastasia.Anastasia_BackEnd.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
-import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
@@ -18,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -73,6 +73,10 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public Page<TenantEntity> findAll(Pageable pageable) {
         return tenantRepository.findAll(pageable);
+    }
+
+    public List<TenantEntity> getTenants(){
+        return tenantRepository.findAll();
     }
 
     @Override
