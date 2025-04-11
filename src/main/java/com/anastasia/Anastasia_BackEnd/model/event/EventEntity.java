@@ -53,6 +53,10 @@ public class EventEntity extends Auditable {
 
     private String image;
 
+    private Double latitude;
+
+    private Double longitude;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "invited_groups",

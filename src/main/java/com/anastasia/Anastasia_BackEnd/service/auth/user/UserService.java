@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.service.user;
+package com.anastasia.Anastasia_BackEnd.service.auth.user;
 
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;

@@ -58,7 +58,6 @@ public class UserEntity{
     private Set<Token> tokens;
 
     @OneToOne
-    @JoinColumn(name = "membership_id")
     private MemberEntity membership;
 
     @ManyToOne
@@ -78,5 +77,14 @@ public class UserEntity{
     @LastModifiedDate
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
+
+    public void assignMembership(MemberEntity membership){
+        this.setMembership(membership);
+        membership.setUser(this);
+    }
+
+    public void assignTenant(TenantEntity tenant){
+        this.setTenant(tenant);
+    }
 
 }

@@ -57,7 +57,7 @@ public class MemberDTO {
     @Pattern(regexp = "^(Male|Female)$", message = "Gender is required'")
     private String gender;
 
-    @NotBlank(message = "Birthday is required")
+    @NotNull(message = "Birthday is required")
     private LocalDate birthday;
 
     @NotBlank(message = "Nationality is required")

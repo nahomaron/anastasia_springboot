@@ -1,9 +1,9 @@
-package com.anastasia.Anastasia_BackEnd.service;
+package com.anastasia.Anastasia_BackEnd.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,4 +13,6 @@ public interface ChurchService {
     String createChurch(ChurchEntity churchEntity);
 
     ChurchDTO convertToDTO(ChurchEntity churchEntity);
+
+    Page<ChurchEntity> findAll(Pageable pageable);
 }

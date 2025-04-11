@@ -1,14 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.controller;
 
 import com.anastasia.Anastasia_BackEnd.model.event.*;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.AttendanceStatus;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.CheckInRequestDTO;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.EventAttendance;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.MarkAbsentRequestDTO;
+import com.anastasia.Anastasia_BackEnd.model.event.attendance.*;
 import com.anastasia.Anastasia_BackEnd.model.event.requests.AssignEventManagerRequest;
 import com.anastasia.Anastasia_BackEnd.model.event.requests.EventManagerDTO;
 import com.anastasia.Anastasia_BackEnd.service.event.EventAttendanceService;
 import com.anastasia.Anastasia_BackEnd.service.event.EventService;
+import com.anastasia.Anastasia_BackEnd.service.event.QrCheckInService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +22,7 @@ public class EventController {
 
     private final EventService eventService;
     private final EventAttendanceService attendanceService;
+    private final QrCheckInService qrCheckInService;
 
     @PostMapping
     public ResponseEntity<?> createEvent(@RequestBody EventDTO eventDTO){
@@ -73,6 +72,13 @@ public class EventController {
         EventAttendance attendance = attendanceService.checkIn(requestDTO);
         return new ResponseEntity<>(attendance, HttpStatus.OK);
     }
+
+    @PostMapping("/event/check-in/qr-code")
+    public ResponseEntity<EventAttendance> checkInWithQR(@RequestBody CheckInQRRequestDTO requestDTO){
+        EventAttendance attendance = qrCheckInService.checkInWithQR(requestDTO);
+        return new ResponseEntity<>(attendance, HttpStatus.OK);
+    }
+
 
     @PostMapping("/mark-absent")
     public ResponseEntity<EventAttendance> markAbsent(@RequestBody MarkAbsentRequestDTO request) {

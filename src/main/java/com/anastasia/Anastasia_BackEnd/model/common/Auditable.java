@@ -29,12 +29,12 @@ public abstract class Auditable {
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
 
-    @CreatedBy
-    @Column(nullable = false, updatable = false)
-    private UUID createdBy;
-
-    @LastModifiedBy
-    @Column(insertable = false)
-    private UUID lastModifiedBy;
+//    @CreatedBy
+//    @Column(nullable = false, updatable = false)
+//    private UUID createdBy;
+//
+//    @LastModifiedBy
+//    @Column(insertable = false)
+//    private UUID lastModifiedBy;
 
 }

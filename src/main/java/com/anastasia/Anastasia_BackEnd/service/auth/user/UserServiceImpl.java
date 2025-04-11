@@ -1,10 +1,9 @@
-package com.anastasia.Anastasia_BackEnd.service.user;
+package com.anastasia.Anastasia_BackEnd.service.auth.user;
 
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
@@ -12,7 +11,6 @@ import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;

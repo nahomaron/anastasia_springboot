@@ -110,4 +110,5 @@ public class ChildEntity extends Auditable {
     @Column(name = "church_id", insertable = false, updatable = false)
     private Long churchId;
 
+    //todo - parent needs to be connected optional
 }

@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.controller;
 
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.service.tenant.TenantService;
+import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
