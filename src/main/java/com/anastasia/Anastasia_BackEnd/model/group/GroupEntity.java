@@ -53,7 +53,8 @@ public class GroupEntity {
             joinColumns = @JoinColumn(name = "group_id"),
             inverseJoinColumns = @JoinColumn(name = "manager_id")
     )
-    private Set<UserEntity> managers;
+    @Builder.Default
+    private Set<UserEntity> managers = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

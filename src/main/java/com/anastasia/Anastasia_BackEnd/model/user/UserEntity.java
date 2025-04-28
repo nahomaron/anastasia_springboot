@@ -75,7 +75,8 @@ public class UserEntity{
     private UUID tenantId;
 
     @ManyToMany(mappedBy = "users")
-    private Set<GroupEntity> groups;
+    @Builder.Default
+    private Set<GroupEntity> groups = new HashSet<>();
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
