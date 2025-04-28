@@ -1,22 +1,26 @@
 package com.anastasia.Anastasia_BackEnd.service.group;
 
+import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.GroupMapper;
+import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.group.*;
+import com.anastasia.Anastasia_BackEnd.model.group.GroupUserCandidateDTO;
+import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.GroupRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.sun.jdi.request.DuplicateRequestException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +30,9 @@ public class GroupServiceImpl implements GroupService{
     private final GroupMapper groupMapper;
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
+    private final ChurchRepository churchRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(GroupServiceImpl.class);  // Use SLF4J logger
 
     @Override
     public GroupEntity convertToEntity(GroupDTO groupDTO) {
@@ -38,10 +45,29 @@ public class GroupServiceImpl implements GroupService{
     }
 
     @Override
-    public void createGroup(GroupEntity groupEntity) {
-        if(groupRepository.existsByGroupName(groupEntity.getGroupName())){
+    public void createGroup(GroupDTO groupDTO) {
+        if(groupRepository.existsByGroupName(groupDTO.getGroupName())){
             throw new DuplicateRequestException("Group name already exists");
         }
+        GroupEntity groupEntity = groupMapper.groupDTOToEntity(groupDTO);
+
+
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID not found in context");
+        }
+
+        ChurchEntity church = churchRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Church not found for tenant "));
+
+        Set<UserEntity> users = new HashSet<>(userRepository.findAllByUuidIn(groupDTO.getUsers()));
+        Set<UserEntity> managers = new HashSet<>(userRepository.findAllByUuidIn(groupDTO.getManagers()));
+
+        groupEntity.setTenantId(tenantId);
+        groupEntity.setChurch(church);
+        groupEntity.setUsers(users);
+        groupEntity.setManagers(managers);
+
         groupRepository.save(groupEntity);
     }
 
@@ -61,19 +87,29 @@ public class GroupServiceImpl implements GroupService{
     }
 
     @Override
-    public GroupEntity updateGroup(Long groupId, GroupDTO request) {
+    public void updateGroup(Long groupId, GroupDTO request) {
 
         if(!exists(groupId)){
             throw new EntityNotFoundException("Group not found");
         }
-         return groupRepository.findById(groupId).map(groupEntity -> {
+        groupRepository.findById(groupId).map(groupEntity -> {
             Optional.ofNullable(request.getGroupName()).ifPresent(groupEntity::setGroupName);
             Optional.ofNullable(request.getDescription()).ifPresent(groupEntity::setDescription);
-            Optional.ofNullable(request.getManagers()).ifPresent(groupEntity::setManagers);
             Optional.ofNullable(request.getAvatar()).ifPresent(groupEntity::setAvatar);
             Optional.ofNullable(request.getVisibility()).ifPresent(groupEntity::setVisibility);
 
-            return groupRepository.save(groupEntity);
+             Optional.ofNullable(request.getManagers()).ifPresent(managerUUIDs -> {
+                 Set<UserEntity> managers = new HashSet<>(userRepository.findAllByUuidIn(managerUUIDs));
+                 groupEntity.setManagers(managers);
+             });
+
+             Optional.ofNullable(request.getUsers()).ifPresent(userUUIDs -> {
+                 Set<UserEntity> users = new HashSet<>(userRepository.findAllByUuidIn(userUUIDs));
+                 groupEntity.setUsers(users);
+             });
+
+             return groupRepository.save(groupEntity);
+
         }).orElseThrow(() -> new RuntimeException("Group could not be updated"));
     }
 
@@ -85,35 +121,41 @@ public class GroupServiceImpl implements GroupService{
         groupRepository.deleteById(groupId);
     }
 
+
     @Transactional
     @Override
     public AddUsersToGroupResponse addUsersToGroup(Long groupId, AddUsersToGroupRequest request) {
+
+        if (request == null || request.getUserIds() == null || request.getUserIds().isEmpty()) {
+            throw new EntityNotFoundException("No users provided");
+        }
+
         GroupEntity group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found"));
 
-        List<UserEntity> users = userRepository.findAllById(request.getUserIds());
+        List<UserEntity> users = userRepository.findAllByUuidIn(request.getUserIds());
 
-        if(users.size() != request.getUserIds().size()){
+        if (users.size() != request.getUserIds().size()) {
             throw new EntityNotFoundException("One or more users not found");
         }
 
-        for (UserEntity user : users){
-            group.getUsers().add(user);
-            user.getGroups().add(group);
-        }
+        Set<UserEntity> newUsersToAdd = users.stream()
+                .filter(user -> !group.getUsers().contains(user))
+                .collect(Collectors.toSet());
 
-        groupRepository.save(group);
-        userRepository.saveAll(users);
+        newUsersToAdd.forEach(group::addUser);
+
+        groupRepository.saveAndFlush(group);  // Immediately flush batch insert/update
 
         return AddUsersToGroupResponse.builder()
                 .groupName(group.getGroupName())
-                .addedCount(users.size())
-                .addedUserIds(request.getUserIds())
+                .addedCount(newUsersToAdd.size())
                 .build();
     }
 
+
     @Override
-    public String removeUsersFromGroup(Long groupId, RemoveUsersFromGroupRequest request) {
+    public String removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request) {
         GroupEntity group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found"));
 
@@ -127,30 +169,56 @@ public class GroupServiceImpl implements GroupService{
         groupRepository.save(group);
         userRepository.saveAll(users);
 
-        return users.size() + "user(s) removed from "+group.getGroupName();
+        return users.size() + " user(s) removed from "+group.getGroupName();
     }
 
     @Override
-    public Page<UserEntity> listGroupMembers(Long groupId, Pageable pageable) {
+    public Page<SimpleUserDTO> listGroupMembers(Long groupId, Pageable pageable) {
            if(!groupRepository.existsById(groupId)){
                throw new EntityNotFoundException("Group not found");
             }
 
         return userRepository.findUsersByGroupId(groupId, pageable);
-
     }
 
     @Override
-    public List<UserEntity> getGroupManagers(Long groupId) {
+    public List<SimpleUserDTO> getGroupManagers(Long groupId) {
         GroupEntity group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found"));
 
-        Set<UUID> managerIds = group.getManagers();
-
-        if (managerIds == null || managerIds.isEmpty()) {
-            return List.of(); // return empty list if no managers
-        }
-
-        return userRepository.findByUuidIn(managerIds);
+        return group.getManagers().stream()
+                .map(manager -> SimpleUserDTO.builder()
+                        .uuid(manager.getUuid())
+                        .fullName(manager.getFullName())
+                        .email(manager.getEmail())
+                        .build())
+                .toList();
     }
+
+    @Override
+    public List<GroupUserCandidateDTO> getGroupUserStatus(Long groupId) {
+        GroupEntity group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+
+        Long churchId = group.getChurch().getChurchId();
+
+
+        List<SimpleUserDTO> simpleUsers = userRepository.findSimpleUsersByChurchId(churchId);
+
+        Set<UUID> usersAlreadyInGroup = group.getUsers().stream()
+                .map(UserEntity::getUuid)
+                .collect(Collectors.toSet());
+
+        // Build the candidate DTOs
+        return simpleUsers.stream()
+                .map(user -> GroupUserCandidateDTO.builder()
+                        .uuid(user.uuid())
+                        .fullName(user.fullName())
+                        .avatarUrl(null) // todo -> later we can load avatar here if needed
+                        .alreadyInGroup(usersAlreadyInGroup.contains(user.uuid()))
+                        .build())
+                .toList();
+
+    }
+
 }

@@ -17,7 +17,8 @@ import java.util.UUID;
 @Builder
 public class GroupDTO {
 
-    private Long churchId;
+    @NotBlank(message = "Church Id is required")
+    private String churchId;
 
     @NotBlank(message = "Group name is required")
     private String groupName;
@@ -31,12 +32,5 @@ public class GroupDTO {
 
     private Set<UUID> managers;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "group_users",
-            joinColumns = @JoinColumn(name = "group_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-
-    private Set<UserEntity> users;
+    private Set<UUID> users;
 }

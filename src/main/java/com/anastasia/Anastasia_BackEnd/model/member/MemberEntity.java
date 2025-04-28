@@ -19,7 +19,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "members")
+@Table(name = "members", indexes = {
+        @Index(name = "idx_member_church", columnList = "church_id")
+})
 @EntityListeners(AuditingEntityListener.class)
 public class MemberEntity extends Auditable {
 

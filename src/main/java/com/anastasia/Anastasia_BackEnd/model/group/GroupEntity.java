@@ -1,23 +1,28 @@
 package com.anastasia.Anastasia_BackEnd.model.group;
 
+import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
 @Table(name = "groups")
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
+@Filters(@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId"))
 public class GroupEntity {
 
     @Id
@@ -27,20 +32,28 @@ public class GroupEntity {
     @Column(nullable = false)
     private UUID tenantId;
 
-    @Column(nullable = false)
-    private Long churchId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "church_id", nullable = false)
+    private ChurchEntity church;
+
 
     @Column(nullable = false)
     private String groupName;
 
-    @Lob
     private String description;
+
     private String avatar;
 
     @Column(nullable = false)
     private String visibility;
 
-    private Set<UUID> managers;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "group_managers",
+            joinColumns = @JoinColumn(name = "group_id"),
+            inverseJoinColumns = @JoinColumn(name = "manager_id")
+    )
+    private Set<UserEntity> managers;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -50,5 +63,14 @@ public class GroupEntity {
     )
     @Builder.Default
     private Set<UserEntity> users = new HashSet<>();
+
+
+    public void addUser(UserEntity user) {
+        if (user != null && !this.users.contains(user)) {
+            this.users.add(user);
+            user.addGroup(this); // avoid recursion
+        }
+    }
+
 
 }

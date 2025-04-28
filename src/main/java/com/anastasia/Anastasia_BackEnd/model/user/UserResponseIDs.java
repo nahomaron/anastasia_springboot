@@ -1,17 +1,16 @@
-package com.anastasia.Anastasia_BackEnd.model.group;
+package com.anastasia.Anastasia_BackEnd.model.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.UUID;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class RemoveUsersFromGroupRequest {
-    private List<UUID> userIds;
+public class UserResponseIDs {
+    private UUID uuid;
 }

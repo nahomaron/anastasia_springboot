@@ -1,19 +1,31 @@
 package com.anastasia.Anastasia_BackEnd.controller;
 
+import com.anastasia.Anastasia_BackEnd.model.common.PagedResponse;
 import com.anastasia.Anastasia_BackEnd.model.group.*;
+import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
 import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.data.web.PagedResourcesAssembler;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -23,19 +35,21 @@ public class GroupController {
     private final GroupService groupService;
     private final UserService userService;
 
+    // Creating the group
     @PostMapping
     public ResponseEntity<?> createGroup(@RequestBody GroupDTO groupDTO){
-        GroupEntity groupEntity = groupService.convertToEntity(groupDTO);
-        groupService.createGroup(groupEntity);
+        groupService.createGroup(groupDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    // Get list of Groups
     @GetMapping
     public ResponseEntity<Page<GroupDTO>> listOfGroups(Pageable pageable){
         Page<GroupEntity> groups = groupService.findAll(pageable);
         return new ResponseEntity<>(groups.map(groupService::convertToDTO), HttpStatus.OK);
     }
 
+    // Get specific group by ID
     @GetMapping("/{groupId}")
     public ResponseEntity<GroupDTO> getGroup(@PathVariable Long groupId){
         Optional<GroupEntity> foundGroup = groupService.findOne(groupId);
@@ -45,6 +59,7 @@ public class GroupController {
         }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    // Update a specific group
     @PutMapping("/{groupId}")
     public ResponseEntity<GroupEntity> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDTO){
         boolean groupExists = groupService.exists(groupId);
@@ -52,46 +67,108 @@ public class GroupController {
         if(!groupExists){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        GroupEntity group = groupService.updateGroup(groupId, groupDTO);
-        return new ResponseEntity<>(group, HttpStatus.ACCEPTED);
+        groupService.updateGroup(groupId, groupDTO);
+
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
+    // Get list of church members as candidates for group
+    @GetMapping("/{groupId}/users/candidates")
+    public ResponseEntity<List<GroupUserCandidateDTO>> listCandidatesForGroup(
+            @PathVariable Long groupId) {
+        List<GroupUserCandidateDTO> candidates = groupService.getGroupUserStatus(groupId);
+        return ResponseEntity.ok(candidates);
+    }
+
+    // Add users to group
     @PostMapping("/{groupId}/users")
-    public ResponseEntity<AddUsersToGroupResponse> addUsersToGroup(@PathVariable Long groupId, AddUsersToGroupRequest request){
+    public ResponseEntity<AddUsersToGroupResponse> addUsersToGroup(@PathVariable Long groupId,
+                                                                   @Valid @RequestBody AddUsersToGroupRequest request){
         AddUsersToGroupResponse response = groupService.addUsersToGroup(groupId, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{groupId}/users")
-    public ResponseEntity<String> removeUsersFromGroup(
+    // Get all list of Group members
+    @GetMapping("/group/{groupId}/members")
+    public ResponseEntity<PagedModel<EntityModel<SimpleUserDTO>>> listGroupMembers(
+            @PathVariable Long groupId,
+            Pageable pageable,
+            PagedResourcesAssembler<SimpleUserDTO> assembler){
+
+        Page<SimpleUserDTO> members = groupService.listGroupMembers(groupId, pageable);
+        PagedModel<EntityModel<SimpleUserDTO>> pagedModelMembers = assembler.toModel(members, user -> addLinks(user, groupId));
+
+        PagedResponse<SimpleUserDTO> response = PagedResponse.<SimpleUserDTO>builder()
+                .data(pagedModelMembers)
+                .currentPage(members.getNumber())
+                .totalPages(members.getTotalPages())
+                .totalElements(members.getTotalElements())
+                .size(members.getSize())
+                .isFirst(members.isFirst())
+                .isLast(members.isLast())
+                .build();
+
+        return new ResponseEntity<>(pagedModelMembers, HttpStatus.OK);
+    }
+
+    // Get a single group member
+    @GetMapping("/group/members/{userId}")
+    public ResponseEntity<SimpleUserDTO> getGroupMember(@PathVariable UUID userId) {
+        // Fetch user logic here
+        Optional<UserEntity> userEntity = userService.findOne(userId);
+        return userEntity.map(foundUser -> {
+            SimpleUserDTO user = SimpleUserDTO.builder()
+                    .uuid(foundUser.getUuid())
+                    .fullName(foundUser.getFullName())
+                    .email(foundUser.getEmail())
+                    .build();
+
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    // Remove members from group
+    @DeleteMapping("/{groupId}/members")
+    public ResponseEntity<String> removeMembersFromGroup(
             @PathVariable Long groupId,
             @RequestBody RemoveUsersFromGroupRequest request) {
-
-        String response = groupService.removeUsersFromGroup(groupId, request);
+        String response = groupService.removeMembersFromGroup(groupId, request);
         return ResponseEntity.ok(response);
     }
 
+    // Delete group
     @DeleteMapping("/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId){
         groupService.delete(groupId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/group/{groupId}/users")
-    public ResponseEntity<Page<UserDTO>> listGroupMembers(@PathVariable Long groupId, Pageable pageable){
-        Page<UserEntity> members = groupService.listGroupMembers(groupId, pageable);
-        return new ResponseEntity<>(members.map(userService::convertToDTO), HttpStatus.OK);
-    }
-     //  Add role-based filters (e.g., list only managers)
-     @GetMapping("/{groupId}/managers")
-     public ResponseEntity<List<UserDTO>> getGroupManagers(@PathVariable Long groupId) {
-         List<UserEntity> managers = groupService.getGroupManagers(groupId);
 
-         return new ResponseEntity<>(managers.stream()
-                 .map(userService::convertToDTO).toList(), HttpStatus.OK);
+    // Get group managers
+     @GetMapping("/{groupId}/managers")
+     public ResponseEntity<List<SimpleUserDTO>> getGroupManagers(@PathVariable Long groupId) {
+         List<SimpleUserDTO> managers = groupService.getGroupManagers(groupId);
+         return new ResponseEntity<>(managers, HttpStatus.OK);
      }
 
     // todo - Add batch invites with email or UUID instead of user ID
 
+    // helper method to pass additional links to the hyperlink
+    private EntityModel<SimpleUserDTO> addLinks(SimpleUserDTO user, Long groupId) {
+        List<UUID> usersId = new ArrayList<>();
+        usersId.add(user.uuid());
 
+        RemoveUsersFromGroupRequest removeRequest = RemoveUsersFromGroupRequest.builder()
+                .userIds(usersId)
+                .build();
+
+        return EntityModel.of(user,
+                linkTo(methodOn(GroupController.class)
+                        .getGroupMember(user.uuid()))
+                        .withSelfRel(),
+                linkTo(methodOn(GroupController.class)
+                        .removeMembersFromGroup(groupId, removeRequest)) // null because we don't pass body for link building
+                        .withRel("remove-from-group")
+        );
+    }
 }
