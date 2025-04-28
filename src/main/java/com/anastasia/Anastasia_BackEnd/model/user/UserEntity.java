@@ -18,13 +18,17 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_user_membership", columnList = "membership_id"),
+        @Index(name = "idx_user_tenant", columnList = "tenant_id")
+})
 public class UserEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -60,6 +64,9 @@ public class UserEntity{
     @OneToOne
     private MemberEntity membership;
 
+    @Column(name = "membership_id", insertable = false, updatable = false)
+    private Long membershipId;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private TenantEntity tenant; // Linked tenant details
@@ -85,6 +92,13 @@ public class UserEntity{
 
     public void assignTenant(TenantEntity tenant){
         this.setTenant(tenant);
+    }
+
+    public void addGroup(GroupEntity group) {
+        if (group != null && !this.groups.contains(group)) {
+            this.groups.add(group);
+            group.getUsers().add(this); // do NOT call group.addUser() again
+        }
     }
 
 }

@@ -1,15 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.model.tenant;
 
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -19,7 +19,7 @@ public class TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID tenantId;
+    private UUID id;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,14 +39,13 @@ public class TenantEntity {
 
     private boolean isPaymentConfirmed; // True if payment is confirmed
 
-    @OneToOne
+    @OneToOne(mappedBy = "tenant")
     private ChurchEntity church;
 
     public void assignChurch(ChurchEntity church) {
         this.setChurch(church);
         church.setTenant(this);
     }
-
 
 }
 
