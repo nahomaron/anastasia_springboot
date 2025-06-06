@@ -21,13 +21,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "members")
+@Table(name = "children")
 @EntityListeners(AuditingEntityListener.class)
 public class ChildEntity extends Auditable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "member_seq")
-    @SequenceGenerator(name = "member_seq", sequenceName = "member_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "child_seq")
+    @SequenceGenerator(name = "child_seq", sequenceName = "child_id_seq", allocationSize = 1)
     private Long id;
 
     private String membershipNumber;

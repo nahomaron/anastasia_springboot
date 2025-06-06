@@ -2,10 +2,7 @@ package com.anastasia.Anastasia_BackEnd.model.child;
 
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -59,7 +56,7 @@ public class ChildDTO {
     @Pattern(regexp = "^(Male|Female)$", message = "Gender is required'")
     private String gender;
 
-    @NotBlank(message = "Birthday is required")
+    @NotNull(message = "Birthday is required")
     private LocalDate birthday;
 
     @NotBlank(message = "Nationality is required")

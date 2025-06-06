@@ -1,7 +1,10 @@
 package com.anastasia.Anastasia_BackEnd;
 
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
+import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
@@ -194,5 +197,84 @@ public class TestDataUtil {
                 .levelOfEducation("BSc")
                 .build();
     }
+
+    public static ChildEntity createTestChild(ChurchEntity church) {
+        return ChildEntity.builder()
+                .membershipNumber("CHD-001")
+                .church(church)
+                .churchNumber(church.getChurchNumber())
+                .status("ACTIVE")
+                .deacon(false)
+                .title("Master")
+                .firstName("Yonas")
+                .fatherName("Samuel")
+                .grandFatherName("Bereket")
+                .motherName("Martha")
+                .mothersFather("Tesfaye")
+                .firstNameT("ዮናስ")
+                .fatherNameT("ሳሙኤል")
+                .grandFatherNameT("በረከት")
+                .motherFullNameT("ማርታ ተስፋዬ")
+                .gender("Male")
+                .birthday(LocalDate.of(2015, Month.MARCH, 15))
+                .nationality("Eritrean")
+                .placeOfBirth("Keren")
+                .email("yonas.child@gmail.com")
+                .phone("+1234500012")
+                .whatsApp("+1234500012")
+                .emergencyContactNumber("+1987612345")
+                .contactRelation("Father")
+                .firstLanguage("Tigrinya")
+                .secondLanguage("English")
+                .levelOfEducation("Grade 2")
+                .fatherOfConfession("Abba Mikael")
+                .address(Address.builder()
+                        .city("Keren")
+                        .country("Eritrea")
+                        .province("Anseba")
+                        .street("123 School Street")
+                        .zipcode("7123")
+                        .build())
+                .build();
+    }
+
+    public static ChildDTO createTestChildDTO(ChurchEntity church) {
+        return ChildDTO.builder()
+                .churchNumber(church.getChurchNumber())
+                .deacon(false)
+                .title("Master")
+                .firstName("Yonas")
+                .fatherName("Samuel")
+                .grandFatherName("Bereket")
+                .motherName("Martha")
+                .mothersFather("Tesfaye")
+                .firstNameT("ዮናስ")
+                .fatherNameT("ሳሙኤል")
+                .grandFatherNameT("በረከት")
+                .motherFullNameT("ማርታ ተስፋዬ")
+                .gender("Male")
+                .birthday(LocalDate.of(2015, Month.MARCH, 15))
+                .nationality("Eritrean")
+                .placeOfBirth("Keren")
+                .email("yonas.child@gmail.com")
+                .phone("+1234500012")
+                .whatsApp("+1234500012")
+                .emergencyContactNumber("+1987612345")
+                .contactRelation("Father")
+                .firstLanguage("Tigrinya")
+                .secondLanguage("English")
+                .levelOfEducation("Grade 2")
+                .fatherOfConfession("Abba Mikael")
+                .address(Address.builder()
+                        .city("Keren")
+                        .country("Eritrea")
+                        .province("Anseba")
+                        .street("123 School Street")
+                        .zipcode("7123")
+                        .build())
+                .build();
+    }
+
+
 
 }
