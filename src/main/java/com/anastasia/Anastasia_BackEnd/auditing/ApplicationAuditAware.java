@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.auditing;
 
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -8,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 import java.util.UUID;
+
+@Profile("prod") // Limit to prod only
 
 public class ApplicationAuditAware implements AuditorAware<UUID> {
 

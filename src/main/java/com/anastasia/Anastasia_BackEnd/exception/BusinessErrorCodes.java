@@ -18,7 +18,8 @@ public enum BusinessErrorCodes {
     ACCOUNT_DISABLED(303, FORBIDDEN, "User account is disabled"),
     ACCOUNT_LOCKED(302, FORBIDDEN, "User account is locked"),
     BAD_CREDENTIALS(304, FORBIDDEN, "Login username or password is incorrect"),
-    DUPLICATE_EMAIL(305, CONFLICT, "The provided email is already in use. Please use a different email.")
+    DUPLICATE_EMAIL(305, CONFLICT, "The provided email is already in use. Please use a different email."),
+    DUPLICATE_REQUEST(306, CONFLICT, "The provided data or name already in use")
     ;
 
     @Getter

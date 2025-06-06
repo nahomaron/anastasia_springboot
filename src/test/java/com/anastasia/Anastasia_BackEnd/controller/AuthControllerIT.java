@@ -35,10 +35,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthControllerIT {
 
 
-    private final MockMvc mockMvc;
-    private final ObjectMapper objectMapper;
-    private final TokenRepository tokenRepository;
-    private final AuthService authService;
+    @Autowired private final MockMvc mockMvc;
+    @Autowired private final ObjectMapper objectMapper;
+    @Autowired private final TokenRepository tokenRepository;
+    @Autowired private final AuthService authService;
 
     @Mock
     private RateLimiterConfig rateLimiterConfig;

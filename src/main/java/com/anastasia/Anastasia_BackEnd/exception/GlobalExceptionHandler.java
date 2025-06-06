@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.exception;
 
+import com.sun.jdi.request.DuplicateRequestException;
 import jakarta.mail.MessagingException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
@@ -95,6 +96,18 @@ public class GlobalExceptionHandler {
                         .businessErrorCode(DUPLICATE_EMAIL.getCode())
                         .businessErrorDescription(DUPLICATE_EMAIL.getDescription())
                         .error(exp.getMessage())
+                        .build()
+        );
+    }
+
+    //todo -> DuplicateRequestException: Group name already exists
+    @ExceptionHandler(DuplicateRequestException.class)
+    public ResponseEntity<ExceptionResponse> handleDuplicationRequestException(DuplicateRequestException exception){
+        return ResponseEntity.status(CONFLICT).body(
+                ExceptionResponse.builder()
+                        .businessErrorCode(DUPLICATE_REQUEST.getCode())
+                        .businessErrorDescription(DUPLICATE_REQUEST.getDescription())
+                        .error(exception.getMessage())
                         .build()
         );
     }

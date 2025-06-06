@@ -69,6 +69,7 @@ public class JwtUtil {
 
     public Claims extractAllClaims(String token){
         return Jwts.parser()
+                .clockSkewSeconds(5)
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)

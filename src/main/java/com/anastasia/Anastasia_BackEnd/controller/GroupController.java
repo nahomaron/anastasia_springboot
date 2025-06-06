@@ -3,7 +3,6 @@ package com.anastasia.Anastasia_BackEnd.controller;
 import com.anastasia.Anastasia_BackEnd.model.common.PagedResponse;
 import com.anastasia.Anastasia_BackEnd.model.group.*;
 import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
 import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
@@ -37,16 +36,19 @@ public class GroupController {
 
     // Creating the group
     @PostMapping
-    public ResponseEntity<?> createGroup(@RequestBody GroupDTO groupDTO){
-        groupService.createGroup(groupDTO);
+    public ResponseEntity<SimpleGroupEntity> createGroup(@RequestBody GroupDTO groupDTO){
+        SimpleGroupEntity simpleGroupEntity = groupService.createGroup(groupDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     // Get list of Groups
     @GetMapping
-    public ResponseEntity<Page<GroupDTO>> listOfGroups(Pageable pageable){
+    public ResponseEntity<PagedModel<EntityModel<GroupDTO>>> listOfGroups(Pageable pageable, PagedResourcesAssembler<GroupDTO> assembler){
         Page<GroupEntity> groups = groupService.findAll(pageable);
-        return new ResponseEntity<>(groups.map(groupService::convertToDTO), HttpStatus.OK);
+        Page<GroupDTO> groupDTOS = groups.map(groupService::convertToDTO);
+
+        PagedModel<EntityModel<GroupDTO>> model = assembler.toModel(groupDTOS);
+        return new ResponseEntity<>(model, HttpStatus.OK);
     }
 
     // Get specific group by ID
@@ -75,8 +77,13 @@ public class GroupController {
     // Get list of church members as candidates for group
     @GetMapping("/{groupId}/users/candidates")
     public ResponseEntity<List<GroupUserCandidateDTO>> listCandidatesForGroup(
-            @PathVariable Long groupId) {
+            @PathVariable Long groupId,
+            Pageable pageable,
+            PagedResourcesAssembler<GroupUserCandidateDTO> assembler) {
+
         List<GroupUserCandidateDTO> candidates = groupService.getGroupUserStatus(groupId);
+
+//        EntityModel<GroupUserCandidateDTO> model = assembler.toModel(candidates);
         return ResponseEntity.ok(candidates);
     }
 

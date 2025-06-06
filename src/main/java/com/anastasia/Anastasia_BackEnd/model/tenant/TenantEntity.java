@@ -25,7 +25,7 @@ public class TenantEntity {
     @Column(nullable = false)
     private TenantType tenantType; // CHURCH or PRIEST
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String ownerName; // Can be a church name or a priest's full name
 
     @Column(nullable = false)
@@ -39,7 +39,7 @@ public class TenantEntity {
 
     private boolean isPaymentConfirmed; // True if payment is confirmed
 
-    @OneToOne(mappedBy = "tenant")
+    @OneToOne(mappedBy = "tenant", cascade = CascadeType.ALL)
     private ChurchEntity church;
 
     public void assignChurch(ChurchEntity church) {

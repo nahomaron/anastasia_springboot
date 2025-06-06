@@ -38,9 +38,11 @@ public class TenantDTO {
     @NotBlank(message = "Confirm Password is required")
     private String confirmPassword;
 
+
     public boolean isPasswordMatch() {
-        return this.password.equals(this.confirmPassword);
+        return password != null && password.equals(confirmPassword);
     }
+
 
 
 }
