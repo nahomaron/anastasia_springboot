@@ -20,7 +20,6 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     // Basic lookups
     Optional<UserEntity> findByEmail(String email);
     Optional<UserEntity> findByGoogleId(String googleId);
-    Optional<UserEntity> findByEmailAndTenantId(String email, UUID tenantId);
     boolean existsByEmail(String email);
 
     // Find users by group

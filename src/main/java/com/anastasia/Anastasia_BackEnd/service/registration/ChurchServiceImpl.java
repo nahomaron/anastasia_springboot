@@ -116,7 +116,4 @@ public class ChurchServiceImpl implements ChurchService{
         } while (churchRepository.existsByChurchNumber(churchNumber)); // Keep generating if it already exists
         return churchNumber;
     }
-
-
-
 }

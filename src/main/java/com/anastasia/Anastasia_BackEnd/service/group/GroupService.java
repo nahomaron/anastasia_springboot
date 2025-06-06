@@ -17,7 +17,7 @@ public interface GroupService {
     GroupEntity convertToEntity(GroupDTO groupDTO);
     GroupDTO convertToDTO(GroupEntity groupEntity);
 
-    void createGroup(GroupDTO groupDTO);
+    SimpleGroupEntity createGroup(GroupDTO groupDTO);
 
     Page<GroupEntity> findAll(Pageable pageable);
 

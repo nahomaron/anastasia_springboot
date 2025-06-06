@@ -45,7 +45,7 @@ public class GroupServiceImpl implements GroupService{
     }
 
     @Override
-    public void createGroup(GroupDTO groupDTO) {
+    public SimpleGroupEntity createGroup(GroupDTO groupDTO) {
         if(groupRepository.existsByGroupName(groupDTO.getGroupName())){
             throw new DuplicateRequestException("Group name already exists");
         }
@@ -53,6 +53,7 @@ public class GroupServiceImpl implements GroupService{
 
 
         UUID tenantId = TenantContext.getTenantId();
+
         if (tenantId == null) {
             throw new IllegalStateException("Tenant ID not found in context");
         }
@@ -68,7 +69,13 @@ public class GroupServiceImpl implements GroupService{
         groupEntity.setUsers(users);
         groupEntity.setManagers(managers);
 
-        groupRepository.save(groupEntity);
+        GroupEntity savedGroup = groupRepository.save(groupEntity);
+
+        return SimpleGroupEntity.builder()
+                .groupId(savedGroup.getGroupId())
+                .groupName(savedGroup.getGroupName())
+                .description(savedGroup.getDescription())
+                .build();
     }
 
     @Override

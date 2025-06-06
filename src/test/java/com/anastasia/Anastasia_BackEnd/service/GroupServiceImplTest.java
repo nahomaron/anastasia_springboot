@@ -68,6 +68,7 @@ public class GroupServiceImplTest {
         when(groupMapper.groupDTOToEntity(any())).thenReturn(testGroup);
         when(churchRepository.findByTenantId(any(UUID.class))).thenReturn(Optional.of(new ChurchEntity()));
         when(userRepository.findAllByUuidIn(anySet())).thenReturn(Collections.emptyList());
+        when(groupRepository.save(any(GroupEntity.class))).thenReturn(testGroup);
 
         groupService.createGroup(groupDTO);
 
@@ -75,6 +76,7 @@ public class GroupServiceImplTest {
     }
 
     @Test
+
     void testFindAll_success() {
         Pageable pageable = Pageable.unpaged();
         when(groupRepository.findAll(pageable)).thenReturn(Page.empty());
@@ -296,5 +298,4 @@ public class GroupServiceImplTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Group not found");
     }
-
 }

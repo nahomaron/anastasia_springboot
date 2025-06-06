@@ -24,12 +24,13 @@ public class TenantController {
 
     @PostMapping("/subscription")
     public ResponseEntity<?> subscribeTenant(@Valid @RequestBody TenantDTO tenantDTO) throws MessagingException {
-        if(!tenantDTO.isPasswordMatch()){
+        if(tenantDTO.getPassword() != null && !tenantDTO.isPasswordMatch()){
             return ResponseEntity.badRequest().body("Password do not match");
         }
+
+
         tenantService.subscribeTenant(tenantDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
-
     }
 
     @GetMapping

@@ -1,0 +1,14 @@
+# 1 complete unit test for
+ - authentication
+ - logout
+ - role service
+ - email service
+ - member service
+ - child service
+ - priest service
+ - tenant service
+ - church service
+
+
+ # 2 complete Integration test for
+ -

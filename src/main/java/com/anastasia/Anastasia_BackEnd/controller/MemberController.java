@@ -31,6 +31,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
+    //
     @PostMapping("/register-member")
     public ResponseEntity<MemberResponse> registerMember(@Valid @RequestBody MemberDTO memberDTO){
 
@@ -122,8 +123,8 @@ public class MemberController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String motherName,
             @RequestParam(required = false) String gender,
-            @RequestParam(required = false) int minAge,
-            @RequestParam(required = false) int maxAge,
+            @RequestParam(required = false) Integer minAge,
+            @RequestParam(required = false) Integer maxAge,
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String maritalStatus,
             @RequestParam(required = false) String profession,
@@ -150,7 +151,7 @@ public class MemberController {
         if (gender != null && !gender.isBlank()) {
             spec = spec.and(MemberSpecifications.hasGender(gender));
         }
-        if (minAge != 0 && maxAge >= minAge) {
+        if (minAge != null && maxAge >= minAge) {
             spec = spec.and(MemberSpecifications.ageBetween(minAge, maxAge));
         }
         if (phone != null && !phone.isBlank()) {
