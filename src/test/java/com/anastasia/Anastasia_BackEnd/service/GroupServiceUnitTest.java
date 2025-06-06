@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 /** Unit test for {@link GroupServiceImpl} */
 
 @ExtendWith(MockitoExtension.class)
-public class GroupServiceImplTest {
+public class GroupServiceUnitTest {
 
     @Mock private GroupMapper groupMapper;
     @Mock private GroupRepository groupRepository;

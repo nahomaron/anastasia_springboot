@@ -78,8 +78,8 @@ public class ChildController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String motherName,
             @RequestParam(required = false) String gender,
-            @RequestParam(required = false) int minAge,
-            @RequestParam(required = false) int maxAge,
+            @RequestParam(required = false) Integer minAge,
+            @RequestParam(required = false) Integer maxAge,
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String levelOfEducation,
             @RequestBody(required = false) Address address
@@ -104,7 +104,7 @@ public class ChildController {
         if (gender != null && !gender.isBlank()) {
             spec = spec.and(ChildSpecifications.hasGender(gender));
         }
-        if (minAge != 0 && maxAge >= minAge) {
+        if (minAge != null && maxAge >= minAge) {
             spec = spec.and(ChildSpecifications.ageBetween(minAge, maxAge));
         }
         if (phone != null && !phone.isBlank()) {
