@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
@@ -73,6 +74,23 @@ public class TestDataUtil {
                 .email("stmichael@church.org")
                 .diocese("North America")
                 .facebookPage("facebook.com/stmichael")
+                .build();
+    }
+
+    public static ChurchDTO createTestChurchDTO() {
+        return ChurchDTO.builder()
+                .churchName("St. Michael Church")
+                .email("stgebriel@church.org")
+                .diocese("North America")
+                .facebookPage("facebook.com/stmichael")
+                .build();
+    }
+    public static ChurchDTO createTestChurchDTO_B() {
+        return ChurchDTO.builder()
+                .churchName("St. Mary Church")
+                .email("stmary@church.org")
+                .diocese("North America")
+                .facebookPage("facebook.com/st.mary")
                 .build();
     }
 

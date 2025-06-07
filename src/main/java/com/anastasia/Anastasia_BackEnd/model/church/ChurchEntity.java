@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,6 +31,7 @@ public class ChurchEntity {
 
     @OneToOne
     @JoinColumn(name = "tenant_id", nullable = false, unique = true)
+    @JsonIgnore
     private TenantEntity tenant;
 
     @Column(nullable = false)
