@@ -28,10 +28,25 @@ public class ChurchServiceImpl implements ChurchService{
     private final TenantRepository tenantRepository;
     private final SecurityUtils securityUtils;
 
+//    @Override
+//    public ChurchEntity convertToEntity(ChurchDTO churchDTO) {
+//        return churchMapper.churchDTOToEntity(churchDTO);
+//    }
+
     @Override
     public ChurchEntity convertToEntity(ChurchDTO churchDTO) {
-        return churchMapper.churchDTOToEntity(churchDTO);
+        ChurchEntity entity = churchMapper.churchDTOToEntity(churchDTO);
+
+        if (entity.getTenant() == null && TenantContext.getTenantId() != null) {
+            UUID tenantId = TenantContext.getTenantId();
+            TenantEntity tenant = tenantRepository.findById(tenantId)
+                    .orElseThrow(() -> new IllegalStateException("Tenant not found for context ID"));
+            entity.setTenant(tenant);
+        }
+
+        return entity;
     }
+
 
     @Override
     public ChurchDTO convertToDTO(ChurchEntity churchEntity) {
@@ -50,10 +65,12 @@ public class ChurchServiceImpl implements ChurchService{
 
     @Override
     public void updateChurch(Long churchId, ChurchEntity churchEntity) {
-        ChurchEntity church = churchRepository.findById(churchId)
+        ChurchEntity existingChurch = churchRepository.findById(churchId)
                 .orElseThrow(()-> new EntityNotFoundException("Church Not Found"));
 
-        churchEntity.setChurchId(church.getChurchId());
+        churchEntity.setChurchId(existingChurch.getChurchId());
+        churchEntity.setTenant(existingChurch.getTenant());
+        churchEntity.setChurchNumber(existingChurch.getChurchNumber()); // ✅ Fix here
         churchRepository.save(churchEntity);
     }
 
