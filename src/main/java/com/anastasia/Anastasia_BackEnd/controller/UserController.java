@@ -4,7 +4,6 @@ import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor

@@ -76,7 +76,7 @@ public class PriestDTO {
     private String confirmPassword;
 
     public boolean isPasswordMatch() {
-        return this.password.equals(this.confirmPassword);
+        return this.password != null && this.password.equals(this.confirmPassword);
     }
 
 }

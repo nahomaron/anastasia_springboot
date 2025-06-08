@@ -12,6 +12,9 @@ import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.model.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
+import com.anastasia.Anastasia_BackEnd.model.priest.PriestDTO;
+import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
@@ -292,6 +295,96 @@ public class TestDataUtil {
                         .build())
                 .build();
     }
+
+    public static PriestDTO createTestPriestDTO(String churchNumber) {
+        return PriestDTO.builder()
+                .churchNumber(churchNumber) // or provide a valid church number if needed
+                .tenantId(null)     // or UUID.randomUUID() for tenant priest
+                .profilePicture("https://example.com/photo.jpg")
+                .prefixes("Abba")
+                .firstName("Dawit")
+                .fatherName("Tekle")
+                .grandFatherName("Berhane")
+                .phoneNumber("+251911223344")
+                .personalEmail("abba.dawit" + UUID.randomUUID() + "@mail.com")
+                .churchEmail("church.contact@mail.com")
+                .priesthoodCardId("PR-2025-XYZ")
+                .priesthoodCardScan("https://example.com/card-scan.png")
+                .birthdate("1990-04-15")
+                .languages(Set.of("Tigrigna", "Amharic", "English"))
+                .levelOfEducation("Master of Divinity")
+                .address(Address.builder()
+                        .street("123 Abune Tekle Street")
+                        .city("Asmara")
+                        .province("Zoba Maekel")
+                        .country("Eritrea")
+                        .zipcode("0000")
+                        .build())
+                .password("StrongP@ss1")
+                .confirmPassword("StrongP@ss1")
+                .build();
+    }
+
+    public static PriestDTO createTestPriestDTO_B(String churchNumber) {
+        return PriestDTO.builder()
+                .churchNumber(churchNumber)
+                .tenantId(null)
+                .profilePicture("https://example.com/images/priest_b.jpg")
+                .prefixes("Keshi")
+                .firstName("Michael")
+                .fatherName("Abraham")
+                .grandFatherName("Hagos")
+                .phoneNumber("+251911778899")
+                .personalEmail("keshi.michael@example.com")
+                .churchEmail("michael.church@church.org")
+                .priesthoodCardId("PRT-1002")
+                .priesthoodCardScan("https://example.com/docs/priest_card_b.pdf")
+                .birthdate("1972-04-18")
+                .languages(Set.of("Amharic", "English"))
+                .levelOfEducation("Master of Divinity")
+                .address(Address.builder()
+                        .street("Divine Way 21")
+                        .city("Addis Ababa")
+                        .province("Addis Ababa")
+                        .country("Ethiopia")
+                        .zipcode("2000")
+                        .build())
+                .password("StrongP@ssword2")
+                .confirmPassword("StrongP@ssword2")
+                .build();
+    }
+
+
+    public static PriestEntity createTestPriestEntity(ChurchEntity church, TenantEntity tenant) {
+        return PriestEntity.builder()
+                .priestNumber("PR" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .church(church)
+                .churchNumber(church != null ? church.getChurchNumber() : null)
+                .tenant(tenant)
+                .status(PriestStatus.ACTIVE)
+                .profilePicture("https://example.com/priest/profile.jpg")
+                .prefixes("Abba")
+                .firstName("Yohannes")
+                .fatherName("Tesfay")
+                .grandFatherName("Kifle")
+                .phoneNumber("+251911334455")
+                .churchEmail("abba.yohannes@church.org")
+                .priesthoodCardId("PCID-2025-003")
+                .priesthoodCardScan("https://example.com/scans/priest_card.png")
+                .birthdate("1985-08-25")
+                .languages(Set.of("Geez", "Tigrigna", "English"))
+                .levelOfEducation("Bachelor of Theology")
+                .address(Address.builder()
+                        .street("Church Street 42")
+                        .city("Mekelle")
+                        .province("Tigray")
+                        .country("Ethiopia")
+                        .zipcode("1000")
+                        .build())
+                .isActive(true)
+                .build();
+    }
+
 
 
 
