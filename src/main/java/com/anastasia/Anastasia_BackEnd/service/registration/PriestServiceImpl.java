@@ -129,8 +129,6 @@ public class PriestServiceImpl implements PriestService{
 
         // Save the priest entity
         priestRepository.save(priestBuilder.build());
-
-
     }
 
     @Override
