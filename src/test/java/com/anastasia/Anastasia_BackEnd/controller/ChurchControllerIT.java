@@ -28,6 +28,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -112,6 +113,7 @@ class ChurchControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void testGetChurches() throws Exception {
         churchService.createChurch(churchService.convertToEntity(TestDataUtil.createTestChurchDTO()));
         mockMvc.perform(get("/api/v1/churches")
@@ -123,6 +125,7 @@ class ChurchControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void testFindChurchById() throws Exception {
         ChurchDTO churchDTO2 = TestDataUtil.createTestChurchDTO_B();
         String churchNumber = churchService.createChurch(churchService.convertToEntity(churchDTO2));
@@ -154,6 +157,7 @@ class ChurchControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void testDeleteChurch() throws Exception {
         ChurchDTO churchDTO1 = TestDataUtil.createTestChurchDTO();
         String churchNum = churchService.createChurch(churchService.convertToEntity(churchDTO1));

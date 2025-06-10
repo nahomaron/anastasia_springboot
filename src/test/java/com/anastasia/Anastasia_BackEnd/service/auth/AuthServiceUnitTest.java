@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.token.Token;
 import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
@@ -52,6 +53,7 @@ public class AuthServiceUnitTest {
                 .email(email)
                 .password("plain")
                 .fullName("Test User")
+                .userType(UserType.GUEST)
                 .verified(false)
                 .createdDate(LocalDateTime.now().minusDays(1))
                 .build();

@@ -30,6 +30,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -117,6 +118,7 @@ class PriestControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "OWNER")
     void testListOfPriests() throws Exception {
         mockMvc.perform(get("/api/v1/priests")
                         .header("Authorization", "Bearer " + jwtToken)
@@ -127,6 +129,7 @@ class PriestControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "OWNER")
     void testGetPriestById() throws Exception {
         ChurchEntity church = churchRepository.findByChurchNumber(churchNumber).orElse(null);
 
@@ -159,6 +162,7 @@ class PriestControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "OWNER")
     void testDeletePriest() throws Exception {
         PriestDTO priestDTO = TestDataUtil.createTestPriestDTO_B(churchNumber);
         priestService.registerPriest(priestDTO);

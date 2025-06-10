@@ -34,6 +34,10 @@ public class UserEntity{
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserType userType = UserType.GUEST;
+
     @Column(nullable = false)
     private String fullName;
 

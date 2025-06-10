@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.service.group;
 import com.anastasia.Anastasia_BackEnd.model.group.*;
 import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,4 +39,6 @@ public interface GroupService {
     List<SimpleUserDTO> getGroupManagers(Long groupId);
 
     List<GroupUserCandidateDTO> getGroupUserStatus(Long groupId);
+
+    BatchInviteResponse batchInviteUsersToGroup(Long groupId, @Valid BatchInviteRequest request);
 }

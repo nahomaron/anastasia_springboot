@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.model.token.Token;
 import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
@@ -61,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
         try {
 
             userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+            userEntity.setUserType(UserType.GUEST);
 
             UserEntity savedUser = userRepository.save(userEntity);
 

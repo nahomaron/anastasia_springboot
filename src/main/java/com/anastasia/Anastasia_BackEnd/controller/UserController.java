@@ -30,17 +30,20 @@ public class UserController {
     private final AuthService authService;
     private final UserService userService;
 
+
     @GetMapping("/info")
     public Map<String, Object> getUserInfo(@AuthenticationPrincipal OAuth2User principal) {
         return principal.getAttributes();
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MEMBER')")
     @GetMapping("/dashboard")
     public String getDashboard(){
         return "bravo! You are logged in";
     }
 
 
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping("/")
     public ResponseEntity<List<UUID>> listOfUsers(Pageable pageable){
         Page<UserEntity> users = userService.findAllUsers(pageable);
@@ -54,6 +57,7 @@ public class UserController {
         return new ResponseEntity<>(userIdsList, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping("/{userid}")
     public ResponseEntity<UserDTO> getUser(@PathVariable UUID userId){
         Optional<UserEntity> foundUser = userService.findOne(userId);
@@ -65,6 +69,7 @@ public class UserController {
         );
     }
 
+    @PreAuthorize("@hashRole('USER')")
     @PatchMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, Principal connectedUser){
         userService.changePassword(request, connectedUser);

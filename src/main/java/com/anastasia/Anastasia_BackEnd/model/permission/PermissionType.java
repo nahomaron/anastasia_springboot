@@ -11,30 +11,36 @@ public enum PermissionType {
     // User & Role Management
     MANAGE_USERS("manage_users", "Can create, update, and delete users"),
     MANAGE_ROLES("manage_roles", "Can create, update, and delete roles"),
+    MANAGE_TENANTS("manage_tenants", "Can do everything to the software"),
+    VIEW_ALL_DATA("view_all_data", "Can view everything in the software"),
 
     // Member Management
-    MANAGE_MEMBERS("manage_members", "can do everything with members"),
-    VIEW_MEMBERS("view_members", "Can view member profiles"),
-    ADD_MEMBERS("add_members", "Can add new members"),
-    EDIT_MEMBERS("edit_members", "Can update member details"),
-    DELETE_MEMBERS("delete_members", "Can remove members"),
+    /**/MANAGE_MEMBERS("manage_members", "can do everything with members"),
+    /**/VIEW_MEMBERS("view_members", "Can view member profiles"),
+    /**/ADD_MEMBERS("add_members", "Can add new members"),
+    /**/EDIT_MEMBERS("edit_members", "Can update member details"),
+    /**/DELETE_MEMBERS("delete_members", "Can remove members"),
     SMS_MEMBERS("sms_members", "Can send SMS to members"),
     EMAIL_MEMBERS("email_members", "Can send emails to members"),
     NOTIFY_MEMBERS("notify_members", "Can send notifications to members"),
     COMMUNICATE_WITH_PARENTS("communicate_with_parents", "Can contact parents of child members"),
     COMMUNICATE_WITH_CHILDREN("communicate_with_children", "Can contact child members"),
-    ADVANCED_SEARCH_MEMBERS("advanced_search_members", "Can perform advanced searches on members"),
-    APPROVE_MEMBERSHIP("approve_membership", "Can approve or reject membership applications"),
+    /**/ADVANCED_SEARCH_MEMBERS("advanced_search_members", "Can perform advanced searches on members"),
+    /**/APPROVE_MEMBERSHIP("approve_membership", "Can approve or reject membership applications"),
     ADD_EDIT_MEMBER_REPORTS("add_edit_member_reports", "Can create and edit member reports"),
     VIEW_MEMBER_REPORTS("view_member_reports", "Can view member reports"),
 
+    /**/VIEW_CHILDREN("view_children", "can view children profiles"),
+    /**/EDIT_CHILDREN("edit_children", "can edit children profiles"),
+    /**/DELETE_CHILDREN("delete_children", "can delete children profiles"),
+
     // Group Management
-    MANAGE_GROUPS("manage_groups", "can do everything with groups"),
-    VIEW_GROUPS("view_groups", "Can view groups"),
-    CREATE_GROUPS("create_groups", "Can create new groups"),
-    EDIT_GROUPS("edit_groups", "Can edit existing groups"),
-    ADD_MEMBERS_TO_GROUPS("add_members_to_groups", "Can add members to groups"),
-    REMOVE_MEMBERS_FROM_GROUPS("remove_members_from_groups", "Can remove members from groups"),
+    /**/MANAGE_GROUPS("manage_groups", "can do everything with groups"),
+    /**/VIEW_GROUPS("view_groups", "Can view groups"),
+    /**/CREATE_GROUPS("create_groups", "Can create new groups"),
+    /**/ EDIT_GROUPS("edit_groups", "Can edit existing groups"),
+    /**/ADD_MEMBERS_TO_GROUPS("add_members_to_groups", "Can add members to groups"),
+    /**/REMOVE_MEMBERS_FROM_GROUPS("remove_members_from_groups", "Can remove members from groups"),
     MANAGE_REQUESTS("manage_requests", "Can manage group membership requests"),
 
     // Event Management
@@ -48,6 +54,7 @@ public enum PermissionType {
     VIEW_EVENT_REPORTS("view_event_reports", "Can view event attendance reports"),
     CHECK_IN_ATTENDANCE("check_in_attendance", "Can check in attendees at events"),
     CHECK_OUT_ATTENDANCE("check_out_attendance", "Can check out attendees at events"),
+    MARK_ATTENDANCE("mark_attendance", "Can mark attendance"),
 
     // Follow-ups
     MANAGE_FOLLOWUPS("manage_followup", "can do everything with follow ups"),

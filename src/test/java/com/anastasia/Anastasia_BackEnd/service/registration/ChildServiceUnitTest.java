@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.model.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.ChildRepository;
@@ -57,6 +58,7 @@ public class ChildServiceUnitTest {
         user = UserEntity.builder()
                 .uuid(UUID.randomUUID())
                 .email("test@example.com")
+                .userType(UserType.GUEST)
                 .build();
 
         church = new ChurchEntity();

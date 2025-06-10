@@ -22,12 +22,15 @@ import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TestDataUtil {
 
@@ -386,6 +389,36 @@ public class TestDataUtil {
     }
 
 
+    public static UserEntity createTestUserWithPermissions(
+            Set<PermissionType> permissionTypes,
+            TenantEntity tenant,
+            RoleRepository roleRepository,
+            PermissionRepository permissionRepository
+    ) {
+        // Fetch permissions from DB
+        Set<Permission> permissions = permissionTypes.stream()
+                .map(pt -> permissionRepository.findByName(pt)
+                        .orElseThrow(() -> new IllegalArgumentException("Permission not found: " + pt.name())))
+                .collect(Collectors.toSet());
+
+        // Create a dynamic role
+        Role testRole = Role.builder()
+                .roleName("TEST_ROLE_" + UUID.randomUUID())
+                .description("Auto-generated test role for integration test")
+                .permissions(permissions)
+                .tenant(tenant)
+                .tenantId(tenant.getId())
+                .build();
+        Role savedRole = roleRepository.save(testRole);
+
+        // Prepare user with role assigned (not saved!)
+        return UserEntity.builder()
+                .fullName("Test User")
+                .email("gebray@gmail.com")
+                .password(TEST_PASSWORD)
+                .roles(Set.of(savedRole))
+                .build();
+    }
 
 
 }

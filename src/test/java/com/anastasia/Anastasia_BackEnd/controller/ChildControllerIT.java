@@ -6,10 +6,13 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
@@ -27,8 +30,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
         import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,6 +56,8 @@ class ChildControllerIT {
     @Autowired private TenantRepository tenantRepository;
     @Autowired private AuthService authService;
     @Autowired private ChurchService churchService;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private PermissionRepository permissionRepository;
 
     @MockBean private EmailService emailService;
     @Captor private ArgumentCaptor<String> tokenCaptor;
@@ -67,7 +75,17 @@ class ChildControllerIT {
         String churchNumber = churchService.createChurch(TestDataUtil.createTestChurchEntity(tenant));
         church = churchRepository.findByChurchNumber(churchNumber).orElse(null);
 
-        UserEntity user = TestDataUtil.createTestUserEntityA();
+//        UserEntity user = TestDataUtil.createTestUserEntityA();
+        UserEntity user = TestDataUtil.createTestUserWithPermissions(
+                Set.of(
+                        PermissionType.VIEW_CHILDREN,
+                        PermissionType.EDIT_CHILDREN,
+                        PermissionType.DELETE_CHILDREN
+                ),
+                tenant,
+                roleRepository,
+                permissionRepository
+        );
         authService.createUser(user);
 
         verify(emailService).sendEmail(
@@ -143,6 +161,7 @@ class ChildControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "PRIEST")
     void testAdvancedSearch() throws Exception {
         childRepository.save(TestDataUtil.createTestChild(church));
 

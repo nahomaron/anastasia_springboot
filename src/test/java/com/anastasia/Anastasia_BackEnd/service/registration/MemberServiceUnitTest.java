@@ -10,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.model.member.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
@@ -65,6 +66,7 @@ public class MemberServiceUnitTest {
         // Arrange
         UserEntity user = TestDataUtil.createTestUserEntityA();
         user.setUuid(UUID.randomUUID());
+        user.setUserType(UserType.GUEST);
         ChurchEntity church = TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity());
         MemberEntity member = TestDataUtil.createTestMember(church);
 

@@ -71,4 +71,5 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     List<SimpleUserDTO> findSimpleUsersByChurchId(@Param("churchId") Long churchId);
 
 
+    List<UserEntity> findAllByEmailIn(Set<String> groupEmail);
 }

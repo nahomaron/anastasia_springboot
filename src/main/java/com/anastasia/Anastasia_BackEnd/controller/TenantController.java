@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -33,12 +34,14 @@ public class TenantController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<TenantDTO>> listOfTenants(Pageable pageable){
         Page<TenantEntity> tenants = tenantService.findAll(pageable);
         return new ResponseEntity<>(tenants.map(tenantService::convertTenantToDTO), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping("/{tenantId}")
     public ResponseEntity<TenantDTO> getTenant(@PathVariable UUID tenantId){
         Optional<TenantEntity> foundTenant = tenantService.findTenantById(tenantId);
@@ -51,6 +54,8 @@ public class TenantController {
     }
 
     // todo instead of getting tenant id from url get it from the tenant context
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PLATFORM_ADMIN')")
     @PostMapping("/unsubscribe/{tenantId}")
     public ResponseEntity<?> unsubscribeTenant(@PathVariable UUID tenantId){
         tenantService.unsubscribeTenant(tenantId);

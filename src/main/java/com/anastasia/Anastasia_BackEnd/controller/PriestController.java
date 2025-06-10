@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -30,12 +31,14 @@ public class PriestController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<PriestDTO>> listOfPriests(Pageable pageable){
         Page<PriestEntity> priests = priestService.findAllPriests(pageable);
         return new ResponseEntity<>(priests.map(priestService::convertToDTO), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/{priestId}")
     public ResponseEntity<PriestDTO> getPriest(@PathVariable Long priestId){
         Optional<PriestEntity> foundPriest = priestService.findPriestById(priestId);
@@ -48,6 +51,7 @@ public class PriestController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN', 'PRIEST')")
     @PatchMapping("/{priestId}")
     public ResponseEntity<PriestDTO> updatePriestDetails(@PathVariable Long priestId,
                                                          @RequestBody PriestDTO priestDTO){
@@ -56,6 +60,7 @@ public class PriestController {
         return new ResponseEntity<>(priestService.convertToDTO(updatedPriest), HttpStatus.ACCEPTED);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
     @PostMapping("/delete/{priestId}")
     public ResponseEntity<?> deletePriest(@PathVariable Long priestId){
         priestService.deletePriest(priestId);

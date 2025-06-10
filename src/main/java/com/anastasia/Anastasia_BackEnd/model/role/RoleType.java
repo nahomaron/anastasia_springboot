@@ -14,6 +14,12 @@ import static com.anastasia.Anastasia_BackEnd.model.permission.PermissionType.*;
 @RequiredArgsConstructor
 public enum RoleType {
 
+    PLATFORM_ADMIN(
+            Set.of(
+                    MANAGE_USERS, MANAGE_ROLES, MANAGE_TENANTS, VIEW_ALL_DATA
+            ), "Developer with full platform access"
+    ),
+
     OWNER(
             Set.of(
                     OWN_SUBSCRIPTION
