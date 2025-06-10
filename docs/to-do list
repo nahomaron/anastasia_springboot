@@ -3,4 +3,7 @@
  - role service
  - email service
 
-# 2 - secure endpoints with roles and permissions
+
+# 2 work more on global exceptions
+ - add more global exception handlers
+

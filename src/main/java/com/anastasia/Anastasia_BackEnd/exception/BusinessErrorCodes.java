@@ -18,8 +18,11 @@ public enum BusinessErrorCodes {
     ACCOUNT_DISABLED(303, FORBIDDEN, "User account is disabled"),
     ACCOUNT_LOCKED(302, FORBIDDEN, "User account is locked"),
     BAD_CREDENTIALS(304, FORBIDDEN, "Login username or password is incorrect"),
-    DUPLICATE_EMAIL(305, CONFLICT, "The provided email is already in use. Please use a different email."),
-    DUPLICATE_REQUEST(306, CONFLICT, "The provided data or name already in use")
+    DUPLICATE_RESOURCE(305, CONFLICT, "The provided %s is already in use. Please use a different %s."),
+    DUPLICATE_REQUEST(306, CONFLICT, "The provided data or name already in use"),
+    RESOURCE_NOT_FOUND(307, NOT_FOUND, "The requested resource with %s '%s' was not found"),
+    INVALID_REQUEST(308, BAD_REQUEST, "The request is invalid or malformed"),
+    
     ;
 
     @Getter
@@ -30,5 +33,9 @@ public enum BusinessErrorCodes {
 
     @Getter
     private final String description;
+
+    public String formatDescription(String field) {
+        return String.format(description, field, field);
+    }
 
 }
