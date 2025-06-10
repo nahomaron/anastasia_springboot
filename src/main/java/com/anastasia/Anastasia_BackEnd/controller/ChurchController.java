@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -27,6 +28,7 @@ public class ChurchController {
         return new ResponseEntity<>(churchNumber, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<ChurchDTO>> getChurches(Pageable pageable){
         Page<ChurchEntity> churches = churchService.findAll(pageable);
@@ -34,6 +36,7 @@ public class ChurchController {
     }
 
     @GetMapping("/{churchId}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<ChurchDTO> findChurch(@PathVariable Long churchId){
         Optional<ChurchEntity> foundChurch = churchService.findOne(churchId);
 
@@ -44,6 +47,7 @@ public class ChurchController {
     }
 
     @PutMapping("/{churchId}")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER')")
     public ResponseEntity<String> updateChurch(@PathVariable Long churchId, @Valid @RequestBody ChurchDTO churchDTO){
         ChurchEntity churchEntity = churchService.convertToEntity(churchDTO);
 
@@ -58,6 +62,7 @@ public class ChurchController {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @DeleteMapping("/{churchId}")
     public ResponseEntity<?> deleteChurch(@PathVariable Long churchId){
         churchService.deleteChurch(churchId);

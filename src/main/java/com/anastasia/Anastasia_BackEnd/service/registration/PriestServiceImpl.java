@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
@@ -70,6 +71,7 @@ public class PriestServiceImpl implements PriestService{
                     .email(priestDTO.getPersonalEmail())
                     .password(passwordEncoder.encode(priestDTO.getPassword()))
                     .roles(Set.of(priestRole))
+                    .userType(UserType.PRIEST)
                     .build();
 
             // Save the newly created priest user

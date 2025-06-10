@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 //import com.anastasia.Anastasia_BackEnd.testsupport.TestAuditorAwareConfig;
 import com.anastasia.Anastasia_BackEnd.testsupport.TestAuditorAwareConfig;
@@ -68,6 +69,7 @@ public class UserRepositoryUnitTest {
 
         user = TestDataUtil.createTestUserEntityA();
         user.setMembership(member);
+        user.setUserType(UserType.MEMBER);
         user.setGroups(Set.of(group));
         entityManager.persist(user);
 

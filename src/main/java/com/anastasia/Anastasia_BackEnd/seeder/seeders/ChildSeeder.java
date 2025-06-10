@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchServiceImpl;
@@ -54,6 +55,7 @@ public class ChildSeeder {
                         .fullName(faker.name().fullName())
                         .email(faker.internet().emailAddress())
                         .password(password)
+                        .userType(UserType.CHILD)
                         .build();
 
                 UserEntity savedUser = userRepository.save(user);

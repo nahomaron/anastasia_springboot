@@ -6,10 +6,13 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
@@ -31,6 +34,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Set;
+
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -51,6 +56,8 @@ class MemberControllerIT {
     @Autowired private TenantRepository tenantRepository;
     @Autowired private AuthService authService;
     @Autowired private ChurchService churchService;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private PermissionRepository permissionRepository;
 
     @MockBean private EmailService emailService;
     @Captor private ArgumentCaptor<String> tokenCaptor;
@@ -69,7 +76,20 @@ class MemberControllerIT {
         String churchNumber = churchService.createChurch(TestDataUtil.createTestChurchEntity(tenant));
         church = churchRepository.findByChurchNumber(churchNumber).orElse(null);
 
-        UserEntity user = TestDataUtil.createTestUserEntityA();
+//        UserEntity user = TestDataUtil.createTestUserEntityA();
+        UserEntity user = TestDataUtil.createTestUserWithPermissions(
+                Set.of(PermissionType.ADD_MEMBERS,
+                        PermissionType.EDIT_MEMBERS,
+                        PermissionType.VIEW_MEMBERS,
+                        PermissionType.APPROVE_MEMBERSHIP,
+                        PermissionType.DELETE_MEMBERS,
+                        PermissionType.ADVANCED_SEARCH_MEMBERS
+                        ),
+                tenant,
+                roleRepository,
+                permissionRepository
+        );
+
         authService.createUser(user);
 
         // Capture the token passed to emailService
@@ -137,7 +157,6 @@ class MemberControllerIT {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void testApproveByChurch() throws Exception {
         MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 

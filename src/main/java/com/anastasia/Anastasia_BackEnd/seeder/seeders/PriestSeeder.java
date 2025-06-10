@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchService;
@@ -61,6 +62,7 @@ public class PriestSeeder {
                         .fullName(faker.name().fullName())
                         .email(faker.internet().emailAddress())
                         .password(password)
+                        .userType(UserType.PRIEST)
                         .build();
 
                 UserEntity savedUser = userRepository.save(user);

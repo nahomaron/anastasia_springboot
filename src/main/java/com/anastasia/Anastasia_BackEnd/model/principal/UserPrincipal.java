@@ -85,20 +85,4 @@ public class UserPrincipal implements UserDetails {
         return true;
     }
 
-    //    @Override
-//    public Collection<? extends GrantedAuthority> getAuthorities() {
-//
-//        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-//
-//        // Add roles
-//        for (Role role : user.getRoles()) {
-//            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
-//
-//            // Add permissions from role
-//            for (Permission permission : role.getPermissions()) {
-//                authorities.add(new SimpleGrantedAuthority(permission.getName().getName()));
-//            }
-//        }
-//        return authorities;
-//    }
 }

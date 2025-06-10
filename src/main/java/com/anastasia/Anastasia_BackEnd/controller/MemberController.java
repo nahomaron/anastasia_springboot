@@ -32,6 +32,7 @@ public class MemberController {
     private final MemberService memberService;
 
     //
+    @PreAuthorize("hasAnyRole('USER') or hasAuthority('ADD_MEMBERS')")
     @PostMapping("/register-member")
     public ResponseEntity<MemberResponse> registerMember(@Valid @RequestBody MemberDTO memberDTO){
 
@@ -41,6 +42,8 @@ public class MemberController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping
     public ResponseEntity<Page<MemberDTO>> listOfMembers(Pageable pageable){
         Page<MemberEntity> members = memberService.findAll(pageable);
@@ -48,6 +51,8 @@ public class MemberController {
                 members.map(memberService::convertToDTO), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{memberId}")
     public ResponseEntity<MemberDTO> getMember(@PathVariable Long memberId){
         Optional<MemberEntity> foundMember = memberService.findMemberById(memberId);
@@ -59,13 +64,16 @@ public class MemberController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_MEMBERS')")
     @PatchMapping("/{memberId}")
     public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody MemberDTO request){
         memberService.updateMembershipDetails(memberId, request);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'APPROVE_MEMBERSHIP')")
     @PatchMapping("/{memberId}/church-approve")
     public ResponseEntity<?> approveByChurch(@PathVariable Long memberId){
         memberService.approveByChurch(memberId);
@@ -79,6 +87,8 @@ public class MemberController {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'DELETE_MEMBERS')")
     @DeleteMapping("/{memberId}")
     public ResponseEntity<?> deleteMemberShip(@PathVariable Long memberId){
         memberService.deleteMembership(memberId);
@@ -112,6 +122,8 @@ public class MemberController {
 //        return productRepository.findAll(spec);
 //    }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'ADVANCED_SEARCH_MEMBERS')")
     @PostMapping("/advanced-search")
     public ResponseEntity<Page<MemberDTO>> searchMembers(
             @RequestParam(defaultValue = "0") int page,

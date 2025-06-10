@@ -15,6 +15,14 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.UUID;
 
+/*
+This HibernateTenantFilter class is a custom servlet filter designed to automatically
+enable Hibernates multi-tenancy filter for tenant-aware data isolation in a multi-tenant application.
+
+This class enables the @Filter (from Hibernate) named "tenantFilter" for the current request, using the
+tenant ID from a TenantContext. This ensures that only data related to the current tenant is accessible in that request.
+ */
+
 @Component
 @RequiredArgsConstructor
 public class HibernateTenantFilter implements Filter {

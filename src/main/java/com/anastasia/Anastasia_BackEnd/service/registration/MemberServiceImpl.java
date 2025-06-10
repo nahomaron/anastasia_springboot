@@ -8,6 +8,7 @@ import com.anastasia.Anastasia_BackEnd.model.member.MemberResponse;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
@@ -72,6 +73,7 @@ public class MemberServiceImpl implements MemberService {
 
         user.assignMembership(membership);
         user.assignTenant(church.getTenant());
+        user.setUserType(UserType.MEMBER);
         userRepository.save(user);
 
 

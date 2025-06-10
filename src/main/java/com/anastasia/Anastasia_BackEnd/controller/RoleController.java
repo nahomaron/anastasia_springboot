@@ -20,6 +20,7 @@ public class RoleController {
 
     private final RoleService roleService;
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
     @PostMapping("/roles")
     public ResponseEntity<?> createRole(@RequestBody RoleRequest request){
         roleService.createRole(request);

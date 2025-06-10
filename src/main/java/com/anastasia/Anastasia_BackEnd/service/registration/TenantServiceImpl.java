@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
@@ -65,6 +66,7 @@ public class TenantServiceImpl implements TenantService {
                 .password(tenantDTO.getPassword())
                 .tenant(savedTenant)
                 .roles(Set.of(ownerRole))
+                .userType(UserType.TENANT)
                 .build();
 
         authService.createUser(adminUser);

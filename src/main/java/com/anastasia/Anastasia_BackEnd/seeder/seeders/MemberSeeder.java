@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchServiceImpl;
@@ -54,6 +55,7 @@ public class MemberSeeder {
                         .fullName(faker.name().fullName())
                         .email(faker.internet().emailAddress())
                         .password(password)
+                        .userType(UserType.MEMBER)
                         .build();
 
                 UserEntity savedUser = userRepository.save(user);
@@ -111,6 +113,7 @@ public class MemberSeeder {
 
                 user.assignMembership(savedMember);
                 user.assignTenant(assignedChurch.getTenant());
+                user.setUserType(UserType.MEMBER);
                 userRepository.save(user);
             }
 

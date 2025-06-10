@@ -228,4 +228,40 @@ public class GroupServiceImpl implements GroupService{
 
     }
 
+    @Override
+    // todo -> this need to be addressed in detail ..
+    public BatchInviteResponse batchInviteUsersToGroup(Long groupId, BatchInviteRequest request) {
+        GroupEntity group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+
+        if (request.getGroupEmails() == null || request.getGroupEmails().isEmpty()) {
+            throw new IllegalArgumentException("Email list cannot be empty");
+        }
+
+        List<UserEntity> usersToInvite = userRepository.findAllByEmailIn(request.getGroupEmails());
+
+        if (usersToInvite.isEmpty()) {
+            throw new EntityNotFoundException("No users found with provided emails");
+        }
+
+        Set<UserEntity> alreadyInGroup = group.getUsers();
+        Set<UserEntity> managers = group.getManagers();
+
+        List<UserEntity> invitedUsers = new ArrayList<>();
+
+        for (UserEntity user : usersToInvite) {
+            if (!alreadyInGroup.contains(user) && !managers.contains(user)) {
+                group.addUser(user);
+                invitedUsers.add(user);
+            }
+        }
+
+        groupRepository.saveAndFlush(group);
+
+        return BatchInviteResponse.builder()
+                .groupName(group.getGroupName())
+                .invitedCount(invitedUsers.size())
+                .build();
+    }
+
 }

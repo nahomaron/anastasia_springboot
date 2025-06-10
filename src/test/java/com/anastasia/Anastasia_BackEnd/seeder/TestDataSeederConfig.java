@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
@@ -60,7 +61,7 @@ public class TestDataSeederConfig {
 
         // 3. Build and create church using service (to trigger full logic)
         ChurchEntity church = ChurchEntity.builder()
-                .churchId(11L)
+//                .churchId(11L)
                 .churchNumber("M1234")
                 .tenant(savedTenant)
                 .churchName("Test Church")
@@ -83,11 +84,12 @@ public class TestDataSeederConfig {
                 .fullName("Test User")
                 .verified(true)
                 .roles(Set.of(ownerRole))
+                .userType(UserType.GUEST)
                 .tenant(savedTenant)
                 .tenantId(savedTenant.getId())
                 .build();
 
-        UserEntity savedUser  = userRepository.save(user);
+        UserEntity savedUser = userRepository.save(user);
         TEST_USER_UUID = savedUser.getUuid();
 
         // 5. Clear tenant context

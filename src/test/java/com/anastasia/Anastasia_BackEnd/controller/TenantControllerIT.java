@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -65,6 +66,7 @@ public class TenantControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void testListOfTenants() throws Exception {
         mockMvc.perform(get("/api/v1/tenant")
                         .param("page", "0")
@@ -74,12 +76,14 @@ public class TenantControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void testGetTenant_found() throws Exception {
         mockMvc.perform(get("/api/v1/tenant/{tenantId}", savedTenant.getId()))
                 .andExpect(status().isFound());
     }
 
     @Test
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void testGetTenant_notFound() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
 
@@ -88,6 +92,7 @@ public class TenantControllerIT {
     }
 
     @Test
+    @WithMockUser(roles = "OWNER")
     void testUnsubscribeTenant_success() throws Exception {
         mockMvc.perform(post("/api/v1/tenant/unsubscribe/{tenantId}", savedTenant.getId()))
                 .andExpect(status().isOk());

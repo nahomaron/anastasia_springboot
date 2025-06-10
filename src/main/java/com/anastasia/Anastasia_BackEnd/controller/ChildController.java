@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -36,6 +37,8 @@ public class ChildController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
     public ResponseEntity<Page<ChildDTO>> listOfChildren(Pageable pageable){
         Page<ChildEntity> children = childService.findAll(pageable);
@@ -43,6 +46,8 @@ public class ChildController {
                 children.map(childService::convertToDTO), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{memberId}")
     public ResponseEntity<ChildDTO> getChild(@PathVariable Long memberId){
         Optional<ChildEntity> foundChild = childService.findChildById(memberId);
@@ -54,6 +59,8 @@ public class ChildController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_CHILDREN')")
     @PatchMapping("/{memberId}")
     public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody ChildDTO request){
         childService.updateChildDetails(memberId, request);
@@ -61,12 +68,16 @@ public class ChildController {
     }
 
 
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'DELETE_CHILDREN')")
     @DeleteMapping("/{memberId}")
     public ResponseEntity<?> deleteMemberShip(@PathVariable Long memberId){
         childService.deleteChildMembership(memberId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') OR " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADVANCED_SEARCH_MEMBERS')")
     @PostMapping("/advanced-search")
     public ResponseEntity<Page<ChildDTO>> searchChildren(
             @RequestParam(defaultValue = "0") int page,

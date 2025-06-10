@@ -9,7 +9,15 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.UUID;
-
+/*
+TenantFilter is a servlet filter responsible for resolving the tenant identifier for multi-tenant request
+processing. It:
+1 - Extracts the X-Tenant-ID from the request header, or
+2 - Falls back to decoding the tenant ID from the JWT token if the header is absent.
+3 - Sets the TenantContext for the duration of the request.
+4 - Clears the context after the request is processed.
+This enables tenant-based data isolation across the application.
+ */
 @Component
 @RequiredArgsConstructor
 public class TenantFilter implements Filter {

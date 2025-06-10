@@ -17,6 +17,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
@@ -36,6 +37,8 @@ public class GroupController {
 
     // Creating the group
     @PostMapping
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS')")
     public ResponseEntity<SimpleGroupEntity> createGroup(@RequestBody GroupDTO groupDTO){
         SimpleGroupEntity simpleGroupEntity = groupService.createGroup(groupDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
@@ -43,6 +46,8 @@ public class GroupController {
 
     // Get list of Groups
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     public ResponseEntity<PagedModel<EntityModel<GroupDTO>>> listOfGroups(Pageable pageable, PagedResourcesAssembler<GroupDTO> assembler){
         Page<GroupEntity> groups = groupService.findAll(pageable);
         Page<GroupDTO> groupDTOS = groups.map(groupService::convertToDTO);
@@ -52,6 +57,8 @@ public class GroupController {
     }
 
     // Get specific group by ID
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     @GetMapping("/{groupId}")
     public ResponseEntity<GroupDTO> getGroup(@PathVariable Long groupId){
         Optional<GroupEntity> foundGroup = groupService.findOne(groupId);
@@ -62,6 +69,8 @@ public class GroupController {
     }
 
     // Update a specific group
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'EDIT_GROUPS')")
     @PutMapping("/{groupId}")
     public ResponseEntity<GroupEntity> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDTO){
         boolean groupExists = groupService.exists(groupId);
@@ -75,6 +84,8 @@ public class GroupController {
     }
 
     // Get list of church members as candidates for group
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
     @GetMapping("/{groupId}/users/candidates")
     public ResponseEntity<List<GroupUserCandidateDTO>> listCandidatesForGroup(
             @PathVariable Long groupId,
@@ -88,6 +99,8 @@ public class GroupController {
     }
 
     // Add users to group
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS', 'ADD_MEMBERS_TO_GROUPS')")
     @PostMapping("/{groupId}/users")
     public ResponseEntity<AddUsersToGroupResponse> addUsersToGroup(@PathVariable Long groupId,
                                                                    @Valid @RequestBody AddUsersToGroupRequest request){
@@ -96,6 +109,8 @@ public class GroupController {
     }
 
     // Get all list of Group members
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     @GetMapping("/group/{groupId}/members")
     public ResponseEntity<PagedModel<EntityModel<SimpleUserDTO>>> listGroupMembers(
             @PathVariable Long groupId,
@@ -119,6 +134,8 @@ public class GroupController {
     }
 
     // Get a single group member
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     @GetMapping("/group/members/{userId}")
     public ResponseEntity<SimpleUserDTO> getGroupMember(@PathVariable UUID userId) {
         // Fetch user logic here
@@ -135,6 +152,8 @@ public class GroupController {
     }
 
     // Remove members from group
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'REMOVE_MEMBERS_FROM_GROUPS')")
     @DeleteMapping("/{groupId}/members")
     public ResponseEntity<String> removeMembersFromGroup(
             @PathVariable Long groupId,
@@ -144,6 +163,8 @@ public class GroupController {
     }
 
     // Delete group
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'DELETE_GROUPS')")
     @DeleteMapping("/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId){
         groupService.delete(groupId);
@@ -152,13 +173,24 @@ public class GroupController {
 
 
     // Get group managers
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
      @GetMapping("/{groupId}/managers")
      public ResponseEntity<List<SimpleUserDTO>> getGroupManagers(@PathVariable Long groupId) {
          List<SimpleUserDTO> managers = groupService.getGroupManagers(groupId);
          return new ResponseEntity<>(managers, HttpStatus.OK);
      }
 
-    // todo - Add batch invites with email or UUID instead of user ID
+    // Add batch invites with email or UUID instead of user ID
+    @PostMapping("/{groupId}/batch-invite")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
+    public ResponseEntity<BatchInviteResponse> batchInviteUsersToGroup(
+            @PathVariable Long groupId,
+            @Valid @RequestBody BatchInviteRequest request) {
+        BatchInviteResponse response = groupService.batchInviteUsersToGroup(groupId, request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
     // helper method to pass additional links to the hyperlink
     private EntityModel<SimpleUserDTO> addLinks(SimpleUserDTO user, Long groupId) {

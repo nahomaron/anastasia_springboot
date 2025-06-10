@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.user.UserServiceImpl;
@@ -50,6 +51,7 @@ public class UserServiceUnitTest {
                 .fullName("Test User")
                 .email("test@example.com")
                 .password("hashedPassword")
+                .userType(UserType.GUEST)
                 .build();
 
         mockPrincipal = new UserPrincipal(testUser);
