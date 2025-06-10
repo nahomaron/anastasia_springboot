@@ -33,4 +33,6 @@ public interface UserService {
     void assignRolesToUser(UUID userId, AssignRolesRequest request);
 
     List<UserEntity> findAll();
+
+    void deleteUser(UUID userId);
 }

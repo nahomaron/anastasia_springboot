@@ -4,6 +4,20 @@
  - email service
 
 
-# 2 work more on global exceptions
- - add more global exception handlers
+# 2 reset password
+ - create a new password
+ - reset password with email
+ - reset password with token
+ - handle forget password
 
+ # 3 user profile
+    - view profile
+    - update profile
+
+# 4 phone verification
+    - send verification code
+    - verify phone number
+
+# 5 notifications
+    - view notifications
+    - mark notifications as read

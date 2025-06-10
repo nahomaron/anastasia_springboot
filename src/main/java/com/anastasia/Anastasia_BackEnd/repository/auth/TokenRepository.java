@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.repository.auth;
 
 import com.anastasia.Anastasia_BackEnd.model.token.Token;
+import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,6 +23,12 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
             where u.uuid = :uuid and (t.expired = false or t.revoked = false)
             """)
     List<Token> findAllValidUserTokens(UUID uuid);
+
+    @Query("""
+        SELECT t FROM Token t JOIN UserEntity u ON t.user.uuid = u.uuid
+        WHERE u.uuid = :userId AND t.tokenType = :tokenType AND t.expired = false AND t.revoked = false
+    """)
+    List<Token> findAllValidTokensByUser(UUID uuid, TokenType tokenType);
 
 
     @Transactional
@@ -38,4 +46,6 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
     void markExpiredTokens();
 
     Token findByUserUuid(UUID uuid);
+
+
 }
