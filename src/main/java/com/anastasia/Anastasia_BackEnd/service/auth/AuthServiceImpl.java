@@ -3,8 +3,6 @@ package com.anastasia.Anastasia_BackEnd.service.auth;
 import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.model.role.Role;
-import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.model.token.Token;
 import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
@@ -31,25 +29,18 @@ import lombok.RequiredArgsConstructor;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
-    private final TenantMapper tenantMapper;
     private final EmailService emailService;
-    private final RoleRepository roleRepository;
-
-
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
@@ -77,52 +68,6 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
-    public void sendValidationEmail(UserEntity user) throws MessagingException {
-        var newToken = generateAndSaveActivationToken(user);
-        // send email
-
-        String activationUrl = "http://localhost:3000/activate-account";
-
-        emailService.sendEmail(
-                user.getEmail(),
-                user.getFullName(),
-                EmailTemplateName.ACTIVATE_ACCOUNT,
-                activationUrl,
-                newToken,
-                "Account Activation"
-        );
-
-    }
-
-    private String generateAndSaveActivationToken(UserEntity user) {
-        String generatedToken = generateActivationCode(6);
-        var token = Token.builder()
-                .token(generatedToken)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(15))
-                .user(user)
-                .build();
-
-        tokenRepository.save(token);
-
-        return generatedToken;
-    }
-
-    private String generateActivationCode(int length) {
-        String characters = "01234456789";
-        StringBuilder codeBuilder = new StringBuilder();
-        SecureRandom secureRandom = new SecureRandom();
-
-        for (int i = 0; i < length; i++) {
-            int randomIndex = secureRandom.nextInt(characters.length());
-            codeBuilder.append(characters.charAt(randomIndex));
-        }
-
-        return codeBuilder.toString();
-    }
-
-
-//    @Transactional
     @Override
     public void activateAccount(String token) throws MessagingException {
         Token savedToken = tokenRepository.findByToken(token)
@@ -140,7 +85,6 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         savedToken.setValidatedAt(LocalDateTime.now());
     }
-
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException {
@@ -241,6 +185,83 @@ public class AuthServiceImpl implements AuthService {
         sendValidationEmail(user);
     }
 
+    public void initiatePasswordReset(String email) throws MessagingException {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        String resetTokenValue = generateActivationCode(8); // Longer token for security
+        // Invalidate any existing password reset tokens for this user first (optional but good practice)
+        tokenRepository.findAllValidTokensByUser(user.getUuid(), TokenType.PASSWORD_RESET) // Assuming you add TokenType.PASSWORD_RESET
+                .forEach(token -> {
+                    token.setExpired(true);
+                    token.setRevoked(true);
+                });
+
+        Token resetToken = Token.builder()
+                .token(resetTokenValue)
+                .tokenType(TokenType.PASSWORD_RESET) // Assign a specific type
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusHours(1)) // Reset token valid for 1 hour
+                .user(user)
+                .build();
+        tokenRepository.save(resetToken);
+
+        Map<String, Object> templateProperties = new HashMap<>();
+        templateProperties.put("username", user.getFullName());
+        templateProperties.put("reset_url", "http://localhost:3000/reset-password?token=" + resetTokenValue);
+        templateProperties.put("reset_token", resetTokenValue); // Also provide the raw token if needed
+
+        emailService.sendEmail(
+                user.getEmail(),
+                "Password Reset for Anastasia Account",
+                EmailTemplateName.RESET_PASSWORD, // Make sure you have a reset_password.html template
+                templateProperties
+        );
+        System.out.println("Password reset email triggered for: " + user.getEmail());
+    }
+
+    @Override
+    public void resetPassword(String token, String newPassword) {
+        Token savedToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired password reset token."));
+
+        // Validate token type (ensure it's a password reset token)
+        if (savedToken.getTokenType() != TokenType.PASSWORD_RESET) {
+            throw new RuntimeException("Invalid token type for password reset.");
+        }
+
+        // Check if the token has expired
+        if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
+            // Optionally, you could resend a new reset email here or prompt the user to request a new one
+            throw new RuntimeException("Password reset token has expired. Please request a new one.");
+        }
+
+        // Check if the token has already been validated, expired or revoked
+        if (savedToken.getValidatedAt() != null || savedToken.isExpired() || savedToken.isRevoked()) {
+            throw new RuntimeException("Password reset token has already been used or is invalid.");
+        }
+
+        UserEntity user = userRepository.findById(savedToken.getUser().getUuid())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found for this token."));
+
+        // Hash the new password and save it
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Invalidate the reset token after use
+        savedToken.setValidatedAt(LocalDateTime.now());
+        savedToken.setExpired(true);
+        savedToken.setRevoked(true);
+        tokenRepository.save(savedToken);
+
+        System.out.println("Password reset successfully for user: " + user.getEmail());
+    }
+
+    @Override
+    public boolean isEmailRegistered(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     @Override
     public boolean exists(UUID userId) {
         return userRepository.existsById(userId);
@@ -271,6 +292,58 @@ public class AuthServiceImpl implements AuthService {
             }
         });
         tokenRepository.saveAll(validUserTokens);
+    }
+
+    public void sendValidationEmail(UserEntity user) throws MessagingException {
+        // Generate and save the activation token
+        var newToken = generateAndSaveActivationToken(user);
+
+        // Define the activation URL for the frontend application
+        String activationUrl = "http://localhost:3000/activate-account";
+
+        // Prepare the properties map for the email template
+        Map<String, Object> templateProperties = new HashMap<>();
+        templateProperties.put("username", user.getFullName());
+        templateProperties.put("confirmation_url", activationUrl);
+        templateProperties.put("activation_code", newToken);
+
+        // Call the enhanced EmailService with the dynamic properties map
+        emailService.sendEmail(
+                user.getEmail(),
+                "Account Activation for Anastasia",
+                EmailTemplateName.ACTIVATE_ACCOUNT,
+                templateProperties
+        );
+
+        System.out.println("Validation email triggered for: " + user.getEmail());
+    }
+
+    private String generateAndSaveActivationToken(UserEntity user) {
+        String generatedToken = generateActivationCode(6);
+        var token = Token.builder()
+                .token(generatedToken)
+                .tokenType(TokenType.ACTIVATION)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .user(user)
+                .build();
+
+        tokenRepository.save(token);
+
+        return generatedToken;
+    }
+
+    private String generateActivationCode(int length) {
+        String characters = "01234456789";
+        StringBuilder codeBuilder = new StringBuilder();
+        SecureRandom secureRandom = new SecureRandom();
+
+        for (int i = 0; i < length; i++) {
+            int randomIndex = secureRandom.nextInt(characters.length());
+            codeBuilder.append(characters.charAt(randomIndex));
+        }
+
+        return codeBuilder.toString();
     }
 
 

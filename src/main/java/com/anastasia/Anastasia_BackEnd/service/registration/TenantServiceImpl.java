@@ -11,6 +11,7 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -93,6 +94,21 @@ public class TenantServiceImpl implements TenantService {
 
         tenantToBeUnsubscribed.setActiveTenant(false);
         tenantRepository.save(tenantToBeUnsubscribed);
+    }
+
+    @Override
+    public void updateTenant(UUID tenantId, TenantDTO tenantDTO) {
+        tenantRepository.findById(tenantId).ifPresent(tenantEntity -> {
+           Optional.ofNullable(tenantDTO.getOwnerName()).ifPresent(tenantEntity::setOwnerName);
+           Optional.ofNullable(tenantDTO.getTenantType()).ifPresent(tenantEntity::setTenantType);
+           Optional.ofNullable(tenantDTO.getPhoneNumber()).ifPresent(tenantEntity::setPhoneNumber);
+
+           tenantRepository.save(tenantEntity);
+        }
+        );
+
+
+
     }
 
 }

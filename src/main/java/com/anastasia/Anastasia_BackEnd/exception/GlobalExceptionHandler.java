@@ -43,77 +43,103 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     // ----------------- Override Spring MVC’s own handlers ----
 
-    protected ResponseEntity<ExceptionResponse> handleHttpMessageNotReadable(
+    // Important to use @Override for overridden methods
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("Malformed JSON request", ex);
-        return buildResponse(BAD_REQUEST, INVALID_REQUEST, "Malformed JSON request");
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(buildResponse(BAD_REQUEST, INVALID_REQUEST, "Malformed JSON request").getBody(), BAD_REQUEST);
     }
 
-    protected ResponseEntity<ExceptionResponse> handleHttpRequestMethodNotSupported(
+    protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(
             HttpRequestMethodNotSupportedException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("Request method not supported", ex);
-        return buildResponse(METHOD_NOT_ALLOWED, INVALID_REQUEST,
-                String.format("Method %s not supported for this endpoint", ex.getMethod()));
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(buildResponse(METHOD_NOT_ALLOWED, INVALID_REQUEST,
+                String.format("Method %s not supported for this endpoint", ex.getMethod())).getBody(), METHOD_NOT_ALLOWED);
     }
 
 
-    protected ResponseEntity<ExceptionResponse> handleMissingServletRequestParameter(
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(
             MissingServletRequestParameterException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("Missing request parameter", ex);
-        return buildResponse(BAD_REQUEST, INVALID_REQUEST,
-                String.format("Missing parameter: %s", ex.getParameterName()));
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(buildResponse(BAD_REQUEST, INVALID_REQUEST,
+                String.format("Missing parameter: %s", ex.getParameterName())).getBody(), BAD_REQUEST);
     }
 
-    protected ResponseEntity<ExceptionResponse> handleTypeMismatch(
+    protected ResponseEntity<Object> handleTypeMismatch(
             TypeMismatchException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("Type mismatch", ex);
-        return buildResponse(BAD_REQUEST, INVALID_REQUEST,
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(buildResponse(BAD_REQUEST, INVALID_REQUEST,
                 String.format("Parameter '%s' expects value of type %s",
-                        ex.getPropertyName(), ex.getRequiredType().getSimpleName()));
+                        ex.getPropertyName(), ex.getRequiredType().getSimpleName())).getBody(), BAD_REQUEST);
     }
 
-    protected ResponseEntity<ExceptionResponse> handleNoHandlerFoundException(
+    protected ResponseEntity<Object> handleNoHandlerFoundException(
             NoHandlerFoundException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("No handler found for request", ex);
-        return buildResponse(NOT_FOUND, RESOURCE_NOT_FOUND,
-                String.format("No handler found for %s %s", ex.getHttpMethod(), ex.getRequestURL()));
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(buildResponse(NOT_FOUND, RESOURCE_NOT_FOUND,
+                String.format("No handler found for %s %s", ex.getHttpMethod(), ex.getRequestURL())).getBody(), NOT_FOUND);
     }
 
-    protected ResponseEntity<ExceptionResponse> handleHttpMediaTypeNotSupported(
+    protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
             HttpMediaTypeNotSupportedException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("Media type not supported", ex);
-        return buildResponse(UNSUPPORTED_MEDIA_TYPE, INVALID_REQUEST,
-                String.format("Media type %s not supported", ex.getContentType()));
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(buildResponse(UNSUPPORTED_MEDIA_TYPE, INVALID_REQUEST,
+                String.format("Media type %s not supported", ex.getContentType())).getBody(), UNSUPPORTED_MEDIA_TYPE);
     }
 
-    protected ResponseEntity<ExceptionResponse> handleHttpMediaTypeNotAcceptable(
+    protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
             HttpMediaTypeNotAcceptableException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("Media type not acceptable", ex);
-        return buildResponse(NOT_ACCEPTABLE, INVALID_REQUEST,
-                "Requested media type not acceptable");
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(buildResponse(NOT_ACCEPTABLE, INVALID_REQUEST,
+                "Requested media type not acceptable").getBody(), NOT_ACCEPTABLE);
     }
 
-    protected ResponseEntity<ExceptionResponse> handleBindException(
+    protected ResponseEntity<Object> handleBindException(
             BindException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
 
         log.error("Binding failure", ex);
-        return handleValidationErrors(ex.getBindingResult().getAllErrors());
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(handleValidationErrors(ex.getBindingResult().getAllErrors()).getBody(), BAD_REQUEST);
     }
+
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException exp, HttpHeaders headers,
+            HttpStatus status, WebRequest request) {
+        Set<String> errors = new HashSet<>();
+        exp.getBindingResult().getAllErrors()
+                .forEach(error -> {
+                    var errorMessage = error.getDefaultMessage();
+                    errors.add(errorMessage);
+                });
+
+        // Ensure the return type matches ResponseEntity<Object>
+        return new ResponseEntity<>(ExceptionResponse.builder()
+                .validationErrors(errors)
+                .build(), BAD_REQUEST);
+    }
+
 
     // ============================== Custom / application exceptions ================================== //
 
@@ -139,62 +165,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
-    @ExceptionHandler(LockedException.class)
-    public ResponseEntity<ExceptionResponse> handleException(LockedException exp){
-        return ResponseEntity.status(UNAUTHORIZED).body(
-                ExceptionResponse.builder()
-                        .errorCode(ACCOUNT_LOCKED.getCode())
-                        .errorDescription(ACCOUNT_LOCKED.getDescription())
-                        .error(exp.getMessage())
-                        .build()
-        );
-    }
-
-    @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<ExceptionResponse> handleException(DisabledException exp){
-        return ResponseEntity.status(UNAUTHORIZED).body(
-                ExceptionResponse.builder()
-                        .errorCode(ACCOUNT_DISABLED.getCode())
-                        .errorDescription(ACCOUNT_DISABLED.getDescription())
-                        .error(exp.getMessage())
-                        .build()
-        );
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ExceptionResponse> handleException(BadCredentialsException exp){
-        return ResponseEntity.status(UNAUTHORIZED).body(
-                ExceptionResponse.builder()
-                        .errorCode(BAD_CREDENTIALS.getCode())
-                        .errorDescription(BAD_CREDENTIALS.getDescription())
-                        .error(exp.getMessage())
-                        .build()
-        );
-    }
     @ExceptionHandler(MessagingException.class)
-    public ResponseEntity<ExceptionResponse> handleException(MessagingException exp){
-        return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(
-                ExceptionResponse.builder()
-                        .error(exp.getMessage())
-                        .build()
-        );
+    public ResponseEntity<ExceptionResponse> handleMessaging(MessagingException ex) {
+        log.error("Email error", ex);
+        return buildResponse(INTERNAL_SERVER_ERROR, NO_CODE, "Failed to send email: " + ex.getMessage());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ExceptionResponse> handleException(MethodArgumentNotValidException exp){
-        Set<String> errors = new HashSet<>();
-        exp.getBindingResult().getAllErrors()
-                .forEach(error -> {
-                    var errorMessage = error.getDefaultMessage();
-                    errors.add(errorMessage);
-                });
-
-        return ResponseEntity.status(BAD_REQUEST).body(
-                ExceptionResponse.builder()
-                        .validationErrors(errors)
-                        .build()
-        );
-    }
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ExceptionResponse> handleDataAccess(DataAccessException ex) {
@@ -234,8 +210,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    // This consolidated handler will catch LockedException, DisabledException, and BadCredentialsException
     @ExceptionHandler({LockedException.class, DisabledException.class, BadCredentialsException.class})
-    public ResponseEntity<ExceptionResponse> handleAuthExceptions(Exception ex) {
+    public ResponseEntity<ExceptionResponse> handleAuthExceptions(Exception ex) { // Keep this one
         log.error("Authentication error", ex);
         BusinessErrorCodes code = LockedException.class.isInstance(ex)
                 ? ACCOUNT_LOCKED
@@ -245,23 +222,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponse(UNAUTHORIZED, code, code.getDescription());
     }
 
-    @ExceptionHandler(MessagingException.class)
-    public ResponseEntity<ExceptionResponse> handleMessaging(MessagingException ex) {
-        log.error("Email error", ex);
-        return buildResponse(INTERNAL_SERVER_ERROR, NO_CODE, "Failed to send email: " + ex.getMessage());
-    }
-
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ExceptionResponse> handleException(Exception exp){
-        log.error("Unhandled exception", exp);
-        return ResponseEntity.status(BAD_REQUEST).body(
-                ExceptionResponse.builder()
-                        .errorDescription("An unexpected error occurred")
-                        .error(exp.getMessage())
-                        .build()
-        );
-    }
+    // Removed the generic @ExceptionHandler(Exception.class) method to resolve ambiguity
+    // with more specific handlers and overridden methods from ResponseEntityExceptionHandler.
 
 
     // ===================================== Helper methods ============================================== //
@@ -295,6 +257,4 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if (msg.contains("phone"))    return "phone number";
         return "resource";
     }
-
-
 }

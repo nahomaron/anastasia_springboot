@@ -23,17 +23,30 @@ public class TenantController {
 
     private final TenantService tenantService;
 
+    /**
+     * Subscribes a new tenant to the system.
+     * This endpoint is used for tenant registration.
+     *
+     * @param tenantDTO The data transfer object containing tenant details.
+     * @return ResponseEntity indicating success or failure of the subscription.
+     * @throws MessagingException If there's an issue sending the activation email.
+     */
     @PostMapping("/subscription")
     public ResponseEntity<?> subscribeTenant(@Valid @RequestBody TenantDTO tenantDTO) throws MessagingException {
         if(tenantDTO.getPassword() != null && !tenantDTO.isPasswordMatch()){
             return ResponseEntity.badRequest().body("Password do not match");
         }
-
-
         tenantService.subscribeTenant(tenantDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    /**
+     * Retrieves a paginated list of all tenants.
+     * This endpoint is accessible only to users with the 'PLATFORM_ADMIN' role.
+     *
+     * @param pageable Pagination information.
+     * @return ResponseEntity containing a page of TenantDTO objects.
+     */
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<TenantDTO>> listOfTenants(Pageable pageable){
@@ -41,6 +54,12 @@ public class TenantController {
         return new ResponseEntity<>(tenants.map(tenantService::convertTenantToDTO), HttpStatus.OK);
     }
 
+
+    /**
+     * Retrieves a specific tenant by its ID.
+     * @param tenantId  The ID of the tenant to retrieve.
+     * @return  tenantDTO that is converted from entity
+     */
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping("/{tenantId}")
     public ResponseEntity<TenantDTO> getTenant(@PathVariable UUID tenantId){
@@ -59,6 +78,16 @@ public class TenantController {
     @PostMapping("/unsubscribe/{tenantId}")
     public ResponseEntity<?> unsubscribeTenant(@PathVariable UUID tenantId){
         tenantService.unsubscribeTenant(tenantId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PLATFORM_ADMIN')")
+    @PatchMapping("/update/{tenantId}")
+    public ResponseEntity<?> updateTenant(@PathVariable UUID tenantId, @Valid @RequestBody TenantDTO tenantDTO) {
+        if(tenantDTO.getPassword() != null && !tenantDTO.isPasswordMatch()){
+            return ResponseEntity.badRequest().body("Password do not match");
+        }
+        tenantService.updateTenant(tenantId, tenantDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

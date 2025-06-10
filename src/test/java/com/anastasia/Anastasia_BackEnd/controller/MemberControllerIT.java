@@ -34,6 +34,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
@@ -60,7 +61,7 @@ class MemberControllerIT {
     @Autowired private PermissionRepository permissionRepository;
 
     @MockBean private EmailService emailService;
-    @Captor private ArgumentCaptor<String> tokenCaptor;
+    @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor;
 
 
     private String jwtToken;
@@ -97,14 +98,19 @@ class MemberControllerIT {
                 eq(user.getEmail()),
                 eq(user.getFullName()),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                anyString(),
-                tokenCaptor.capture(),
-                eq("Account Activation")
+                templatePropertiesCaptor.capture()
         );
 
-        String capturedToken = tokenCaptor.getValue();
-        assertNotNull(capturedToken);
-        authService.activateAccount(capturedToken);
+        Map<String, Object> capturedProperties = templatePropertiesCaptor.getValue();
+        assertNotNull(capturedProperties);
+        assertNotNull(capturedProperties.get("username"));
+        assertNotNull(capturedProperties.get("confirmation_url"));
+        String token = (String) capturedProperties.get("activation_code"); // Extract the token
+        assertNotNull(token);
+
+        assertNotNull(token);
+        authService.activateAccount(token);
+
         AuthenticationResponse response = authService.authenticate(
                 TestDataUtil.createTestAuthenticationRequest());
         jwtToken = response.getAccessToken();

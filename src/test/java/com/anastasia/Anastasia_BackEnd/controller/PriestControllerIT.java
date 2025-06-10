@@ -34,6 +34,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Map;
+
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -56,7 +58,7 @@ class PriestControllerIT {
     @Autowired private ChurchRepository churchRepository;
 
     @MockBean private EmailService emailService;
-    @Captor private ArgumentCaptor<String> tokenCaptor;
+    @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor;
 
     private String jwtToken;
     private String churchNumber;
@@ -86,15 +88,18 @@ class PriestControllerIT {
                 eq(priestDTO.getPersonalEmail()),
                 nameCaptor.capture(),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                anyString(),
-                tokenCaptor.capture(),
-                eq("Account Activation")
+                templatePropertiesCaptor.capture()
         );
 
         assertEquals(priestDTO.getFirstName() + " " + priestDTO.getFatherName() + " " + priestDTO.getGrandFatherName(), nameCaptor.getValue());
 
+        Map<String, Object> capturedProperties = templatePropertiesCaptor.getValue();
+        assertNotNull(capturedProperties);
+        assertNotNull(capturedProperties.get("username"));
+        assertNotNull(capturedProperties.get("confirmation_url"));
+        String token = (String) capturedProperties.get("activation_code"); // Extract the token
+        assertNotNull(token);
 
-        String token = tokenCaptor.getValue();
         assertNotNull(token);
         authService.activateAccount(token);
 

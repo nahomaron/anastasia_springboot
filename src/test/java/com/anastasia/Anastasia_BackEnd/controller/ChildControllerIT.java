@@ -34,6 +34,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
@@ -60,7 +61,10 @@ class ChildControllerIT {
     @Autowired private PermissionRepository permissionRepository;
 
     @MockBean private EmailService emailService;
-    @Captor private ArgumentCaptor<String> tokenCaptor;
+//    @Captor private ArgumentCaptor<String> tokenCaptor;
+
+    @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor; // Captor for the properties map
+
 
     private String jwtToken;
     private ChurchEntity church;
@@ -90,14 +94,19 @@ class ChildControllerIT {
 
         verify(emailService).sendEmail(
                 eq(user.getEmail()),
-                eq(user.getFullName()),
+                eq("Account Activation for Anastasia"), // Subject
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                anyString(),
-                tokenCaptor.capture(),
-                eq("Account Activation")
+                templatePropertiesCaptor.capture() // Capture the entire properties map
         );
 
-        String token = tokenCaptor.getValue();
+        Map<String, Object> capturedProperties = templatePropertiesCaptor.getValue();
+        assertNotNull(capturedProperties);
+
+        assertNotNull(capturedProperties.get("username"));
+        assertNotNull(capturedProperties.get("confirmation_url"));
+        String token = (String) capturedProperties.get("activation_code"); // Extract the token
+        assertNotNull(token);
+
         assertNotNull(token);
         authService.activateAccount(token);
 
