@@ -1,0 +1,12 @@
+1. User Management
+   - Create, update, and delete users.
+   - Assign roles to users.
+   - Manage user permissions.
+   - User authentication and authorization.
+   - Password reset functionality.
+
+
+2. Tenant Management
+   - Create/subscribe, update, and delete tenants.
+   - assign church to a tenant
+   - Assign users to tenants.

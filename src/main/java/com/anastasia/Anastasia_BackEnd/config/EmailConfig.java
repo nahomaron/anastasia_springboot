@@ -24,6 +24,10 @@ public class EmailConfig {
         mailSender.setProtocol("smtp");
         mailSender.getJavaMailProperties().put("mail.smtp.auth", "true");
         mailSender.getJavaMailProperties().put("mail.smtp.starttls.enable", "true");
+//
+        // Uncomment the following line to enable debug mode for mail sending
+//        mailSender.getJavaMailProperties().put("mail.debug", "true");
+
 
         return mailSender;
     }

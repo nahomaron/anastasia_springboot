@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.service.email;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value; // Import Value annotation
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,6 +22,7 @@ import static org.springframework.mail.javamail.MimeMessageHelper.MULTIPART_MODE
 @Service
 public class EmailService {
 
+    private final Logger log = LoggerFactory.getLogger(EmailService.class);
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
@@ -64,9 +67,18 @@ public class EmailService {
         helper.setSubject(subject);
 
         // Process the Thymeleaf template with the provided context
-        String htmlContent = templateEngine.process(templateName, context);
-        helper.setText(htmlContent, true); // 'true' indicates that the content is HTML
+//        String htmlContent = templateEngine.process(templateName, context);
+//        helper.setText(htmlContent, true); // 'true' indicates that the content is HTML
+//
+//        mailSender.send(mimeMessage); // Send the email
 
-        mailSender.send(mimeMessage); // Send the email
+        try {
+            String htmlContent = templateEngine.process(templateName, context);
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            log.info("Error sending email: ", e); // or use a logger
+        }
+
     }
 }
