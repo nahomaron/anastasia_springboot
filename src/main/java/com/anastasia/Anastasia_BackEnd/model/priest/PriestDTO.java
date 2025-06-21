@@ -59,6 +59,7 @@ public class PriestDTO {
     @NotBlank(message = "Birthdate is required")
     private String birthdate;
 
+    @Builder.Default
     private Set<String> languages = new HashSet<>();
     private String levelOfEducation;
 

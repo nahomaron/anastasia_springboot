@@ -23,10 +23,6 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
-    // Inject sender email from application properties
-    @Value("${spring.mail.username:info@anastasia.com}") // Use a default if property is not found
-    private String senderEmail;
-
     @Autowired
     public EmailService(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
         this.mailSender = mailSender;
@@ -60,6 +56,9 @@ public class EmailService {
             context.setVariables(templateProperties);
         }
 
+        // Inject sender email from application properties
+        //    @Value("${spring.mail.from}") // Use a default if property is not found
+        String senderEmail = "info@anastasia.com";
         helper.setFrom(senderEmail); // Use the sender email injected from properties
         helper.setTo(to);
         helper.setSubject(subject);

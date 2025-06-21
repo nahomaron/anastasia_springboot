@@ -39,7 +39,7 @@ public class Role {
     private Set<Permission> permissions;
 
     @ManyToOne
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @JoinColumn(name = "tenant_id")
     private TenantEntity tenant;
 
     @Column(name = "tenant_id", insertable = false, updatable = false)

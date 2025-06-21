@@ -1,8 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.controller;
 
+import com.anastasia.Anastasia_BackEnd.model.sms.PhoneVerificationRequest;
+import com.anastasia.Anastasia_BackEnd.model.sms.ResendOtpRequest;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
+import com.anastasia.Anastasia_BackEnd.service.sms.PhoneVerificationService;
+import com.anastasia.Anastasia_BackEnd.util.RateLimiterService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +26,8 @@ import java.util.UUID;
 public class TenantController {
 
     private final TenantService tenantService;
+    private final RateLimiterService rateLimiterService;
+    private final PhoneVerificationService phoneVerificationService;
 
     /**
      * Subscribes a new tenant to the system.
@@ -39,6 +45,45 @@ public class TenantController {
         tenantService.subscribeTenant(tenantDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
+
+    /**
+     * Verifies the phone number of a tenant using an OTP (One Time Password).
+     * This endpoint is used to confirm the phone number during registration.
+     *
+     * @param request The request containing the phone number and OTP.
+     * @return ResponseEntity indicating success or failure of the verification.
+     */
+    @PostMapping("/verify-phone")
+    public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request) {
+        if (!rateLimiterService.isAllowed(request.getPhone())) {
+            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+        }
+        boolean verified = tenantService.verifyTenantPhone(request.getPhone(), request.getOtp());
+
+        return verified
+                ? ResponseEntity.ok("Phone verified successfully.")
+                : ResponseEntity.badRequest().body("Invalid or expired OTP or wrong phone number.");
+    }
+
+    /**
+     * Resends the OTP to the tenant's phone number for verification.
+     * This endpoint is used when the user requests a new OTP.
+     *
+     * @param request The request containing the phone number.
+     * @return ResponseEntity indicating success or failure of the resend operation.
+     */
+    @PostMapping("/resend-phone-otp")
+    public ResponseEntity<?> resendPhoneOtp(@RequestBody ResendOtpRequest request) {
+        if (!rateLimiterService.isAllowed(request.getPhone())) {
+            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+        }
+        if (request.getPhone() == null || request.getPhone().isEmpty()) {
+            return ResponseEntity.badRequest().body("Phone number is required.");
+        }
+        phoneVerificationService.resendOtp(request.getPhone());
+        return ResponseEntity.ok("OTP has been resent successfully.");
+    }
+
 
     /**
      * Retrieves a paginated list of all tenants.
@@ -72,8 +117,14 @@ public class TenantController {
         );
     }
 
-    // todo instead of getting tenant id from url get it from the tenant context
 
+    /**
+     * Unsubscribes a tenant from the system.
+     * This endpoint is accessible only to users with the 'OWNER' or 'PLATFORM_ADMIN' role.
+     *
+     * @param tenantId The ID of the tenant to unsubscribe.
+     * @return ResponseEntity indicating success or failure of the un-subscription.
+     */
     @PreAuthorize("hasAnyRole('OWNER', 'PLATFORM_ADMIN')")
     @PostMapping("/unsubscribe/{tenantId}")
     public ResponseEntity<?> unsubscribeTenant(@PathVariable UUID tenantId){
@@ -81,6 +132,14 @@ public class TenantController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    /**
+     * Updates the details of an existing tenant.
+     * This endpoint is accessible only to users with the 'OWNER' or 'PLATFORM_ADMIN' role.
+     *
+     * @param tenantId  The ID of the tenant to update.
+     * @param tenantDTO The data transfer object containing updated tenant details.
+     * @return ResponseEntity indicating success or failure of the update operation.
+     */
     @PreAuthorize("hasAnyRole('OWNER', 'PLATFORM_ADMIN')")
     @PatchMapping("/update/{tenantId}")
     public ResponseEntity<?> updateTenant(@PathVariable UUID tenantId, @Valid @RequestBody TenantDTO tenantDTO) {

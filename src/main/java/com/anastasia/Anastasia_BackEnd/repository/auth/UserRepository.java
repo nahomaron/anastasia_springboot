@@ -72,4 +72,8 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
 
     List<UserEntity> findAllByEmailIn(Set<String> groupEmail);
+
+    @Query("SELECT u FROM UserEntity u WHERE u.tenant.id = :tenantId AND u.userType = 'TENANT'")
+    Optional<UserEntity> findTenantAdmin(UUID tenantId);
+
 }

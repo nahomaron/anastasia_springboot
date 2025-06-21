@@ -30,12 +30,12 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("test")
 @DataJpaTest(
         excludeAutoConfiguration = {
                 com.anastasia.Anastasia_BackEnd.config.ApplicationConfig.class
         }
 )
-@ActiveProfiles("test")
 @Import(TestAuditorAwareConfig.class)
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class UserRepositoryUnitTest {

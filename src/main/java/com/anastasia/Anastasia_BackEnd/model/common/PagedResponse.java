@@ -20,5 +20,6 @@ public class PagedResponse<T> {
     private int size;
     private boolean isFirst;
     private boolean isLast;
+    @Builder.Default
     private int[] pageSizeOptions = {10, 20, 50}; // Add default options
 }

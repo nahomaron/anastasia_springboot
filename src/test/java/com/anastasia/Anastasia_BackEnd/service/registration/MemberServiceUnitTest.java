@@ -17,7 +17,9 @@ import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +35,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class MemberServiceUnitTest {
 
     @Mock private MemberRepository memberRepository;
@@ -42,20 +45,14 @@ public class MemberServiceUnitTest {
     @Mock private SecurityUtils securityUtils;
     @Mock private SecurityContext securityContext;
 
-
     @InjectMocks
     private MemberServiceImpl memberService;
 
-//    @BeforeEach
-//    void setUp() {
-//        MockitoAnnotations.openMocks(this);
-//    }
     private UserEntity user;
     private MemberEntity member;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         SecurityContextHolder.setContext(securityContext);
         user = TestDataUtil.createTestUserEntityA();
         member = TestDataUtil.createTestMember(TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity()));
@@ -63,21 +60,19 @@ public class MemberServiceUnitTest {
 
     @Test
     void registerMember_shouldRegisterSuccessfully() {
-        // Arrange
+
         UserEntity user = TestDataUtil.createTestUserEntityA();
         user.setUuid(UUID.randomUUID());
         user.setUserType(UserType.GUEST);
+
         ChurchEntity church = TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity());
         MemberEntity member = TestDataUtil.createTestMember(church);
 
         UserPrincipal principal = new UserPrincipal(user);
         Authentication auth = mock(Authentication.class);
         when(auth.getPrincipal()).thenReturn(principal);
-        when(auth.isAuthenticated()).thenReturn(true);
 
-        SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(auth);
-        SecurityContextHolder.setContext(securityContext);
 
         when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
         when(churchRepository.findByChurchNumber(member.getChurchNumber())).thenReturn(Optional.of(church));
@@ -93,6 +88,16 @@ public class MemberServiceUnitTest {
         assertThat(response).isNotNull();
         assertThat(response.getMembershipNumber()).isEqualTo("M123456");
         assertThat(response.getName()).contains(member.getFirstName());
+
+
+        verify(userRepository, times(1)).findById(user.getUuid());
+        verify(churchRepository, times(1)).findByChurchNumber(member.getChurchNumber());
+        verify(securityUtils, times(1)).generateUniqueIDNumber(anyInt(), anyString());
+        verify(memberRepository, times(1)).existsByMembershipNumber(anyString());
+        verify(memberRepository, times(1)).save(any(MemberEntity.class));
+        verify(userRepository, times(1)).save(user); // Verify saving the updated user
+        verify(securityContext, times(1)).getAuthentication(); // Verify authentication was retrieved
+        verify(auth, times(1)).getPrincipal(); // Verify principal was retrieved
     }
 
     @Test

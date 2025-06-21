@@ -10,12 +10,15 @@ import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
+import com.anastasia.Anastasia_BackEnd.service.sms.PhoneVerificationService;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -30,33 +33,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class TenantServiceUnitTest {
 
-    @Mock
-    private TenantRepository tenantRepository;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private TenantMapper tenantMapper;
-
-    @Mock
-    private AuthService authService;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private RoleRepository roleRepository;
+    @Mock private TenantRepository tenantRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private TenantMapper tenantMapper;
+    @Mock private AuthService authService;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private RoleRepository roleRepository;
+    @Mock private PhoneVerificationService phoneVerificationService;
 
     @InjectMocks
     private TenantServiceImpl tenantService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     void convertTenantToEntity_shouldMapCorrectly() {
@@ -78,19 +68,42 @@ public class TenantServiceUnitTest {
         assertThat(result).isEqualTo(dto);
     }
 
+//    @Test
+//    void subscribeTenant_shouldSaveTenantAndCreateUser() throws MessagingException {
+//        TenantDTO dto = TestDataUtil.createTestTenantDTO();
+//        TenantEntity tenant = TestDataUtil.createTestTenantEntity();
+//        Role ownerRole = TestDataUtil.createTestOwnerRole(tenant);
+//
+//        when(tenantRepository.save(any())).thenReturn(tenant);
+//        when(roleRepository.findByRoleName("OWNER")).thenReturn(Optional.of(ownerRole));
+//
+//        tenantService.subscribeTenant(dto);
+//
+//        verify(tenantRepository, times(1)).save(any());
+//        verify(authService, times(1)).createUser(any(UserEntity.class));
+//    }
+
     @Test
     void subscribeTenant_shouldSaveTenantAndCreateUser() throws MessagingException {
         TenantDTO dto = TestDataUtil.createTestTenantDTO();
-        TenantEntity tenant = TestDataUtil.createTestTenantEntity();
-        Role ownerRole = TestDataUtil.createTestOwnerRole(tenant);
+        dto.setPhoneNumber("1234567890");
 
-        when(tenantRepository.save(any())).thenReturn(tenant);
+        TenantEntity tenantEntity = TestDataUtil.createTestTenantEntity();
+        when(tenantRepository.save(any(TenantEntity.class))).thenReturn(tenantEntity);
+
+        Role ownerRole = TestDataUtil.createTestOwnerRole(tenantEntity);
         when(roleRepository.findByRoleName("OWNER")).thenReturn(Optional.of(ownerRole));
+
+        doNothing().when(phoneVerificationService).startVerification(anyString());
 
         tenantService.subscribeTenant(dto);
 
-        verify(tenantRepository, times(1)).save(any());
+        verify(tenantRepository, times(1)).save(any(TenantEntity.class));
         verify(authService, times(1)).createUser(any(UserEntity.class));
+        verify(phoneVerificationService, times(1)).startVerification(eq(dto.getPhoneNumber()));
+
+        // Optionally, verify no other interactions if strict mocks are desired
+//         verifyNoMoreInteractions(tenantRepository, roleRepository, authService, phoneVerificationService);
     }
 
     @Test
