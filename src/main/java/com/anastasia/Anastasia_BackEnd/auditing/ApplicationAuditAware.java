@@ -10,8 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 import java.util.UUID;
 
-@Profile("prod") // Limit to prod only
-
 public class ApplicationAuditAware implements AuditorAware<UUID> {
 
     @Override

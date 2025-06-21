@@ -10,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
+import com.anastasia.Anastasia_BackEnd.service.sms.PhoneVerificationService;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -34,6 +35,8 @@ public class TenantServiceImpl implements TenantService {
     private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final PhoneVerificationService phoneVerificationService;   // NEW
+
     @Override
     public TenantEntity convertTenantToEntity(TenantDTO tenantDTO) {
         return tenantMapper.tenantDTOToEntity(tenantDTO);
@@ -71,7 +74,37 @@ public class TenantServiceImpl implements TenantService {
                 .build();
 
         authService.createUser(adminUser);
+
+        // Send OTP after account creation
+        phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());
     }
+
+    @Transactional
+    @Override
+    public boolean verifyTenantPhone(String phone, String rawOtp) {
+        if (!phoneVerificationService.confirmOtp(phone, rawOtp)) {
+            return false;
+        }
+
+        tenantRepository.findByPhoneNumber(phone).ifPresent(tenant -> {
+            tenant.setPhoneVerified(true);
+            tenantRepository.save(tenant);  // Save verification update
+//            checkAndActivateTenant(tenant); // Centralized logic
+        });
+        // update verified flag
+        return true;
+    }
+
+//    public void checkAndActivateTenant(TenantEntity tenant) {
+//        if (!tenant.isPhoneVerified()) return;
+//
+//        userRepository.findTenantAdmin(tenant.getId())
+//                .filter(UserEntity::isVerified)  // email is verified
+//                .ifPresent(user -> {
+//                    tenant.setActiveTenant(true);
+//                    tenantRepository.save(tenant);
+//                });
+//    }
 
     @Override
     public Page<TenantEntity> findAll(Pageable pageable) {
@@ -106,8 +139,6 @@ public class TenantServiceImpl implements TenantService {
            tenantRepository.save(tenantEntity);
         }
         );
-
-
 
     }
 

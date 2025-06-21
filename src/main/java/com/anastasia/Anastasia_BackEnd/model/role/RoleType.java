@@ -11,6 +11,7 @@ import java.util.Set;
 
 import static com.anastasia.Anastasia_BackEnd.model.permission.PermissionType.*;
 
+@Getter
 @RequiredArgsConstructor
 public enum RoleType {
 
@@ -46,10 +47,8 @@ public enum RoleType {
     )
 
     ;
-    @Getter
     private final Set<PermissionType> permissions;
 
-    @Getter
     private final String description;
 
     public List<SimpleGrantedAuthority> getAuthorities(){

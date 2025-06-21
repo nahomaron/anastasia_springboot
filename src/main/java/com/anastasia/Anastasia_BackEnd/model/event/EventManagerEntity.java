@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @Table(name = "event_managers")
 public class EventManagerEntity {
 
+    @Builder.Default
     @EmbeddedId
     private EventManagerId id = new EventManagerId();
 

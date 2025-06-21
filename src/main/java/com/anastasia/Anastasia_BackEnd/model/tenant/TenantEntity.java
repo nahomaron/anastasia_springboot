@@ -31,7 +31,13 @@ public class TenantEntity {
     @Column(nullable = false)
     private String phoneNumber; // Contact number (Church or Priest)
 
-    private boolean isActiveTenant;
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean phoneVerified = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean isActiveTenant = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

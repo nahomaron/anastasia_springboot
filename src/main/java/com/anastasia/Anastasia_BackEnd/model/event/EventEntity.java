@@ -79,6 +79,7 @@ public class EventEntity extends Auditable {
     @Enumerated(EnumType.STRING)
     private Repetition repetition;
 
+    @Builder.Default
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventManagerEntity> eventManagers = new HashSet<>();
 

@@ -28,4 +28,8 @@ public interface TenantService {
     void unsubscribeTenant(UUID tenantId);
 
     void updateTenant(UUID tenantId, @Valid TenantDTO tenantDTO);
+
+    boolean verifyTenantPhone(String phone, String otp);
+
+//    void checkAndActivateTenant(TenantEntity tenant);
 }

@@ -30,13 +30,13 @@ public class RoleAndPermissionSeeder {
                 if (!permissionRepository.existsByName(perm)) {
                     Permission permission = new Permission(perm);
                     permissionRepository.save(permission);
-                    //System.out.println("Permission " + perm.name() + " saved successfully.");
+                    System.out.println("Permission " + perm.name() + " saved successfully.");
                 }
             }
         } catch (Exception e) {
             logger.error("Error during data seeding: {}", e.getMessage(), e);
             // Optionally, rethrow the exception if you want the entire seeding process to stop
-            // throw new RuntimeException("Error occurred while seeding permissions.", e);
+             throw new RuntimeException("Error occurred while seeding permissions.", e);
         }
     }
 

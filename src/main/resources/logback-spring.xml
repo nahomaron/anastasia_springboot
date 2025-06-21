@@ -1,0 +1,23 @@
+<configuration>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Remove %d for timestamp -->
+            <pattern>%clr([%thread]){faint} %clr(%-5level) %clr(%logger{36}){cyan} : %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    // %d → timestamp (e.g. 2025-06-16T00:07:03.554-04:00)
+    // %thread → thread name
+    // %level → log level
+    // %logger → logger name
+    // %msg → the actual log message
+    // %n → newline
+</configuration>
+
