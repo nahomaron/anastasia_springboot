@@ -17,7 +17,6 @@ import java.util.UUID;
 @Service
 public interface AuthService {
 
-
     void createUser(UserEntity userEntity) throws MessagingException;
 
     AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException;
@@ -26,7 +25,7 @@ public interface AuthService {
 
     boolean exists(UUID userId);
 
-    void activateAccount(String token) throws MessagingException;
+    void activateAccount(String token);
 
     Optional<UserEntity> findUserByEmail(@NotBlank(message = "Email is required") @Email(message = "Invalid Email format") String email);
 

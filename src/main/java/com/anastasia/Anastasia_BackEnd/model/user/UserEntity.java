@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.model.user;
 
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
@@ -15,6 +16,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,6 +40,13 @@ public class UserEntity{
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserType userType = UserType.GUEST;
+
+    @OneToOne
+    @JoinColumn(name = "profile_avatar_id", unique = true)
+    private AvatarEntity profileAvatar;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<AvatarEntity> avatars;
 
     @Column(nullable = false)
     private String fullName;

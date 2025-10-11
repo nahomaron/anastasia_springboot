@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.model.member;
 
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.common.Auditable;
@@ -43,6 +44,9 @@ public class MemberEntity extends Auditable {
 
     @Column(nullable = false)
     private boolean approvedByPriest;
+
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
+    private AvatarEntity avatar;
 
     private boolean deacon;
 

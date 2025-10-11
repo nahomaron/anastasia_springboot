@@ -1,11 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.controller;
 
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -76,7 +78,7 @@ public class UserController {
      * @param userId The UUID of the user to retrieve.
      * @return A ResponseEntity containing the UserDTO of the specified user, or NOT_FOUND if the user does not exist.
      */
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'USER')")
     @GetMapping("/{userid}")
     public ResponseEntity<UserDTO> getUser(@PathVariable UUID userId){
         Optional<UserEntity> foundUser = userService.findOne(userId);
@@ -102,6 +104,14 @@ public class UserController {
         UserEntity user = userService.convertToEntity(userDTO);
         UserEntity updatedUser = userService.updateUserDetails(user, connectedUser);
         return new ResponseEntity<>(userService.convertToDTO(updatedUser), HttpStatus.ACCEPTED);
+    }
+
+    @PutMapping("/avatar")
+    public ResponseEntity<String> updateProfileAvatar(
+            @Valid @RequestBody AvatarDTO avatarDTO
+    ) {
+        userService.updateProfileAvatar(avatarDTO);
+        return ResponseEntity.ok("Profile avatar updated successfully.");
     }
 
 

@@ -5,9 +5,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 @Configuration
 public class ApplicationConfig {
@@ -26,6 +28,17 @@ public class ApplicationConfig {
             // Production: return actual implementation
             return new ApplicationAuditAware();
         }
+    }
+
+    @Bean(name = "taskExecutor")
+    public Executor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(8);  // Change based on expected load
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("AsyncExecutor-");
+        executor.initialize();
+        return executor;
     }
 
 

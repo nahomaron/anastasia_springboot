@@ -28,13 +28,13 @@ public class SmsServiceImpl implements SmsService {
 
     Logger log = LoggerFactory.getLogger(SmsServiceImpl.class);
 
-    @Value("${twilio.account-sid}")
+    @Value("${twilio.account_sid}")
     private String accountSid;
 
-    @Value("${twilio.auth-token}")
+    @Value("${twilio.auth_token}")
     private String authToken;
 
-    @Value("${twilio.phone-number}")
+    @Value("${twilio.phone_number}")
     private String fromNumber;
 
 
@@ -47,7 +47,6 @@ public class SmsServiceImpl implements SmsService {
         Twilio.init(accountSid, authToken);
         log.info("Twilio initialized with accountSid ending in {}", accountSid.substring(accountSid.length() - 4));
     }
-
 
 
     /**

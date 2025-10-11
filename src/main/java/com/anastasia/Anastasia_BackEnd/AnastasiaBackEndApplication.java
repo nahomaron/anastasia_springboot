@@ -18,5 +18,4 @@ public class AnastasiaBackEndApplication {
 		SpringApplication.run(AnastasiaBackEndApplication.class, args);
 	}
 
-
 }

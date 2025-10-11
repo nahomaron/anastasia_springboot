@@ -3,19 +3,25 @@ package com.anastasia.Anastasia_BackEnd.service.auth.user;
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarType;
 import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserResponseIDs;
+import com.anastasia.Anastasia_BackEnd.repository.AvatarRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final UsersMapper usersMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final AvatarRepository avatarRepository;
 
 
     @Override
@@ -154,6 +161,32 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         userRepository.delete(user);
+    }
+
+    public UUID getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal userPrincipal) {
+            return userPrincipal.getUserUuid(); // or userPrincipal.getId();
+        }
+        throw new RuntimeException("No authenticated user found.");
+    }
+
+    @Override
+    public void updateProfileAvatar(AvatarDTO avatarDTO) {
+        UUID userId = getCurrentUserId();
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        AvatarEntity avatar = AvatarEntity.builder()
+                .imageUrl(avatarDTO.getImageUrl())
+                .imageSize(avatarDTO.getImageSize())
+                .avatarType(AvatarType.USER)
+                .user(user)
+                .build();
+
+        avatar = avatarRepository.save(avatar);
+        user.setProfileAvatar(avatar);
+        userRepository.save(user);
     }
 
 }

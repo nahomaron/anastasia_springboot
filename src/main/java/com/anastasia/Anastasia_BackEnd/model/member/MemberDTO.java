@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.model.member;
 
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -20,6 +21,10 @@ public class MemberDTO {
     @NotBlank
     @Pattern(regexp = "^[A-Za-z]{1,2}\\d{5}$", message = "Invalid church number")
     private String churchNumber;
+
+    @Valid
+    @NotNull
+    private AvatarDTO avatar;
 
     private boolean deacon;
 

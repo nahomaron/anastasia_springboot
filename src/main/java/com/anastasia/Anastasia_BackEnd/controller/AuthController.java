@@ -14,6 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 public class AuthController {
+
+    Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
     private final UserService userService;
@@ -90,8 +94,11 @@ public class AuthController {
      * @throws MessagingException If there's an issue sending the activation email.
      */
     @GetMapping("/activate-account")
-    public void confirm(@RequestParam String token) throws MessagingException {
+    public ResponseEntity<String> confirm(@RequestParam String token){
+        long start = System.currentTimeMillis();
         authService.activateAccount(token);
+        log.info("Activation took: {} ms", System.currentTimeMillis() - start);
+        return ResponseEntity.ok("Account successfully activated");
     }
 
     /**

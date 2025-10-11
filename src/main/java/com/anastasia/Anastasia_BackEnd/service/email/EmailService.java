@@ -80,5 +80,7 @@ public class EmailService {
             log.info("Error sending email: ", e); // or use a logger
         }
 
+        log.info("My thread is: {}", Thread.currentThread().getName());
+
     }
 }

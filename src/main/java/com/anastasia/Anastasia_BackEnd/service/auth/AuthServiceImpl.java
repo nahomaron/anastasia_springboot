@@ -19,6 +19,7 @@ import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -69,21 +70,22 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void activateAccount(String token) throws MessagingException {
+    public void activateAccount(String token){
         Token savedToken = tokenRepository.findByToken(token)
-                // todo - exception
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
 
-        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
-            sendValidationEmail(savedToken.getUser());
-            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
-        }
+//        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
+//            sendValidationEmail(savedToken.getUser());
+//            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
+//        }
 
         var user = userRepository.findById(savedToken.getUser().getUuid())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         user.setVerified(true);
         userRepository.save(user);
         savedToken.setValidatedAt(LocalDateTime.now());
+        tokenRepository.save(savedToken);
     }
 
     @Override

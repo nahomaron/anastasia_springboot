@@ -15,11 +15,13 @@
     - update profile
 
 # 4 phone verification
-    - send verification code
-    - verify phone number
+    - tests
+    - use production level twilio account
 
 # 5 notifications
     - view notifications
     - mark notifications as read
 
 # 6 avatar
+
+# 7 Test event attendance

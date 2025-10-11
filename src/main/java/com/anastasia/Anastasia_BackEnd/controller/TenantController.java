@@ -55,9 +55,10 @@ public class TenantController {
      */
     @PostMapping("/verify-phone")
     public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request) {
-        if (!rateLimiterService.isAllowed(request.getPhone())) {
-            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
-        }
+        // enable rate limiting for phone verification
+//        if (!rateLimiterService.isAllowed(request.getPhone())) {
+//            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+//        }
         boolean verified = tenantService.verifyTenantPhone(request.getPhone(), request.getOtp());
 
         return verified

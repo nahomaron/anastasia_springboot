@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.model.avatar;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,9 +15,8 @@ import java.util.UUID;
 @Builder
 public class AvatarDTO {
 
-    private Long churchId;
-    private UUID userId;
-    private Long membershipId;
+    @NotBlank(message = "Image URL is required")
     private String imageUrl;
-    private String imageSize;
+
+    private String imageSize; // Optional
 }

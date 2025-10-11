@@ -1,10 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.service.auth.user;
 
 import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserResponseIDs;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,4 +37,6 @@ public interface UserService {
     List<UserEntity> findAll();
 
     void deleteUser(UUID userId);
+
+    void updateProfileAvatar(@Valid AvatarDTO avatarDTO);
 }
