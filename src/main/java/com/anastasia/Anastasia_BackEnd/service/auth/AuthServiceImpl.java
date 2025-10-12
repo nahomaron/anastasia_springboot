@@ -1,6 +1,5 @@
 package com.anastasia.Anastasia_BackEnd.service.auth;
 
-import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.token.Token;
@@ -8,7 +7,6 @@ import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserType;
-import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
@@ -19,7 +17,6 @@ import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -80,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
 //        }
 
         var user = userRepository.findById(savedToken.getUser().getUuid())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Activation - Username not found"));
 
         user.setVerified(true);
         userRepository.save(user);
@@ -96,21 +93,21 @@ public class AuthServiceImpl implements AuthService {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (Exception e) {
-            throw new RuntimeException("Authentication failed: " + e.getMessage());
+            throw new RuntimeException("Login failed: " + e.getMessage());
         }
 
 
         var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Login - Username not found"));
 
 
         if(!user.isVerified()){
             if (user.getCreatedDate().isBefore(LocalDateTime.now().minusHours(24))) {
                 // The user was created more than 24 hours ago
                 sendValidationEmail(user);
-                throw new RuntimeException("Account is not verified. Please find a new token sent to you for verification!");
+                throw new RuntimeException("Login: Account is not verified. Please find a new token sent to you for verification!");
             }
-            throw new RuntimeException("Account is not verified. Please find the token sent to you for verification!");
+            throw new RuntimeException("Login: Account is not verified. Please find the token sent to you for verification!");
         }
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
@@ -244,7 +241,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserEntity user = userRepository.findById(savedToken.getUser().getUuid())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found for this token."));
+                .orElseThrow(() -> new UsernameNotFoundException("Reset password: User not found for this token."));
 
         // Hash the new password and save it
         user.setPassword(passwordEncoder.encode(newPassword));

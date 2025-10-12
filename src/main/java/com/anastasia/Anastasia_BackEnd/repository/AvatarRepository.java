@@ -10,7 +10,7 @@ import java.util.UUID;
 @Repository
 public interface AvatarRepository extends JpaRepository<AvatarEntity, Long> {
 
-    Optional<AvatarEntity> findByUserId(UUID userId);
-    Optional<AvatarEntity> findByMemberId(UUID memberId);
+    Optional<AvatarEntity> findByOwnerId(UUID userId);
+//    Optional<AvatarEntity> findByMemberId(UUID memberId);
 
 }

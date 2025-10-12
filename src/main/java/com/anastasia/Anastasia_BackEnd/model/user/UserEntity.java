@@ -45,7 +45,7 @@ public class UserEntity{
     @JoinColumn(name = "profile_avatar_id", unique = true)
     private AvatarEntity profileAvatar;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     private List<AvatarEntity> avatars;
 
     @Column(nullable = false)

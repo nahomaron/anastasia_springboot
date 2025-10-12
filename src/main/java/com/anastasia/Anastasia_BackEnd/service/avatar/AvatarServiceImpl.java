@@ -54,7 +54,7 @@ public class AvatarServiceImpl implements AvatarService{
 
     @Override
     public AvatarDTO getAvatar(String ownerType, UUID ownerId) {
-        return avatarRepository.findByUserId(ownerId) // for USER case
+        return avatarRepository.findByOwnerId(ownerId) // for USER case
                 .map(a -> new AvatarDTO(a.getImageUrl(), a.getImageSize()))
                 .orElseThrow(() -> new EntityNotFoundException("Avatar not found"));
     }

@@ -181,7 +181,7 @@ public class UserServiceImpl implements UserService {
                 .imageUrl(avatarDTO.getImageUrl())
                 .imageSize(avatarDTO.getImageSize())
                 .avatarType(AvatarType.USER)
-                .user(user)
+                .ownerId(user.getUuid())
                 .build();
 
         avatar = avatarRepository.save(avatar);

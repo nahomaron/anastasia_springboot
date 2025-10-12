@@ -45,7 +45,8 @@ public class MemberEntity extends Auditable {
     @Column(nullable = false)
     private boolean approvedByPriest;
 
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "avatar_id", referencedColumnName = "id")
     private AvatarEntity avatar;
 
     private boolean deacon;
