@@ -56,13 +56,12 @@ public class AuthTests extends BaseApiTest {
 
     @Test
     void shouldFailLoginWithInvalidCredentials(){
+        authService.logout(BaseApiTest.cachedAccessToken);
         AuthenticationRequest request = new AuthenticationRequest();
+
         request.setEmail("invalidUser@gmail.com");
         request.setPassword("wrongPassword");
         Response res = authService.login(request);
-
-//        System.out.println("Response status: " + res.statusCode());
-//        System.out.println("Response body: " + res.asString());
 
         Assertions.assertEquals(401, res.getStatusCode());
     }

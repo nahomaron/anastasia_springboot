@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.api.base;
 
+import com.anastasia.Anastasia_BackEnd.api.config.ApiInterceptor;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.tests.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
@@ -34,6 +35,10 @@ public class BaseApiTest {
     protected static AuthenticationResponse cachedAuth;
     protected static RequestSpecification authSpec;
 
+    protected static String cachedAccessToken;
+    protected static String cachedRefreshToken;
+    protected static String cachedEmail;
+
     // Spring injects the actual random port the server started on
     @LocalServerPort
     private int port; // Must be an instance field
@@ -52,6 +57,7 @@ public class BaseApiTest {
         RestAssured.port = this.port;
         RestAssured.basePath = "/api/v1";
         RestAssured.defaultParser = Parser.JSON;
+        RestAssured.filters(new ApiInterceptor());
 
         // 2. Ensure the expensive one-time setup runs *after* RestAssured is configured
         if (cachedAuth == null) {
@@ -59,13 +65,16 @@ public class BaseApiTest {
         }
     }
 
-    private static void initializeAuthenticationCache() {
+    protected static void initializeAuthenticationCache() {
         String email = "api_user_" + System.currentTimeMillis() + "@mail.com";
+        cachedEmail = email;
 
         // Perform the full sign-up -> activate -> login flow.
         AuthenticationResponse loginResponse = AuthFlowHelper.signUpAndActivateAndLogin(email);
 
         cachedAuth = loginResponse;
+        cachedAccessToken = loginResponse.getAccessToken();
+        cachedRefreshToken = loginResponse.getRefreshToken();
 
         // Build the authenticated spec
         authSpec = new RequestSpecBuilder()
@@ -106,6 +115,11 @@ public class BaseApiTest {
         }
 
         return authSpec;
+    }
+
+    /** Helper to add Authorization header automatically */
+    protected String bearerToken() {
+        return "Bearer " + cachedAccessToken;
     }
 
     protected static Map<String, AuthenticationResponse> tokenCache = new HashMap<>();

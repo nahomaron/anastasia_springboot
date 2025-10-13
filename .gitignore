@@ -4,6 +4,13 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-check-report.html
+
 ### STS ###
 .apt_generated
 .classpath
@@ -50,6 +57,8 @@ build/
 /*.iml
 /*.ipr
 /*.iws
+.idea/
+
 
 # Ignore Eclipse specific files
 /.settings/
@@ -72,6 +81,12 @@ hs_err_pid*
 /**/*.class
 /**/*.war
 /**/*.jar
+
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
 
 # Ignore environment variables and sensitive data
 .env
