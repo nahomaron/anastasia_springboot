@@ -7,25 +7,34 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class AuthTests extends BaseApiTest {
-    private static String TEST_EMAIL;
+//    private static String TEST_EMAIL;
+    private String testEmail;
     private static final String TEST_PASSWORD = "Password@123";
 
     public final AuthService authService = new AuthService();
 
-    @BeforeAll
-    static void init() {
-        TEST_EMAIL = "auto_" + System.currentTimeMillis() + "@mail.com";
-        // sign up and activate once for all tests
-        AuthFlowHelper.signUpAndActivateAndLogin(TEST_EMAIL);
+//    @BeforeAll
+//    static void init() {
+//        TEST_EMAIL = "auto_" + System.currentTimeMillis() + "@mail.com";
+//        // sign up and activate once for all tests
+//        AuthFlowHelper.signUpAndActivateAndLogin(TEST_EMAIL);
+//    }
+    @BeforeEach
+    void setupTestUser() {
+        // Create a unique user for these specific login tests
+        testEmail = "auth_test_" + System.currentTimeMillis() + "@mail.com";
+        // Ensure this user is signed up and activated *before* the login tests run
+        AuthFlowHelper.signUpAndActivateAndLogin(testEmail);
     }
 
     @Test
     void shouldLoginSuccessfully(){
         AuthenticationRequest request = new AuthenticationRequest();
-        request.setEmail(TEST_EMAIL);
+        request.setEmail(testEmail);
         request.setPassword(TEST_PASSWORD);
         Response res = authService.login(request);
 
@@ -36,7 +45,7 @@ public class AuthTests extends BaseApiTest {
     @Test
     void shouldExtractTokenFromResponse() {
         AuthenticationRequest req = new
-                AuthenticationRequest(TEST_EMAIL, TEST_PASSWORD);
+                AuthenticationRequest(testEmail, TEST_PASSWORD);
         AuthenticationResponse authRes = authService.loginAndExtractToken(req);
 
         Assertions.assertNotNull(authRes, "AuthResponse should not be null");

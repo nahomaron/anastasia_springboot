@@ -13,6 +13,8 @@ target/
 .springBeans
 .sts4-cache
 application.properties
+application-api.properties
+application-test.properties
 
 ### IntelliJ IDEA ###
 .idea
@@ -92,3 +94,4 @@ docker-compose.override.yml
 /.cache/
 /out/
 
+allure-results/
