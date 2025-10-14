@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.service.auth;
 
+import com.anastasia.Anastasia_BackEnd.exception.customExceptions.AuthenticationProcessException;
+import com.anastasia.Anastasia_BackEnd.exception.customExceptions.InvalidCredentialsException;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.token.Token;
@@ -89,11 +91,13 @@ public class AuthServiceImpl implements AuthService {
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException {
 
         try {
-            var auth = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            throw new InvalidCredentialsException("Invalid email or password");
         } catch (Exception e) {
-            throw new RuntimeException("Login failed: " + e.getMessage());
+            throw new AuthenticationProcessException("An unexpected error occurred during login");
         }
 
 

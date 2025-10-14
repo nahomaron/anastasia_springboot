@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
+import io.qameta.allure.Step;
 import io.restassured.builder.ResponseBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -19,7 +20,8 @@ import static io.restassured.RestAssured.given;
  */
 public class AuthService {
     Logger log = org.slf4j.LoggerFactory.getLogger(AuthService.class);
-    
+
+    @Step("Sign up user with email: {request.email}")
     public Response signUp(UserDTO request) {
         return given()
                 .contentType(ContentType.JSON)
@@ -31,6 +33,7 @@ public class AuthService {
                 .response();
     }
 
+    @Step("Activate account with token")
     public Response activateAccount(String token) {
         return given()
                 .when()
@@ -40,6 +43,7 @@ public class AuthService {
                 .response();
     }
 
+    @Step("Login with email: {request.email}")
     public Response login(AuthenticationRequest request){
         try {
             Response rawResponse = given()
@@ -75,6 +79,7 @@ public class AuthService {
         return responseBuilder.build();
     }
 
+    @Step("Logout with access token")
     public void logout(String accessToken) {
         given()
                 .header("Authorization", "Bearer " + accessToken)
@@ -88,6 +93,7 @@ public class AuthService {
     }
 
 
+    @Step("Login and extract token for email: {request.email}")
     public AuthenticationResponse loginAndExtractToken(AuthenticationRequest request) {
         Response response = login(request);
 

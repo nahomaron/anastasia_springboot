@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.api.config;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
+import io.qameta.allure.Allure;
 import io.restassured.filter.Filter;
 import io.restassured.filter.FilterContext;
 import io.restassured.response.Response;
@@ -8,6 +9,8 @@ import io.restassured.specification.FilterableRequestSpecification;
 import io.restassured.specification.FilterableResponseSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
 
 public class ApiInterceptor extends BaseApiTest implements Filter {
 
@@ -54,7 +57,42 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
             log.error("Network or IO error during request to {}: {}", requestSpec.getURI(), e.getMessage());
         }
 
-        // 5. Return whatever response we have (could be null)
+//        String requestAttachment = requestSpec.getBody() != null
+//                ? requestSpec.getBody().toString()
+//                : "";
+//        Allure.addAttachment(
+//                "Request - " + requestSpec.getMethod() + " " + requestSpec.getURI(),
+//                "application/json",
+//                requestAttachment
+//        );
+//
+//        if (response != null) {
+//            Allure.addAttachment(
+//                    "Response - " + response.getStatusCode(),
+//                    "application/json",
+//                    response.asPrettyString()
+//            );
+//        }
+        if (response != null) {
+            Allure.addAttachment(
+                    "Response - " + response.getStatusCode(),
+                    "application/json",
+                    new ByteArrayInputStream(response.asPrettyString().getBytes()),
+                    ".json"
+            );
+        }
+
+        if (requestSpec.getBody() != null) {
+            Allure.addAttachment(
+                    "Request - " + requestSpec.getMethod() + " " + requestSpec.getURI(),
+                    "application/json",
+                    new ByteArrayInputStream(requestSpec.getBody().toString().getBytes()),
+                    ".json"
+            );
+        }
+
+
+
         return response;
     }
 }

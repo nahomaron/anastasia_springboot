@@ -4,12 +4,19 @@ import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.*;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@Epic("Authentication")
+@Feature("User Account Management")
+@Story("Sign up, activate, and login flow")
+@Owner("Nahom Aron")
+@Severity(SeverityLevel.CRITICAL)
 public class AuthTests extends BaseApiTest {
 //    private static String TEST_EMAIL;
     private String testEmail;
@@ -17,13 +24,8 @@ public class AuthTests extends BaseApiTest {
 
     public final AuthService authService = new AuthService();
 
-//    @BeforeAll
-//    static void init() {
-//        TEST_EMAIL = "auto_" + System.currentTimeMillis() + "@mail.com";
-//        // sign up and activate once for all tests
-//        AuthFlowHelper.signUpAndActivateAndLogin(TEST_EMAIL);
-//    }
     @BeforeEach
+    @Description("Verifies user can sign up, activate, and login successfully.")
     void setupTestUser() {
         // Create a unique user for these specific login tests
         testEmail = "auth_test_" + System.currentTimeMillis() + "@mail.com";
@@ -32,6 +34,8 @@ public class AuthTests extends BaseApiTest {
     }
 
     @Test
+    @Feature("Login")
+    @Story("User can login with valid credentials")
     void shouldLoginSuccessfully(){
         AuthenticationRequest request = new AuthenticationRequest();
         request.setEmail(testEmail);
@@ -43,6 +47,7 @@ public class AuthTests extends BaseApiTest {
     }
 
     @Test
+    @Description("Verifies authentication token is extracted from login response.")
     void shouldExtractTokenFromResponse() {
         AuthenticationRequest req = new
                 AuthenticationRequest(testEmail, TEST_PASSWORD);
@@ -55,6 +60,7 @@ public class AuthTests extends BaseApiTest {
     }
 
     @Test
+    @Description("Verifies login fails with invalid credentials.")
     void shouldFailLoginWithInvalidCredentials(){
         authService.logout(BaseApiTest.cachedAccessToken);
         AuthenticationRequest request = new AuthenticationRequest();

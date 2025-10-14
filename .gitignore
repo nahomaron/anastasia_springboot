@@ -52,6 +52,11 @@ build/
 .gradle/
 !gradle-wrapper.jar  # Keep the Gradle wrapper
 
+
+# Keep Maven wrapper files (needed for CI)
+!.mvn/
+!.mvn/wrapper/maven-wrapper.properties
+
 # Ignore IntelliJ IDEA specific files
 /.idea/
 /*.iml
@@ -109,4 +114,13 @@ docker-compose.override.yml
 /.cache/
 /out/
 
+# --- Allure Reports ---
 allure-results/
+allure-report/
+target/allure-results/
+target/site/allure-maven-plugin/
+
+*.html
+*.json
+*.xml
+

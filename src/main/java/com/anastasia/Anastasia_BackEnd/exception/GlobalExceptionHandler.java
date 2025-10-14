@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.exception;
 
+import com.anastasia.Anastasia_BackEnd.exception.customExceptions.AuthenticationProcessException;
+import com.anastasia.Anastasia_BackEnd.exception.customExceptions.InvalidCredentialsException;
 import com.sun.jdi.request.DuplicateRequestException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.ConstraintViolationException;
@@ -29,9 +31,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static com.anastasia.Anastasia_BackEnd.exception.BusinessErrorCodes.*;
 import static org.springframework.http.HttpStatus.*;
@@ -222,8 +223,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponse(UNAUTHORIZED, code, code.getDescription());
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.UNAUTHORIZED.value());
+        body.put("error", "Unauthorized");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler(AuthenticationProcessException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthProcess(AuthenticationProcessException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        body.put("error", "Authentication Error");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
     // Removed the generic @ExceptionHandler(Exception.class) method to resolve ambiguity
     // with more specific handlers and overridden methods from ResponseEntityExceptionHandler.
+
+
 
 
     // ===================================== Helper methods ============================================== //

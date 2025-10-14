@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.api.base;
 
 import com.anastasia.Anastasia_BackEnd.api.config.ApiInterceptor;
+import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.tests.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
@@ -18,6 +19,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
 
 /**
  * Base class for API integration tests.
@@ -59,9 +65,30 @@ public class BaseApiTest {
         RestAssured.defaultParser = Parser.JSON;
         RestAssured.filters(new ApiInterceptor());
 
+        writeEnvironmentInfo();
+
+
+
         // 2. Ensure the expensive one-time setup runs *after* RestAssured is configured
         if (cachedAuth == null) {
             initializeAuthenticationCache();
+        }
+    }
+
+    private static void writeEnvironmentInfo() {
+        try {
+            Path allureResults = Path.of("target/allure-results");
+            Files.createDirectories(allureResults);
+            Properties props = new Properties();
+            props.setProperty("Environment", "Local Test");
+            props.setProperty("BaseURL", ConfigManager.get("base.url"));
+            props.setProperty("Profile", "test");
+            props.setProperty("GeneratedAt", java.time.LocalDateTime.now().toString());
+            try (FileOutputStream fos = new FileOutputStream(allureResults.resolve("environment.properties").toFile())) {
+                props.store(fos, "Allure Environment Info");
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to write environment info: " + e.getMessage());
         }
     }
 
