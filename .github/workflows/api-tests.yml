@@ -33,29 +33,37 @@ jobs:
 
       - name: Start backend with test profile
         run: |
-          echo "Starting backend with test profile..."
-          # Start in background, redirecting output
-          nohup java -jar target/*.jar --spring.profiles.active=test > server.log 2>&1 &
-          
-          # Health-check loop for robust startup
-          for i in {1..24}; do
-            if curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
-              echo "Backend is up after $((i * 5)) seconds!"
-              break
-            fi
-            echo "Waiting for backend to start... (Attempt $i/15)"
-            sleep 5
-            if [ $i -eq 24 ]; then
-              echo "Health check failed after  seconds. Aborting."
-              tail -n 50 server.log
-              exit 1
-            fi
-          done
-          
-          echo "Last 20 lines of server log:"
-          tail -n 20 server.log
-
+            echo "Starting backend with test profile..."
+            # Start in background, redirecting output
+            nohup java -jar target/*.jar --spring.profiles.active=test > server.log 2>&1 &
+            
+            # Health-check loop (120 seconds max)
+            MAX_ATTEMPTS=24
+            SLEEP_SECONDS=5
+            TIMEOUT_SECONDS=$((MAX_ATTEMPTS * SLEEP_SECONDS))
+            
+            for i in $(seq 1 $MAX_ATTEMPTS); do
+              if curl -s http://localhost:8081/actuator/health | grep -q "UP"; then
+                echo "Backend is up after $((i * SLEEP_SECONDS)) seconds!"
+                break
+              fi
+            
+              # **FIXED LOGGING:** Now consistently uses MAX_ATTEMPTS
+              echo "Waiting for backend to start... (Attempt $i/$MAX_ATTEMPTS)"
+              sleep $SLEEP_SECONDS
+            
+              if [ $i -eq $MAX_ATTEMPTS ]; then
+                # **FIXED TIMEOUT MESSAGE:** Displays the calculated timeout
+                echo "Health check failed after $TIMEOUT_SECONDS seconds. Aborting."
+                tail -n 50 server.log
+                exit 1
+              fi
+            done
+            
+            echo "Last 20 lines of server log:"
+            tail -n 20 server.log
       # 🧪 Phase 2: Run Tests
+
       - name: Run RestAssured API tests
         # The 'test' profile must ensure Allure results are generated in target/allure-results
         run: ./mvnw test -Papi
