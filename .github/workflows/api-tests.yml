@@ -49,9 +49,57 @@ jobs:
           SPRING_PROFILES_ACTIVE: test
           BASE_URL: http://localhost:8080/api/v1
 
+       # ⚙️ New: Generate Allure Report
+      - name: Generate Allure report
+        if: always()
+        run: ./mvnw allure:report
+
+      # ⚙️ New: Upload Allure raw results
+      - name: 📦 Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: target/allure-results/
+
+       # ⚙️ New: Upload Allure HTML report
+      - name: 🌐 Upload Allure HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-html-report
+          path: target/site/allure-maven-plugin/
+
       - name: Archive test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports
           path: target/surefire-reports/
+
+  deploy-allure-report:
+    needs: api-tests
+    if: always() && github.ref == 'refs/heads/main'        # only publish from main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⬇️ Download Allure HTML artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-html-report
+          path: allure-report
+
+      - name: Deploy Allure report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: allure-report
+          publish_branch: gh-pages
+          keep_files: false
