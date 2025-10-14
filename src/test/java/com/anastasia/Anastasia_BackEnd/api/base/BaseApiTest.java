@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.net.URI;
 
 /**
  * Base class for API integration tests.
@@ -37,6 +38,12 @@ public class BaseApiTest {
 
     private static final JwtUtil jwtUtil = new JwtUtil();
     // The static AuthService field was removed as it was not being initialized by Spring (it was null).
+
+    static {
+        if (System.getProperty("environment") == null) {
+            System.setProperty("environment", "test");
+        }
+    }
 
     protected static AuthenticationResponse cachedAuth;
     protected static RequestSpecification authSpec;
@@ -59,19 +66,46 @@ public class BaseApiTest {
     @BeforeEach
     public void configureRestAssured() {
         // 1. Set the base URI and port using the injected fields
-        RestAssured.baseURI = "http://localhost";
-        RestAssured.port = this.port;
-        RestAssured.basePath = "/api/v1";
+        applyBaseUrlConfiguration();
         RestAssured.defaultParser = Parser.JSON;
         RestAssured.filters(new ApiInterceptor());
 
         writeEnvironmentInfo();
 
-
-
         // 2. Ensure the expensive one-time setup runs *after* RestAssured is configured
         if (cachedAuth == null) {
             initializeAuthenticationCache();
+        }
+    }
+
+    private void applyBaseUrlConfiguration() {
+        String configuredBaseUrl = ConfigManager.get("base.url");
+        if (configuredBaseUrl == null || configuredBaseUrl.isBlank()) {
+            throw new IllegalStateException("Missing base.url configuration for environment "
+                    + ConfigManager.getEnvironment());
+        }
+
+        URI uri = URI.create(configuredBaseUrl);
+        String scheme = uri.getScheme() != null ? uri.getScheme() : "http";
+        String host = uri.getHost() != null ? uri.getHost() : "localhost";
+
+        RestAssured.baseURI = scheme + "://" + host;
+
+        if (this.port > 0) {
+            RestAssured.port = this.port;
+        } else if (uri.getPort() > 0) {
+            RestAssured.port = uri.getPort();
+        } else if ("https".equalsIgnoreCase(scheme)) {
+            RestAssured.port = 443;
+        } else {
+            RestAssured.port = 80;
+        }
+
+        String path = uri.getPath();
+        if (path != null && !path.isBlank() && !"/".equals(path)) {
+            RestAssured.basePath = path;
+        } else {
+            RestAssured.basePath = "/api/v1";
         }
     }
 
@@ -82,7 +116,7 @@ public class BaseApiTest {
             Properties props = new Properties();
             props.setProperty("Environment", "Local Test");
             props.setProperty("BaseURL", ConfigManager.get("base.url"));
-            props.setProperty("Profile", "test");
+            props.setProperty("Profile", ConfigManager.getEnvironment());
             props.setProperty("GeneratedAt", java.time.LocalDateTime.now().toString());
             try (FileOutputStream fos = new FileOutputStream(allureResults.resolve("environment.properties").toFile())) {
                 props.store(fos, "Allure Environment Info");

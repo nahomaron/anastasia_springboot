@@ -19,9 +19,7 @@ dependency-check-report.html
 .settings
 .springBeans
 .sts4-cache
-application.properties
-application-api.properties
-application-test.properties
+
 
 ### IntelliJ IDEA ###
 .idea
@@ -99,6 +97,10 @@ hs_err_pid*
 application.yml
 application-dev.properties
 application-prod.properties
+application-test.properties
+application-api.properties
+application.properties
+
 config/*.properties
 config/*.yml
 
