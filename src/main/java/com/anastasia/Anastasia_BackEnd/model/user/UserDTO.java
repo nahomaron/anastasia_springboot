@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.model.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -33,6 +34,7 @@ public class UserDTO {
     @NotBlank(message = "Confirm Password is required")
     private String confirmPassword;
 
+    @JsonIgnore
     public boolean isPasswordMatch() {
         return this.password.equals(this.confirmPassword);
     }

@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.api.tests;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
+import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import io.qameta.allure.SeverityLevel;
@@ -18,9 +19,8 @@ import org.junit.jupiter.api.Test;
 @Owner("Nahom Aron")
 @Severity(SeverityLevel.CRITICAL)
 public class AuthTests extends BaseApiTest {
-//    private static String TEST_EMAIL;
     private String testEmail;
-    private static final String TEST_PASSWORD = "Password@123";
+    private String testPassword;
 
     public final AuthService authService = new AuthService();
 
@@ -28,9 +28,10 @@ public class AuthTests extends BaseApiTest {
     @Description("Verifies user can sign up, activate, and login successfully.")
     void setupTestUser() {
         // Create a unique user for these specific login tests
-        testEmail = "auth_test_" + System.currentTimeMillis() + "@mail.com";
+        testEmail = DataGenerator.randomEmail();
+        testPassword = DataGenerator.randomPassword();
         // Ensure this user is signed up and activated *before* the login tests run
-        AuthFlowHelper.signUpAndActivateAndLogin(testEmail);
+        AuthFlowHelper.signUpAndActivateAndLogin(testEmail, testPassword);
     }
 
     @Test
@@ -39,7 +40,7 @@ public class AuthTests extends BaseApiTest {
     void shouldLoginSuccessfully(){
         AuthenticationRequest request = new AuthenticationRequest();
         request.setEmail(testEmail);
-        request.setPassword(TEST_PASSWORD);
+        request.setPassword(testPassword);
         Response res = authService.login(request);
 
         Assertions.assertEquals(200, res.getStatusCode());
@@ -50,7 +51,7 @@ public class AuthTests extends BaseApiTest {
     @Description("Verifies authentication token is extracted from login response.")
     void shouldExtractTokenFromResponse() {
         AuthenticationRequest req = new
-                AuthenticationRequest(testEmail, TEST_PASSWORD);
+                AuthenticationRequest(testEmail, testPassword);
         AuthenticationResponse authRes = authService.loginAndExtractToken(req);
 
         Assertions.assertNotNull(authRes, "AuthResponse should not be null");

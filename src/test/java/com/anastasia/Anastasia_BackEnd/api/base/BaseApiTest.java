@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.api.config.ApiInterceptor;
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.tests.AuthFlowHelper;
+import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
@@ -51,6 +52,7 @@ public class BaseApiTest {
     protected static String cachedAccessToken;
     protected static String cachedRefreshToken;
     protected static String cachedEmail;
+    protected static String cachedPassword;
 
     // Spring injects the actual random port the server started on
     @LocalServerPort
@@ -127,11 +129,13 @@ public class BaseApiTest {
     }
 
     protected static void initializeAuthenticationCache() {
-        String email = "api_user_" + System.currentTimeMillis() + "@mail.com";
+        String email = DataGenerator.randomEmail();
+        String password = DataGenerator.randomPassword();
         cachedEmail = email;
+        cachedPassword = password;
 
         // Perform the full sign-up -> activate -> login flow.
-        AuthenticationResponse loginResponse = AuthFlowHelper.signUpAndActivateAndLogin(email);
+        AuthenticationResponse loginResponse = AuthFlowHelper.signUpAndActivateAndLogin(email, password);
 
         cachedAuth = loginResponse;
         cachedAccessToken = loginResponse.getAccessToken();
@@ -158,7 +162,7 @@ public class BaseApiTest {
         if (jwtUtil.isTokenExpired(cachedAuth.getAccessToken())) {
             String email = jwtUtil.extractUsername(cachedAuth.getAccessToken());
 
-            AuthenticationRequest request = new AuthenticationRequest(email, "Password@123");
+            AuthenticationRequest request = new AuthenticationRequest(email, cachedPassword);
 
             // FIX: Create local instance of AuthService as the static field was null
             AuthService localAuthService = new AuthService();
@@ -190,7 +194,7 @@ public class BaseApiTest {
      */
     public static RequestSpecification getSpecForRole(String role) {
         if (!tokenCache.containsKey(role)) {
-            tokenCache.put(role, AuthFlowHelper.signUpAndActivateAndLogin(role + "@mail.com"));
+            tokenCache.put(role, AuthFlowHelper.signUpAndActivateAndLogin(role + "@mail.com", "Password@123"));
         }
         return new RequestSpecBuilder()
                 .setContentType("application/json")

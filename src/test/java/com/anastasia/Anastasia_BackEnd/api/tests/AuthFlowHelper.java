@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.api.tests;
 
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
+import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
@@ -14,12 +15,10 @@ import static io.restassured.RestAssured.given;
 public class AuthFlowHelper {
     private static final AuthService authService = new AuthService();
 
-    public static AuthenticationResponse signUpAndActivateAndLogin(String email) {
-        String password = "Password@123";
-
+    public static AuthenticationResponse signUpAndActivateAndLogin(String email, String password) {
         // 1️⃣ Sign up
         UserDTO signUp = UserDTO.builder()
-                .fullName("Test User")
+                .fullName(DataGenerator.randomName())
                 .email(email)
                 .password(password)
                 .confirmPassword(password)

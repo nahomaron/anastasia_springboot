@@ -23,6 +23,8 @@ public class AuthService {
 
     @Step("Sign up user with email: {request.email}")
     public Response signUp(UserDTO request) {
+        log.info("Signup payload:\n{}", request);
+
         return given()
                 .contentType(ContentType.JSON)
                 .body(request)
@@ -56,7 +58,7 @@ public class AuthService {
             if (rawResponse == null) {
                 log.error("Login attempt to {} returned a null response object",
                         ConfigManager.get("auth.login.endpoint"));
-                return buildFailureResponse();
+                return buildFailureResponse(new Exception("Null response from server"));
             }
 
             return rawResponse.then()
@@ -66,18 +68,10 @@ public class AuthService {
             // Catching the broad exception (often IO, Connect, or Wrapped)
             log.error("Network or IO error during login attempt to {}: {}",
                     ConfigManager.get("auth.login.endpoint"), e.getMessage(), e);
-            return buildFailureResponse();
+            return buildFailureResponse(e);
         }
     }
 
-    private Response buildFailureResponse() {
-        // Build a synthetic failure response so callers can continue to assert on status codes.
-        ResponseBuilder responseBuilder = new ResponseBuilder();
-        responseBuilder.setStatusCode(401);
-        responseBuilder.setContentType(ContentType.JSON);
-        responseBuilder.setBody("{\"message\":\"login failed\"}");
-        return responseBuilder.build();
-    }
 
     @Step("Logout with access token")
     public void logout(String accessToken) {
@@ -104,4 +98,14 @@ public class AuthService {
             return null;
         }
     }
+
+    private Response buildFailureResponse(Exception e) {
+        int code = (e.getMessage() != null && e.getMessage().contains("Connection refused")) ? 503 : 401;
+        ResponseBuilder rb = new ResponseBuilder();
+        rb.setStatusCode(code);
+        rb.setContentType(ContentType.JSON);
+        rb.setBody("{\"message\":\"" + e.getMessage() + "\"}");
+        return rb.build();
+    }
+
 }
