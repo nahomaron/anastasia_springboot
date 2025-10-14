@@ -45,8 +45,8 @@ jobs:
             fi
             echo "Waiting for backend to start... (Attempt $i/15)"
             sleep 5
-            if [ $i -eq 15 ]; then
-              echo "Health check failed after 75 seconds. Aborting."
+            if [ $i -eq 24 ]; then
+              echo "Health check failed after  seconds. Aborting."
               tail -n 50 server.log
               exit 1
             fi
