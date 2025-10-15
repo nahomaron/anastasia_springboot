@@ -14,11 +14,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
@@ -32,12 +28,9 @@ import java.net.URI;
 
 /**
  * Base class for API integration tests.
- * Starts the application on a random port for isolation, ensuring the web environment is fully started
- * before tests attempt to connect via RestAssured.
+ * Treats the backend as an already-running black-box service and only configures RestAssured
+ * before delegating to helper flows.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@RequiredArgsConstructor
 public class BaseApiTest {
 
     private static final JwtUtil jwtUtil = new JwtUtil();
@@ -58,20 +51,16 @@ public class BaseApiTest {
     protected static String cachedEmail;
     protected static String cachedPassword;
 
-    // Spring injects the actual random port the server started on
-    @LocalServerPort
-    private int port; // Must be an instance field
-
     // --- Setup Logic ---
 
     /**
-     * Configures RestAssured with the dynamic port and ensures the authentication
-     * cache is initialized before any test method runs.
+     * Configures RestAssured with target base URL and ensures the authentication cache
+     * is initialized before any test method runs.
      * This method runs once per test class instance (i.e., before each test method).
      */
     @BeforeEach
     public void configureRestAssured() {
-        // 1. Set the base URI and port using the injected fields
+        // 1. Configure RestAssured to talk to the externalised backend
         applyBaseUrlConfiguration();
         RestAssured.defaultParser = Parser.JSON;
         RestAssured.filters(new ApiInterceptor());
@@ -85,11 +74,7 @@ public class BaseApiTest {
     }
 
     private void applyBaseUrlConfiguration() {
-        String configuredBaseUrl = ConfigManager.get("base.url");
-        if (configuredBaseUrl == null || configuredBaseUrl.isBlank()) {
-            throw new IllegalStateException("Missing base.url configuration for environment "
-                    + ConfigManager.getEnvironment());
-        }
+        String configuredBaseUrl = resolveBaseUrl();
 
         URI uri = URI.create(configuredBaseUrl);
         String scheme = uri.getScheme() != null ? uri.getScheme() : "http";
@@ -97,14 +82,10 @@ public class BaseApiTest {
 
         RestAssured.baseURI = scheme + "://" + host;
 
-        if (this.port > 0) {
-            RestAssured.port = this.port;
-        } else if (uri.getPort() > 0) {
+        if (uri.getPort() > 0) {
             RestAssured.port = uri.getPort();
-        } else if ("https".equalsIgnoreCase(scheme)) {
-            RestAssured.port = 443;
         } else {
-            RestAssured.port = 80;
+            RestAssured.port = "https".equalsIgnoreCase(scheme) ? 443 : 80;
         }
 
         String path = uri.getPath();
@@ -121,7 +102,7 @@ public class BaseApiTest {
             Files.createDirectories(allureResults);
             Properties props = new Properties();
             props.setProperty("Environment", "Local Test");
-            props.setProperty("BaseURL", ConfigManager.get("base.url"));
+            props.setProperty("BaseURL", resolveBaseUrl());
             props.setProperty("Profile", ConfigManager.getEnvironment());
             props.setProperty("GeneratedAt", java.time.LocalDateTime.now().toString());
             try (FileOutputStream fos = new FileOutputStream(allureResults.resolve("environment.properties").toFile())) {
@@ -130,6 +111,30 @@ public class BaseApiTest {
         } catch (IOException e) {
             System.err.println("Failed to write environment info: " + e.getMessage());
         }
+    }
+
+    private static String resolveBaseUrl() {
+        String envOverride = System.getenv("BASE_URL");
+        if (hasText(envOverride)) {
+            return envOverride.trim();
+        }
+
+        String systemProperty = System.getProperty("base.url");
+        if (hasText(systemProperty)) {
+            return systemProperty.trim();
+        }
+
+        String configuredBaseUrl = ConfigManager.get("base.url");
+        if (hasText(configuredBaseUrl)) {
+            return configuredBaseUrl.trim();
+        }
+
+        throw new IllegalStateException("Missing base.url configuration for environment "
+                + ConfigManager.getEnvironment());
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     protected static void initializeAuthenticationCache() {

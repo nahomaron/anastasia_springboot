@@ -400,7 +400,7 @@
 				<version>3.2.5</version>
 				<configuration>
 					<argLine>@{argLine}</argLine>
-					<testFailureIgnore>true</testFailureIgnore>
+<!--					<testFailureIgnore>true</testFailureIgnore>-->
 					<systemPropertyVariables>
 						<allure.results.directory>
 							${project.build.directory}/allure-results
