@@ -12,6 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    env:
+      SPRING_PROFILES_ACTIVE: test
+      ALLURE_RESULTS_DIR: target/allure-results
+#      MAVEN_OPTS: "-Dmaven.test.failure.ignore=true"
+
+      # Default cleanup behavior — overridden per branch below
+      CLEANUP_ON_EXIT: "false"
+      CLEANUP_ON_FAILURE_ONLY: "true"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,6 +35,22 @@ jobs:
 
       - name: Grant execute permission for Maven wrapper
         run: chmod +x ./mvnw
+
+          # 🧹 Configure cleanup behavior per branch
+      - name: Configure cleanup behavior per branch
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "CLEANUP_ON_EXIT=true" >> $GITHUB_ENV
+            echo "CLEANUP_ON_FAILURE_ONLY=false" >> $GITHUB_ENV
+            echo "Cleanup mode: Always cleanup (PR run)"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "CLEANUP_ON_EXIT=false" >> $GITHUB_ENV
+            echo "CLEANUP_ON_FAILURE_ONLY=true" >> $GITHUB_ENV
+            echo "Cleanup mode: Cleanup only on failure (main branch)"
+          else
+            echo "CLEANUP_ON_EXIT=false" >> $GITHUB_ENV
+            echo "CLEANUP_ON_FAILURE_ONLY=false" >> $GITHUB_ENV
+            echo "Cleanup mode: Skip cleanup (default)"
 
       # 📦 Phase 1: Build & Start Backend
       - name: Build Spring Boot backend (skip tests)
@@ -121,7 +146,7 @@ jobs:
       - name: Download Allure HTML artifact
         uses: actions/download-artifact@v4
         with:
-          name: allure-report
+          name: allure-html-report
           path: allure-report
 
       - name: Deploy Allure report to GitHub Pages

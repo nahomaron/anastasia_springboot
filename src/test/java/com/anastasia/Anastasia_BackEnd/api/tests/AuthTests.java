@@ -11,10 +11,7 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 @Epic("Authentication")
 @Feature("User Account Management")
@@ -30,6 +27,8 @@ public class AuthTests extends BaseApiTest {
     @BeforeEach
     @Description("Verifies user can sign up, activate, and login successfully.")
     void setupTestUser() {
+        System.out.println("Running pre-test cleanup...");
+        TestDataManager.resetAllTestData();
         // Create a unique user for these specific login tests
         testEmail = DataGenerator.randomEmail();
         testPassword = DataGenerator.randomPassword();
@@ -38,9 +37,15 @@ public class AuthTests extends BaseApiTest {
     }
 
     @AfterEach
-    void cleanup() {
-        // Ensure isolation between tests
-        TestDataManager.deleteUserByEmail(testEmail);
+    void cleanup(TestInfo testInfo) {
+        boolean testFailed = testInfo.getTags().contains("failed");
+        TestDataManager.cleanupOnFailure(testEmail, testFailed);
+        TestDataManager.cleanupIfEnabled(testEmail);
+    }
+
+    @AfterAll
+    static void exportCleanupSummary() {
+        TestDataManager.exportSummaryToAllure();
     }
 
     @Test
