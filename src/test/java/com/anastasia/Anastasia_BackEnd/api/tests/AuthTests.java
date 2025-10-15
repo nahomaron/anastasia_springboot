@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
+import com.anastasia.Anastasia_BackEnd.api.utils.SchemaValidator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import io.qameta.allure.SeverityLevel;
@@ -38,13 +39,13 @@ public class AuthTests extends BaseApiTest {
     @Feature("Login")
     @Story("User can login with valid credentials")
     void shouldLoginSuccessfully(){
-        AuthenticationRequest request = new AuthenticationRequest();
-        request.setEmail(testEmail);
-        request.setPassword(testPassword);
+        AuthenticationRequest request = new AuthenticationRequest(testEmail, testPassword);
         Response res = authService.login(request);
 
         Assertions.assertEquals(200, res.getStatusCode());
         Assertions.assertTrue(res.asString().contains("access_token"));
+
+        SchemaValidator.validate(res, "schemas/authentication-response-schema.json");
     }
 
     @Test
@@ -57,7 +58,6 @@ public class AuthTests extends BaseApiTest {
         Assertions.assertNotNull(authRes, "AuthResponse should not be null");
         Assertions.assertNotNull(authRes.getAccessToken(), "Access token should not be null");
 
-//        System.out.println("JWT Token: " + authRes.getAccessToken());
     }
 
     @Test
@@ -65,11 +65,12 @@ public class AuthTests extends BaseApiTest {
     void shouldFailLoginWithInvalidCredentials(){
         authService.logout(BaseApiTest.cachedAccessToken);
         AuthenticationRequest request = new AuthenticationRequest();
-
         request.setEmail("invalidUser@gmail.com");
         request.setPassword("wrongPassword");
         Response res = authService.login(request);
 
         Assertions.assertEquals(401, res.getStatusCode());
+        Assertions.assertTrue(res.asString().contains("Unauthorized"));
+
     }
 }

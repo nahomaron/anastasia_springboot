@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.api.services;
 
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
+import com.anastasia.Anastasia_BackEnd.api.config.RequestSpecFactory;
+import com.anastasia.Anastasia_BackEnd.api.utils.SchemaValidator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
@@ -13,6 +15,7 @@ import org.slf4j.Logger;
 
 
 import java.io.ByteArrayInputStream;
+import java.util.Map;
 
 import static io.restassured.RestAssured.given;
     
@@ -26,24 +29,23 @@ public class AuthService {
 
     @Step("Sign up user with email: {request.email}")
     public Response signUp(UserDTO request) {
-        log.info("Signup payload:\n{}", request);
-
         return given()
-                .contentType(ContentType.JSON)
+                .spec(RequestSpecFactory.anonymousSpec())
                 .body(request)
                 .when()
                 .post(ConfigManager.get("auth.signup.endpoint"))
                 .then()
                 .extract()
                 .response();
-
     }
 
     @Step("Activate account with token")
     public Response activateAccount(String token) {
         return given()
+                .spec(RequestSpecFactory.anonymousSpec())
+                .queryParam("token", token)
                 .when()
-                .get(ConfigManager.get("auth.activate.endpoint") + "?token=" + token)
+                .get(ConfigManager.get("auth.activate.endpoint"))
                 .then()
                 .extract()
                 .response();
@@ -53,8 +55,7 @@ public class AuthService {
     public Response login(AuthenticationRequest request){
         try {
             Response rawResponse = given()
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
+                    .spec(RequestSpecFactory.anonymousSpec())
                     .body(request)
                     .when()
                     .post(ConfigManager.get("auth.login.endpoint"));
@@ -77,12 +78,11 @@ public class AuthService {
     }
 
 
-    @Step("Logout with access token")
-    public void logout(String accessToken) {
-        given()
-                .header("Authorization", "Bearer " + accessToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
+    @Step("Logout user")
+    public Response logout(String accessToken) {
+        return given()
+                .spec(RequestSpecFactory.specWithHeaders(
+                        Map.of("Authorization", "Bearer " + accessToken)))
                 .when()
                 .post("/auth/logout")
                 .then()
@@ -94,6 +94,7 @@ public class AuthService {
     @Step("Login and extract token for email: {request.email}")
     public AuthenticationResponse loginAndExtractToken(AuthenticationRequest request) {
         Response response = login(request);
+        SchemaValidator.validate(response, "schemas/authentication-response-schema.json");
 
         if (response.statusCode() == 200 && !response.asString().isEmpty()) {
             return response.as(AuthenticationResponse.class);
@@ -101,15 +102,21 @@ public class AuthService {
             System.out.println("Login failed (status " + response.statusCode() + "): " + response.asString());
             return null;
         }
+
     }
 
-    private Response buildFailureResponse(Exception e) {
+
+    public static Response buildFailureResponse(Exception e) {
         int code = (e.getMessage() != null && e.getMessage().contains("Connection refused")) ? 503 : 401;
         ResponseBuilder rb = new ResponseBuilder();
         rb.setStatusCode(code);
         rb.setContentType(ContentType.JSON);
-        rb.setBody("{\"message\":\"" + e.getMessage() + "\"}");
+        rb.setBody("{\"message\":\"" + sanitize(e.getMessage()) + "\"}");
         return rb.build();
+    }
+
+    private static String sanitize(String input) {
+        return input == null ? "Unknown error" : input.replace("\"", "'");
     }
 
 

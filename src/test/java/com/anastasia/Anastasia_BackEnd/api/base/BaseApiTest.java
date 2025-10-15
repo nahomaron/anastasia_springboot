@@ -8,6 +8,7 @@ import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
+import io.qameta.allure.Allure;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
@@ -19,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.FileOutputStream;
@@ -209,9 +211,29 @@ public class BaseApiTest {
     }
 
     public static void ensureAuthenticated() {
-        if (cachedAuth == null || cachedAccessToken == null || cachedAccessToken.isBlank()
-                || jwtUtil.isTokenExpired(cachedAccessToken)) {
+        boolean needsAuth = (cachedAuth == null || cachedAccessToken == null || cachedAccessToken.isBlank());
+
+        if (!needsAuth && jwtUtil.isTokenExpired(cachedAccessToken)) {
+            needsAuth = true;
+        }
+
+        if (needsAuth) {
+            long start = System.currentTimeMillis();
             initializeAuthenticationCache();
+            long duration = System.currentTimeMillis() - start;
+
+            // Write to Allure report and logs
+            String message = String.format("Initialized new authentication cache for email: %s (took %d ms)",
+                    cachedEmail, duration);
+
+            System.out.println("[Auth Refresh] " + message);
+
+            Allure.addAttachment(
+                    "Auth Cache Refreshed",
+                    "text/plain",
+                    new ByteArrayInputStream(message.getBytes()),
+                    ".txt"
+            );
         }
     }
 

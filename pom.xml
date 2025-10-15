@@ -101,7 +101,6 @@
 				</plugins>
 			</build>
 		</profile>
-
 	</profiles>
 
 	<dependencies>
@@ -273,6 +272,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>io.rest-assured</groupId>
+			<artifactId>json-schema-validator</artifactId>
+			<version>5.5.0</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- JSON Parser-->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -317,7 +323,6 @@
 			<artifactId>jaxb-runtime</artifactId>
 			<version>4.0.5</version> <scope>runtime</scope>
 		</dependency>
-
 
 	</dependencies>
 	<dependencyManagement>

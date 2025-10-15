@@ -14,8 +14,6 @@ import java.util.UUID;
 @Builder
 public class AuthenticationResponse {
 
-    private UUID userId;
-
     @JsonProperty("access_token")
     private String accessToken;
 
