@@ -12,6 +12,7 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,6 +50,7 @@ public class BaseApiTest {
     protected static AuthenticationResponse cachedAuth;
     protected static RequestSpecification authSpec;
 
+    @Getter
     protected static String cachedAccessToken;
     protected static String cachedRefreshToken;
     protected static String cachedEmail;
@@ -201,4 +203,18 @@ public class BaseApiTest {
                 .addHeader("Authorization", "Bearer " + tokenCache.get(role).getAccessToken())
                 .build();
     }
+
+    public static boolean hasValidToken() {
+        return cachedAccessToken != null && !cachedAccessToken.isBlank();
+    }
+
+    public static void ensureAuthenticated() {
+        if (cachedAuth == null || cachedAccessToken == null || cachedAccessToken.isBlank()
+                || jwtUtil.isTokenExpired(cachedAccessToken)) {
+            initializeAuthenticationCache();
+        }
+    }
+
+
+
 }

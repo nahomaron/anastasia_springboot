@@ -4,5 +4,7 @@ public enum SubscriptionPlan {
     FREE,
     BASIC,
     PREMIUM,
-    ENTERPRISE
+    ENTERPRISE,
+    MONTHLY,
+    ANNUAL
 }
