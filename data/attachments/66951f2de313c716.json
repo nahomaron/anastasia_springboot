@@ -1,0 +1,7 @@
+{
+    "type": "about:blank",
+    "title": "Not Found",
+    "status": 404,
+    "detail": "No static resource api/v1/test-utils/cleanup/reset-all.",
+    "instance": "/api/v1/test-utils/cleanup/reset-all"
+}

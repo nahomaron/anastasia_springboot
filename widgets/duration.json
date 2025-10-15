@@ -1,0 +1,1211 @@
+[ {
+  "uid" : "6054736f5152d6cd",
+  "name" : "subscribeTenant_shouldThrowWhenRoleNotFound()",
+  "time" : {
+    "start" : 1760569925336,
+    "stop" : 1760569925338,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a5b517a1c579df64",
+  "name" : "testUpdateGroup_groupNotFound_throwsException()",
+  "time" : {
+    "start" : 1760569925106,
+    "stop" : 1760569925108,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1930485b56e8b951",
+  "name" : "shouldLoginSuccessfully()",
+  "time" : {
+    "start" : 1760569908583,
+    "stop" : 1760569909065,
+    "duration" : 482
+  },
+  "status" : "passed",
+  "severity" : "critical"
+}, {
+  "uid" : "7fa3a1f4ce868699",
+  "name" : "testUpdatePriestDetails_updatesAndSaves()",
+  "time" : {
+    "start" : 1760569925283,
+    "stop" : 1760569925288,
+    "duration" : 5
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "992952ba4a49b42a",
+  "name" : "testFindAllBySpecification()",
+  "time" : {
+    "start" : 1760569925513,
+    "stop" : 1760569925524,
+    "duration" : 11
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "855e89e324649cc5",
+  "name" : "testFindOne_whenNotExists()",
+  "time" : {
+    "start" : 1760569925166,
+    "stop" : 1760569925183,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8cfe56742db41bad",
+  "name" : "testFindOneGroup_success()",
+  "time" : {
+    "start" : 1760569925157,
+    "stop" : 1760569925159,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6e8308bd59cae970",
+  "name" : "testFindAllUsersByChurchIdOptimized()",
+  "time" : {
+    "start" : 1760569926465,
+    "stop" : 1760569926485,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "36d6cb09ddd0fc10",
+  "name" : "testConvertToDTO()",
+  "time" : {
+    "start" : 1760569925011,
+    "stop" : 1760569925012,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "62b9163f31cc2ea1",
+  "name" : "testConvertToEntity_withNullDTO_shouldReturnNull()",
+  "time" : {
+    "start" : 1760569924690,
+    "stop" : 1760569924691,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "74c9c3ad42a0c705",
+  "name" : "testHasMembershipNumber()",
+  "time" : {
+    "start" : 1760569924631,
+    "stop" : 1760569924633,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9ee43b95f9dc6f4b",
+  "name" : "testFindUserByEmail_ShouldReturnEmpty()",
+  "time" : {
+    "start" : 1760569924932,
+    "stop" : 1760569924935,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8dc3be6d46ec5f1",
+  "name" : "testExtractSpecificClaims()",
+  "time" : {
+    "start" : 1760569926568,
+    "stop" : 1760569926689,
+    "duration" : 121
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "229b83738da562f",
+  "name" : "testAssignRolesToUser_throwsIfTenantNotInContext()",
+  "time" : {
+    "start" : 1760569924956,
+    "stop" : 1760569924975,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "12c34d5d227e8799",
+  "name" : "testFindSimpleUsersByChurchId()",
+  "time" : {
+    "start" : 1760569926534,
+    "stop" : 1760569926550,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f0f16d3f8491b1bd",
+  "name" : "testExtractClaims()",
+  "time" : {
+    "start" : 1760569926696,
+    "stop" : 1760569926698,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "fd00a035dcc52cd6",
+  "name" : "shouldFailLoginWithInvalidCredentials()",
+  "time" : {
+    "start" : 1760569909070,
+    "stop" : 1760569909571,
+    "duration" : 501
+  },
+  "status" : "passed",
+  "severity" : "critical"
+}, {
+  "uid" : "1c06d5c21bcec7bc",
+  "name" : "testGetGroupUserStatus_success()",
+  "time" : {
+    "start" : 1760569925128,
+    "stop" : 1760569925134,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8675535c611e3a4e",
+  "name" : "testCreateRole_throwsIfTenantNotFound()",
+  "time" : {
+    "start" : 1760569924805,
+    "stop" : 1760569924809,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5f614aa1dc4d9016",
+  "name" : "testAddUsersToGroup_success()",
+  "time" : {
+    "start" : 1760569925109,
+    "stop" : 1760569925121,
+    "duration" : 12
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e9578c8ccca1f629",
+  "name" : "testRemoveMembersFromGroup_success()",
+  "time" : {
+    "start" : 1760569925098,
+    "stop" : 1760569925105,
+    "duration" : 7
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "adee47b3ce15d236",
+  "name" : "testFindByGoogleId()",
+  "time" : {
+    "start" : 1760569926348,
+    "stop" : 1760569926398,
+    "duration" : 50
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5b2f6520f0234a1a",
+  "name" : "testFindByEmail()",
+  "time" : {
+    "start" : 1760569926487,
+    "stop" : 1760569926509,
+    "duration" : 22
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d643e25cf3afbfce",
+  "name" : "testCreateUser_ShouldThrowIfEmailExists()",
+  "time" : {
+    "start" : 1760569924924,
+    "stop" : 1760569924927,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4746ecb0d3b8a4a6",
+  "name" : "testRegisterChild_throwsIfUserNotFound()",
+  "time" : {
+    "start" : 1760569925412,
+    "stop" : 1760569925415,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9974a3a939f0de0b",
+  "name" : "registerMember_shouldRegisterSuccessfully()",
+  "time" : {
+    "start" : 1760569925490,
+    "stop" : 1760569925496,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3fc57c4bc394d331",
+  "name" : "testRevokeAllValidUserTokens_ShouldSkipIfEmpty()",
+  "time" : {
+    "start" : 1760569924936,
+    "stop" : 1760569924938,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5fec30df6b14912d",
+  "name" : "testFindAllByChurchId()",
+  "time" : {
+    "start" : 1760569926512,
+    "stop" : 1760569926531,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "bf75349a4ff8254e",
+  "name" : "testGetChurches()",
+  "time" : {
+    "start" : 1760569925188,
+    "stop" : 1760569925190,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d9de2feee5313fdb",
+  "name" : "updateChildDetails_shouldUpdateOnlyNonNullFields()",
+  "time" : {
+    "start" : 1760569925424,
+    "stop" : 1760569925430,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ce7192eadbc8986a",
+  "name" : "testFindOne_whenExists()",
+  "time" : {
+    "start" : 1760569925212,
+    "stop" : 1760569925214,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "aef0c622373f4292",
+  "name" : "testFindAllChurches()",
+  "time" : {
+    "start" : 1760569925184,
+    "stop" : 1760569925186,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "637ea2da4b7b182a",
+  "name" : "testCreateGroup_duplicateGroupName_throwsException()",
+  "time" : {
+    "start" : 1760569925125,
+    "stop" : 1760569925127,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "85eba0fb1b1d2094",
+  "name" : "testFindOne_found()",
+  "time" : {
+    "start" : 1760569924988,
+    "stop" : 1760569924990,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5ccf948a8f3c5285",
+  "name" : "testConvertToDTO()",
+  "time" : {
+    "start" : 1760569925525,
+    "stop" : 1760569925527,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3fbd196f4b1afeff",
+  "name" : "testExistsByEmail()",
+  "time" : {
+    "start" : 1760569926552,
+    "stop" : 1760569926565,
+    "duration" : 13
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a73f43c848806143",
+  "name" : "testCreateGroup_success()",
+  "time" : {
+    "start" : 1760569925084,
+    "stop" : 1760569925090,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1b4bafd323c912a0",
+  "name" : "testGetGroupManagers_groupNotFound_throwsException()",
+  "time" : {
+    "start" : 1760569925091,
+    "stop" : 1760569925093,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7af9b3e735d09e7",
+  "name" : "getTenants_shouldReturnList()",
+  "time" : {
+    "start" : 1760569925334,
+    "stop" : 1760569925335,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ba78fa7cf9668452",
+  "name" : "testGetGroupUserStatus_groupNotFound_throwsException()",
+  "time" : {
+    "start" : 1760569925016,
+    "stop" : 1760569925082,
+    "duration" : 66
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "60f0986d20b13f1f",
+  "name" : "testFindAll()",
+  "time" : {
+    "start" : 1760569924982,
+    "stop" : 1760569924984,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "72a4eb78479e04d",
+  "name" : "testConvertToDTO_shouldMapCorrectly()",
+  "time" : {
+    "start" : 1760569924664,
+    "stop" : 1760569924684,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "270267664f8effc6",
+  "name" : "testListGroupMembers_success()",
+  "time" : {
+    "start" : 1760569925152,
+    "stop" : 1760569925156,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a963474f69bf81dd",
+  "name" : "unsubscribeTenant_shouldThrowIfNotFound()",
+  "time" : {
+    "start" : 1760569925348,
+    "stop" : 1760569925350,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "adcf28ad2fdb173f",
+  "name" : "testApproveByChurch()",
+  "time" : {
+    "start" : 1760569925440,
+    "stop" : 1760569925482,
+    "duration" : 42
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d4e67302975c39b3",
+  "name" : "testSaveUserToken_ShouldCallRepo()",
+  "time" : {
+    "start" : 1760569924943,
+    "stop" : 1760569924945,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "aaa62a8c8bbe15b",
+  "name" : "testAssignRolesToUser_success()",
+  "time" : {
+    "start" : 1760569924995,
+    "stop" : 1760569924999,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "327ea58a50fd63b0",
+  "name" : "findAll_shouldReturnPageOfTenants()",
+  "time" : {
+    "start" : 1760569925351,
+    "stop" : 1760569925353,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9e15f3c1d2e0344a",
+  "name" : "testRegisterPriest_throwsIfNeitherTenantNorChurchProvided()",
+  "time" : {
+    "start" : 1760569925293,
+    "stop" : 1760569925295,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e578bf6be0abcc88",
+  "name" : "testRegisterChild_Success()",
+  "time" : {
+    "start" : 1760569925419,
+    "stop" : 1760569925423,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ac123ce914889109",
+  "name" : "testFindAll()",
+  "time" : {
+    "start" : 1760569925401,
+    "stop" : 1760569925403,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4b107b6d37d3a668",
+  "name" : "testResendActivationEmail_ShouldThrowIfAlreadyVerified()",
+  "time" : {
+    "start" : 1760569924928,
+    "stop" : 1760569924931,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "419dbb66501b0543",
+  "name" : "testGenerateAndValidateRefreshToken()",
+  "time" : {
+    "start" : 1760569926699,
+    "stop" : 1760569926703,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "238461a39ec151c3",
+  "name" : "testCreateChurch_whenTenantIdIsMissing()",
+  "time" : {
+    "start" : 1760569925204,
+    "stop" : 1760569925205,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "246ce453c15a3596",
+  "name" : "testRegisterChild_throwsIfChurchNotFound()",
+  "time" : {
+    "start" : 1760569925356,
+    "stop" : 1760569925399,
+    "duration" : 43
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6548174ac4dc0a38",
+  "name" : "testCreateChurch_withValidTenantContext()",
+  "time" : {
+    "start" : 1760569925200,
+    "stop" : 1760569925203,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5e3da3581ac10fbd",
+  "name" : "testIsDeacon()",
+  "time" : {
+    "start" : 1760569924623,
+    "stop" : 1760569924626,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "997028b3c0e5c783",
+  "name" : "testFindAllUsers()",
+  "time" : {
+    "start" : 1760569924977,
+    "stop" : 1760569924981,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b16a17340313c66a",
+  "name" : "testUpdateChurch_whenExists()",
+  "time" : {
+    "start" : 1760569925207,
+    "stop" : 1760569925208,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "37d4c6aca922fab4",
+  "name" : "testConvertToDTO_withNullEntity_shouldReturnNull()",
+  "time" : {
+    "start" : 1760569924687,
+    "stop" : 1760569924689,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "90389aa212559604",
+  "name" : "testDeleteGroup_success()",
+  "time" : {
+    "start" : 1760569925138,
+    "stop" : 1760569925140,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2ba04c1f35610960",
+  "name" : "testDeleteChurch()",
+  "time" : {
+    "start" : 1760569925194,
+    "stop" : 1760569925196,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d6eb497377967c78",
+  "name" : "findTenantById_shouldReturnTenant()",
+  "time" : {
+    "start" : 1760569925331,
+    "stop" : 1760569925333,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a6f46a7bd2570406",
+  "name" : "testConvertToEntity()",
+  "time" : {
+    "start" : 1760569925505,
+    "stop" : 1760569925506,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "fbe23e89e34de8b6",
+  "name" : "testDeleteChildMembership()",
+  "time" : {
+    "start" : 1760569925416,
+    "stop" : 1760569925418,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6d34e88aed6793ab",
+  "name" : "testFindUserUUIDsByChurchId()",
+  "time" : {
+    "start" : 1760569926418,
+    "stop" : 1760569926437,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e9348faa0afc6b8d",
+  "name" : "testRegisterPriest_throwsIfBothTenantAndChurchPresent()",
+  "time" : {
+    "start" : 1760569925280,
+    "stop" : 1760569925282,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d07e28d91536fcff",
+  "name" : "testHasGender()",
+  "time" : {
+    "start" : 1760569924284,
+    "stop" : 1760569924606,
+    "duration" : 322
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "256ec4cd1d56a568",
+  "name" : "testHasMembershipNumber()",
+  "time" : {
+    "start" : 1760569924614,
+    "stop" : 1760569924616,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "79d9194309afeb8c",
+  "name" : "testExistsById()",
+  "time" : {
+    "start" : 1760569925192,
+    "stop" : 1760569925193,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "64bd449cc799b5cc",
+  "name" : "testGetGroupManagers_success()",
+  "time" : {
+    "start" : 1760569925146,
+    "stop" : 1760569925148,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8f2962cd90ccea9c",
+  "name" : "testConvertToEntity_shouldMapCorrectly()",
+  "time" : {
+    "start" : 1760569924685,
+    "stop" : 1760569924686,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1d29413f47c51ffc",
+  "name" : "testUpdateMembershipDetails()",
+  "time" : {
+    "start" : 1760569925497,
+    "stop" : 1760569925503,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1a068fbd99a0cf47",
+  "name" : "unsubscribeTenant_shouldDeactivateTenant()",
+  "time" : {
+    "start" : 1760569925346,
+    "stop" : 1760569925347,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ab18fd2561a6601d",
+  "name" : "testFindPriestById_found()",
+  "time" : {
+    "start" : 1760569925296,
+    "stop" : 1760569925298,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3e123c2ea27d1ccb",
+  "name" : "testAgeBetween()",
+  "time" : {
+    "start" : 1760569924617,
+    "stop" : 1760569924619,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "51b17a195e624c65",
+  "name" : "testFindAll()",
+  "time" : {
+    "start" : 1760569925488,
+    "stop" : 1760569925489,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e36ee6a9104fb974",
+  "name" : "testFindPriestById_notFound()",
+  "time" : {
+    "start" : 1760569925276,
+    "stop" : 1760569925279,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "56586fef77228fa4",
+  "name" : "testFindMemberById()",
+  "time" : {
+    "start" : 1760569925510,
+    "stop" : 1760569925512,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6072795ac278e603",
+  "name" : "testChangePassword_mismatchNewPasswords()",
+  "time" : {
+    "start" : 1760569925005,
+    "stop" : 1760569925007,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5970cb1d2613f972",
+  "name" : "contextLoads()",
+  "time" : {
+    "start" : 1760569923958,
+    "stop" : 1760569924279,
+    "duration" : 321
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c99921b322bf3c6",
+  "name" : "testConvertToEntity()",
+  "time" : {
+    "start" : 1760569924985,
+    "stop" : 1760569924987,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4ce880cb4331bfaf",
+  "name" : "testResendActivationEmail_ShouldThrowIfNotFound()",
+  "time" : {
+    "start" : 1760569924939,
+    "stop" : 1760569924942,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f17f09166b45f9d6",
+  "name" : "testCreateChurch_whenTenantNotFound()",
+  "time" : {
+    "start" : 1760569925209,
+    "stop" : 1760569925211,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1929275df9b82ba0",
+  "name" : "testHasStatus()",
+  "time" : {
+    "start" : 1760569924627,
+    "stop" : 1760569924629,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5b2d25ca662d3145",
+  "name" : "testRegisterChild_throwsIfUserNotAuthenticated()",
+  "time" : {
+    "start" : 1760569925432,
+    "stop" : 1760569925434,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d0d84c327dd41ae4",
+  "name" : "testNameContains()",
+  "time" : {
+    "start" : 1760569924634,
+    "stop" : 1760569924655,
+    "duration" : 21
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "62b8749b1250347",
+  "name" : "shouldExtractTokenFromResponse()",
+  "time" : {
+    "start" : 1760569903878,
+    "stop" : 1760569908504,
+    "duration" : 4626
+  },
+  "status" : "passed",
+  "severity" : "critical"
+}, {
+  "uid" : "85f72976fc2c4f93",
+  "name" : "testFindUserByEmail_ShouldReturnUser()",
+  "time" : {
+    "start" : 1760569924817,
+    "stop" : 1760569924914,
+    "duration" : 97
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e2010e7a25640eed",
+  "name" : "testUpdateGroup_success()",
+  "time" : {
+    "start" : 1760569925141,
+    "stop" : 1760569925145,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7b997e0ebac51e",
+  "name" : "testDeleteMembership()",
+  "time" : {
+    "start" : 1760569925508,
+    "stop" : 1760569925509,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9fa1c941a8982b9d",
+  "name" : "testIsDeacon()",
+  "time" : {
+    "start" : 1760569924608,
+    "stop" : 1760569924610,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5986493406e61ff1",
+  "name" : "testUpdateChurch_whenNotFound()",
+  "time" : {
+    "start" : 1760569925197,
+    "stop" : 1760569925199,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e34ce6e0bd536c24",
+  "name" : "testGenerateAndValidateAccessToken()",
+  "time" : {
+    "start" : 1760569926691,
+    "stop" : 1760569926695,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9e6260c1a89cbd81",
+  "name" : "testCreateRole_throwsIfRoleAlreadyExists()",
+  "time" : {
+    "start" : 1760569924811,
+    "stop" : 1760569924813,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c75a941eb60008e2",
+  "name" : "testRevokeAllValidUserTokens_ShouldRevokeAndSave()",
+  "time" : {
+    "start" : 1760569924920,
+    "stop" : 1760569924923,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "bbd7fb3bb9b5be9",
+  "name" : "testAgeBetween()",
+  "time" : {
+    "start" : 1760569924657,
+    "stop" : 1760569924659,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3986236cc4329f0b",
+  "name" : "subscribeTenant_shouldSaveTenantAndCreateUser()",
+  "time" : {
+    "start" : 1760569925301,
+    "stop" : 1760569925329,
+    "duration" : 28
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6b6d3c4b4c75deb",
+  "name" : "testCreateRole_success()",
+  "time" : {
+    "start" : 1760569924698,
+    "stop" : 1760569924804,
+    "duration" : 106
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e802cb45897bf3e2",
+  "name" : "testListGroupMembers_groupNotFound_throwsException()",
+  "time" : {
+    "start" : 1760569925122,
+    "stop" : 1760569925124,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "79678b895a307515",
+  "name" : "testUpdateUserDetails_success()",
+  "time" : {
+    "start" : 1760569925001,
+    "stop" : 1760569925004,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "11c268763cdad609",
+  "name" : "testDeletePriest()",
+  "time" : {
+    "start" : 1760569925289,
+    "stop" : 1760569925291,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d7a26197e66766df",
+  "name" : "testFindChildById()",
+  "time" : {
+    "start" : 1760569925435,
+    "stop" : 1760569925437,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ea9e8c90132bcd86",
+  "name" : "testRemoveMembersFromGroup_groupNotFound_throwsException()",
+  "time" : {
+    "start" : 1760569925094,
+    "stop" : 1760569925097,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a8120d94bef09cfd",
+  "name" : "testExists_ShouldReturnTrue()",
+  "time" : {
+    "start" : 1760569924916,
+    "stop" : 1760569924919,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "cad34de848d2cf33",
+  "name" : "testFindAllByUuidIn()",
+  "time" : {
+    "start" : 1760569926400,
+    "stop" : 1760569926415,
+    "duration" : 15
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a10b76b92560ee11",
+  "name" : "testAuthenticate_ShouldThrowIfAuthFails()",
+  "time" : {
+    "start" : 1760569924946,
+    "stop" : 1760569924951,
+    "duration" : 5
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ba25b82b36816736",
+  "name" : "testFindOneGroup_notFound()",
+  "time" : {
+    "start" : 1760569925135,
+    "stop" : 1760569925137,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "bd8311a94676d677",
+  "name" : "testHasStatus()",
+  "time" : {
+    "start" : 1760569924612,
+    "stop" : 1760569924613,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "adee08fc4c298c78",
+  "name" : "testExists_true()",
+  "time" : {
+    "start" : 1760569925149,
+    "stop" : 1760569925151,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "409ffbd9e5138957",
+  "name" : "testChangePassword_incorrectCurrentPassword()",
+  "time" : {
+    "start" : 1760569924991,
+    "stop" : 1760569924994,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3e3ee25ed1fb2d20",
+  "name" : "updateChildDetails_shouldNotCallSave_whenChildNotFound()",
+  "time" : {
+    "start" : 1760569925407,
+    "stop" : 1760569925410,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d7e752973970dbc9",
+  "name" : "convertTenantToDTO_shouldMapCorrectly()",
+  "time" : {
+    "start" : 1760569925343,
+    "stop" : 1760569925344,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e79a1cb2e7664f6",
+  "name" : "testChangePassword_success()",
+  "time" : {
+    "start" : 1760569925008,
+    "stop" : 1760569925010,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2f9e129c4a0b8647",
+  "name" : "convertTenantToEntity_shouldMapCorrectly()",
+  "time" : {
+    "start" : 1760569925339,
+    "stop" : 1760569925342,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9ed522bb6f9f3579",
+  "name" : "testTokenIsExpired()",
+  "time" : {
+    "start" : 1760569926704,
+    "stop" : 1760569926715,
+    "duration" : 11
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ae466a4203a41d43",
+  "name" : "testRegisterPriest_createsNewUserAndSavesPriest()",
+  "time" : {
+    "start" : 1760569925217,
+    "stop" : 1760569925275,
+    "duration" : 58
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f49fee0d676fd059",
+  "name" : "testApproveByPriest()",
+  "time" : {
+    "start" : 1760569925484,
+    "stop" : 1760569925487,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "43ac37c283b321aa",
+  "name" : "Login Endpoint Performance",
+  "time" : {
+    "start" : 1760569909585,
+    "stop" : 1760569911954,
+    "duration" : 2369
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "999149e7f564f358",
+  "name" : "testFindUsersByGroupId()",
+  "time" : {
+    "start" : 1760569926441,
+    "stop" : 1760569926462,
+    "duration" : 21
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5e8caff259e7be3c",
+  "name" : "testFindAll_success()",
+  "time" : {
+    "start" : 1760569925161,
+    "stop" : 1760569925162,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+} ]

@@ -1,0 +1,10 @@
+[ {
+  "name" : "GitHub Actions",
+  "type" : "github",
+  "url" : "https://nahomaron.github.io/anastasia_springboot",
+  "buildOrder" : 24,
+  "buildName" : "GitHub Actions Run #18545143327",
+  "buildUrl" : "https://github.com/nahomaron/anastasia_springboot/actions/runs/18545143327",
+  "reportName" : "Allure Report with history",
+  "reportUrl" : "https://nahomaron.github.io/anastasia_springboot/24/"
+} ]

@@ -1,0 +1,60 @@
+{
+  "uid" : "c99921b322bf3c6",
+  "name" : "testConvertToEntity()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest.testConvertToEntity",
+  "historyId" : "199622b7e992489bc558f2decc3b53aa",
+  "time" : {
+    "start" : 1760569924985,
+    "stop" : 1760569924987,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest]/[method:testConvertToEntity()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2626@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testConvertToEntity"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "c99921b322bf3c6.json",
+  "parameterValues" : [ ]
+}

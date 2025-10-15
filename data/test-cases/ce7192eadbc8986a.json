@@ -1,0 +1,60 @@
+{
+  "uid" : "ce7192eadbc8986a",
+  "name" : "testFindOne_whenExists()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest.testFindOne_whenExists",
+  "historyId" : "c91833a5129270c5bc621f433a6060c1",
+  "time" : {
+    "start" : 1760569925212,
+    "stop" : 1760569925214,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest]/[method:testFindOne_whenExists()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2626@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testFindOne_whenExists"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "ce7192eadbc8986a.json",
+  "parameterValues" : [ ]
+}

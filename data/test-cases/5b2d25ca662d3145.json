@@ -1,0 +1,60 @@
+{
+  "uid" : "5b2d25ca662d3145",
+  "name" : "testRegisterChild_throwsIfUserNotAuthenticated()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest.testRegisterChild_throwsIfUserNotAuthenticated",
+  "historyId" : "23fb7c885bc756051a3efebc1271ad52",
+  "time" : {
+    "start" : 1760569925432,
+    "stop" : 1760569925434,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest]/[method:testRegisterChild_throwsIfUserNotAuthenticated()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2626@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testRegisterChild_throwsIfUserNotAuthenticated"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "5b2d25ca662d3145.json",
+  "parameterValues" : [ ]
+}

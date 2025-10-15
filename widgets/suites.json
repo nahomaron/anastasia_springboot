@@ -1,0 +1,114 @@
+{
+  "total" : 17,
+  "items" : [ {
+    "uid" : "0f828462de670660c2eefb3824c7fc8c",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 18,
+      "unknown" : 0,
+      "total" : 18
+    }
+  }, {
+    "uid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 11,
+      "unknown" : 0,
+      "total" : 11
+    }
+  }, {
+    "uid" : "90a8f09c3ccf862dad789606324a88d6",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 11,
+      "unknown" : 0,
+      "total" : 11
+    }
+  }, {
+    "uid" : "c5178937ba27faf906cb3b475b07ef77",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 10,
+      "unknown" : 0,
+      "total" : 10
+    }
+  }, {
+    "uid" : "9bff3925bec1285f33f3131fd501dfc2",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.MemberServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 10,
+      "unknown" : 0,
+      "total" : 10
+    }
+  }, {
+    "uid" : "47c16abb52ddd188235def106c8efd68",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 9,
+      "unknown" : 0,
+      "total" : 9
+    }
+  }, {
+    "uid" : "0dbe749ad1dad7955a4fe5601ae55539",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 9,
+      "unknown" : 0,
+      "total" : 9
+    }
+  }, {
+    "uid" : "b4a69ff7c722a22882f0b287db70c0cd",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 9,
+      "unknown" : 0,
+      "total" : 9
+    }
+  }, {
+    "uid" : "14173f47fcbfaeff22675e64e162c253",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 7,
+      "unknown" : 0,
+      "total" : 7
+    }
+  }, {
+    "uid" : "3675703fdd1213b02659b4393d1606bd",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 5,
+      "unknown" : 0,
+      "total" : 5
+    }
+  } ]
+}
