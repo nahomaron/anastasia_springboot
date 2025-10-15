@@ -32,7 +32,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +60,7 @@ class MemberControllerIT {
     @Autowired private RoleRepository roleRepository;
     @Autowired private PermissionRepository permissionRepository;
 
-    @MockBean private EmailService emailService;
+    @MockitoBean private EmailService emailService;
     @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor;
 
 
@@ -202,4 +202,3 @@ class MemberControllerIT {
                 .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(1))));
     }
 }
-
