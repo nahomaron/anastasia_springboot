@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.api.tests;
+package com.anastasia.Anastasia_BackEnd.api.flows;
 
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
@@ -6,7 +6,6 @@ import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
-import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
 

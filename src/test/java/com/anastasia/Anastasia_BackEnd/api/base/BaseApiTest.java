@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.api.base;
 import com.anastasia.Anastasia_BackEnd.api.config.ApiInterceptor;
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
-import com.anastasia.Anastasia_BackEnd.api.tests.AuthFlowHelper;
+import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;

@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.api.tests;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
+import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
@@ -9,7 +10,6 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

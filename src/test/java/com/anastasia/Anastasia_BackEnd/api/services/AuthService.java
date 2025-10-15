@@ -4,12 +4,15 @@ import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
+import io.qameta.allure.Allure;
 import io.qameta.allure.Step;
 import io.restassured.builder.ResponseBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.slf4j.Logger;
 
+
+import java.io.ByteArrayInputStream;
 
 import static io.restassured.RestAssured.given;
     
@@ -33,6 +36,7 @@ public class AuthService {
                 .then()
                 .extract()
                 .response();
+
     }
 
     @Step("Activate account with token")
@@ -107,5 +111,14 @@ public class AuthService {
         rb.setBody("{\"message\":\"" + e.getMessage() + "\"}");
         return rb.build();
     }
+
+
+    private void attachResponse(String title, Response response) {
+        Allure.addAttachment(title,
+                "application/json",
+                new ByteArrayInputStream(response.asPrettyString().getBytes()),
+                ".json");
+    }
+
 
 }

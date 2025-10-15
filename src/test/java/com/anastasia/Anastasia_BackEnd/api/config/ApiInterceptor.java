@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.api.config;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import io.qameta.allure.Allure;
 import io.restassured.builder.ResponseBuilder;
 import io.restassured.filter.Filter;
@@ -13,12 +15,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
 public class ApiInterceptor extends BaseApiTest implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(ApiInterceptor.class);
+    private static final ObjectWriter PRETTY_WRITER = new ObjectMapper().writerWithDefaultPrettyPrinter();
+
+
     private static final List<String> PUBLIC_AUTH_ENDPOINTS = List.of(
             ConfigManager.get("auth.login.endpoint"),
             ConfigManager.get("auth.signup.endpoint"),
@@ -47,12 +53,10 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
         if (requestSpec.getBody() != null)
             log.info("Request Body: {}", (Object) requestSpec.getBody());
 
-        Response response = null; // 1. Initialize safely
+        Response response = null;
 
         try {
-            response = ctx.next(requestSpec, responseSpec); // attempt to call API
-
-            // 2. Log safely
+            response = ctx.next(requestSpec, responseSpec);
             if (response != null) {
                 log.info("⬅️  Status: {}", response.getStatusCode());
                 log.info("Response Body: {}", response.asPrettyString());
@@ -79,7 +83,6 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
             }
 
         } catch (Exception e) {
-            //4. Catch and log IO/network exceptions clearly
             log.error("Network or IO error during request to {}: {}", requestSpec.getURI(), e.getMessage(), e);
             int code = (e.getMessage() != null && e.getMessage().contains("Connection refused")) ? 503 : 500;
 
@@ -87,26 +90,11 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
                     "Request failed: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
         }
 
-        Allure.addAttachment(
-                "Response - " + response.getStatusCode(),
-                "application/json",
-                new ByteArrayInputStream(response.asPrettyString().getBytes()),
-                ".json"
-        );
-
-        if (requestSpec.getBody() != null) {
-            Allure.addAttachment(
-                    "Request - " + requestSpec.getMethod() + " " + requestSpec.getURI(),
-                    "application/json",
-                    new ByteArrayInputStream(requestSpec.getBody().toString().getBytes()),
-                    ".json"
-            );
-        }
-
-
+        attachRequestAndResponse(requestSpec, response);
 
         return response;
     }
+
 
     private Response buildFailureResponse(int statusCode, String message) {
         ResponseBuilder builder = new ResponseBuilder();
@@ -121,5 +109,40 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
         return PUBLIC_AUTH_ENDPOINTS.stream()
                 .filter(Objects::nonNull)
                 .anyMatch(uri::contains);
+    }
+
+    private void attachRequestAndResponse(FilterableRequestSpecification req, Response res) {
+        try {
+            if (req.getBody() != null) {
+                String body = formatJsonSafely(req.getBody().toString());
+                Allure.addAttachment(
+                        "📤 Request → " + req.getMethod() + " " + req.getURI(),
+                        "application/json",
+                        new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)),
+                        ".json"
+                );
+            }
+
+            if (res != null && res.getBody() != null) {
+                String body = formatJsonSafely(res.asPrettyString());
+                Allure.addAttachment(
+                        "📥 Response ← " + res.getStatusCode() + " " + req.getURI(),
+                        "application/json",
+                        new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)),
+                        ".json"
+                );
+            }
+        } catch (Exception e) {
+            log.warn("Failed to attach Allure request/response: {}", e.getMessage());
+        }
+    }
+
+    private String formatJsonSafely(String text) {
+        try {
+            Object json = new ObjectMapper().readValue(text, Object.class);
+            return PRETTY_WRITER.writeValueAsString(json);
+        } catch (Exception e) {
+            return text; // not JSON, return raw
+        }
     }
 }

@@ -79,6 +79,7 @@ Thumbs.db
 /logs/
 /*.log
 hs_err_pid*
+ajcore.*
 
 # Ignore compiled Java classes
 /**/*.class
@@ -121,8 +122,8 @@ allure-results/
 allure-report/
 target/allure-results/
 target/site/allure-maven-plugin/
+.allure/
 
 *.html
 *.json
 *.xml
-
