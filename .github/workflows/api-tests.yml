@@ -43,7 +43,7 @@ jobs:
             TIMEOUT_SECONDS=$((MAX_ATTEMPTS * SLEEP_SECONDS))
             
             for i in $(seq 1 $MAX_ATTEMPTS); do
-              if curl -s http://localhost:8081/actuator/health | grep -q "UP"; then
+              if curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
                 echo "Backend is up after $((i * SLEEP_SECONDS)) seconds!"
                 break
               fi
@@ -54,7 +54,7 @@ jobs:
             
               if [ $i -eq $MAX_ATTEMPTS ]; then
                 # **FIXED TIMEOUT MESSAGE:** Displays the calculated timeout
-                echo "Health check failed after $TIMEOUT_SECONDS seconds. Aborting."
+              echo "Health check failed after $TIMEOUT_SECONDS seconds. Aborting."
                 tail -n 50 server.log
                 exit 1
               fi
@@ -69,7 +69,7 @@ jobs:
         run: ./mvnw test -Papi
         env:
           SPRING_PROFILES_ACTIVE: test
-          BASE_URL: http://localhost:8080/api/v1
+          BASE_URL: http://localhost:8080
 
 
       - name: Generate Allure HTML report
