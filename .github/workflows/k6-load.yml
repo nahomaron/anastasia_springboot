@@ -1,0 +1,64 @@
+name: k6 Load Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  k6-load:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 23
+          cache: maven
+
+      - name: Build (skip tests)
+        run: ./mvnw -DskipTests package
+
+      - name: Start Spring Boot (background)
+        run: |
+          nohup ./mvnw -DskipTests spring-boot:run > app.log 2>&1 &
+          for i in {1..60}; do
+            if curl -sSf http://localhost:8080/actuator/health > /dev/null; then
+              echo "App is up."
+              break
+            fi
+            echo "Waiting for app..."
+            sleep 2
+          done
+          curl -s http://localhost:8080/actuator/health || true
+        env:
+          # if you need a specific profile for CI, uncomment:
+          # SPRING_PROFILES_ACTIVE: dev
+          # otherwise default app config will be used
+          MAVEN_OPTS: -Xmx1g
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run k6 load test
+        run: |
+          k6 run k6/auth_flow.js \
+            -e BASE_URL=http://localhost:8080/api/v1 \
+            --summary-export=k6-summary.json
+        continue-on-error: false
+
+      - name: Upload k6 summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary
+          path: k6-summary.json
+
+      - name: Upload app log (helpful if failing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: spring-app-log
+          path: app.log
