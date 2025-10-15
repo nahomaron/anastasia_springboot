@@ -118,8 +118,8 @@ jobs:
         if: always()
         uses: simple-elf/allure-report-action@v1.6
         with:
-          allure_results_path: target/allure-results
-          report_path: allure-html-report-dir # Define a clean output directory name
+          allure_results: target/allure-results
+          allure_report: allure-html-report-dir # Define a clean output directory name
 
       # Upload Allure HTML report for deployment
       - name: Upload Allure HTML report artifact
