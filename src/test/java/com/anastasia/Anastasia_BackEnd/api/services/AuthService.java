@@ -94,7 +94,7 @@ public class AuthService {
     @Step("Login and extract token for email: {request.email}")
     public AuthenticationResponse loginAndExtractToken(AuthenticationRequest request) {
         Response response = login(request);
-        SchemaValidator.validate(response, "schemas/authentication-response-schema.json");
+        SchemaValidator.validate(response);
 
         if (response.statusCode() == 200 && !response.asString().isEmpty()) {
             return response.as(AuthenticationResponse.class);

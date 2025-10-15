@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.api.config;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
+import com.anastasia.Anastasia_BackEnd.api.utils.RequestTracker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.qameta.allure.Allure;
@@ -43,6 +44,10 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
                            FilterableResponseSpecification responseSpec,
                            FilterContext ctx) {
 
+        String resolvedUri = requestSpec.getURI();
+        RequestTracker.record(resolvedUri);
+        requestSpec.header("X-Request-URI", resolvedUri);
+
         // Automatically add Authorization header if missing
         boolean isPublicAuthRequest = isPublicAuthEndpoint(requestSpec);
         if (!isPublicAuthRequest && cachedAuth != null && requestSpec.getHeaders().getValue("Authorization") == null) {
@@ -67,6 +72,7 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
                     log.warn("Token expired — refreshing...");
                     initializeAuthenticationCache();
                     requestSpec.header("Authorization", bearerToken());
+                    RequestTracker.record(requestSpec.getURI());
                     response = ctx.next(requestSpec, responseSpec);
                     if (response == null) {
                         log.warn("Token refresh retry returned null for: {}", requestSpec.getURI());
