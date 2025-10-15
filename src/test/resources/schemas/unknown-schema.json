@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Unknown Endpoint Schema (Fallback)",
+  "description": "Fallback JSON schema used when a response endpoint is not registered in SchemaValidator.",
+  "type": ["object", "array", "string", "number", "boolean", "null"],
+  "properties": {},
+  "additionalProperties": true
+}

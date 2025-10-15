@@ -5,11 +5,13 @@ import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.api.utils.SchemaValidator;
+import com.anastasia.Anastasia_BackEnd.api.utils.TestDataManager;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,12 @@ public class AuthTests extends BaseApiTest {
         testPassword = DataGenerator.randomPassword();
         // Ensure this user is signed up and activated *before* the login tests run
         AuthFlowHelper.signUpAndActivateAndLogin(testEmail, testPassword);
+    }
+
+    @AfterEach
+    void cleanup() {
+        // Ensure isolation between tests
+        TestDataManager.deleteUserByEmail(testEmail);
     }
 
     @Test
