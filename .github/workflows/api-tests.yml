@@ -36,7 +36,7 @@ jobs:
       - name: Grant execute permission for Maven wrapper
         run: chmod +x ./mvnw
 
-          # 🧹 Configure cleanup behavior per branch
+      # 🧹 Configure cleanup behavior per branch
       - name: Configure cleanup behavior per branch
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -79,7 +79,7 @@ jobs:
             
               if [ $i -eq $MAX_ATTEMPTS ]; then
                 # **FIXED TIMEOUT MESSAGE:** Displays the calculated timeout
-              echo "Health check failed after $TIMEOUT_SECONDS seconds. Aborting."
+                echo "Health check failed after $TIMEOUT_SECONDS seconds. Aborting."
                 tail -n 50 server.log
                 exit 1
               fi
