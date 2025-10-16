@@ -1,0 +1,60 @@
+{
+  "uid" : "554012c0ecb6e0b8",
+  "name" : "testFindUserByEmail_ShouldReturnUser()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest.testFindUserByEmail_ShouldReturnUser",
+  "historyId" : "8b60cd4123a6ab5dac9fcec0d614f914",
+  "time" : {
+    "start" : 1760624468905,
+    "stop" : 1760624469022,
+    "duration" : 117
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest]/[method:testFindUserByEmail_ShouldReturnUser()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2604@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testFindUserByEmail_ShouldReturnUser"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "554012c0ecb6e0b8.json",
+  "parameterValues" : [ ]
+}

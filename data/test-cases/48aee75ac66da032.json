@@ -1,0 +1,60 @@
+{
+  "uid" : "48aee75ac66da032",
+  "name" : "testNameContains()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.MemberSpecificationTest.testNameContains",
+  "historyId" : "7c604a3d70207b1e29d8022daa326567",
+  "time" : {
+    "start" : 1760624468714,
+    "stop" : 1760624468730,
+    "duration" : 16
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.specification.MemberSpecificationTest]/[method:testNameContains()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2604@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.MemberSpecificationTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.MemberSpecificationTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testNameContains"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.MemberSpecificationTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "48aee75ac66da032.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,60 @@
+{
+  "uid" : "57f38c160dd72f20",
+  "name" : "testAssignRolesToUser_throwsIfTenantNotInContext()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest.testAssignRolesToUser_throwsIfTenantNotInContext",
+  "historyId" : "92f5dbe3400c84932d9b2b93eb73050d",
+  "time" : {
+    "start" : 1760624469079,
+    "stop" : 1760624469102,
+    "duration" : 23
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest]/[method:testAssignRolesToUser_throwsIfTenantNotInContext()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2604@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testAssignRolesToUser_throwsIfTenantNotInContext"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "57f38c160dd72f20.json",
+  "parameterValues" : [ ]
+}

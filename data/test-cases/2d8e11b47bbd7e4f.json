@@ -1,0 +1,60 @@
+{
+  "uid" : "2d8e11b47bbd7e4f",
+  "name" : "updateChildDetails_shouldUpdateOnlyNonNullFields()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest.updateChildDetails_shouldUpdateOnlyNonNullFields",
+  "historyId" : "163d5284ce2f85d3e1b9276fa212e759",
+  "time" : {
+    "start" : 1760624469573,
+    "stop" : 1760624469578,
+    "duration" : 5
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest]/[method:updateChildDetails_shouldUpdateOnlyNonNullFields()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2604@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "updateChildDetails_shouldUpdateOnlyNonNullFields"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "2d8e11b47bbd7e4f.json",
+  "parameterValues" : [ ]
+}

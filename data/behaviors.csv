@@ -1,7 +1,7 @@
 "Epic","Feature","Story","FAILED","BROKEN","PASSED","SKIPPED","UNKNOWN"
 "","","","0","0","117","0","0"
 "Authentication","User Account Management","Sign up, activate, and login flow","0","0","3","0","0"
+"Performance & Scalability","API Latency Baseline","","0","0","1","0","0"
 "Authentication","User Account Management","User can login with valid credentials","0","0","1","0","0"
 "Authentication","Login","Sign up, activate, and login flow","0","0","1","0","0"
 "Authentication","Login","User can login with valid credentials","0","0","1","0","0"
-"Performance & Scalability","API Latency Baseline","","0","0","1","0","0"

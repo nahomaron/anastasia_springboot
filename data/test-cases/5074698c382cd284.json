@@ -1,0 +1,60 @@
+{
+  "uid" : "5074698c382cd284",
+  "name" : "testFindAllByChurchId()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest.testFindAllByChurchId",
+  "historyId" : "a6fca5efb49db4041f5258e0aa4ec179",
+  "time" : {
+    "start" : 1760624470856,
+    "stop" : 1760624470875,
+    "duration" : 19
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest]/[method:testFindAllByChurchId()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2604@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testFindAllByChurchId"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "5074698c382cd284.json",
+  "parameterValues" : [ ]
+}

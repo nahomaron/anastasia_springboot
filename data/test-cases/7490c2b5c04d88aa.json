@@ -1,0 +1,60 @@
+{
+  "uid" : "7490c2b5c04d88aa",
+  "name" : "testTokenIsExpired()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.util.JwtUtilTest.testTokenIsExpired",
+  "historyId" : "f953043088d9f6477a65f9556a13d083",
+  "time" : {
+    "start" : 1760624471040,
+    "stop" : 1760624471052,
+    "duration" : 12
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.util.JwtUtilTest]/[method:testTokenIsExpired()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2604@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.util.JwtUtilTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.util.JwtUtilTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testTokenIsExpired"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.util.JwtUtilTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "7490c2b5c04d88aa.json",
+  "parameterValues" : [ ]
+}

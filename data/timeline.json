@@ -3,158 +3,145 @@
   "children" : [ {
     "name" : "runnervmwhb2z",
     "children" : [ {
-      "name" : "2513@runnervmwhb2z.main(1)",
+      "name" : "2604@runnervmwhb2z.main(1)",
       "children" : [ {
-        "name" : "testDeletePriest()",
-        "uid" : "fdb1d8237e13a263",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindOneGroup_success()",
+        "uid" : "ceafd9e691c2a7f7",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758080,
-          "stop" : 1760573758082,
+          "start" : 1760624469293,
+          "stop" : 1760624469295,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testCreateGroup_duplicateGroupName_throwsException()",
-        "uid" : "141347eed40c1467",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testCreateRole_throwsIfRoleAlreadyExists()",
+        "uid" : "3675ed0473d3d257",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757921,
-          "stop" : 1760573757923,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testGenerateAndValidateAccessToken()",
-        "uid" : "fd2e6bcb0c1cebcf",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759450,
-          "stop" : 1760573759454,
-          "duration" : 4
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testUpdatePriestDetails_updatesAndSaves()",
-        "uid" : "d9bdf1a15a903754",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758074,
-          "stop" : 1760573758079,
-          "duration" : 5
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testCreateChurch_whenTenantIdIsMissing()",
-        "uid" : "a4c4d074597151c3",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757995,
-          "stop" : 1760573757996,
-          "duration" : 1
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testHasStatus()",
-        "uid" : "5efd8ebccad0ae5a",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757428,
-          "stop" : 1760573757430,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindUserByEmail_ShouldReturnUser()",
-        "uid" : "8d33a787c8a2eef7",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757625,
-          "stop" : 1760573757713,
-          "duration" : 88
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindOne_found()",
-        "uid" : "ad01afb960bc4ff3",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757784,
-          "stop" : 1760573757786,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testRevokeAllValidUserTokens_ShouldRevokeAndSave()",
-        "uid" : "2dae7395d75fe377",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757719,
-          "stop" : 1760573757722,
+          "start" : 1760624468898,
+          "stop" : 1760624468901,
           "duration" : 3
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindPriestById_notFound()",
-        "uid" : "c8cfb677ad2ebb08",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindUserUUIDsByChurchId()",
+        "uid" : "415b82395d0f134b",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758067,
-          "stop" : 1760573758069,
+          "start" : 1760624470760,
+          "stop" : 1760624470785,
+          "duration" : 25
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testAddUsersToGroup_success()",
+        "uid" : "94fa29423ca4f464",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469239,
+          "stop" : 1760624469250,
+          "duration" : 11
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testListGroupMembers_groupNotFound_throwsException()",
+        "uid" : "4c6c83adfbf69785",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469252,
+          "stop" : 1760624469254,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testResendActivationEmail_ShouldThrowIfNotFound()",
-        "uid" : "c0330649f66f089c",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testApproveByPriest()",
+        "uid" : "be044b3c426f60de",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757739,
-          "stop" : 1760573757741,
+          "start" : 1760624469624,
+          "stop" : 1760624469627,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testAgeBetween()",
+        "uid" : "ed71cfd52581db57",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468694,
+          "stop" : 1760624468698,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindAllUsers()",
+        "uid" : "1eced39485bf4247",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469104,
+          "stop" : 1760624469110,
+          "duration" : 6
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRegisterChild_throwsIfUserNotAuthenticated()",
+        "uid" : "e9043d56006104c3",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469579,
+          "stop" : 1760624469581,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testRegisterChild_Success()",
-        "uid" : "aec7e63601997cfb",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testUpdateChurch_whenExists()",
+        "uid" : "76f09a8dbcf2911e",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758205,
-          "stop" : 1760573758209,
+          "start" : 1760624469351,
+          "stop" : 1760624469353,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testUpdatePriestDetails_updatesAndSaves()",
+        "uid" : "c226a44869beb8e9",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469431,
+          "stop" : 1760624469435,
           "duration" : 4
         },
         "flaky" : false,
@@ -162,753 +149,38 @@
         "parameters" : [ ]
       }, {
         "name" : "subscribeTenant_shouldSaveTenantAndCreateUser()",
-        "uid" : "7ac0a3d790378257",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "cfa729d4174e4e4f",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758091,
-          "stop" : 1760573758119,
-          "duration" : 28
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testApproveByPriest()",
-        "uid" : "8bf9279470433306",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758263,
-          "stop" : 1760573758265,
-          "duration" : 2
+          "start" : 1760624469449,
+          "stop" : 1760624469483,
+          "duration" : 34
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
         "name" : "testRemoveMembersFromGroup_groupNotFound_throwsException()",
-        "uid" : "e2cd5d9c0f0bea9b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "69ae3951fc3ddc4d",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757889,
-          "stop" : 1760573757891,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindAllUsers()",
-        "uid" : "4abd0a8507645af1",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757773,
-          "stop" : 1760573757777,
-          "duration" : 4
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testAuthenticate_ShouldThrowIfAuthFails()",
-        "uid" : "8482125c84be2c53",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757745,
-          "stop" : 1760573757750,
-          "duration" : 5
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindPriestById_found()",
-        "uid" : "a698ea980085a831",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758086,
-          "stop" : 1760573758088,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testHasMembershipNumber()",
-        "uid" : "d4270d00a60b90b7",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757432,
-          "stop" : 1760573757433,
-          "duration" : 1
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testConvertToEntity()",
-        "uid" : "2236d78db6f4253b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757781,
-          "stop" : 1760573757783,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testExistsById()",
-        "uid" : "6b6110c9a2cd11e0",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757983,
-          "stop" : 1760573757985,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "findAll_shouldReturnPageOfTenants()",
-        "uid" : "3ca8f405a497eb82",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758143,
-          "stop" : 1760573758145,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testConvertToDTO_withNullEntity_shouldReturnNull()",
-        "uid" : "e8d61c90eac70654",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757498,
-          "stop" : 1760573757500,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testHasMembershipNumber()",
-        "uid" : "cb7f425081ce1168",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757414,
-          "stop" : 1760573757416,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testListGroupMembers_success()",
-        "uid" : "c148a45e156a34ce",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757948,
-          "stop" : 1760573757951,
+          "start" : 1760624469222,
+          "stop" : 1760624469225,
           "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testGetChurches()",
-        "uid" : "6d2e29a732d9c5f",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757980,
-          "stop" : 1760573757982,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testApproveByChurch()",
-        "uid" : "4bf5dd8df425188e",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758225,
-          "stop" : 1760573758261,
-          "duration" : 36
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testExtractSpecificClaims()",
-        "uid" : "752390390322908a",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759347,
-          "stop" : 1760573759448,
-          "duration" : 101
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindSimpleUsersByChurchId()",
-        "uid" : "19d985c96bd3c056",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759315,
-          "stop" : 1760573759330,
-          "duration" : 15
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testUpdateUserDetails_success()",
-        "uid" : "f5540f31f14b31c9",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757795,
-          "stop" : 1760573757798,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindAllChurches()",
-        "uid" : "14bcd1a4eb09f4ca",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757977,
-          "stop" : 1760573757979,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testGetGroupUserStatus_success()",
-        "uid" : "9953bb4c5bab2230",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757924,
-          "stop" : 1760573757930,
-          "duration" : 6
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testIsDeacon()",
-        "uid" : "8bf139df8adcdeca",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757423,
-          "stop" : 1760573757427,
-          "duration" : 4
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testAssignRolesToUser_throwsIfTenantNotInContext()",
-        "uid" : "6c80db9e0ff2927",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757753,
-          "stop" : 1760573757771,
-          "duration" : 18
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "convertTenantToEntity_shouldMapCorrectly()",
-        "uid" : "1ac74fac576b3150",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758132,
-          "stop" : 1760573758133,
-          "duration" : 1
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
         "name" : "testGetGroupManagers_success()",
-        "uid" : "958508efe9693d01",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "31c3411d074f1440",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757942,
-          "stop" : 1760573757944,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testGetGroupUserStatus_groupNotFound_throwsException()",
-        "uid" : "390e60ec7b617dc4",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757811,
-          "stop" : 1760573757877,
-          "duration" : 66
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testAddUsersToGroup_success()",
-        "uid" : "1c081cdee03f2ec9",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757904,
-          "stop" : 1760573757916,
-          "duration" : 12
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testAgeBetween()",
-        "uid" : "5057d0b609d69f34",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757417,
-          "stop" : 1760573757420,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "shouldExtractTokenFromResponse()",
-        "uid" : "98b81816303439e5",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573738230,
-          "stop" : 1760573741127,
-          "duration" : 2897
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindUserUUIDsByChurchId()",
-        "uid" : "467f6bfb74d7cc36",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759217,
-          "stop" : 1760573759235,
-          "duration" : 18
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindByEmail()",
-        "uid" : "d2322cd49abe7d15",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759279,
-          "stop" : 1760573759294,
-          "duration" : 15
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "updateChildDetails_shouldNotCallSave_whenChildNotFound()",
-        "uid" : "5a19096093b07963",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758197,
-          "stop" : 1760573758199,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testRemoveMembersFromGroup_success()",
-        "uid" : "e076a5b4ac6f5114",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757892,
-          "stop" : 1760573757899,
-          "duration" : 7
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "unsubscribeTenant_shouldThrowIfNotFound()",
-        "uid" : "8a865b631a41d98",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758140,
-          "stop" : 1760573758142,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindAllUsersByChurchIdOptimized()",
-        "uid" : "82950ce740a6381a",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759260,
-          "stop" : 1760573759277,
-          "duration" : 17
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindOneGroup_success()",
-        "uid" : "855448a48f031d1",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757952,
-          "stop" : 1760573757954,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "convertTenantToDTO_shouldMapCorrectly()",
-        "uid" : "cad5efa0f4c21508",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758134,
-          "stop" : 1760573758136,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testCreateRole_success()",
-        "uid" : "3869234719eaffec",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757508,
-          "stop" : 1760573757611,
-          "duration" : 103
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testHasGender()",
-        "uid" : "71e090b0df580e1f",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757079,
-          "stop" : 1760573757406,
-          "duration" : 327
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testRegisterPriest_createsNewUserAndSavesPriest()",
-        "uid" : "b16b552344d1c66e",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758007,
-          "stop" : 1760573758065,
-          "duration" : 58
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testExists_ShouldReturnTrue()",
-        "uid" : "95cfad2d704b5727",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757715,
-          "stop" : 1760573757718,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testExtractClaims()",
-        "uid" : "c09787ee80c17fac",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759456,
-          "stop" : 1760573759457,
-          "duration" : 1
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testConvertToEntity()",
-        "uid" : "959f37bdd0c9574a",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758282,
-          "stop" : 1760573758283,
-          "duration" : 1
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindOneGroup_notFound()",
-        "uid" : "7a7c215ea89cf9be",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757931,
-          "stop" : 1760573757934,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testChangePassword_mismatchNewPasswords()",
-        "uid" : "6a9f0c6125ae2b59",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757799,
-          "stop" : 1760573757802,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testConvertToDTO_shouldMapCorrectly()",
-        "uid" : "1483c30834d4819b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757463,
-          "stop" : 1760573757494,
-          "duration" : 31
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "findTenantById_shouldReturnTenant()",
-        "uid" : "ffd77073ad63fc44",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758122,
-          "stop" : 1760573758125,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testUpdateChurch_whenExists()",
-        "uid" : "14b843c6758a83f",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757997,
-          "stop" : 1760573757999,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testRegisterPriest_throwsIfBothTenantAndChurchPresent()",
-        "uid" : "9cac3961d71ee9d6",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758071,
-          "stop" : 1760573758073,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testResendActivationEmail_ShouldThrowIfAlreadyVerified()",
-        "uid" : "fea3f56fc232664e",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757727,
-          "stop" : 1760573757730,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testHasStatus()",
-        "uid" : "9cd3eca5c63eb845",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757411,
-          "stop" : 1760573757413,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindByGoogleId()",
-        "uid" : "fd24289e4e72cb89",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759145,
-          "stop" : 1760573759198,
-          "duration" : 53
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindOne_whenExists()",
-        "uid" : "8c61ce8873b6a1bc",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758003,
-          "stop" : 1760573758004,
-          "duration" : 1
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testConvertToEntity_shouldMapCorrectly()",
-        "uid" : "a3c8c31dae048f4c",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757495,
-          "stop" : 1760573757497,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testCreateRole_throwsIfTenantNotFound()",
-        "uid" : "8ea077d3b8ee1098",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757613,
-          "stop" : 1760573757618,
-          "duration" : 5
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testChangePassword_incorrectCurrentPassword()",
-        "uid" : "8c0658c2a26d80b4",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757787,
-          "stop" : 1760573757790,
-          "duration" : 3
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "updateChildDetails_shouldUpdateOnlyNonNullFields()",
-        "uid" : "da9db1574ede2394",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758210,
-          "stop" : 1760573758216,
-          "duration" : 6
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testRegisterChild_throwsIfUserNotFound()",
-        "uid" : "7963058925e32348",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758200,
-          "stop" : 1760573758202,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testUpdateGroup_success()",
-        "uid" : "eb9ced4f2b0b33cc",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757938,
-          "stop" : 1760573757941,
+          "start" : 1760624469281,
+          "stop" : 1760624469284,
           "duration" : 3
         },
         "flaky" : false,
@@ -916,90 +188,51 @@
         "parameters" : [ ]
       }, {
         "name" : "testConvertToDTO()",
-        "uid" : "fad218c6357deaa8",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "2e0813ee4dada173",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757806,
-          "stop" : 1760573757808,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindChildById()",
-        "uid" : "ee693cbd527c6269",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758220,
-          "stop" : 1760573758222,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testCreateUser_ShouldThrowIfEmailExists()",
-        "uid" : "993d0e354e3771cd",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757723,
-          "stop" : 1760573757726,
+          "start" : 1760624469665,
+          "stop" : 1760624469668,
           "duration" : 3
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindAll()",
-        "uid" : "640835577472007e",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testDeleteMembership()",
+        "uid" : "ad32758cd6ed00a7",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758194,
-          "stop" : 1760573758196,
+          "start" : 1760624469648,
+          "stop" : 1760624469650,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testTokenIsExpired()",
-        "uid" : "f0f357413d4afa0b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testIsDeacon()",
+        "uid" : "c4b55d55a49b365e",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573759463,
-          "stop" : 1760573759475,
-          "duration" : 12
+          "start" : 1760624468701,
+          "stop" : 1760624468705,
+          "duration" : 4
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testGetGroupManagers_groupNotFound_throwsException()",
-        "uid" : "1035d3a5079a318a",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testDeleteGroup_success()",
+        "uid" : "e4e156b4a65ce529",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757886,
-          "stop" : 1760573757887,
-          "duration" : 1
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testDeleteMembership()",
-        "uid" : "df22d46a2a173c92",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758284,
-          "stop" : 1760573758286,
+          "start" : 1760624469273,
+          "stop" : 1760624469275,
           "duration" : 2
         },
         "flaky" : false,
@@ -1007,12 +240,77 @@
         "parameters" : [ ]
       }, {
         "name" : "testUpdateChurch_whenNotFound()",
-        "uid" : "ae51f9cc271fdb3",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "83c31816649f6b9b",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757988,
-          "stop" : 1760573757990,
+          "start" : 1760624469338,
+          "stop" : 1760624469341,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "subscribeTenant_shouldThrowWhenRoleNotFound()",
+        "uid" : "9f7db8939350fc5a",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469492,
+          "stop" : 1760624469494,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindOne_whenExists()",
+        "uid" : "338f30edea228bbf",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469357,
+          "stop" : 1760624469359,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindUserByEmail_ShouldReturnUser()",
+        "uid" : "554012c0ecb6e0b8",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468905,
+          "stop" : 1760624469022,
+          "duration" : 117
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testHasStatus()",
+        "uid" : "884eccf206ed859e",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468706,
+          "stop" : 1760624468709,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "unsubscribeTenant_shouldThrowIfNotFound()",
+        "uid" : "ae6b9b8814803c78",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469505,
+          "stop" : 1760624469507,
           "duration" : 2
         },
         "flaky" : false,
@@ -1020,259 +318,311 @@
         "parameters" : [ ]
       }, {
         "name" : "testConvertToDTO()",
-        "uid" : "c5473fc2b3d5ed03",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "667a592fcbce85fc",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758299,
-          "stop" : 1760573758301,
+          "start" : 1760624469148,
+          "stop" : 1760624469150,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testChangePassword_success()",
-        "uid" : "f96ccbd8e63247be",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindPriestById_notFound()",
+        "uid" : "7ed8ed5f100a5077",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757803,
-          "stop" : 1760573757805,
+          "start" : 1760624469423,
+          "stop" : 1760624469425,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindAllByUuidIn()",
-        "uid" : "60efe81c0c700adf",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testHasStatus()",
+        "uid" : "aa688928b079811f",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573759201,
-          "stop" : 1760573759215,
-          "duration" : 14
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testCreateRole_throwsIfRoleAlreadyExists()",
-        "uid" : "b2ebb025bdf28958",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757619,
-          "stop" : 1760573757621,
+          "start" : 1760624468688,
+          "stop" : 1760624468690,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testDeleteChildMembership()",
-        "uid" : "41c53fbf6047085",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindAllUsersByChurchIdOptimized()",
+        "uid" : "b2e72cf22cadc164",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758203,
-          "stop" : 1760573758204,
-          "duration" : 1
+          "start" : 1760624470814,
+          "stop" : 1760624470833,
+          "duration" : 19
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testExistsByEmail()",
-        "uid" : "96c338dc152f6649",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testCreateChurch_whenTenantIdIsMissing()",
+        "uid" : "4c469a8b1ddfc45e",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573759332,
-          "stop" : 1760573759344,
-          "duration" : 12
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindUsersByGroupId()",
-        "uid" : "f6ec05a81183a1c3",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759237,
-          "stop" : 1760573759258,
-          "duration" : 21
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testSaveUserToken_ShouldCallRepo()",
-        "uid" : "f45232cc95f62b96",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757742,
-          "stop" : 1760573757744,
+          "start" : 1760624469347,
+          "stop" : 1760624469349,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testRegisterChild_throwsIfUserNotAuthenticated()",
-        "uid" : "3e77bf19cae3bb42",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindByGoogleId()",
+        "uid" : "260ece2671e06648",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758217,
-          "stop" : 1760573758219,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindAll_success()",
-        "uid" : "78802451fb353856",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757955,
-          "stop" : 1760573757957,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "subscribeTenant_shouldThrowWhenRoleNotFound()",
-        "uid" : "782731bc454622d1",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758128,
-          "stop" : 1760573758130,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "contextLoads()",
-        "uid" : "18ccf8b39b775f8e",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573756738,
-          "stop" : 1760573757073,
-          "duration" : 335
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testGenerateAndValidateRefreshToken()",
-        "uid" : "e7100437b1c16981",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573759458,
-          "stop" : 1760573759462,
-          "duration" : 4
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testDeleteChurch()",
-        "uid" : "651935afd1ce2042",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757986,
-          "stop" : 1760573757987,
-          "duration" : 1
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "shouldFailLoginWithInvalidCredentials()",
-        "uid" : "e5d6fbcc7b72f75b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573741718,
-          "stop" : 1760573742224,
-          "duration" : 506
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testCreateGroup_success()",
-        "uid" : "18937aef071daaad",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757879,
-          "stop" : 1760573757884,
-          "duration" : 5
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testAgeBetween()",
-        "uid" : "9876710d647ee285",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757456,
-          "stop" : 1760573757458,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testUpdateMembershipDetails()",
-        "uid" : "8cc6ae4e2dbb6d9d",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758275,
-          "stop" : 1760573758281,
-          "duration" : 6
+          "start" : 1760624470447,
+          "stop" : 1760624470736,
+          "duration" : 289
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
         "name" : "testAssignRolesToUser_success()",
-        "uid" : "37c5eb827cdcd52",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "8e62f2ac3e44457",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757791,
-          "stop" : 1760573757794,
+          "start" : 1760624469128,
+          "stop" : 1760624469132,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRegisterChild_throwsIfUserNotFound()",
+        "uid" : "1514fbcb58d93374",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469560,
+          "stop" : 1760624469563,
           "duration" : 3
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testIsDeacon()",
-        "uid" : "f1718044e0463632",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "getTenants_shouldReturnList()",
+        "uid" : "2478cecf2e83cd5d",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757408,
-          "stop" : 1760573757410,
+          "start" : 1760624469488,
+          "stop" : 1760624469490,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindByEmail()",
+        "uid" : "f6a190187ff4a1aa",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624470836,
+          "stop" : 1760624470853,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testConvertToEntity()",
+        "uid" : "4753e30c0352c516",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469644,
+          "stop" : 1760624469646,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRegisterPriest_throwsIfNeitherTenantNorChurchProvided()",
+        "uid" : "f0719828766e3a57",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469440,
+          "stop" : 1760624469442,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testCreateRole_success()",
+        "uid" : "db4510ab33b698e2",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468778,
+          "stop" : 1760624468890,
+          "duration" : 112
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testConvertToDTO_shouldMapCorrectly()",
+        "uid" : "4cc3507392eee500",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468740,
+          "stop" : 1760624468761,
+          "duration" : 21
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindUsersByGroupId()",
+        "uid" : "61e1e9c70d7088b9",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624470787,
+          "stop" : 1760624470812,
+          "duration" : 25
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindSimpleUsersByChurchId()",
+        "uid" : "94ddaa7f8c305b33",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624470878,
+          "stop" : 1760624470896,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testGetChurches()",
+        "uid" : "754a6e88857d1baf",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469327,
+          "stop" : 1760624469330,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testHasMembershipNumber()",
+        "uid" : "3a8270c3093ec7ae",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468691,
+          "stop" : 1760624468693,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "findTenantById_shouldReturnTenant()",
+        "uid" : "f71c544ba9519d3f",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469485,
+          "stop" : 1760624469487,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testCreateGroup_success()",
+        "uid" : "e25275cf398e7b4b",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469211,
+          "stop" : 1760624469217,
+          "duration" : 6
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testChangePassword_incorrectCurrentPassword()",
+        "uid" : "8ab97c9cfd77a5e2",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469124,
+          "stop" : 1760624469127,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindAll()",
+        "uid" : "e78bab0f1cb30bce",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469112,
+          "stop" : 1760624469114,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRegisterPriest_throwsIfBothTenantAndChurchPresent()",
+        "uid" : "c9ec954e4fe47a9d",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469427,
+          "stop" : 1760624469430,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testConvertToEntity_shouldMapCorrectly()",
+        "uid" : "a73b06b58c2032e0",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468763,
+          "stop" : 1760624468765,
           "duration" : 2
         },
         "flaky" : false,
@@ -1280,168 +630,64 @@
         "parameters" : [ ]
       }, {
         "name" : "testCreateChurch_whenTenantNotFound()",
-        "uid" : "f3d0534bfc4077a7",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "503882dab7a65f7",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758000,
-          "stop" : 1760573758002,
+          "start" : 1760624469354,
+          "stop" : 1760624469356,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindAll()",
-        "uid" : "66423bdcb422c932",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindOne_whenNotExists()",
+        "uid" : "c049cc711adac1fc",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757778,
-          "stop" : 1760573757780,
-          "duration" : 2
+          "start" : 1760624469303,
+          "stop" : 1760624469321,
+          "duration" : 18
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testRegisterChild_throwsIfChurchNotFound()",
-        "uid" : "823f49b446b3bb18",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testSaveUserToken_ShouldCallRepo()",
+        "uid" : "3220541e2a1e221e",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758152,
-          "stop" : 1760573758192,
-          "duration" : 40
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testRegisterPriest_throwsIfNeitherTenantNorChurchProvided()",
-        "uid" : "adcb848dd1021b9b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758083,
-          "stop" : 1760573758085,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "Login Endpoint Performance",
-        "uid" : "67b641b26031116b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573742558,
-          "stop" : 1760573744853,
-          "duration" : 2295
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindAllBySpecification()",
-        "uid" : "8b571e318a86f5d2",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573758289,
-          "stop" : 1760573758298,
-          "duration" : 9
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testUpdateGroup_groupNotFound_throwsException()",
-        "uid" : "166b6b2d5da20135",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757901,
-          "stop" : 1760573757903,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testDeleteGroup_success()",
-        "uid" : "2c032400ffdcb173",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757935,
-          "stop" : 1760573757937,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testFindUserByEmail_ShouldReturnEmpty()",
-        "uid" : "d1bd35c8c0cc94d2",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757731,
-          "stop" : 1760573757734,
+          "start" : 1760624469064,
+          "stop" : 1760624469067,
           "duration" : 3
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "shouldLoginSuccessfully()",
-        "uid" : "cec82300e53f8a4d",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testDeleteChurch()",
+        "uid" : "8b138f4aaf35d7fb",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573741211,
-          "stop" : 1760573741712,
-          "duration" : 501
+          "start" : 1760624469336,
+          "stop" : 1760624469337,
+          "duration" : 1
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "registerMember_shouldRegisterSuccessfully()",
-        "uid" : "4b9df3fd4573e51b",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testDeleteChildMembership()",
+        "uid" : "16deee1de7c2cc51",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758269,
-          "stop" : 1760573758274,
-          "duration" : 5
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testRevokeAllValidUserTokens_ShouldSkipIfEmpty()",
-        "uid" : "e2dad4865feaf75c",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757735,
-          "stop" : 1760573757737,
-          "duration" : 2
-        },
-        "flaky" : false,
-        "newFailed" : false,
-        "parameters" : [ ]
-      }, {
-        "name" : "testCreateChurch_withValidTenantContext()",
-        "uid" : "6713802270b5ab66",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
-        "status" : "passed",
-        "time" : {
-          "start" : 1760573757991,
-          "stop" : 1760573757994,
+          "start" : 1760624469564,
+          "stop" : 1760624469567,
           "duration" : 3
         },
         "flaky" : false,
@@ -1449,136 +695,890 @@
         "parameters" : [ ]
       }, {
         "name" : "unsubscribeTenant_shouldDeactivateTenant()",
-        "uid" : "86826a0eb0057a98",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "59e461f3b0dc821",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758137,
-          "stop" : 1760573758139,
+          "start" : 1760624469501,
+          "stop" : 1760624469503,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testConvertToEntity_withNullDTO_shouldReturnNull()",
-        "uid" : "c55ad2798206194c",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindChildById()",
+        "uid" : "89fea816efb64318",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757501,
-          "stop" : 1760573757502,
+          "start" : 1760624469583,
+          "stop" : 1760624469584,
           "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRemoveMembersFromGroup_success()",
+        "uid" : "28a1a3ea8d6d3de4",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469226,
+          "stop" : 1760624469233,
+          "duration" : 7
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testGenerateAndValidateAccessToken()",
+        "uid" : "ca411db2f9baea85",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624471026,
+          "stop" : 1760624471031,
+          "duration" : 5
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
         "name" : "testExists_true()",
-        "uid" : "dad39780318e8257",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "uid" : "7fa349b22ecd562c",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757945,
-          "stop" : 1760573757947,
+          "start" : 1760624469285,
+          "stop" : 1760624469287,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "getTenants_shouldReturnList()",
-        "uid" : "da846de6c22244f2",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "convertTenantToDTO_shouldMapCorrectly()",
+        "uid" : "de95813421be9297",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758126,
-          "stop" : 1760573758127,
+          "start" : 1760624469499,
+          "stop" : 1760624469500,
           "duration" : 1
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindAllByChurchId()",
-        "uid" : "d5888c74f0135022",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "shouldExtractTokenFromResponse()",
+        "uid" : "bd4689e50efadd93",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573759298,
-          "stop" : 1760573759312,
-          "duration" : 14
+          "start" : 1760624449462,
+          "stop" : 1760624453049,
+          "duration" : 3587
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindOne_whenNotExists()",
-        "uid" : "6aea660e6cde60d2",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testExtractClaims()",
+        "uid" : "b01f8cd682d8e5d4",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757960,
-          "stop" : 1760573757975,
-          "duration" : 15
+          "start" : 1760624471032,
+          "stop" : 1760624471034,
+          "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testListGroupMembers_groupNotFound_throwsException()",
-        "uid" : "fe7d4c52fccc0940",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testFindAll_success()",
+        "uid" : "a3f37f20aa8fa752",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757918,
-          "stop" : 1760573757919,
+          "start" : 1760624469297,
+          "stop" : 1760624469299,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testAuthenticate_ShouldThrowIfAuthFails()",
+        "uid" : "811efa0de29b4403",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469069,
+          "stop" : 1760624469075,
+          "duration" : 6
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testListGroupMembers_success()",
+        "uid" : "980bfdaced19628d",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469288,
+          "stop" : 1760624469292,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testUpdateGroup_success()",
+        "uid" : "1c7d6cf38a78ac0f",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469277,
+          "stop" : 1760624469280,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "findAll_shouldReturnPageOfTenants()",
+        "uid" : "d4b4f9898a7d3355",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469508,
+          "stop" : 1760624469509,
           "duration" : 1
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindMemberById()",
-        "uid" : "ee066f43d83f9777",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testRegisterPriest_createsNewUserAndSavesPriest()",
+        "uid" : "8822026bacfe88a",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758287,
-          "stop" : 1760573758288,
+          "start" : 1760624469362,
+          "stop" : 1760624469422,
+          "duration" : 60
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRevokeAllValidUserTokens_ShouldRevokeAndSave()",
+        "uid" : "a6d5a67820f1910a",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469030,
+          "stop" : 1760624469033,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testApproveByChurch()",
+        "uid" : "886d4acf1c909311",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469588,
+          "stop" : 1760624469622,
+          "duration" : 34
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testConvertToEntity_withNullDTO_shouldReturnNull()",
+        "uid" : "b8e9720c2cbd75f8",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468770,
+          "stop" : 1760624468771,
           "duration" : 1
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testNameContains()",
-        "uid" : "3a6884798205c3d4",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testGenerateAndValidateRefreshToken()",
+        "uid" : "b167cd585e13be1",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573757435,
-          "stop" : 1760573757454,
+          "start" : 1760624471035,
+          "stop" : 1760624471039,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindAllByUuidIn()",
+        "uid" : "1c01b51416330b7c",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624470738,
+          "stop" : 1760624470757,
           "duration" : 19
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
       }, {
-        "name" : "testFindAll()",
-        "uid" : "1878206b69ff7518",
-        "parentUid" : "feda5eb3733fdb9640043719609c542a",
+        "name" : "testCreateUser_ShouldThrowIfEmailExists()",
+        "uid" : "c665495b5d3563f2",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
         "status" : "passed",
         "time" : {
-          "start" : 1760573758266,
-          "stop" : 1760573758268,
+          "start" : 1760624469035,
+          "stop" : 1760624469040,
+          "duration" : 5
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindAllBySpecification()",
+        "uid" : "78e7ad2232bfd48a",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469654,
+          "stop" : 1760624469663,
+          "duration" : 9
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRegisterChild_throwsIfChurchNotFound()",
+        "uid" : "d667b3ad7ca0f37a",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469513,
+          "stop" : 1760624469550,
+          "duration" : 37
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testCreateRole_throwsIfTenantNotFound()",
+        "uid" : "879ba7900decb1db",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468892,
+          "stop" : 1760624468896,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "shouldFailLoginWithInvalidCredentials()",
+        "uid" : "828cbe4e4553ec62",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624453608,
+          "stop" : 1760624454132,
+          "duration" : 524
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindUserByEmail_ShouldReturnEmpty()",
+        "uid" : "8c89029b2f39f6c9",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469048,
+          "stop" : 1760624469051,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testUpdateMembershipDetails()",
+        "uid" : "22ecff5e8dd166ff",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469639,
+          "stop" : 1760624469643,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindOne_found()",
+        "uid" : "6552145441509ca2",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469120,
+          "stop" : 1760624469123,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testIsDeacon()",
+        "uid" : "a76365250b4c91e9",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468685,
+          "stop" : 1760624468686,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "contextLoads()",
+        "uid" : "70470470966dd35b",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468048,
+          "stop" : 1760624468385,
+          "duration" : 337
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "updateChildDetails_shouldUpdateOnlyNonNullFields()",
+        "uid" : "2d8e11b47bbd7e4f",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469573,
+          "stop" : 1760624469578,
+          "duration" : 5
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testExistsByEmail()",
+        "uid" : "ca8e2d08c3b6bac2",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624470898,
+          "stop" : 1760624470918,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "Login Endpoint Performance",
+        "uid" : "7dfba4cf7118abd7",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624454511,
+          "stop" : 1760624456826,
+          "duration" : 2315
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testAgeBetween()",
+        "uid" : "c9face4e16fb3f6c",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468732,
+          "stop" : 1760624468734,
           "duration" : 2
         },
         "flaky" : false,
         "newFailed" : false,
         "parameters" : [ ]
+      }, {
+        "name" : "testFindAllChurches()",
+        "uid" : "f57f7c031cef60f7",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469323,
+          "stop" : 1760624469325,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindOneGroup_notFound()",
+        "uid" : "1a9b798ccc594b41",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469267,
+          "stop" : 1760624469271,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testConvertToDTO_withNullEntity_shouldReturnNull()",
+        "uid" : "52b4f7cc90d311c1",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468766,
+          "stop" : 1760624468768,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testExtractSpecificClaims()",
+        "uid" : "c9cb7e4703c2d3cc",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624470922,
+          "stop" : 1760624471024,
+          "duration" : 102
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "shouldLoginSuccessfully()",
+        "uid" : "2f3c9f99c0d2c1c8",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624453113,
+          "stop" : 1760624453603,
+          "duration" : 490
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testChangePassword_success()",
+        "uid" : "55365487b77728c7",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469144,
+          "stop" : 1760624469146,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "convertTenantToEntity_shouldMapCorrectly()",
+        "uid" : "ab0fb7e233271a5c",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469495,
+          "stop" : 1760624469497,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testUpdateGroup_groupNotFound_throwsException()",
+        "uid" : "828c4838d0a896c0",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469234,
+          "stop" : 1760624469237,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testCreateGroup_duplicateGroupName_throwsException()",
+        "uid" : "8e19f2976ea748f6",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469256,
+          "stop" : 1760624469259,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindPriestById_found()",
+        "uid" : "e480c2db259456e0",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469444,
+          "stop" : 1760624469446,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testGetGroupUserStatus_success()",
+        "uid" : "200ea4959c59116a",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469260,
+          "stop" : 1760624469266,
+          "duration" : 6
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindAll()",
+        "uid" : "65435bf9bbf3f315",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469552,
+          "stop" : 1760624469554,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testResendActivationEmail_ShouldThrowIfNotFound()",
+        "uid" : "6a75fb57441d2450",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469059,
+          "stop" : 1760624469062,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindMemberById()",
+        "uid" : "b97fb96feaf1a342",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469651,
+          "stop" : 1760624469652,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testResendActivationEmail_ShouldThrowIfAlreadyVerified()",
+        "uid" : "a28cd483ed531e10",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469042,
+          "stop" : 1760624469046,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testConvertToEntity()",
+        "uid" : "458ece69b0259ce8",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469116,
+          "stop" : 1760624469118,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindAllByChurchId()",
+        "uid" : "5074698c382cd284",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624470856,
+          "stop" : 1760624470875,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testGetGroupManagers_groupNotFound_throwsException()",
+        "uid" : "42c0a48b1e61f2eb",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469218,
+          "stop" : 1760624469221,
+          "duration" : 3
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testExistsById()",
+        "uid" : "ca2042fe351110ec",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469332,
+          "stop" : 1760624469334,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testHasMembershipNumber()",
+        "uid" : "ea4cbca1a8e88738",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468711,
+          "stop" : 1760624468713,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "updateChildDetails_shouldNotCallSave_whenChildNotFound()",
+        "uid" : "e8940d35dd50b8f0",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469556,
+          "stop" : 1760624469558,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testNameContains()",
+        "uid" : "48aee75ac66da032",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468714,
+          "stop" : 1760624468730,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testChangePassword_mismatchNewPasswords()",
+        "uid" : "f64cec565ffc0544",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469140,
+          "stop" : 1760624469142,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testUpdateUserDetails_success()",
+        "uid" : "2173efde60d2ed73",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469134,
+          "stop" : 1760624469138,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRevokeAllValidUserTokens_ShouldSkipIfEmpty()",
+        "uid" : "a277b68bfafaf0ae",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469053,
+          "stop" : 1760624469057,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testTokenIsExpired()",
+        "uid" : "7490c2b5c04d88aa",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624471040,
+          "stop" : 1760624471052,
+          "duration" : 12
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testCreateChurch_withValidTenantContext()",
+        "uid" : "d237f0531960f1da",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469342,
+          "stop" : 1760624469346,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testRegisterChild_Success()",
+        "uid" : "e3407d2657a5c8a7",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469568,
+          "stop" : 1760624469572,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testDeletePriest()",
+        "uid" : "a7e50672b68db6ad",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469436,
+          "stop" : 1760624469438,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testAssignRolesToUser_throwsIfTenantNotInContext()",
+        "uid" : "57f38c160dd72f20",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469079,
+          "stop" : 1760624469102,
+          "duration" : 23
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testGetGroupUserStatus_groupNotFound_throwsException()",
+        "uid" : "e83d38faa8d4e7da",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469155,
+          "stop" : 1760624469209,
+          "duration" : 54
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testExists_ShouldReturnTrue()",
+        "uid" : "dfb08ee08995e36f",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469024,
+          "stop" : 1760624469028,
+          "duration" : 4
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testHasGender()",
+        "uid" : "2adced4d27294546",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624468391,
+          "stop" : 1760624468683,
+          "duration" : 292
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "testFindAll()",
+        "uid" : "1e1be1d45d0d5e89",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469629,
+          "stop" : 1760624469631,
+          "duration" : 2
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "registerMember_shouldRegisterSuccessfully()",
+        "uid" : "37da41688e536216",
+        "parentUid" : "46fe6bba3d0a77ff2cec50c192b1036d",
+        "status" : "passed",
+        "time" : {
+          "start" : 1760624469632,
+          "stop" : 1760624469638,
+          "duration" : 6
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
       } ],
-      "uid" : "feda5eb3733fdb9640043719609c542a"
+      "uid" : "46fe6bba3d0a77ff2cec50c192b1036d"
     } ],
     "uid" : "4431318c99c847c9045f31fb87391744"
   } ],
