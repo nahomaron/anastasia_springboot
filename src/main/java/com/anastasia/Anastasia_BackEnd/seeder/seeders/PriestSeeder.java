@@ -16,10 +16,12 @@ import com.anastasia.Anastasia_BackEnd.service.registration.TenantServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+@Profile("!test") // disable in test profile
 @Slf4j
 @Component
 @RequiredArgsConstructor

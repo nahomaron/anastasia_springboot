@@ -3,9 +3,11 @@ package com.anastasia.Anastasia_BackEnd.service.auth;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+@Profile("!test") // Disable this scheduler in the 'test' profile
 @Component
 @RequiredArgsConstructor
 public class TokenCleanupScheduler {

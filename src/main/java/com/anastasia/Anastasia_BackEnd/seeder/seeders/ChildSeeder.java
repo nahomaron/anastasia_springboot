@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
+@Profile("!test") // disable in test profile
 @Component
 @RequiredArgsConstructor
 public class ChildSeeder {

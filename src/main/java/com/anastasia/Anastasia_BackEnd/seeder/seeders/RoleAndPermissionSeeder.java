@@ -10,12 +10,14 @@ import com.anastasia.Anastasia_BackEnd.seeder.DataSeeder;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
+@Profile("!test")
 @RequiredArgsConstructor
 public class RoleAndPermissionSeeder {
     private static final Logger logger = LoggerFactory.getLogger(RoleAndPermissionSeeder.class);  // ✅ Use SLF4J logger

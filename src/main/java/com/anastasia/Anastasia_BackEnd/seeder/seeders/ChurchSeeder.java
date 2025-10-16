@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
+@Profile("!test") // disable in test profile
 @RequiredArgsConstructor
 public class ChurchSeeder {
     private static final Logger logger = LoggerFactory.getLogger(ChurchSeeder.class);  // Use SLF4J logger
