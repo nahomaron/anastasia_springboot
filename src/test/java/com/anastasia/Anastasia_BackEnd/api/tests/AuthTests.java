@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.api.utils.SchemaValidator;
+import com.anastasia.Anastasia_BackEnd.api.utils.TestContextHolder;
 import com.anastasia.Anastasia_BackEnd.api.utils.TestDataManager;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
@@ -32,6 +33,8 @@ public class AuthTests extends BaseApiTest {
         // Create a unique user for these specific login tests
         testEmail = DataGenerator.randomEmail();
         testPassword = DataGenerator.randomPassword();
+
+        TestContextHolder.setEmail(testEmail);
         // Ensure this user is signed up and activated *before* the login tests run
         AuthFlowHelper.signUpAndActivateAndLogin(testEmail, testPassword);
     }

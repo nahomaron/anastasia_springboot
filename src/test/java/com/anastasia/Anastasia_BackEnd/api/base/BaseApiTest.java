@@ -2,9 +2,11 @@ package com.anastasia.Anastasia_BackEnd.api.base;
 
 import com.anastasia.Anastasia_BackEnd.api.config.ApiInterceptor;
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
+import com.anastasia.Anastasia_BackEnd.api.extensions.TestFailureWatcher;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
+import com.anastasia.Anastasia_BackEnd.api.utils.TestDataManager;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
@@ -14,7 +16,10 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 import lombok.Getter;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
@@ -31,7 +36,11 @@ import java.net.URI;
  * Treats the backend as an already-running black-box service and only configures RestAssured
  * before delegating to helper flows.
  */
+
+@ExtendWith(TestFailureWatcher.class)
 public class BaseApiTest {
+
+    private static final Logger log = LoggerFactory.getLogger(BaseApiTest.class);
 
     private static final JwtUtil jwtUtil = new JwtUtil();
     // The static AuthService field was removed as it was not being initialized by Spring (it was null).
@@ -48,16 +57,19 @@ public class BaseApiTest {
     @Getter
     protected static String cachedAccessToken;
     protected static String cachedRefreshToken;
+    @Getter
     protected static String cachedEmail;
     protected static String cachedPassword;
 
-    // --- Setup Logic ---
+    // -----------------------------------------------------
+    //  Lifecycle Hooks
+    // -----------------------------------------------------
+    @BeforeAll
+    static void beforeAllSuite() {
+        log.info("----- Starting API Test Suite -----");
+        TestDataManager.resetAllTestData();
+    }
 
-    /**
-     * Configures RestAssured with target base URL and ensures the authentication cache
-     * is initialized before any test method runs.
-     * This method runs once per test class instance (i.e., before each test method).
-     */
     @BeforeEach
     public void configureRestAssured() {
         // 1. Configure RestAssured to talk to the externalised backend
@@ -72,6 +84,24 @@ public class BaseApiTest {
             initializeAuthenticationCache();
         }
     }
+
+    @AfterEach
+    void afterEachTest(TestInfo testInfo, TestReporter reporter) {
+        boolean testFailed = testInfo.getTags().contains("failed"); // fallback, depends on how you mark failures
+        if (testFailed) {
+            TestDataManager.cleanupOnFailure(cachedEmail, true);
+        }
+    }
+
+    @AfterAll
+    static void afterAllSuite() {
+        log.info("----- API Test Suite Finished. Exporting cleanup summary -----");
+        TestDataManager.exportSummaryToAllure();
+    }
+
+    // -----------------------------------------------------
+    // Existing Auth Initialization Logic
+    // -----------------------------------------------------
 
     private void applyBaseUrlConfiguration() {
         String configuredBaseUrl = resolveBaseUrl();
@@ -241,7 +271,4 @@ public class BaseApiTest {
             );
         }
     }
-
-
-
 }

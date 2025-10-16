@@ -25,20 +25,24 @@ jobs:
 
       - name: Start Spring Boot (background)
         run: |
-          nohup ./mvnw -DskipTests spring-boot:run > app.log 2>&1 &
-          for i in {1..60}; do
+          echo "Starting Spring Boot jar with test profile..."
+          nohup java -jar target/*.jar --spring.profiles.active=test --server.port=8080 > app.log 2>&1 &
+          
+          echo "Waiting for application health check..."
+          ATTEMPTS=60
+          for i in $(seq 1 $ATTEMPTS); do
             if curl -sSf http://localhost:8080/actuator/health > /dev/null; then
-              echo "App is up."
-              break
+              echo "Application is healthy (attempt $i/${ATTEMPTS})."
+              exit 0
             fi
-            echo "Waiting for app..."
+            echo "Attempt $i/${ATTEMPTS}: application not yet ready."
             sleep 2
           done
-          curl -s http://localhost:8080/actuator/health || true
+          
+          echo "Application failed to start within $((ATTEMPTS * 2)) seconds."
+          tail -n 100 app.log
+          exit 1
         env:
-          # if you need a specific profile for CI, uncomment:
-          # SPRING_PROFILES_ACTIVE: dev
-          # otherwise default app config will be used
           MAVEN_OPTS: -Xmx1g
 
       - name: Install k6
