@@ -1,0 +1,60 @@
+{
+  "uid" : "c0330649f66f089c",
+  "name" : "testResendActivationEmail_ShouldThrowIfNotFound()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest.testResendActivationEmail_ShouldThrowIfNotFound",
+  "historyId" : "748461011451febc49260499ce648e81",
+  "time" : {
+    "start" : 1760573757739,
+    "stop" : 1760573757741,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest]/[method:testResendActivationEmail_ShouldThrowIfNotFound()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2513@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testResendActivationEmail_ShouldThrowIfNotFound"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "c0330649f66f089c.json",
+  "parameterValues" : [ ]
+}

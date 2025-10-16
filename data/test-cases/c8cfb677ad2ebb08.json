@@ -1,0 +1,60 @@
+{
+  "uid" : "c8cfb677ad2ebb08",
+  "name" : "testFindPriestById_notFound()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest.testFindPriestById_notFound",
+  "historyId" : "e5726d0e649cb7e99338fbbe4d9127d5",
+  "time" : {
+    "start" : 1760573758067,
+    "stop" : 1760573758069,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest]/[method:testFindPriestById_notFound()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2513@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testFindPriestById_notFound"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "c8cfb677ad2ebb08.json",
+  "parameterValues" : [ ]
+}

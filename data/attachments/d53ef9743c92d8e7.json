@@ -1,0 +1,6 @@
+{
+  "error" : "Unauthorized",
+  "message" : "Invalid email or password",
+  "timestamp" : "2025-10-16T00:15:42.209077534",
+  "status" : 401
+}

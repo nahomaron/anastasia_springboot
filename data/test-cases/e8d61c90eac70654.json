@@ -1,0 +1,60 @@
+{
+  "uid" : "e8d61c90eac70654",
+  "name" : "testConvertToDTO_withNullEntity_shouldReturnNull()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.mappers.ChildMapperUnitTest.testConvertToDTO_withNullEntity_shouldReturnNull",
+  "historyId" : "e414031918a3a882295c754cf1c38cc3",
+  "time" : {
+    "start" : 1760573757498,
+    "stop" : 1760573757500,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.mappers.ChildMapperUnitTest]/[method:testConvertToDTO_withNullEntity_shouldReturnNull()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2513@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.mappers.ChildMapperUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.mappers.ChildMapperUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testConvertToDTO_withNullEntity_shouldReturnNull"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.mappers.ChildMapperUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "e8d61c90eac70654.json",
+  "parameterValues" : [ ]
+}

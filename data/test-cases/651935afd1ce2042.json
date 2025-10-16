@@ -1,0 +1,60 @@
+{
+  "uid" : "651935afd1ce2042",
+  "name" : "testDeleteChurch()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest.testDeleteChurch",
+  "historyId" : "433dbac0098ce2ee76d999f9a54c2dad",
+  "time" : {
+    "start" : 1760573757986,
+    "stop" : 1760573757987,
+    "duration" : 1
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest]/[method:testDeleteChurch()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2513@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testDeleteChurch"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "651935afd1ce2042.json",
+  "parameterValues" : [ ]
+}

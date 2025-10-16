@@ -1,0 +1,280 @@
+{
+  "uid" : "e5d6fbcc7b72f75b",
+  "name" : "shouldFailLoginWithInvalidCredentials()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests.shouldFailLoginWithInvalidCredentials",
+  "historyId" : "b50d04930f7387cfe36815e9b3da7570",
+  "time" : {
+    "start" : 1760573741718,
+    "stop" : 1760573742224,
+    "duration" : 506
+  },
+  "description" : "Verifies login fails with invalid credentials.",
+  "descriptionHtml" : "<p>Verifies login fails with invalid credentials.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "testStage" : {
+    "description" : "Verifies login fails with invalid credentials.",
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "f5799c7541541c7",
+      "name" : "\uD83D\uDCE5 Response ← 404 http://localhost:8080/api/v1/test-utils/cleanup/reset-all",
+      "source" : "f5799c7541541c7.json",
+      "type" : "application/json",
+      "size" : 198
+    }, {
+      "uid" : "9d1747eee10cd5de",
+      "name" : "\uD83D\uDCE5 Response ← 404 http://localhost:8080/api/v1/test-utils/cleanup/reset-all",
+      "source" : "9d1747eee10cd5de.json",
+      "type" : "application/json",
+      "size" : 198
+    }, {
+      "uid" : "6abbbd8e7ce9def6",
+      "name" : "\uD83D\uDCE5 Response ← 404 http://localhost:8080/api/v1/test-utils/cleanup/reset-all",
+      "source" : "6abbbd8e7ce9def6.json",
+      "type" : "application/json",
+      "size" : 198
+    }, {
+      "uid" : "3be4ee0bb844df95",
+      "name" : "Global Reset Cleanup: All Entities (Status: 404)",
+      "source" : "3be4ee0bb844df95.json",
+      "type" : "application/json",
+      "size" : 203
+    }, {
+      "uid" : "362510a5eae40ce4",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "362510a5eae40ce4.json",
+      "type" : "application/json",
+      "size" : 134
+    }, {
+      "uid" : "16d7a5ed810b543f",
+      "name" : "\uD83D\uDCE5 Response ← 201 http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "16d7a5ed810b543f.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "5b17f58646730d21",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "5b17f58646730d21.json",
+      "type" : "application/json",
+      "size" : 134
+    }, {
+      "uid" : "98087c9f6e6bea9d",
+      "name" : "\uD83D\uDCE5 Response ← 201 http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "98087c9f6e6bea9d.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "dca22a21d433ec26",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "dca22a21d433ec26.json",
+      "type" : "application/json",
+      "size" : 134
+    }, {
+      "uid" : "fb9a95ee1fafa9b",
+      "name" : "\uD83D\uDCE5 Response ← 201 http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "fb9a95ee1fafa9b.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "49e274347add5533",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/test/activation-token?email=mitch.herman%40yahoo.com",
+      "source" : "49e274347add5533.json",
+      "type" : "application/json",
+      "size" : 6
+    }, {
+      "uid" : "4f30948b8ff13648",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/test/activation-token?email=mitch.herman%40yahoo.com",
+      "source" : "4f30948b8ff13648.json",
+      "type" : "application/json",
+      "size" : 6
+    }, {
+      "uid" : "7395371a441d5bcd",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/test/activation-token?email=mitch.herman%40yahoo.com",
+      "source" : "7395371a441d5bcd.json",
+      "type" : "application/json",
+      "size" : 6
+    }, {
+      "uid" : "3f96d1bd4ca441a6",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/activate-account?token=024996",
+      "source" : "3f96d1bd4ca441a6.json",
+      "type" : "application/json",
+      "size" : 30
+    }, {
+      "uid" : "2dec4593b73a3f43",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/activate-account?token=024996",
+      "source" : "2dec4593b73a3f43.json",
+      "type" : "application/json",
+      "size" : 30
+    }, {
+      "uid" : "28e5e2e099cffcf8",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/activate-account?token=024996",
+      "source" : "28e5e2e099cffcf8.json",
+      "type" : "application/json",
+      "size" : 30
+    }, {
+      "uid" : "2020822201d3b8ee",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "2020822201d3b8ee.json",
+      "type" : "application/json",
+      "size" : 67
+    }, {
+      "uid" : "9e94fa7b4087dab3",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "9e94fa7b4087dab3.json",
+      "type" : "application/json",
+      "size" : 433
+    }, {
+      "uid" : "66b5b64c6b1bb581",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "66b5b64c6b1bb581.json",
+      "type" : "application/json",
+      "size" : 67
+    }, {
+      "uid" : "c85754e5ba6fa4e1",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c85754e5ba6fa4e1.json",
+      "type" : "application/json",
+      "size" : 433
+    }, {
+      "uid" : "5360d905749d3fc6",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "5360d905749d3fc6.json",
+      "type" : "application/json",
+      "size" : 67
+    }, {
+      "uid" : "49bab08a450ce036",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "49bab08a450ce036.json",
+      "type" : "application/json",
+      "size" : 433
+    }, {
+      "uid" : "36b671a66ed8a761",
+      "name" : "Schema: schemas/auth-login-schema.json",
+      "source" : "36b671a66ed8a761.json",
+      "type" : "application/json",
+      "size" : 371
+    }, {
+      "uid" : "4171824e1ca1a0de",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/logout",
+      "source" : "4171824e1ca1a0de.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "d1d9e90424bc1207",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/logout",
+      "source" : "d1d9e90424bc1207.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "77fef9d885635721",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/logout",
+      "source" : "77fef9d885635721.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "6a14bf4f46ad3868",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "6a14bf4f46ad3868.json",
+      "type" : "application/json",
+      "size" : 71
+    }, {
+      "uid" : "a6b883f229761e08",
+      "name" : "\uD83D\uDCE5 Response ← 401 http://localhost:8080/api/v1/auth/login",
+      "source" : "a6b883f229761e08.json",
+      "type" : "application/json",
+      "size" : 140
+    }, {
+      "uid" : "e43c2aab62835bb5",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "e43c2aab62835bb5.json",
+      "type" : "application/json",
+      "size" : 71
+    }, {
+      "uid" : "d53ef9743c92d8e7",
+      "name" : "\uD83D\uDCE5 Response ← 401 http://localhost:8080/api/v1/auth/login",
+      "source" : "d53ef9743c92d8e7.json",
+      "type" : "application/json",
+      "size" : 140
+    }, {
+      "uid" : "43ae399418c7c841",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "43ae399418c7c841.json",
+      "type" : "application/json",
+      "size" : 71
+    }, {
+      "uid" : "dab73ea28d166e8c",
+      "name" : "\uD83D\uDCE5 Response ← 401 http://localhost:8080/api/v1/auth/login",
+      "source" : "dab73ea28d166e8c.json",
+      "type" : "application/json",
+      "size" : 140
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 32,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.api.tests.AuthTests]/[method:shouldFailLoginWithInvalidCredentials()]"
+  }, {
+    "name" : "owner",
+    "value" : "Nahom Aron"
+  }, {
+    "name" : "epic",
+    "value" : "Authentication"
+  }, {
+    "name" : "story",
+    "value" : "Sign up, activate, and login flow"
+  }, {
+    "name" : "feature",
+    "value" : "User Account Management"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2513@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests"
+  }, {
+    "name" : "testMethod",
+    "value" : "shouldFailLoginWithInvalidCredentials"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests"
+  }, {
+    "name" : "severity",
+    "value" : "critical"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "critical",
+    "owner" : "Nahom Aron",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "e5d6fbcc7b72f75b.json",
+  "parameterValues" : [ ]
+}
