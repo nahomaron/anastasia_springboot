@@ -47,7 +47,7 @@ services:
         condition: "service_healthy"
     environment:
       - TEST_BASE_URL=http://backend:8080/api
-      - K6_CLOUD_TOKEN=${K6_INFLUXDB_TOKEN}
+      - K6_CLOUD_TOKEN=${K6_CLOUD_TOKEN}
     volumes:
       - ./tests/load:/scripts
     command: >
