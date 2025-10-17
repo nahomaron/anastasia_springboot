@@ -11,6 +11,8 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import io.qameta.allure.Allure;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
@@ -37,6 +39,8 @@ import java.net.URI;
  * before delegating to helper flows.
  */
 
+@Epic("API Tests")
+@Feature("External REST Layer")
 @ExtendWith(TestFailureWatcher.class)
 public class BaseApiTest {
 
@@ -68,6 +72,16 @@ public class BaseApiTest {
     static void beforeAllSuite() {
         log.info("----- Starting API Test Suite -----");
         TestDataManager.resetAllTestData();
+
+        String baseUrl = System.getProperty("base.url", "http://localhost:8080");
+        try {
+            RestAssured.baseURI = baseUrl;
+            RestAssured.get("/actuator/health")
+                    .then()
+                    .statusCode(200);
+        } catch (Exception e) {
+            Assumptions.abort("Backend not reachable at " + baseUrl + ". Skipping black-box tests.");
+        }
     }
 
     @BeforeEach

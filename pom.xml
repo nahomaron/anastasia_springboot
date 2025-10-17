@@ -36,11 +36,80 @@
 		<lombok.version>1.18.42</lombok.version>
 	</properties>
 	<profiles>
+		<!-- Integration + Testcontainers -->
 		<profile>
-			<id>api</id>
+			<id>test</id>
+			<properties>
+				<spring.profiles.active>test</spring.profiles.active>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludes>
+								<exclude>**/api/**/tests/**/*.java</exclude>
+							</excludes>
+							<systemPropertyVariables>
+								<allure.results.directory>target/allure-results/integration</allure.results.directory>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!-- Black-box API tests -->
+		<profile>
+			<id>test-server</id>
 			<properties>
 				<spring.config.location>classpath:application-api.properties</spring.config.location>
 			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>**/api/**/tests/**/*.java</include>
+							</includes>
+							<systemPropertyVariables>
+								<base.url>${env.BASE_URL}</base.url>
+								<allure.results.directory>target/allure-results/api</allure.results.directory>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>api</id>
+			<properties>
+				<!-- Points to your API-specific application properties -->
+				<spring.config.location>classpath:application-api.properties</spring.config.location>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<!-- Run only API test classes -->
+							<includes>
+								<include>**/api/**/tests/**/*.java</include>
+							</includes>
+
+							<!-- Optional: make Allure output predictable -->
+							<systemPropertyVariables>
+								<allure.results.directory>target/allure-results/api</allure.results.directory>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>allure-report</id>
@@ -420,18 +489,34 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
 				<configuration>
+					<reuseForks>false</reuseForks>
 					<argLine>@{argLine}</argLine>
 <!--					<testFailureIgnore>true</testFailureIgnore>-->
 					<systemPropertyVariables>
 						<allure.results.directory>
 							${project.build.directory}/allure-results
 						</allure.results.directory>
+						<TESTCONTAINERS_RYUK_DISABLED>false</TESTCONTAINERS_RYUK_DISABLED>
 					</systemPropertyVariables>
 
 					<!-- Enable parallel test execution -->
 					<parallel>classes</parallel>
 					<useUnlimitedThreads>true</useUnlimitedThreads>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.2.5</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 
 			<!-- 🔹 Allure report generator -->

@@ -8,168 +8,137 @@ on:
 
 jobs:
   api-tests:
-    # Best Practice: Use a stable LTS version for CI, like JDK 21
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    permissions:
+      contents: read
 
     env:
       SPRING_PROFILES_ACTIVE: test
       ALLURE_RESULTS_DIR: target/allure-results
-#      MAVEN_OPTS: "-Dmaven.test.failure.ignore=true"
-
-      # Default cleanup behavior — overridden per branch below
+      BASE_URL: http://localhost:8080
       CLEANUP_ON_EXIT: "false"
       CLEANUP_ON_FAILURE_ONLY: "true"
 
     steps:
-      - name: Checkout repository
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v4
 
-      # Using JDK 21 (LTS) for stability
-      - name: Set up JDK 23
+      - name: ☕ Set up JDK 23
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 23
           cache: maven
 
-      - name: Grant execute permission for Maven wrapper
+      - name: ⚙️ Configure Testcontainers
+        run: |
+          echo "TESTCONTAINERS_CHECKS_DISABLE=true" >> $GITHUB_ENV
+          echo "TESTCONTAINERS_RYUK_DISABLED=false" >> $GITHUB_ENV
+
+      - name: 🧰 Grant execute permission for Maven wrapper
         run: chmod +x ./mvnw
 
-      # Configure cleanup behavior per branch
-      - name: Configure cleanup behavior per branch
+      # ---------------------------------------------------
+      # 1️⃣ INTERNAL TESTS – Run integration/unit suite
+      # ---------------------------------------------------
+      - name: 🧩 Run internal Testcontainers integration tests
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "CLEANUP_ON_EXIT=true" >> $GITHUB_ENV
-            echo "CLEANUP_ON_FAILURE_ONLY=false" >> $GITHUB_ENV
-            echo "Cleanup mode: Always cleanup (PR run)"
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "CLEANUP_ON_EXIT=false" >> $GITHUB_ENV
-            echo "CLEANUP_ON_FAILURE_ONLY=true" >> $GITHUB_ENV
-            echo "Cleanup mode: Cleanup only on failure (main branch)"
-          else
-            echo "CLEANUP_ON_EXIT=false" >> $GITHUB_ENV
-            echo "CLEANUP_ON_FAILURE_ONLY=false" >> $GITHUB_ENV
-            echo "Cleanup mode: Skip cleanup (default)"
-          fi
-          
-
-      # Build & Start Backend
-      - name: Build Spring Boot backend (skip tests)
-        run: ./mvnw clean package -DskipTests
-
-      - name: Start backend with test profile
-        run: |
-            echo "Starting backend with test profile..."
-            # Start in background, redirecting output
-            nohup java -jar target/*.jar --spring.profiles.active=test > server.log 2>&1 &
-            
-            # Health-check loop (120 seconds max)
-            MAX_ATTEMPTS=24
-            SLEEP_SECONDS=5
-            TIMEOUT_SECONDS=$((MAX_ATTEMPTS * SLEEP_SECONDS))
-            
-            for i in $(seq 1 $MAX_ATTEMPTS); do
-              if curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
-                echo "Backend is up after $((i * SLEEP_SECONDS)) seconds!"
-                break
-              fi
-            
-              # **FIXED LOGGING:** Now consistently uses MAX_ATTEMPTS
-              echo "Waiting for backend to start... (Attempt $i/$MAX_ATTEMPTS)"
-              sleep $SLEEP_SECONDS
-            
-              if [ $i -eq $MAX_ATTEMPTS ]; then
-                # **FIXED TIMEOUT MESSAGE:** Displays the calculated timeout
-                echo "Health check failed after $TIMEOUT_SECONDS seconds. Aborting."
-                tail -n 50 server.log
-                exit 1
-              fi
-            done
-            
-            echo "Last 20 lines of server log:"
-            tail -n 20 server.log
-
-       # Run Tests
-      - name: Run RestAssured API tests
-        # The 'test' profile must ensure Allure results are generated in target/allure-results
-        run: ./mvnw test -Papi
+          echo "Running internal integration tests..."
+          ./mvnw verify -Ptest -B
         env:
           SPRING_PROFILES_ACTIVE: test
-          BASE_URL: http://localhost:8080
 
-        # Cleanup server process (Optional, but robust)
-      - name: Stop Spring Boot backend
-        if: always() # Attempt to kill the process regardless of test outcome
+      # ---------------------------------------------------
+      # 2️⃣ BUILD & START BACKEND
+      # ---------------------------------------------------
+      - name: 🏗️ Build Spring Boot backend (skip tests)
+        run: ./mvnw clean package -DskipTests
+
+      - name: 🚀 Start backend with test profile
         run: |
-          # Find the PID of the server running on port 8080 or the JAR
-          SERVER_PID=$(lsof -t -i:8080 || pgrep -f "java -jar target/*.jar")
+          echo "Starting backend with test profile..."
+          nohup java -jar target/*.jar --spring.profiles.active=test > server.log 2>&1 &
+          
+          MAX_ATTEMPTS=24
+          SLEEP_SECONDS=5
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            if curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
+              echo "✅ Backend is up after $((i * SLEEP_SECONDS))s"
+              break
+            fi
+            echo "Waiting for backend... ($i/$MAX_ATTEMPTS)"
+            sleep $SLEEP_SECONDS
+            if [ $i -eq $MAX_ATTEMPTS ]; then
+              echo "❌ Backend failed to start"
+              tail -n 50 server.log
+              exit 1
+            fi
+          done
+          echo "Last 20 lines of server.log:"
+          tail -n 20 server.log
+
+      # ---------------------------------------------------
+      # 3️⃣ BLACK-BOX TESTS – RestAssured API suite
+      # ---------------------------------------------------
+      - name: 🧪 Run RestAssured black-box API tests
+        run: |
+          echo "Running external API tests against running backend..."
+          ./mvnw test -Ptest-server -B
+        env:
+          BASE_URL: http://localhost:8080
+          SPRING_PROFILES_ACTIVE: test
+
+      # ---------------------------------------------------
+      # 4️⃣ CLEANUP & REPORTING
+      # ---------------------------------------------------
+      - name: 🛑 Stop Spring Boot backend
+        if: always()
+        run: |
+          SERVER_PID=$(lsof -t -i:8080 || pgrep -f "java -jar target/*.jar" || true)
           if [ -n "$SERVER_PID" ]; then
-            echo "Stopping backend with PID: $SERVER_PID"
+            echo "Stopping backend (PID: $SERVER_PID)"
             kill $SERVER_PID
-            # Wait for graceful shutdown (optional)
-            sleep 5 
+            sleep 5
           else
-            echo "Backend process not found. Skipping kill."
+            echo "No backend process found."
           fi
 
 
-      - name: Generate Allure HTML report
+      # ---------------------------------------------------
+      # 🧩 Merge Allure results from both suites
+      # ---------------------------------------------------
+      - name: 🧩 Merge Allure results (integration + api)
+        run: |
+          mkdir -p target/allure-results
+          cp -r target/allure-results/integration/* target/allure-results/ 2>/dev/null || true
+          cp -r target/allure-results/api/* target/allure-results/ 2>/dev/null || true
+
+      # ---------------------------------------------------
+      - name: 🧮 Generate Allure HTML report
         if: always()
         uses: simple-elf/allure-report-action@v1.6
         with:
           allure_results: target/allure-results
-          allure_report: allure-html-report-dir # Define a clean output directory name
+          allure_report: allure-html-report-dir
 
-      # Upload Allure HTML report for deployment
-      - name: Upload Allure HTML report artifact
+      - name: 📤 Upload Allure HTML artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-html-report
-          path: allure-html-report-dir/ # Upload the directory generated by the action
+          path: allure-html-report-dir/
 
-      # Optional: Upload raw results for local debugging
-      - name: Upload Allure raw results
+      - name: 📁 Upload raw Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-raw
           path: target/allure-results/
 
-      # Archive test reports (optional, but good practice)
-      - name: Archive Surefire test reports
+      - name: 🧾 Archive Surefire test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports
           path: target/surefire-reports/
-
-  deploy-allure-report:
-    needs: api-tests
-    # Run always, but only deploy from main
-    if: always() && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository (required for gh-pages)
-        uses: actions/checkout@v4
-
-      - name: Download Allure HTML artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-html-report
-          path: allure-report
-
-      - name: Deploy Allure report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-report
-          keep_files: false

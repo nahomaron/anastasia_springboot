@@ -3,6 +3,8 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -23,7 +25,8 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
+@Epic("Integration Tests")
+@Feature("Internal Layer")
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
