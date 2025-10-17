@@ -2,9 +2,9 @@
   "name" : "GitHub Actions",
   "type" : "github",
   "url" : "https://nahomaron.github.io/anastasia_springboot",
-  "buildOrder" : 26,
-  "buildName" : "GitHub Actions Run #18564455105",
-  "buildUrl" : "https://github.com/nahomaron/anastasia_springboot/actions/runs/18564455105",
+  "buildOrder" : 27,
+  "buildName" : "GitHub Actions Run #18580071708",
+  "buildUrl" : "https://github.com/nahomaron/anastasia_springboot/actions/runs/18580071708",
   "reportName" : "Allure Report with history",
-  "reportUrl" : "https://nahomaron.github.io/anastasia_springboot/26/"
+  "reportUrl" : "https://nahomaron.github.io/anastasia_springboot/27/"
 } ]

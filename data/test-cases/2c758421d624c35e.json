@@ -1,0 +1,60 @@
+{
+  "uid" : "2c758421d624c35e",
+  "name" : "testCreateGroup_duplicateGroupName_throwsException()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest.testCreateGroup_duplicateGroupName_throwsException",
+  "historyId" : "aaa1898c7030feea2377b236db05eefc",
+  "time" : {
+    "start" : 1760666472973,
+    "stop" : 1760666472975,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest]/[method:testCreateGroup_duplicateGroupName_throwsException()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmzdgdc"
+  }, {
+    "name" : "thread",
+    "value" : "2514@runnervmzdgdc.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testCreateGroup_duplicateGroupName_throwsException"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "2c758421d624c35e.json",
+  "parameterValues" : [ ]
+}

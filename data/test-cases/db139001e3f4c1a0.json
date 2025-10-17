@@ -1,0 +1,60 @@
+{
+  "uid" : "db139001e3f4c1a0",
+  "name" : "testFindUsersByGroupId()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest.testFindUsersByGroupId",
+  "historyId" : "80a4688194d285699c85f067aba90781",
+  "time" : {
+    "start" : 1760666480330,
+    "stop" : 1760666480356,
+    "duration" : 26
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest]/[method:testFindUsersByGroupId()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmzdgdc"
+  }, {
+    "name" : "thread",
+    "value" : "2514@runnervmzdgdc.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testFindUsersByGroupId"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "db139001e3f4c1a0.json",
+  "parameterValues" : [ ]
+}

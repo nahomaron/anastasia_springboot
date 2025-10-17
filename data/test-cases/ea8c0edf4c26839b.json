@@ -1,0 +1,60 @@
+{
+  "uid" : "ea8c0edf4c26839b",
+  "name" : "testListGroupMembers_groupNotFound_throwsException()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest.testListGroupMembers_groupNotFound_throwsException",
+  "historyId" : "a1767994927398b28e9a3d3040d2e9c3",
+  "time" : {
+    "start" : 1760666472970,
+    "stop" : 1760666472972,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest]/[method:testListGroupMembers_groupNotFound_throwsException()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmzdgdc"
+  }, {
+    "name" : "thread",
+    "value" : "2514@runnervmzdgdc.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testListGroupMembers_groupNotFound_throwsException"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "ea8c0edf4c26839b.json",
+  "parameterValues" : [ ]
+}

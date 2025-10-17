@@ -1,4 +1,0 @@
-POST /auth/login
-Runs: 20
-Average: 111.15 ms (limit 500)
-P95: 123 ms (limit 800)

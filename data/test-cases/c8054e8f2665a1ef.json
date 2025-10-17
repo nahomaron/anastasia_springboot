@@ -1,0 +1,60 @@
+{
+  "uid" : "c8054e8f2665a1ef",
+  "name" : "testAgeBetween()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest.testAgeBetween",
+  "historyId" : "856ded6e58e2672929d4a8b8c06830f7",
+  "time" : {
+    "start" : 1760666473422,
+    "stop" : 1760666473424,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest]/[method:testAgeBetween()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmzdgdc"
+  }, {
+    "name" : "thread",
+    "value" : "2514@runnervmzdgdc.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testAgeBetween"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "c8054e8f2665a1ef.json",
+  "parameterValues" : [ ]
+}
