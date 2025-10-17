@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class TenantControllerIT {
+public class TenantControllerIT extends PostgresTestContainer {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private TenantRepository tenantRepository;

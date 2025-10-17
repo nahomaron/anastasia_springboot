@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
@@ -48,7 +49,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class ChildControllerIT {
+class ChildControllerIT extends PostgresTestContainer {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;

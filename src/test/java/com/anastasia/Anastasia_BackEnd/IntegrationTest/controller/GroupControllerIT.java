@@ -1,34 +1,31 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
+import com.anastasia.Anastasia_BackEnd.api.utils.TestDataSeeder;
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.group.*;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
-import com.anastasia.Anastasia_BackEnd.seeder.TestDataSeederConfig;
 import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Set;
 import java.util.UUID;
 
-import static com.anastasia.Anastasia_BackEnd.seeder.TestDataSeederConfig.TEST_EMAIL;
-import static com.anastasia.Anastasia_BackEnd.seeder.TestDataSeederConfig.TEST_PASSWORD;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -36,21 +33,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //@ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@Import(TestDataSeederConfig.class)
-public class GroupControllerIT {
+public class GroupControllerIT extends PostgresTestContainer {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private GroupService groupService;
     @Autowired private ChurchRepository churchRepository;
     @Autowired private JwtUtil jwtUtil;
+    @Autowired private TestDataSeeder testDataSeeder;
 
     private String accessToken;
     private String tenantId;
+    private UserEntity adminUser;
 
     @BeforeEach
     void setUp() throws Exception {
-        AuthenticationRequest loginRequest = new AuthenticationRequest(TEST_EMAIL, TEST_PASSWORD);
+        adminUser = testDataSeeder.createAdminUser();
+        testDataSeeder.createMember("Nahom");
+
+        AuthenticationRequest loginRequest = new AuthenticationRequest(
+                TestDataSeeder.ADMIN_EMAIL,
+                TestDataSeeder.ADMIN_PASSWORD
+        );
+
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
@@ -168,7 +173,7 @@ public class GroupControllerIT {
         SimpleGroupEntity created = groupService.createGroup(groupDTO);
 
         AddUsersToGroupRequest request = AddUsersToGroupRequest.builder()
-                .userIds(Set.of(TestDataSeederConfig.TEST_USER_UUID))
+                .userIds(Set.of(adminUser.getUuid()))
                 .build();
 
         mockMvc.perform(post("/api/v1/groups/" + created.getGroupId() + "/users")
@@ -186,7 +191,7 @@ public class GroupControllerIT {
         SimpleGroupEntity created = groupService.createGroup(groupDTO);
 
         AddUsersToGroupRequest request = AddUsersToGroupRequest.builder()
-                .userIds(Set.of(TestDataSeederConfig.TEST_USER_UUID))
+                .userIds(Set.of(adminUser.getUuid()))
                 .build();
         groupService.addUsersToGroup(created.getGroupId(), request);
 
@@ -194,7 +199,7 @@ public class GroupControllerIT {
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.simpleUserDTOList[0].uuid").value(TestDataSeederConfig.TEST_USER_UUID.toString()));
+                .andExpect(jsonPath("$._embedded.simpleUserDTOList[0].uuid").value(adminUser.getUuid().toString()));
     }
 
     private GroupDTO getValidGroupDTO() {

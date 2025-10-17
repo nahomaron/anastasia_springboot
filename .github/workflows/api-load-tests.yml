@@ -36,7 +36,7 @@ jobs:
       - name: Wait for backend health check
         run: |
           echo "Waiting for backend to become healthy..."
-          MAX_ATTEMPTS=20
+          MAX_ATTEMPTS=30
           for i in $(seq 1 $MAX_ATTEMPTS); do
             STATUS=$(docker inspect --format='{{json .State.Health.Status}}' anastasia_backend 2>/dev/null || echo "unknown")
             echo "Attempt $i/$MAX_ATTEMPTS: $STATUS"

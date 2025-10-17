@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 
 import com.anastasia.Anastasia_BackEnd.AnastasiaBackEndApplication;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
+import com.anastasia.Anastasia_BackEnd.api.utils.TestDataSeeder;
 import com.anastasia.Anastasia_BackEnd.config.RateLimiterConfig;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
@@ -32,13 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //@ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
-public class AuthControllerIT {
+public class AuthControllerIT extends PostgresTestContainer {
 
 
     @Autowired private final MockMvc mockMvc;
     @Autowired private final ObjectMapper objectMapper;
     @Autowired private final TokenRepository tokenRepository;
     @Autowired private final AuthService authService;
+    @Autowired private TestDataSeeder testDataSeeder;
 
     @Mock
     private RateLimiterConfig rateLimiterConfig;
@@ -48,6 +51,8 @@ public class AuthControllerIT {
 
     @BeforeEach
     void setUp() {
+        testDataSeeder.createAdminUser();
+        testDataSeeder.createMember("Nahom");
         bucket = Bucket.builder()
                 .addLimit(io.github.bucket4j.Bandwidth.classic(5, io.github.bucket4j.Refill.greedy(5, java.time.Duration.ofMinutes(1))))
                 .build();
@@ -78,11 +83,10 @@ public class AuthControllerIT {
 
     @Test
     public void testThatLoginReturnsHttpStatus200OnSuccess() throws Exception {
-        UserEntity user = TestDataUtil.createTestUserEntityA();
-        user.setVerified(true);
-        authService.createUser(user);
-
-        AuthenticationRequest testAuth = TestDataUtil.createTestAuthenticationRequest();
+        AuthenticationRequest testAuth = new AuthenticationRequest(
+                TestDataSeeder.ADMIN_EMAIL,
+                TestDataSeeder.ADMIN_PASSWORD
+        );
         String testAuthJson = objectMapper.writeValueAsString(testAuth);
 
         mockMvc.perform(
