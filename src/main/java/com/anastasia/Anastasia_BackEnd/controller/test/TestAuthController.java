@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth/test")
-@Profile("test")  // Only available in 'test' profile
+@Profile({"test", "test-server"})  // Only available in 'test' profile
 public class TestAuthController {
 
     private final TokenRepository tokenRepository;

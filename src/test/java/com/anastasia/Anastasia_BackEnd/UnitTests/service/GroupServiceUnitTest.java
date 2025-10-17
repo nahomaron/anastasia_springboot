@@ -11,7 +11,7 @@ import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.GroupRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.group.GroupServiceImpl;
-import com.sun.jdi.request.DuplicateRequestException;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -236,7 +236,7 @@ public class GroupServiceUnitTest {
         when(groupRepository.existsByGroupName(anyString())).thenReturn(true);
 
         assertThatThrownBy(() -> groupService.createGroup(groupDTO))
-                .isInstanceOf(DuplicateRequestException.class)
+                .isInstanceOf(EntityExistsException.class)
                 .hasMessageContaining("Group name already exists");
 
         verify(groupRepository, never()).save(any(GroupEntity.class));

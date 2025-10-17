@@ -106,7 +106,7 @@ export default function (data) {
   errorRate.add(!ok);
   if (!ok) {
     // Keep noisy logs off unless needed. Uncomment for debugging:
-    // console.error(`Login failed: ${res.status} ${res.body}`);
+     console.error(`Login failed: ${res.status} ${res.body}`);
   }
 
   sleep(1);

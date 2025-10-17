@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.exception;
 
 import com.anastasia.Anastasia_BackEnd.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.exception.customExceptions.InvalidCredentialsException;
-import com.sun.jdi.request.DuplicateRequestException;
+import jakarta.persistence.EntityExistsException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -199,9 +199,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 
-    //todo -> DuplicateRequestException: Group name already exists
-    @ExceptionHandler(DuplicateRequestException.class)
-    public ResponseEntity<ExceptionResponse> handleDuplicationRequestException(DuplicateRequestException exception){
+    // Handles duplicate resource creation scenarios (e.g., group name already exists)
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<ExceptionResponse> handleDuplicationRequestException(EntityExistsException exception){
         return ResponseEntity.status(CONFLICT).body(
                 ExceptionResponse.builder()
                         .errorCode(DUPLICATE_REQUEST.getCode())

@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @Primary
-@Profile("test")
+@Profile({"test", "test-server"})  // Only active in test profiles
 public class TestSmsService implements SmsService {
 
     private static final Logger log = LoggerFactory.getLogger(TestSmsService.class);

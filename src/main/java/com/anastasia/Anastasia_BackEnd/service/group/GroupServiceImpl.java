@@ -10,8 +10,8 @@ import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.GroupRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.sun.jdi.request.DuplicateRequestException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class GroupServiceImpl implements GroupService{
     @Override
     public SimpleGroupEntity createGroup(GroupDTO groupDTO) {
         if(groupRepository.existsByGroupName(groupDTO.getGroupName())){
-            throw new DuplicateRequestException("Group name already exists");
+            throw new EntityExistsException("Group name already exists");
         }
         GroupEntity groupEntity = groupMapper.groupDTOToEntity(groupDTO);
 

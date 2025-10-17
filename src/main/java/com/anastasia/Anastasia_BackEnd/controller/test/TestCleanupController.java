@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@Profile("test")
+@Profile({"test", "test-server"})  // Only available in 'test' profile
 @RestController
 @RequestMapping("/test-utils/cleanup")
 public class TestCleanupController {
