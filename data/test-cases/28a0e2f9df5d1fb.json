@@ -1,0 +1,60 @@
+{
+  "uid" : "28a0e2f9df5d1fb",
+  "name" : "testHasGender()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest.testHasGender",
+  "historyId" : "c8b74e7cf3419f33431de6eb5d4de3e6",
+  "time" : {
+    "start" : 1760666796460,
+    "stop" : 1760666796759,
+    "duration" : 299
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest]/[method:testHasGender()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2467@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testHasGender"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "28a0e2f9df5d1fb.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,202 @@
+{
+  "uid" : "4ff7266d4cdb7ff",
+  "name" : "shouldExtractTokenFromResponse()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests.shouldExtractTokenFromResponse",
+  "historyId" : "a1ecebd6e9847dd807ad41d44175c143",
+  "time" : {
+    "start" : 1760666778878,
+    "stop" : 1760666782203,
+    "duration" : 3325
+  },
+  "description" : "Verifies authentication token is extracted from login response.",
+  "descriptionHtml" : "<p>Verifies authentication token is extracted from login response.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "testStage" : {
+    "description" : "Verifies authentication token is extracted from login response.",
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "795a5299c4c3b764",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "795a5299c4c3b764.json",
+      "type" : "application/json",
+      "size" : 151
+    }, {
+      "uid" : "e2b8469fb93e0138",
+      "name" : "\uD83D\uDCE5 Response ← 201 http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "e2b8469fb93e0138.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "c7fb6363043cfa66",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/test/activation-token?email=gudrun.swaniawski%40yahoo.com",
+      "source" : "c7fb6363043cfa66.json",
+      "type" : "application/json",
+      "size" : 6
+    }, {
+      "uid" : "f5ada7308f2c629d",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/activate-account?token=794964",
+      "source" : "f5ada7308f2c629d.json",
+      "type" : "application/json",
+      "size" : 30
+    }, {
+      "uid" : "c69432d4e5669f54",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "c69432d4e5669f54.json",
+      "type" : "application/json",
+      "size" : 78
+    }, {
+      "uid" : "8beb0bb71e4fa8cf",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "8beb0bb71e4fa8cf.json",
+      "type" : "application/json",
+      "size" : 447
+    }, {
+      "uid" : "a4a74764bb53159f",
+      "name" : "Schema: schemas/auth-login-schema.json",
+      "source" : "a4a74764bb53159f.json",
+      "type" : "application/json",
+      "size" : 371
+    }, {
+      "uid" : "b02349c54ece3fa2",
+      "name" : "\uD83D\uDCE5 Response ← 404 http://localhost:8080/api/v1/test-utils/cleanup/reset-all",
+      "source" : "b02349c54ece3fa2.json",
+      "type" : "application/json",
+      "size" : 198
+    }, {
+      "uid" : "63966b3a26d41211",
+      "name" : "Global Reset Cleanup: All Entities (Status: 404)",
+      "source" : "63966b3a26d41211.json",
+      "type" : "application/json",
+      "size" : 203
+    }, {
+      "uid" : "be8ae3d11252f7ac",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "be8ae3d11252f7ac.json",
+      "type" : "application/json",
+      "size" : 144
+    }, {
+      "uid" : "b0a854edc2738ca3",
+      "name" : "\uD83D\uDCE5 Response ← 201 http://localhost:8080/api/v1/auth/sign-up",
+      "source" : "b0a854edc2738ca3.json",
+      "type" : "application/json",
+      "size" : 0
+    }, {
+      "uid" : "775ab80e5a270186",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/test/activation-token?email=meggan.upton%40gmail.com",
+      "source" : "775ab80e5a270186.json",
+      "type" : "application/json",
+      "size" : 6
+    }, {
+      "uid" : "2adc430262ebd512",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/activate-account?token=489459",
+      "source" : "2adc430262ebd512.json",
+      "type" : "application/json",
+      "size" : 30
+    }, {
+      "uid" : "809b06099966a4",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "809b06099966a4.json",
+      "type" : "application/json",
+      "size" : 72
+    }, {
+      "uid" : "c004003f72780a88",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c004003f72780a88.json",
+      "type" : "application/json",
+      "size" : 433
+    }, {
+      "uid" : "288fbfc9a63e7ead",
+      "name" : "Schema: schemas/auth-login-schema.json",
+      "source" : "288fbfc9a63e7ead.json",
+      "type" : "application/json",
+      "size" : 371
+    }, {
+      "uid" : "98b0421ce4873fc2",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "98b0421ce4873fc2.json",
+      "type" : "application/json",
+      "size" : 72
+    }, {
+      "uid" : "610a733c77bafd12",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "610a733c77bafd12.json",
+      "type" : "application/json",
+      "size" : 433
+    }, {
+      "uid" : "e5abec8bb5384ae9",
+      "name" : "Schema: schemas/auth-login-schema.json",
+      "source" : "e5abec8bb5384ae9.json",
+      "type" : "application/json",
+      "size" : 371
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 19,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.api.tests.AuthTests]/[method:shouldExtractTokenFromResponse()]"
+  }, {
+    "name" : "owner",
+    "value" : "Nahom Aron"
+  }, {
+    "name" : "epic",
+    "value" : "Authentication"
+  }, {
+    "name" : "story",
+    "value" : "Sign up, activate, and login flow"
+  }, {
+    "name" : "feature",
+    "value" : "User Account Management"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2467@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests"
+  }, {
+    "name" : "testMethod",
+    "value" : "shouldExtractTokenFromResponse"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests"
+  }, {
+    "name" : "severity",
+    "value" : "critical"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "critical",
+    "owner" : "Nahom Aron",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "4ff7266d4cdb7ff.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,1051 @@
+{
+  "uid" : "70371c62d0984476",
+  "name" : "Login Endpoint Performance",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.api.tests.PerformanceTests.measureLoginPerformance",
+  "historyId" : "190909c54de9a005fe90ee57d3d68008",
+  "time" : {
+    "start" : 1760666783667,
+    "stop" : 1760666786055,
+    "duration" : 2388
+  },
+  "description" : "Measures latency for /auth/login",
+  "descriptionHtml" : "<p>Measures latency for /auth/login</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "testStage" : {
+    "description" : "Measures latency for /auth/login",
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "3f4f7f8c88be7629",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "3f4f7f8c88be7629.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "343261f07197a3e1",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "343261f07197a3e1.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "4791c2e47678834a",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "4791c2e47678834a.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "cb8e73c3f3f803ac",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "cb8e73c3f3f803ac.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "968463e3e86f4810",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "968463e3e86f4810.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "a56dd6dda14a4084",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "a56dd6dda14a4084.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "93bd4f3e511a6fe7",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "93bd4f3e511a6fe7.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "8daef217347c2665",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "8daef217347c2665.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "82e4acbf39e8ae35",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "82e4acbf39e8ae35.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "ec8a6c4fb4e48df1",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "ec8a6c4fb4e48df1.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "e365757e02a42a2e",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "e365757e02a42a2e.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "921c2e92d33c70b",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "921c2e92d33c70b.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "2e437a68f9371ea8",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "2e437a68f9371ea8.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c3b5c6d460756ee1",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c3b5c6d460756ee1.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "704340943f0085f9",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "704340943f0085f9.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "865c4b2a0adc85fd",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "865c4b2a0adc85fd.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "83cc556b73f1dcd2",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "83cc556b73f1dcd2.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "98779e5f39913b75",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "98779e5f39913b75.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "24312890b4c58480",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "24312890b4c58480.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "cd962ab17bd79ead",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "cd962ab17bd79ead.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "22b94df2d7145fdb",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "22b94df2d7145fdb.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "5bc35deb5b4efbc4",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "5bc35deb5b4efbc4.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "bf88a3533cd33492",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "bf88a3533cd33492.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "bae1612de28cb6a1",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "bae1612de28cb6a1.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "300cde619c4da93b",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "300cde619c4da93b.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "236f933f18f7bd71",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "236f933f18f7bd71.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "63ba1b2f2d565a97",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "63ba1b2f2d565a97.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "30615a110f898f16",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "30615a110f898f16.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "ff5b87e0fe34badf",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "ff5b87e0fe34badf.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "fc69fc13529c1e7c",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "fc69fc13529c1e7c.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "390e0a5cbe66e096",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "390e0a5cbe66e096.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "f43f924db887a764",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "f43f924db887a764.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "914a69fbcf9f85da",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "914a69fbcf9f85da.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "75e2bed4de1bd46b",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "75e2bed4de1bd46b.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "a82bf2e075846e8d",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "a82bf2e075846e8d.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "525e2ae748cb347c",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "525e2ae748cb347c.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "f0850b09d7335ec4",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "f0850b09d7335ec4.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "caea33ca20e7c79b",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "caea33ca20e7c79b.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "e4727d19a79071af",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "e4727d19a79071af.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "a0f15666aba70365",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "a0f15666aba70365.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "9e0f1d176cee43b0",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "9e0f1d176cee43b0.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "5eb94fb090522541",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "5eb94fb090522541.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "61e8e3c54e769db0",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "61e8e3c54e769db0.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "66e0a8a582e09224",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "66e0a8a582e09224.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "52a777546af8dbe3",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "52a777546af8dbe3.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "ba26622bdd9f18b6",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "ba26622bdd9f18b6.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "da507b33bb64c86b",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "da507b33bb64c86b.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c4dce7dc1f45d3e4",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c4dce7dc1f45d3e4.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "c85926d5015f4c39",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "c85926d5015f4c39.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "5cc7173ac10c4da2",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "5cc7173ac10c4da2.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "928ea2b332c4d2c7",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "928ea2b332c4d2c7.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "af870f86f6681eae",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "af870f86f6681eae.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "10285867d878db78",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "10285867d878db78.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c49f1524f5ff385c",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c49f1524f5ff385c.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "89d50321eaf17a80",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "89d50321eaf17a80.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "1be0695e37b642a4",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "1be0695e37b642a4.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "69023e2ac354e7ff",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "69023e2ac354e7ff.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "eeb3aeaec6b06326",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "eeb3aeaec6b06326.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "edb63bf2f1d0b1ec",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "edb63bf2f1d0b1ec.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "4adadfb4578473e2",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "4adadfb4578473e2.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "dd4411595a4c2ea3",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "dd4411595a4c2ea3.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "aa39ba7a8110a363",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "aa39ba7a8110a363.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "7357bdad6d6180b5",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "7357bdad6d6180b5.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "1f3fd24ed379bcab",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "1f3fd24ed379bcab.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "b59978072c38475f",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "b59978072c38475f.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "83fa2daa8b0fef55",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "83fa2daa8b0fef55.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "8c4c73721a436908",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "8c4c73721a436908.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "54911d4657f1107a",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "54911d4657f1107a.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "77d48fb00a46a233",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "77d48fb00a46a233.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "5ebccdca52576bb4",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "5ebccdca52576bb4.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "fa1505673bc63754",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "fa1505673bc63754.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "737c8fc09ec620cd",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "737c8fc09ec620cd.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "a672878af8d906da",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "a672878af8d906da.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "82b8c964e44835cc",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "82b8c964e44835cc.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "d7c18337f436e4cf",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "d7c18337f436e4cf.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "9e6dfa077f1f4f87",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "9e6dfa077f1f4f87.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "7a2e73bee3c61969",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "7a2e73bee3c61969.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c2343466434ff14e",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c2343466434ff14e.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "c1f5c49d67a14d97",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "c1f5c49d67a14d97.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "f3e4e495108c8346",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "f3e4e495108c8346.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "f4cc967771effb9f",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "f4cc967771effb9f.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "aa6f9ca6b2410441",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "aa6f9ca6b2410441.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "80a80b0c293509ae",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "80a80b0c293509ae.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "8cca899ee6f35b25",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "8cca899ee6f35b25.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "b09aa8d930a9d6c8",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "b09aa8d930a9d6c8.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "aca45ff9ad29eca7",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "aca45ff9ad29eca7.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "8bec6df53b3255b1",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "8bec6df53b3255b1.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "d19d2e88013699aa",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "d19d2e88013699aa.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "752fa0d2d73b9842",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "752fa0d2d73b9842.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "37a32b2c94506b6a",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "37a32b2c94506b6a.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "beaf91347a32459",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "beaf91347a32459.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "d89a0b0150a0974a",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "d89a0b0150a0974a.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "e7e42b4d4b1e325c",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "e7e42b4d4b1e325c.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "f226df6b69cdbb50",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "f226df6b69cdbb50.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "1c24fe2e3cf67558",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "1c24fe2e3cf67558.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "4ed6930e76171eca",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "4ed6930e76171eca.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "c90807112c276",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "c90807112c276.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c13ba211e3aace2e",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c13ba211e3aace2e.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "af49314229852c05",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "af49314229852c05.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c75d1b9ec4defe2",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c75d1b9ec4defe2.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "d577b0629ea8c78c",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "d577b0629ea8c78c.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c93ecea1cc6673d8",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c93ecea1cc6673d8.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "3c074e5eccd6b594",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "3c074e5eccd6b594.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "d4f420fa91edd8cd",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "d4f420fa91edd8cd.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "18a15667c7b3a701",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "18a15667c7b3a701.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "72e183fb56b9d482",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "72e183fb56b9d482.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "baba9376b9345544",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "baba9376b9345544.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "2cec5ac629378e76",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "2cec5ac629378e76.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "d8c3a3b086266404",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "d8c3a3b086266404.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "3240bce0215f9552",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "3240bce0215f9552.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "36dfe1ae50f92efc",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "36dfe1ae50f92efc.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "908698fbda1063cf",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "908698fbda1063cf.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "4146f82f71a2f3a2",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "4146f82f71a2f3a2.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "ce848525d3ad03c5",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "ce848525d3ad03c5.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "4f295e49fd50ab1f",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "4f295e49fd50ab1f.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "6f5102067f499d9a",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "6f5102067f499d9a.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "be90b4c2321c8c74",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "be90b4c2321c8c74.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "d77b0eb63edd53f5",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "d77b0eb63edd53f5.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "32eb2a3a25f57bc0",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "32eb2a3a25f57bc0.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "b19cb3d580a217ed",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "b19cb3d580a217ed.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "d3ebdb6db3839dc8",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "d3ebdb6db3839dc8.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "7f9fac0dd5a594ae",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "7f9fac0dd5a594ae.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "ea62407e754af075",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "ea62407e754af075.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "3509fb2af8471510",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "3509fb2af8471510.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "f1c9ffc3f3307a94",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "f1c9ffc3f3307a94.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "58dca48e101ed35c",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "58dca48e101ed35c.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "3ac04124328ab02f",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "3ac04124328ab02f.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "82f2a9a1e6ea0fdb",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "82f2a9a1e6ea0fdb.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "9f95367622b4f246",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "9f95367622b4f246.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "c1ae3ac995d9f50c",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "c1ae3ac995d9f50c.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "56b4918050fe1c94",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "56b4918050fe1c94.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "4f4de5c7bacac1ef",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "4f4de5c7bacac1ef.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "7dbe60bc9e199438",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "7dbe60bc9e199438.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "e8523c002586e16f",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "e8523c002586e16f.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "518d9fe8b0c2fd23",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "518d9fe8b0c2fd23.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "6b5c5b0db335bfa8",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "6b5c5b0db335bfa8.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "adf9c86182306e3a",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "adf9c86182306e3a.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "657fcbcb8852c7d7",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "657fcbcb8852c7d7.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "27f3777bb7f82af6",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "27f3777bb7f82af6.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "9d043d4bd4722ae9",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "9d043d4bd4722ae9.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "138251d8438b83d3",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "138251d8438b83d3.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "b38090c073306ccb",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "b38090c073306ccb.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "7fff80a260bc382d",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "7fff80a260bc382d.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "170baed11dd69a6",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "170baed11dd69a6.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "6fdad9e9b3ea2813",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "6fdad9e9b3ea2813.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "962ff4acc9a6bdde",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "962ff4acc9a6bdde.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "84ac5c5dced765f9",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "84ac5c5dced765f9.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "a693c7f1bde95ab7",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "a693c7f1bde95ab7.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "377f9b15eae54196",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "377f9b15eae54196.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "1adaa8655414be6c",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "1adaa8655414be6c.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "6f1a090d4a644950",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "6f1a090d4a644950.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "d5b1c8494c85eeab",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "d5b1c8494c85eeab.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "d398aed6f21559a3",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "d398aed6f21559a3.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "922e138436b67029",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "922e138436b67029.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "248bf1a212befc76",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "248bf1a212befc76.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "6dc117838f234e34",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "6dc117838f234e34.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "fd704cfdcf705f7b",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "fd704cfdcf705f7b.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "9fd59d442301b8ff",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "9fd59d442301b8ff.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "736b283489e90088",
+      "name" : "\uD83D\uDCE4 Request → POST http://localhost:8080/api/v1/auth/login",
+      "source" : "736b283489e90088.json",
+      "type" : "application/json",
+      "size" : 80
+    }, {
+      "uid" : "2fa1e7cb8ba84617",
+      "name" : "\uD83D\uDCE5 Response ← 200 http://localhost:8080/api/v1/auth/login",
+      "source" : "2fa1e7cb8ba84617.json",
+      "type" : "application/json",
+      "size" : 449
+    }, {
+      "uid" : "178322424e64ed39",
+      "name" : "Performance Summary - POST /auth/login",
+      "source" : "178322424e64ed39.txt",
+      "type" : "text/plain",
+      "size" : 80
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 161,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.api.tests.PerformanceTests]/[method:measureLoginPerformance()]"
+  }, {
+    "name" : "epic",
+    "value" : "Performance & Scalability"
+  }, {
+    "name" : "owner",
+    "value" : "Nahom Aron"
+  }, {
+    "name" : "feature",
+    "value" : "API Latency Baseline"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2467@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.PerformanceTests"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.PerformanceTests"
+  }, {
+    "name" : "testMethod",
+    "value" : "measureLoginPerformance"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.api.tests.PerformanceTests"
+  }, {
+    "name" : "severity",
+    "value" : "normal"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "owner" : "Nahom Aron",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "70371c62d0984476.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,60 @@
+{
+  "uid" : "d6b09ef14ff08ca6",
+  "name" : "testDeleteGroup_success()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest.testDeleteGroup_success",
+  "historyId" : "3d4759f4418264fe642ed7f0b28bf889",
+  "time" : {
+    "start" : 1760666797305,
+    "stop" : 1760666797307,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest]/[method:testDeleteGroup_success()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2467@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testDeleteGroup_success"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "d6b09ef14ff08ca6.json",
+  "parameterValues" : [ ]
+}

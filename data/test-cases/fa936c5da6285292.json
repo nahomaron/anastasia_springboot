@@ -1,0 +1,60 @@
+{
+  "uid" : "fa936c5da6285292",
+  "name" : "subscribeTenant_shouldThrowWhenRoleNotFound()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest.subscribeTenant_shouldThrowWhenRoleNotFound",
+  "historyId" : "f5e54ca9e575a97f1d56cbfad2afefda",
+  "time" : {
+    "start" : 1760666797497,
+    "stop" : 1760666797499,
+    "duration" : 2
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest]/[method:subscribeTenant_shouldThrowWhenRoleNotFound()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2467@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "subscribeTenant_shouldThrowWhenRoleNotFound"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "fa936c5da6285292.json",
+  "parameterValues" : [ ]
+}

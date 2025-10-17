@@ -1,0 +1,60 @@
+{
+  "uid" : "5a1cd509e79f3596",
+  "name" : "testCreateUser_ShouldThrowIfEmailExists()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest.testCreateUser_ShouldThrowIfEmailExists",
+  "historyId" : "942617678a5dac5283833c6806be5601",
+  "time" : {
+    "start" : 1760666797069,
+    "stop" : 1760666797073,
+    "duration" : 4
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest]/[method:testCreateUser_ShouldThrowIfEmailExists()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2467@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testCreateUser_ShouldThrowIfEmailExists"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "5a1cd509e79f3596.json",
+  "parameterValues" : [ ]
+}

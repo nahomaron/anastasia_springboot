@@ -4,39 +4,39 @@
     "name" : "com.anastasia.Anastasia_BackEnd.api.tests.AuthTests",
     "children" : [ {
       "name" : "shouldExtractTokenFromResponse()",
-      "uid" : "e96d2ad702388040",
+      "uid" : "4ff7266d4cdb7ff",
       "parentUid" : "a3ccda566c9303130f836fbfbe911d95",
       "status" : "passed",
       "time" : {
-        "start" : 1760666463793,
-        "stop" : 1760666467087,
-        "duration" : 3294
+        "start" : 1760666778878,
+        "stop" : 1760666782203,
+        "duration" : 3325
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     }, {
       "name" : "shouldLoginSuccessfully()",
-      "uid" : "9ba4a34e9f1fb682",
+      "uid" : "c04419efa7f3ae7e",
       "parentUid" : "a3ccda566c9303130f836fbfbe911d95",
       "status" : "passed",
       "time" : {
-        "start" : 1760666467183,
-        "stop" : 1760666467705,
-        "duration" : 522
+        "start" : 1760666782272,
+        "stop" : 1760666782786,
+        "duration" : 514
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     }, {
       "name" : "shouldFailLoginWithInvalidCredentials()",
-      "uid" : "2882e617abcdd0a",
+      "uid" : "d728f97b4ee7211e",
       "parentUid" : "a3ccda566c9303130f836fbfbe911d95",
       "status" : "passed",
       "time" : {
-        "start" : 1760666467710,
-        "stop" : 1760666468227,
-        "duration" : 517
+        "start" : 1760666782791,
+        "stop" : 1760666783291,
+        "duration" : 500
       },
       "flaky" : false,
       "newFailed" : false,
@@ -47,13 +47,13 @@
     "name" : "com.anastasia.Anastasia_BackEnd.api.tests.PerformanceTests",
     "children" : [ {
       "name" : "Login Endpoint Performance",
-      "uid" : "1a2d7454767d2880",
+      "uid" : "70371c62d0984476",
       "parentUid" : "dd1f1ccb737eea4ecc8a1d0a32932cb0",
       "status" : "passed",
       "time" : {
-        "start" : 1760666468601,
-        "stop" : 1760666471045,
-        "duration" : 2444
+        "start" : 1760666783667,
+        "stop" : 1760666786055,
+        "duration" : 2388
       },
       "flaky" : false,
       "newFailed" : false,
@@ -61,1333 +61,45 @@
     } ],
     "uid" : "dd1f1ccb737eea4ecc8a1d0a32932cb0"
   }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.util.JwtUtilTest",
+    "name" : "com.anastasia.Anastasia_BackEnd.AnastasiaBackEndApplicationTests",
     "children" : [ {
-      "name" : "testExtractSpecificClaims()",
-      "uid" : "66ebe295e53e94d0",
-      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
+      "name" : "contextLoads()",
+      "uid" : "b8abe67bc08d7d94",
+      "parentUid" : "8ce600a954c1ed36063d2a8b4602a247",
       "status" : "passed",
       "time" : {
-        "start" : 1760666471055,
-        "stop" : 1760666471183,
-        "duration" : 128
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testGenerateAndValidateAccessToken()",
-      "uid" : "54e6ee7f6ea2fa9c",
-      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666471185,
-        "stop" : 1760666471192,
-        "duration" : 7
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testExtractClaims()",
-      "uid" : "2cdacc33cbf3f24f",
-      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666471194,
-        "stop" : 1760666471197,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testGenerateAndValidateRefreshToken()",
-      "uid" : "4d8a8b4ee7ccca3d",
-      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666471198,
-        "stop" : 1760666471204,
-        "duration" : 6
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testTokenIsExpired()",
-      "uid" : "1a04543a709bda7f",
-      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666471205,
-        "stop" : 1760666471218,
-        "duration" : 13
+        "start" : 1760666796132,
+        "stop" : 1760666796455,
+        "duration" : 323
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     } ],
-    "uid" : "276b0cc94cd787c489ffa8a5db64adea"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.MemberServiceUnitTest",
-    "children" : [ {
-      "name" : "testApproveByChurch()",
-      "uid" : "364f65d3b1cc26d3",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666471246,
-        "stop" : 1760666472306,
-        "duration" : 1060
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testApproveByPriest()",
-      "uid" : "db8bf8f4f62ef46c",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472308,
-        "stop" : 1760666472312,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAll()",
-      "uid" : "c4238463331beb6c",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472313,
-        "stop" : 1760666472334,
-        "duration" : 21
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "registerMember_shouldRegisterSuccessfully()",
-      "uid" : "1982699e763e700b",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472336,
-        "stop" : 1760666472363,
-        "duration" : 27
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testUpdateMembershipDetails()",
-      "uid" : "bce8e89fa2584af4",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472365,
-        "stop" : 1760666472374,
-        "duration" : 9
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testConvertToEntity()",
-      "uid" : "fee867e89968d1a8",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472376,
-        "stop" : 1760666472379,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testDeleteMembership()",
-      "uid" : "492141a6cb1f1f08",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472380,
-        "stop" : 1760666472383,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindMemberById()",
-      "uid" : "14021eafa8987737",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472385,
-        "stop" : 1760666472389,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAllBySpecification()",
-      "uid" : "c8f67f0412038f90",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472390,
-        "stop" : 1760666472412,
-        "duration" : 22
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testConvertToDTO()",
-      "uid" : "b89108696b165ac1",
-      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472414,
-        "stop" : 1760666472416,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "9bff3925bec1285f33f3131fd501dfc2"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest",
-    "children" : [ {
-      "name" : "testRegisterPriest_createsNewUserAndSavesPriest()",
-      "uid" : "3a79a63455fa5c46",
-      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472427,
-        "stop" : 1760666472612,
-        "duration" : 185
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindPriestById_notFound()",
-      "uid" : "a07d2288bffbe23",
-      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472614,
-        "stop" : 1760666472617,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRegisterPriest_throwsIfBothTenantAndChurchPresent()",
-      "uid" : "7efae07fa0edec75",
-      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472618,
-        "stop" : 1760666472623,
-        "duration" : 5
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testUpdatePriestDetails_updatesAndSaves()",
-      "uid" : "f4203f8aad8f68e9",
-      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472624,
-        "stop" : 1760666472630,
-        "duration" : 6
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testDeletePriest()",
-      "uid" : "778ed6866533a098",
-      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472632,
-        "stop" : 1760666472635,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRegisterPriest_throwsIfNeitherTenantNorChurchProvided()",
-      "uid" : "7868bbf028d4b9de",
-      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472637,
-        "stop" : 1760666472641,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindPriestById_found()",
-      "uid" : "be715dedd1b5a09c",
-      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472642,
-        "stop" : 1760666472645,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "14173f47fcbfaeff22675e64e162c253"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest",
-    "children" : [ {
-      "name" : "testRegisterChild_throwsIfChurchNotFound()",
-      "uid" : "d6d29a651d30517f",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472651,
-        "stop" : 1760666472709,
-        "duration" : 58
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAll()",
-      "uid" : "4d85579e7c706a19",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472711,
-        "stop" : 1760666472714,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "updateChildDetails_shouldNotCallSave_whenChildNotFound()",
-      "uid" : "a8c71acb0fa5bd1",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472716,
-        "stop" : 1760666472719,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRegisterChild_throwsIfUserNotFound()",
-      "uid" : "fc5ef69b7d5f52de",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472721,
-        "stop" : 1760666472723,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testDeleteChildMembership()",
-      "uid" : "9b5c0efd71bfed14",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472725,
-        "stop" : 1760666472727,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRegisterChild_Success()",
-      "uid" : "98fb030760a12f5c",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472728,
-        "stop" : 1760666472733,
-        "duration" : 5
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "updateChildDetails_shouldUpdateOnlyNonNullFields()",
-      "uid" : "53fb87e900542e26",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472735,
-        "stop" : 1760666472741,
-        "duration" : 6
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRegisterChild_throwsIfUserNotAuthenticated()",
-      "uid" : "b91bdba4eac53972",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472743,
-        "stop" : 1760666472745,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindChildById()",
-      "uid" : "41450c301b253e01",
-      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472747,
-        "stop" : 1760666472749,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "0dbe749ad1dad7955a4fe5601ae55539"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest",
-    "children" : [ {
-      "name" : "testFindOne_whenNotExists()",
-      "uid" : "f1b664857e7d8a0e",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472753,
-        "stop" : 1760666472770,
-        "duration" : 17
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAllChurches()",
-      "uid" : "b4df2e5cacbfdc04",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472772,
-        "stop" : 1760666472775,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testGetChurches()",
-      "uid" : "fc7363568f5af7e5",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472776,
-        "stop" : 1760666472780,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testExistsById()",
-      "uid" : "d917c85cebaee46b",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472781,
-        "stop" : 1760666472783,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testDeleteChurch()",
-      "uid" : "26459cfa36e8df23",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472785,
-        "stop" : 1760666472786,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testUpdateChurch_whenNotFound()",
-      "uid" : "1cb632936bd68c60",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472788,
-        "stop" : 1760666472792,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateChurch_withValidTenantContext()",
-      "uid" : "c0f6bccfa233b77e",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472793,
-        "stop" : 1760666472797,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateChurch_whenTenantIdIsMissing()",
-      "uid" : "1e09268daa11ff29",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472799,
-        "stop" : 1760666472801,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testUpdateChurch_whenExists()",
-      "uid" : "94cda3092a56abf2",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472802,
-        "stop" : 1760666472804,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateChurch_whenTenantNotFound()",
-      "uid" : "1424aedb1dd6c1fb",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472805,
-        "stop" : 1760666472807,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindOne_whenExists()",
-      "uid" : "658ddd070cce5d77",
-      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472809,
-        "stop" : 1760666472810,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "90a8f09c3ccf862dad789606324a88d6"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest",
-    "children" : [ {
-      "name" : "subscribeTenant_shouldSaveTenantAndCreateUser()",
-      "uid" : "d34ec7609e687ac7",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472815,
-        "stop" : 1760666472868,
-        "duration" : 53
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "findTenantById_shouldReturnTenant()",
-      "uid" : "81fc37f186b9eadc",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472870,
-        "stop" : 1760666472872,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "getTenants_shouldReturnList()",
-      "uid" : "a9ee5c6564555d25",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472874,
-        "stop" : 1760666472876,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "subscribeTenant_shouldThrowWhenRoleNotFound()",
-      "uid" : "ec668cdba4d24062",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472877,
-        "stop" : 1760666472879,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "convertTenantToEntity_shouldMapCorrectly()",
-      "uid" : "d0d0116bdf0c89f8",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472881,
-        "stop" : 1760666472882,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "convertTenantToDTO_shouldMapCorrectly()",
-      "uid" : "bffddf6fa90769a6",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472884,
-        "stop" : 1760666472885,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "unsubscribeTenant_shouldDeactivateTenant()",
-      "uid" : "59488679ce3ab416",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472887,
-        "stop" : 1760666472889,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "unsubscribeTenant_shouldThrowIfNotFound()",
-      "uid" : "ea6b65b192b24f21",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472890,
-        "stop" : 1760666472892,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "findAll_shouldReturnPageOfTenants()",
-      "uid" : "24541dcd0e8be493",
-      "parentUid" : "47c16abb52ddd188235def106c8efd68",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472894,
-        "stop" : 1760666472896,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "47c16abb52ddd188235def106c8efd68"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest",
-    "children" : [ {
-      "name" : "testGetGroupUserStatus_groupNotFound_throwsException()",
-      "uid" : "10edaaf19e2d77fb",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472902,
-        "stop" : 1760666472942,
-        "duration" : 40
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateGroup_success()",
-      "uid" : "70473cb406795c3d",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472944,
-        "stop" : 1760666472949,
-        "duration" : 5
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testGetGroupManagers_groupNotFound_throwsException()",
-      "uid" : "c1126e96ebd057c1",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472950,
-        "stop" : 1760666472952,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRemoveMembersFromGroup_groupNotFound_throwsException()",
-      "uid" : "5db26a8950bede73",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472953,
-        "stop" : 1760666472955,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRemoveMembersFromGroup_success()",
-      "uid" : "6f5d03ed504e1326",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472957,
-        "stop" : 1760666472959,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testUpdateGroup_groupNotFound_throwsException()",
-      "uid" : "384f366481f7f7ec",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472960,
-        "stop" : 1760666472962,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testAddUsersToGroup_success()",
-      "uid" : "f2cd986627a0b018",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472964,
-        "stop" : 1760666472969,
-        "duration" : 5
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testListGroupMembers_groupNotFound_throwsException()",
-      "uid" : "ea8c0edf4c26839b",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472970,
-        "stop" : 1760666472972,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateGroup_duplicateGroupName_throwsException()",
-      "uid" : "2c758421d624c35e",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472973,
-        "stop" : 1760666472975,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testGetGroupUserStatus_success()",
-      "uid" : "840552837f4a16f6",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472976,
-        "stop" : 1760666472979,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindOneGroup_notFound()",
-      "uid" : "dd00b82dca8c233f",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472980,
-        "stop" : 1760666472982,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testDeleteGroup_success()",
-      "uid" : "49b82a210ffc5a5b",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472983,
-        "stop" : 1760666472985,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testUpdateGroup_success()",
-      "uid" : "402af8e4ec9e8ccd",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472986,
-        "stop" : 1760666472989,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testGetGroupManagers_success()",
-      "uid" : "97c4827851b7dd2c",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472991,
-        "stop" : 1760666472993,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testExists_true()",
-      "uid" : "19d9d7f8d1aac705",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472995,
-        "stop" : 1760666472997,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testListGroupMembers_success()",
-      "uid" : "a15199805c5bc7be",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666472998,
-        "stop" : 1760666473002,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindOneGroup_success()",
-      "uid" : "125079a0aa1cbb38",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473003,
-        "stop" : 1760666473005,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAll_success()",
-      "uid" : "7198b7ae69d4293d",
-      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473006,
-        "stop" : 1760666473008,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "0f828462de670660c2eefb3824c7fc8c"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest",
-    "children" : [ {
-      "name" : "testFindUserByEmail_ShouldReturnUser()",
-      "uid" : "dc1afa34e3a4a2ca",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473011,
-        "stop" : 1760666473080,
-        "duration" : 69
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testExists_ShouldReturnTrue()",
-      "uid" : "fab6d18aef28d00c",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473081,
-        "stop" : 1760666473083,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRevokeAllValidUserTokens_ShouldRevokeAndSave()",
-      "uid" : "7a289cf49a3a9112",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473084,
-        "stop" : 1760666473088,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateUser_ShouldThrowIfEmailExists()",
-      "uid" : "369271e1f8816cb5",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473089,
-        "stop" : 1760666473091,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testResendActivationEmail_ShouldThrowIfAlreadyVerified()",
-      "uid" : "53453ba1a4138ef2",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473092,
-        "stop" : 1760666473094,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindUserByEmail_ShouldReturnEmpty()",
-      "uid" : "b09106e932845aed",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473095,
-        "stop" : 1760666473097,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testRevokeAllValidUserTokens_ShouldSkipIfEmpty()",
-      "uid" : "5a80556e501b6c25",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473098,
-        "stop" : 1760666473101,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testResendActivationEmail_ShouldThrowIfNotFound()",
-      "uid" : "5b82855f3163d69",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473102,
-        "stop" : 1760666473104,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testSaveUserToken_ShouldCallRepo()",
-      "uid" : "18ff65552c5158e8",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473105,
-        "stop" : 1760666473107,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testAuthenticate_ShouldThrowIfAuthFails()",
-      "uid" : "4595ac8a167a8d08",
-      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473108,
-        "stop" : 1760666473114,
-        "duration" : 6
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "c5178937ba27faf906cb3b475b07ef77"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.RoleServiceTest",
-    "children" : [ {
-      "name" : "testCreateRole_success()",
-      "uid" : "d85f7401d0820b56",
-      "parentUid" : "fe0ba387645e51fa857dcab8998342dd",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473118,
-        "stop" : 1760666473151,
-        "duration" : 33
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateRole_throwsIfTenantNotFound()",
-      "uid" : "588458fa95b5e80f",
-      "parentUid" : "fe0ba387645e51fa857dcab8998342dd",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473153,
-        "stop" : 1760666473155,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testCreateRole_throwsIfRoleAlreadyExists()",
-      "uid" : "be8966d90b41ea31",
-      "parentUid" : "fe0ba387645e51fa857dcab8998342dd",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473156,
-        "stop" : 1760666473158,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "fe0ba387645e51fa857dcab8998342dd"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest",
-    "children" : [ {
-      "name" : "testAssignRolesToUser_throwsIfTenantNotInContext()",
-      "uid" : "2ea99a1a52ba3115",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473162,
-        "stop" : 1760666473175,
-        "duration" : 13
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAllUsers()",
-      "uid" : "ec061c55c35d59c7",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473176,
-        "stop" : 1760666473178,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAll()",
-      "uid" : "3c5d398f58135e4c",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473179,
-        "stop" : 1760666473181,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testConvertToEntity()",
-      "uid" : "d4d69d767c3987bd",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473182,
-        "stop" : 1760666473183,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindOne_found()",
-      "uid" : "e0c8cbfd4f92c43",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473184,
-        "stop" : 1760666473186,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testChangePassword_incorrectCurrentPassword()",
-      "uid" : "a63836078402397d",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473187,
-        "stop" : 1760666473189,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testAssignRolesToUser_success()",
-      "uid" : "215d9c2755af4830",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473191,
-        "stop" : 1760666473206,
-        "duration" : 15
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testUpdateUserDetails_success()",
-      "uid" : "e776448987d50c1e",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473209,
-        "stop" : 1760666473213,
-        "duration" : 4
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testChangePassword_mismatchNewPasswords()",
-      "uid" : "6b757d8185435c61",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473214,
-        "stop" : 1760666473217,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testChangePassword_success()",
-      "uid" : "a58d038f110e4101",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473219,
-        "stop" : 1760666473222,
-        "duration" : 3
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testConvertToDTO()",
-      "uid" : "124dd2dacfc79fe6",
-      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473224,
-        "stop" : 1760666473225,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "9ed566008f62cec7f099a3c0cdd04b6c"
-  }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.mappers.ChildMapperUnitTest",
-    "children" : [ {
-      "name" : "testConvertToDTO_shouldMapCorrectly()",
-      "uid" : "355fd399d0aec54a",
-      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473232,
-        "stop" : 1760666473233,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testConvertToEntity_shouldMapCorrectly()",
-      "uid" : "74f9e2aa91e630c5",
-      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473237,
-        "stop" : 1760666473238,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testConvertToDTO_withNullEntity_shouldReturnNull()",
-      "uid" : "7a7bd203d5248de7",
-      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473239,
-        "stop" : 1760666473241,
-        "duration" : 2
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testConvertToEntity_withNullDTO_shouldReturnNull()",
-      "uid" : "af5e71555a7e080b",
-      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666473242,
-        "stop" : 1760666473243,
-        "duration" : 1
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    } ],
-    "uid" : "75b642f042e721fb9405f0e1245a658c"
+    "uid" : "8ce600a954c1ed36063d2a8b4602a247"
   }, {
     "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.ChildSpecificationsTest",
     "children" : [ {
       "name" : "testHasGender()",
-      "uid" : "5fdc1998a844a18e",
+      "uid" : "28a0e2f9df5d1fb",
       "parentUid" : "3675703fdd1213b02659b4393d1606bd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473246,
-        "stop" : 1760666473412,
-        "duration" : 166
+        "start" : 1760666796460,
+        "stop" : 1760666796759,
+        "duration" : 299
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     }, {
       "name" : "testIsDeacon()",
-      "uid" : "471653e66a1610bc",
+      "uid" : "49db462cdbe24861",
       "parentUid" : "3675703fdd1213b02659b4393d1606bd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473414,
-        "stop" : 1760666473416,
+        "start" : 1760666796761,
+        "stop" : 1760666796763,
         "duration" : 2
       },
       "flaky" : false,
@@ -1395,12 +107,12 @@
       "parameters" : [ ]
     }, {
       "name" : "testHasStatus()",
-      "uid" : "ea281efeb38382ad",
+      "uid" : "f55b78f421551d40",
       "parentUid" : "3675703fdd1213b02659b4393d1606bd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473417,
-        "stop" : 1760666473419,
+        "start" : 1760666796765,
+        "stop" : 1760666796767,
         "duration" : 2
       },
       "flaky" : false,
@@ -1408,26 +120,26 @@
       "parameters" : [ ]
     }, {
       "name" : "testHasMembershipNumber()",
-      "uid" : "fea7792ac9ad62fd",
+      "uid" : "7f49da58415b3aaa",
       "parentUid" : "3675703fdd1213b02659b4393d1606bd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473420,
-        "stop" : 1760666473421,
-        "duration" : 1
+        "start" : 1760666796768,
+        "stop" : 1760666796770,
+        "duration" : 2
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     }, {
       "name" : "testAgeBetween()",
-      "uid" : "c8054e8f2665a1ef",
+      "uid" : "3e43512d6ca5a02f",
       "parentUid" : "3675703fdd1213b02659b4393d1606bd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473422,
-        "stop" : 1760666473424,
-        "duration" : 2
+        "start" : 1760666796771,
+        "stop" : 1760666796774,
+        "duration" : 3
       },
       "flaky" : false,
       "newFailed" : false,
@@ -1438,25 +150,25 @@
     "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.specification.MemberSpecificationTest",
     "children" : [ {
       "name" : "testIsDeacon()",
-      "uid" : "b12ef98bf44e9dc9",
+      "uid" : "d67615c849834e72",
       "parentUid" : "b40c684b46ed0a6674caf29f2ae51169",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473427,
-        "stop" : 1760666473431,
-        "duration" : 4
+        "start" : 1760666796778,
+        "stop" : 1760666796784,
+        "duration" : 6
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     }, {
       "name" : "testHasStatus()",
-      "uid" : "60fdc3a77372f342",
+      "uid" : "51b1298dd11689de",
       "parentUid" : "b40c684b46ed0a6674caf29f2ae51169",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473433,
-        "stop" : 1760666473435,
+        "start" : 1760666796786,
+        "stop" : 1760666796788,
         "duration" : 2
       },
       "flaky" : false,
@@ -1464,12 +176,12 @@
       "parameters" : [ ]
     }, {
       "name" : "testHasMembershipNumber()",
-      "uid" : "9e25e1ce91a8b84b",
+      "uid" : "91487fc350c12f8",
       "parentUid" : "b40c684b46ed0a6674caf29f2ae51169",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473436,
-        "stop" : 1760666473438,
+        "start" : 1760666796790,
+        "stop" : 1760666796792,
         "duration" : 2
       },
       "flaky" : false,
@@ -1477,12 +189,12 @@
       "parameters" : [ ]
     }, {
       "name" : "testNameContains()",
-      "uid" : "9ed5f4032bf42212",
+      "uid" : "8904fd35edb87f93",
       "parentUid" : "b40c684b46ed0a6674caf29f2ae51169",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473439,
-        "stop" : 1760666473455,
+        "start" : 1760666796793,
+        "stop" : 1760666796809,
         "duration" : 16
       },
       "flaky" : false,
@@ -1490,12 +202,12 @@
       "parameters" : [ ]
     }, {
       "name" : "testAgeBetween()",
-      "uid" : "821d9a69055f4e2d",
+      "uid" : "fe90dae8731f465a",
       "parentUid" : "b40c684b46ed0a6674caf29f2ae51169",
       "status" : "passed",
       "time" : {
-        "start" : 1760666473457,
-        "stop" : 1760666473458,
+        "start" : 1760666796811,
+        "stop" : 1760666796812,
         "duration" : 1
       },
       "flaky" : false,
@@ -1504,80 +216,1316 @@
     } ],
     "uid" : "b40c684b46ed0a6674caf29f2ae51169"
   }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest",
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.mappers.ChildMapperUnitTest",
     "children" : [ {
-      "name" : "testFindByGoogleId()",
-      "uid" : "ed513942a48430c2",
-      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
+      "name" : "testConvertToDTO_shouldMapCorrectly()",
+      "uid" : "de5d46ec147ccebf",
+      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
       "status" : "passed",
       "time" : {
-        "start" : 1760666479982,
-        "stop" : 1760666480267,
-        "duration" : 285
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAllByUuidIn()",
-      "uid" : "c9bdc4091e484c22",
-      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666480270,
-        "stop" : 1760666480294,
-        "duration" : 24
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindUserUUIDsByChurchId()",
-      "uid" : "6090bc13f5046e73",
-      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666480299,
-        "stop" : 1760666480327,
-        "duration" : 28
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindUsersByGroupId()",
-      "uid" : "db139001e3f4c1a0",
-      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666480330,
-        "stop" : 1760666480356,
-        "duration" : 26
-      },
-      "flaky" : false,
-      "newFailed" : false,
-      "parameters" : [ ]
-    }, {
-      "name" : "testFindAllUsersByChurchIdOptimized()",
-      "uid" : "ed72a228434ea377",
-      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
-      "status" : "passed",
-      "time" : {
-        "start" : 1760666480360,
-        "stop" : 1760666480378,
+        "start" : 1760666796818,
+        "stop" : 1760666796836,
         "duration" : 18
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     }, {
-      "name" : "testFindByEmail()",
-      "uid" : "5d6259c8b3f926bc",
+      "name" : "testConvertToEntity_shouldMapCorrectly()",
+      "uid" : "41c15b5d807e9f88",
+      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666796838,
+        "stop" : 1760666796839,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testConvertToDTO_withNullEntity_shouldReturnNull()",
+      "uid" : "b4062ed3c4280e02",
+      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666796841,
+        "stop" : 1760666796842,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testConvertToEntity_withNullDTO_shouldReturnNull()",
+      "uid" : "28fd1862acb94e3e",
+      "parentUid" : "75b642f042e721fb9405f0e1245a658c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666796843,
+        "stop" : 1760666796844,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "75b642f042e721fb9405f0e1245a658c"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.RoleServiceTest",
+    "children" : [ {
+      "name" : "testCreateRole_success()",
+      "uid" : "45f1350e946dcef0",
+      "parentUid" : "fe0ba387645e51fa857dcab8998342dd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666796852,
+        "stop" : 1760666796958,
+        "duration" : 106
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateRole_throwsIfTenantNotFound()",
+      "uid" : "64a2dda0835aaf31",
+      "parentUid" : "fe0ba387645e51fa857dcab8998342dd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666796959,
+        "stop" : 1760666796964,
+        "duration" : 5
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateRole_throwsIfRoleAlreadyExists()",
+      "uid" : "15235f6be5fd5163",
+      "parentUid" : "fe0ba387645e51fa857dcab8998342dd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666796965,
+        "stop" : 1760666796968,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "fe0ba387645e51fa857dcab8998342dd"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.AuthServiceUnitTest",
+    "children" : [ {
+      "name" : "testFindUserByEmail_ShouldReturnUser()",
+      "uid" : "6c6838d1d2ac1c37",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666796971,
+        "stop" : 1760666797059,
+        "duration" : 88
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testExists_ShouldReturnTrue()",
+      "uid" : "ae1e5a39dd5fcc77",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797061,
+        "stop" : 1760666797064,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRevokeAllValidUserTokens_ShouldRevokeAndSave()",
+      "uid" : "37caab1ed543a729",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797065,
+        "stop" : 1760666797068,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateUser_ShouldThrowIfEmailExists()",
+      "uid" : "5a1cd509e79f3596",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797069,
+        "stop" : 1760666797073,
+        "duration" : 4
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testResendActivationEmail_ShouldThrowIfAlreadyVerified()",
+      "uid" : "324668d096ce3d3",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797074,
+        "stop" : 1760666797076,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindUserByEmail_ShouldReturnEmpty()",
+      "uid" : "6b7fe2b8d587971a",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797077,
+        "stop" : 1760666797080,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRevokeAllValidUserTokens_ShouldSkipIfEmpty()",
+      "uid" : "ee8549d85ca8f9e2",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797081,
+        "stop" : 1760666797084,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testResendActivationEmail_ShouldThrowIfNotFound()",
+      "uid" : "b575613eb116f4b5",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797085,
+        "stop" : 1760666797088,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testSaveUserToken_ShouldCallRepo()",
+      "uid" : "f33d070c9ef617ed",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797089,
+        "stop" : 1760666797091,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testAuthenticate_ShouldThrowIfAuthFails()",
+      "uid" : "1688f254a679dcf3",
+      "parentUid" : "c5178937ba27faf906cb3b475b07ef77",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797093,
+        "stop" : 1760666797097,
+        "duration" : 4
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "c5178937ba27faf906cb3b475b07ef77"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest",
+    "children" : [ {
+      "name" : "testAssignRolesToUser_throwsIfTenantNotInContext()",
+      "uid" : "5f774f6e82c3f83e",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797102,
+        "stop" : 1760666797135,
+        "duration" : 33
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAllUsers()",
+      "uid" : "3c7f83e855373cec",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797137,
+        "stop" : 1760666797141,
+        "duration" : 4
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAll()",
+      "uid" : "dfa27724418f9f57",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797142,
+        "stop" : 1760666797144,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testConvertToEntity()",
+      "uid" : "a8296a35562b0adc",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797145,
+        "stop" : 1760666797147,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindOne_found()",
+      "uid" : "350f6ebf7db2753",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797148,
+        "stop" : 1760666797150,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testChangePassword_incorrectCurrentPassword()",
+      "uid" : "51e1e3da75fadc66",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797151,
+        "stop" : 1760666797154,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testAssignRolesToUser_success()",
+      "uid" : "287749b4e1092210",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797155,
+        "stop" : 1760666797160,
+        "duration" : 5
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testUpdateUserDetails_success()",
+      "uid" : "286ffc84b8dace95",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797161,
+        "stop" : 1760666797164,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testChangePassword_mismatchNewPasswords()",
+      "uid" : "b43d84dae7e936bb",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797165,
+        "stop" : 1760666797167,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testChangePassword_success()",
+      "uid" : "982f03c835ff12d5",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797168,
+        "stop" : 1760666797170,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testConvertToDTO()",
+      "uid" : "5669960a87528ed0",
+      "parentUid" : "9ed566008f62cec7f099a3c0cdd04b6c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797172,
+        "stop" : 1760666797173,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "9ed566008f62cec7f099a3c0cdd04b6c"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.GroupServiceUnitTest",
+    "children" : [ {
+      "name" : "testGetGroupUserStatus_groupNotFound_throwsException()",
+      "uid" : "89717d3906df91bd",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797178,
+        "stop" : 1760666797245,
+        "duration" : 67
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateGroup_success()",
+      "uid" : "ec2eebbd9ffb8637",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797247,
+        "stop" : 1760666797253,
+        "duration" : 6
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testGetGroupManagers_groupNotFound_throwsException()",
+      "uid" : "60bd790665deecba",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797254,
+        "stop" : 1760666797256,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRemoveMembersFromGroup_groupNotFound_throwsException()",
+      "uid" : "f83675440d29b128",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797257,
+        "stop" : 1760666797259,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRemoveMembersFromGroup_success()",
+      "uid" : "c183de2238dc0b31",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797260,
+        "stop" : 1760666797268,
+        "duration" : 8
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testUpdateGroup_groupNotFound_throwsException()",
+      "uid" : "c0ceb8eed4d605a6",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797269,
+        "stop" : 1760666797271,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testAddUsersToGroup_success()",
+      "uid" : "e7cf96567ade63",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797272,
+        "stop" : 1760666797285,
+        "duration" : 13
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testListGroupMembers_groupNotFound_throwsException()",
+      "uid" : "fcfbd745168c5b03",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797286,
+        "stop" : 1760666797288,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateGroup_duplicateGroupName_throwsException()",
+      "uid" : "8bfaad264d459c3c",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797289,
+        "stop" : 1760666797292,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testGetGroupUserStatus_success()",
+      "uid" : "c397a3ce83eddd89",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797293,
+        "stop" : 1760666797300,
+        "duration" : 7
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindOneGroup_notFound()",
+      "uid" : "c5bc61d12f192757",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797301,
+        "stop" : 1760666797304,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testDeleteGroup_success()",
+      "uid" : "d6b09ef14ff08ca6",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797305,
+        "stop" : 1760666797307,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testUpdateGroup_success()",
+      "uid" : "6f28ab6176f0c46f",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797308,
+        "stop" : 1760666797311,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testGetGroupManagers_success()",
+      "uid" : "e6997cba2a553212",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797312,
+        "stop" : 1760666797315,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testExists_true()",
+      "uid" : "da0397c1312c80ac",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797316,
+        "stop" : 1760666797317,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testListGroupMembers_success()",
+      "uid" : "f8edf2eb14b2abbe",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797318,
+        "stop" : 1760666797322,
+        "duration" : 4
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindOneGroup_success()",
+      "uid" : "4d4ee1a542feddac",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797323,
+        "stop" : 1760666797325,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAll_success()",
+      "uid" : "2fedfa3aa0b1f852",
+      "parentUid" : "0f828462de670660c2eefb3824c7fc8c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797326,
+        "stop" : 1760666797327,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "0f828462de670660c2eefb3824c7fc8c"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChurchServiceUnitTest",
+    "children" : [ {
+      "name" : "testFindOne_whenNotExists()",
+      "uid" : "c93fe98c9a638c0f",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797330,
+        "stop" : 1760666797345,
+        "duration" : 15
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAllChurches()",
+      "uid" : "3cbfa0a32dc21189",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797347,
+        "stop" : 1760666797349,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testGetChurches()",
+      "uid" : "5b24a1b45be95f98",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797350,
+        "stop" : 1760666797353,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testExistsById()",
+      "uid" : "daffb477f558e412",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797354,
+        "stop" : 1760666797355,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testDeleteChurch()",
+      "uid" : "e04498d51a43ba2f",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797356,
+        "stop" : 1760666797358,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testUpdateChurch_whenNotFound()",
+      "uid" : "89e48d97184de003",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797359,
+        "stop" : 1760666797361,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateChurch_withValidTenantContext()",
+      "uid" : "d1760e217b1488cc",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797362,
+        "stop" : 1760666797365,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateChurch_whenTenantIdIsMissing()",
+      "uid" : "6e73f3bc5ff3f16d",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797366,
+        "stop" : 1760666797367,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testUpdateChurch_whenExists()",
+      "uid" : "eddfab8e05ffd701",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797368,
+        "stop" : 1760666797370,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testCreateChurch_whenTenantNotFound()",
+      "uid" : "684d3b18f9eb12d2",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797371,
+        "stop" : 1760666797373,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindOne_whenExists()",
+      "uid" : "9b2a556ae8741f2",
+      "parentUid" : "90a8f09c3ccf862dad789606324a88d6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797374,
+        "stop" : 1760666797375,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "90a8f09c3ccf862dad789606324a88d6"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.PriestServiceUnitTest",
+    "children" : [ {
+      "name" : "testRegisterPriest_createsNewUserAndSavesPriest()",
+      "uid" : "e8defad771c6cfd8",
+      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797378,
+        "stop" : 1760666797435,
+        "duration" : 57
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindPriestById_notFound()",
+      "uid" : "73fd7ab4ef1a31d3",
+      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797437,
+        "stop" : 1760666797439,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRegisterPriest_throwsIfBothTenantAndChurchPresent()",
+      "uid" : "691c49863e9d49a9",
+      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797440,
+        "stop" : 1760666797443,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testUpdatePriestDetails_updatesAndSaves()",
+      "uid" : "5dfe73f3bc85a454",
+      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797444,
+        "stop" : 1760666797448,
+        "duration" : 4
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testDeletePriest()",
+      "uid" : "2feca95193dddcd0",
+      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797449,
+        "stop" : 1760666797451,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRegisterPriest_throwsIfNeitherTenantNorChurchProvided()",
+      "uid" : "65cd2756a0a91aad",
+      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797453,
+        "stop" : 1760666797455,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindPriestById_found()",
+      "uid" : "fbb145382d871d55",
+      "parentUid" : "14173f47fcbfaeff22675e64e162c253",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797456,
+        "stop" : 1760666797458,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "14173f47fcbfaeff22675e64e162c253"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.TenantServiceUnitTest",
+    "children" : [ {
+      "name" : "subscribeTenant_shouldSaveTenantAndCreateUser()",
+      "uid" : "2af6792fe8e3b4c",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797461,
+        "stop" : 1760666797490,
+        "duration" : 29
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "findTenantById_shouldReturnTenant()",
+      "uid" : "f8af6f0cf4614c7d",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797491,
+        "stop" : 1760666797493,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "getTenants_shouldReturnList()",
+      "uid" : "1baec6f1c0f55d9c",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797494,
+        "stop" : 1760666797496,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "subscribeTenant_shouldThrowWhenRoleNotFound()",
+      "uid" : "fa936c5da6285292",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797497,
+        "stop" : 1760666797499,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "convertTenantToEntity_shouldMapCorrectly()",
+      "uid" : "3195862d61b3fa0e",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797500,
+        "stop" : 1760666797502,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "convertTenantToDTO_shouldMapCorrectly()",
+      "uid" : "66bc6889c7da2e45",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797503,
+        "stop" : 1760666797505,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "unsubscribeTenant_shouldDeactivateTenant()",
+      "uid" : "37ab9da169466e83",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797505,
+        "stop" : 1760666797507,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "unsubscribeTenant_shouldThrowIfNotFound()",
+      "uid" : "8307d5987381ac65",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797508,
+        "stop" : 1760666797509,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "findAll_shouldReturnPageOfTenants()",
+      "uid" : "9b3d979488afa1fb",
+      "parentUid" : "47c16abb52ddd188235def106c8efd68",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797510,
+        "stop" : 1760666797512,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "47c16abb52ddd188235def106c8efd68"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.ChildServiceUnitTest",
+    "children" : [ {
+      "name" : "testRegisterChild_throwsIfChurchNotFound()",
+      "uid" : "917d8d3b428740c1",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797515,
+        "stop" : 1760666797556,
+        "duration" : 41
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAll()",
+      "uid" : "4da24d9e737cf3c6",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797557,
+        "stop" : 1760666797559,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "updateChildDetails_shouldNotCallSave_whenChildNotFound()",
+      "uid" : "47c3a2c129ecd62b",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797560,
+        "stop" : 1760666797562,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRegisterChild_throwsIfUserNotFound()",
+      "uid" : "7b92710633b715c",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797563,
+        "stop" : 1760666797566,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testDeleteChildMembership()",
+      "uid" : "5c43d8dfd7f81914",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797567,
+        "stop" : 1760666797569,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRegisterChild_Success()",
+      "uid" : "f71c5a48c64a6b52",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797570,
+        "stop" : 1760666797573,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "updateChildDetails_shouldUpdateOnlyNonNullFields()",
+      "uid" : "cf84eaead1d545d8",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797574,
+        "stop" : 1760666797581,
+        "duration" : 7
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testRegisterChild_throwsIfUserNotAuthenticated()",
+      "uid" : "300cbff816ef2097",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797582,
+        "stop" : 1760666797585,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindChildById()",
+      "uid" : "557cf3073e36932e",
+      "parentUid" : "0dbe749ad1dad7955a4fe5601ae55539",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797586,
+        "stop" : 1760666797587,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "0dbe749ad1dad7955a4fe5601ae55539"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.registration.MemberServiceUnitTest",
+    "children" : [ {
+      "name" : "testApproveByChurch()",
+      "uid" : "b4dcaee3b8c22c57",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797590,
+        "stop" : 1760666797627,
+        "duration" : 37
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testApproveByPriest()",
+      "uid" : "d7b5fb8b54c1e9d0",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797629,
+        "stop" : 1760666797631,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAll()",
+      "uid" : "b9e444e189cac851",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797632,
+        "stop" : 1760666797634,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "registerMember_shouldRegisterSuccessfully()",
+      "uid" : "e0d6706bd58cdb91",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797634,
+        "stop" : 1760666797640,
+        "duration" : 6
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testUpdateMembershipDetails()",
+      "uid" : "944e67a10259ca30",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797641,
+        "stop" : 1760666797647,
+        "duration" : 6
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testConvertToEntity()",
+      "uid" : "de4f277954096799",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797648,
+        "stop" : 1760666797651,
+        "duration" : 3
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testDeleteMembership()",
+      "uid" : "51d6e80e0e06c5c",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797652,
+        "stop" : 1760666797654,
+        "duration" : 2
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindMemberById()",
+      "uid" : "9b37767d4e99d59e",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797655,
+        "stop" : 1760666797656,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAllBySpecification()",
+      "uid" : "886cbeab21ac9a89",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797657,
+        "stop" : 1760666797667,
+        "duration" : 10
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testConvertToDTO()",
+      "uid" : "c198cd4a94417a62",
+      "parentUid" : "9bff3925bec1285f33f3131fd501dfc2",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666797668,
+        "stop" : 1760666797669,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    } ],
+    "uid" : "9bff3925bec1285f33f3131fd501dfc2"
+  }, {
+    "name" : "com.anastasia.Anastasia_BackEnd.UnitTests.repository.UserRepositoryUnitTest",
+    "children" : [ {
+      "name" : "testFindByGoogleId()",
+      "uid" : "720352fc942efa93",
       "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666480381,
-        "stop" : 1760666480397,
+        "start" : 1760666798504,
+        "stop" : 1760666798783,
+        "duration" : 279
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAllByUuidIn()",
+      "uid" : "69093e85d00438b8",
+      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666798785,
+        "stop" : 1760666798805,
+        "duration" : 20
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindUserUUIDsByChurchId()",
+      "uid" : "b93e12cc32fe0f04",
+      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666798807,
+        "stop" : 1760666798836,
+        "duration" : 29
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindUsersByGroupId()",
+      "uid" : "3b5bcb435d756ada",
+      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666798844,
+        "stop" : 1760666798872,
+        "duration" : 28
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindAllUsersByChurchIdOptimized()",
+      "uid" : "5f5470a0ffd57f2d",
+      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666798874,
+        "stop" : 1760666798891,
+        "duration" : 17
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testFindByEmail()",
+      "uid" : "1404f5928104afeb",
+      "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666798893,
+        "stop" : 1760666798909,
         "duration" : 16
       },
       "flaky" : false,
@@ -1585,25 +1533,25 @@
       "parameters" : [ ]
     }, {
       "name" : "testFindAllByChurchId()",
-      "uid" : "f8414dd381be3907",
+      "uid" : "4867c0db1234567a",
       "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666480399,
-        "stop" : 1760666480416,
-        "duration" : 17
+        "start" : 1760666798912,
+        "stop" : 1760666798931,
+        "duration" : 19
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     }, {
       "name" : "testFindSimpleUsersByChurchId()",
-      "uid" : "a78fe08574df235f",
+      "uid" : "e7eee8345e3dda3d",
       "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666480421,
-        "stop" : 1760666480440,
+        "start" : 1760666798933,
+        "stop" : 1760666798952,
         "duration" : 19
       },
       "flaky" : false,
@@ -1611,12 +1559,12 @@
       "parameters" : [ ]
     }, {
       "name" : "testExistsByEmail()",
-      "uid" : "d81521ff892af79f",
+      "uid" : "58ae71f56ae0b1e6",
       "parentUid" : "b4a69ff7c722a22882f0b287db70c0cd",
       "status" : "passed",
       "time" : {
-        "start" : 1760666480442,
-        "stop" : 1760666480458,
+        "start" : 1760666798954,
+        "stop" : 1760666798970,
         "duration" : 16
       },
       "flaky" : false,
@@ -1625,22 +1573,74 @@
     } ],
     "uid" : "b4a69ff7c722a22882f0b287db70c0cd"
   }, {
-    "name" : "com.anastasia.Anastasia_BackEnd.AnastasiaBackEndApplicationTests",
+    "name" : "com.anastasia.Anastasia_BackEnd.util.JwtUtilTest",
     "children" : [ {
-      "name" : "contextLoads()",
-      "uid" : "757083a46c8c63cd",
-      "parentUid" : "8ce600a954c1ed36063d2a8b4602a247",
+      "name" : "testExtractSpecificClaims()",
+      "uid" : "21092c76ff4989d0",
+      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
       "status" : "passed",
       "time" : {
-        "start" : 1760666484370,
-        "stop" : 1760666484384,
-        "duration" : 14
+        "start" : 1760666798974,
+        "stop" : 1760666799073,
+        "duration" : 99
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testGenerateAndValidateAccessToken()",
+      "uid" : "2fbeac484d73eb6e",
+      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666799074,
+        "stop" : 1760666799080,
+        "duration" : 6
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testExtractClaims()",
+      "uid" : "2c2afcf605ed310",
+      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666799081,
+        "stop" : 1760666799082,
+        "duration" : 1
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testGenerateAndValidateRefreshToken()",
+      "uid" : "726a912e5faf31ba",
+      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666799083,
+        "stop" : 1760666799087,
+        "duration" : 4
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ ]
+    }, {
+      "name" : "testTokenIsExpired()",
+      "uid" : "1471d8ec01621c6a",
+      "parentUid" : "276b0cc94cd787c489ffa8a5db64adea",
+      "status" : "passed",
+      "time" : {
+        "start" : 1760666799088,
+        "stop" : 1760666799100,
+        "duration" : 12
       },
       "flaky" : false,
       "newFailed" : false,
       "parameters" : [ ]
     } ],
-    "uid" : "8ce600a954c1ed36063d2a8b4602a247"
+    "uid" : "276b0cc94cd787c489ffa8a5db64adea"
   } ],
   "name" : "suites"
 }

@@ -1,0 +1,60 @@
+{
+  "uid" : "51e1e3da75fadc66",
+  "name" : "testChangePassword_incorrectCurrentPassword()",
+  "fullName" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest.testChangePassword_incorrectCurrentPassword",
+  "historyId" : "a608bcb2e4ad95c28673b65d85563d25",
+  "time" : {
+    "start" : 1760666797151,
+    "stop" : 1760666797154,
+    "duration" : 3
+  },
+  "description" : "",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ ],
+  "afterStages" : [ ],
+  "labels" : [ {
+    "name" : "junit.platform.uniqueid",
+    "value" : "[engine:junit-jupiter]/[class:com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest]/[method:testChangePassword_incorrectCurrentPassword()]"
+  }, {
+    "name" : "host",
+    "value" : "runnervmwhb2z"
+  }, {
+    "name" : "thread",
+    "value" : "2467@runnervmwhb2z.main(1)"
+  }, {
+    "name" : "framework",
+    "value" : "junit-platform"
+  }, {
+    "name" : "language",
+    "value" : "java"
+  }, {
+    "name" : "package",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "testClass",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "testMethod",
+    "value" : "testChangePassword_incorrectCurrentPassword"
+  }, {
+    "name" : "suite",
+    "value" : "com.anastasia.Anastasia_BackEnd.UnitTests.service.auth.UserServiceUnitTest"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "51e1e3da75fadc66.json",
+  "parameterValues" : [ ]
+}
