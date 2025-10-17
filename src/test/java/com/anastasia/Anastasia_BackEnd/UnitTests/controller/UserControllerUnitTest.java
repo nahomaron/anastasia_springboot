@@ -1,0 +1,178 @@
+package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
+
+import com.anastasia.Anastasia_BackEnd.controller.UserController;
+import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
+import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
+import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class UserControllerUnitTest {
+
+    @Mock
+    private AuthService authService;
+    @Mock
+    private UserService userService;
+
+    @InjectMocks
+    private UserController userController;
+
+    private UserEntity userEntity;
+    private UserDTO userDTO;
+    private UUID userId;
+
+    @BeforeEach
+    void setUp() {
+        userId = UUID.randomUUID();
+        userEntity = UserEntity.builder()
+                .uuid(userId)
+                .fullName("Controller User")
+                .email("controller@example.com")
+                .build();
+
+        userDTO = UserDTO.builder()
+                .fullName("Controller User")
+                .email("controller@example.com")
+                .password("Password1!")
+                .confirmPassword("Password1!")
+                .build();
+    }
+
+    @Test
+    void getUserInfo_shouldReturnPrincipalAttributes() {
+        OAuth2User principal = mock(OAuth2User.class);
+        when(principal.getAttributes()).thenReturn(Map.of("name", "User"));
+
+        Map<String, Object> attributes = userController.getUserInfo(principal);
+
+        assertThat(attributes).containsEntry("name", "User");
+    }
+
+    @Test
+    void getDashboard_shouldReturnStaticMessage() {
+        assertThat(userController.getDashboard()).contains("logged in");
+    }
+
+    @Test
+    void listOfUsers_shouldReturnUserIds() {
+        Page<UserEntity> page = new PageImpl<>(List.of(userEntity));
+        when(userService.findAllUsers(any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<List<UUID>> response = userController.listOfUsers(Pageable.unpaged());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsExactly(userId);
+    }
+
+    @Test
+    void getUser_whenUserExists_shouldReturnDto() {
+        when(userService.findOne(userId)).thenReturn(Optional.of(userEntity));
+        when(userService.convertToDTO(userEntity)).thenReturn(userDTO);
+
+        ResponseEntity<UserDTO> response = userController.getUser(userId);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(userDTO);
+    }
+
+    @Test
+    void getUser_whenUserMissing_shouldReturnNotFound() {
+        when(userService.findOne(userId)).thenReturn(Optional.empty());
+
+        ResponseEntity<UserDTO> response = userController.getUser(userId);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void updateUserDetails_shouldConvertUpdateAndReturnUpdatedDto() {
+        Principal principal = () -> "principal";
+        when(userService.convertToEntity(userDTO)).thenReturn(userEntity);
+
+        UserEntity updated = UserEntity.builder()
+                .uuid(userId)
+                .fullName("Updated Name")
+                .email("updated@example.com")
+                .build();
+
+        when(userService.updateUserDetails(userEntity, principal)).thenReturn(updated);
+        when(userService.convertToDTO(updated)).thenReturn(userDTO);
+
+        ResponseEntity<UserDTO> response = userController.updateUserDetails(userDTO, principal);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        verify(userService).updateUserDetails(userEntity, principal);
+    }
+
+    @Test
+    void updateProfileAvatar_shouldDelegateToService() {
+        AvatarDTO avatarDTO = AvatarDTO.builder().imageUrl("avatar.png").build();
+
+        ResponseEntity<String> response = userController.updateProfileAvatar(avatarDTO);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(userService).updateProfileAvatar(avatarDTO);
+    }
+
+    @Test
+    void assignRolesToUser_shouldCallService() {
+        AssignRolesRequest request = new AssignRolesRequest(Set.of(1L));
+
+        ResponseEntity<?> response = userController.assignRolesToUser(userId, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(userService).assignRolesToUser(userId, request);
+    }
+
+    @Test
+    void changePassword_shouldCallService() {
+        Principal principal = () -> "user";
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .currentPassword("old")
+                .newPassword("Password1!")
+                .confirmNewPassword("Password1!")
+                .build();
+
+        ResponseEntity<?> response = userController.changePassword(request, principal);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        verify(userService).changePassword(request, principal);
+    }
+
+    @Test
+    void deleteUser_shouldInvokeDeletion() {
+        ResponseEntity<?> response = userController.deleteUser(userId);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(userService).deleteUser(userId);
+    }
+}

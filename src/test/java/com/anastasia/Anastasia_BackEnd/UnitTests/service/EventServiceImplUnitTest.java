@@ -1,0 +1,198 @@
+package com.anastasia.Anastasia_BackEnd.UnitTests.service;
+
+import com.anastasia.Anastasia_BackEnd.mappers.event.EventManagerMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.event.EventMapper;
+import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
+import com.anastasia.Anastasia_BackEnd.model.event.EventManagerEntity;
+import com.anastasia.Anastasia_BackEnd.model.event.requests.EventManagerDTO;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.repository.EventRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
+import com.anastasia.Anastasia_BackEnd.service.event.EventServiceImpl;
+import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class EventServiceImplUnitTest {
+
+    @Mock
+    private EventRepository eventRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private EventMapper eventMapper;
+    @Mock
+    private EventManagerMapper eventManagerMapper;
+
+    @InjectMocks
+    private EventServiceImpl eventService;
+
+    private EventEntity event;
+    private UserEntity user;
+    private UUID userId;
+
+    @BeforeEach
+    void setUp() {
+        userId = UUID.randomUUID();
+        user = UserEntity.builder().uuid(userId).build();
+        event = EventEntity.builder()
+                .eventId(7L)
+                .eventManagers(new HashSet<>())
+                .build();
+    }
+
+    @Test
+    void assignManagerToEvent_whenValid_addsManagerAndSavesEvent() {
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        eventService.assignManagerToEvent(event.getEventId(), userId, "ORGANIZER");
+
+        ArgumentCaptor<EventEntity> captor = ArgumentCaptor.forClass(EventEntity.class);
+        verify(eventRepository).save(captor.capture());
+
+        EventEntity savedEvent = captor.getValue();
+        assertThat(savedEvent.getEventManagers()).hasSize(1);
+
+        EventManagerEntity manager = savedEvent.getEventManagers().iterator().next();
+        assertThat(manager.getUser()).isEqualTo(user);
+        assertThat(manager.getEvent()).isEqualTo(event);
+        assertThat(manager.getRole()).isEqualTo("ORGANIZER");
+        assertThat(manager.getAssignedAt()).isNotNull();
+    }
+
+    @Test
+    void assignManagerToEvent_whenEventMissing_throwsException() {
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> eventService.assignManagerToEvent(event.getEventId(), userId, "ROLE"))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Event not found");
+
+        verify(eventRepository, never()).save(any());
+    }
+
+    @Test
+    void assignManagerToEvent_whenUserMissing_throwsException() {
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> eventService.assignManagerToEvent(event.getEventId(), userId, "ROLE"))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("User not found");
+
+        verify(eventRepository, never()).save(any());
+    }
+
+    @Test
+    void removeManager_whenManagerExists_removesFromCollection() {
+        EventManagerEntity manager = EventManagerEntity.builder()
+                .event(event)
+                .user(user)
+                .build();
+        Set<EventManagerEntity> managers = new HashSet<>();
+        managers.add(manager);
+        event.setEventManagers(managers);
+
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        eventService.removeManager(event.getEventId(), userId);
+
+        assertThat(event.getEventManagers()).isEmpty();
+    }
+
+    @Test
+    void getManagers_delegatesToRepository() {
+        eventService.getManagers(event.getEventId());
+        verify(eventRepository).findAllManagersByEventId(event.getEventId());
+    }
+
+    @Test
+    void createEvent_withManagers_setsBackReference() {
+        EventManagerEntity manager = EventManagerEntity.builder().build();
+        event.getEventManagers().add(manager);
+
+        when(eventRepository.save(event)).thenReturn(event);
+
+        EventEntity result = eventService.createEvent(event);
+
+        assertThat(result.getEventManagers()).hasSize(1);
+        EventManagerEntity assignedManager = result.getEventManagers().iterator().next();
+        assertThat(assignedManager.getEvent()).isEqualTo(event);
+        assertThat(assignedManager.getAssignedAt()).isNotNull();
+    }
+
+    @Test
+    void updateEvent_whenExists_setsIdAndSaves() {
+        EventEntity update = EventEntity.builder().build();
+        when(eventRepository.existsById(event.getEventId())).thenReturn(true);
+        when(eventRepository.save(update)).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EventEntity result = eventService.updateEvent(event.getEventId(), update);
+
+        assertThat(result.getEventId()).isEqualTo(event.getEventId());
+        verify(eventRepository).save(update);
+    }
+
+    @Test
+    void updateEvent_whenMissing_throwsException() {
+        when(eventRepository.existsById(event.getEventId())).thenReturn(false);
+
+        assertThatThrownBy(() -> eventService.updateEvent(event.getEventId(), EventEntity.builder().build()))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Event is not found");
+    }
+
+    @Test
+    void deleteEvent_whenExists_deletesById() {
+        when(eventRepository.existsById(event.getEventId())).thenReturn(true);
+
+        eventService.deleteEvent(event.getEventId());
+
+        verify(eventRepository).deleteById(event.getEventId());
+    }
+
+    @Test
+    void deleteEvent_whenMissing_throwsException() {
+        when(eventRepository.existsById(event.getEventId())).thenReturn(false);
+
+        assertThatThrownBy(() -> eventService.deleteEvent(event.getEventId()))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Event is not found");
+    }
+
+    @Test
+    void convertMethods_delegateToMappers() {
+        var eventDTO = com.anastasia.Anastasia_BackEnd.model.event.EventDTO.builder().build();
+        var eventEntity = EventEntity.builder().build();
+        var managerDTO = EventManagerDTO.builder().build();
+        var managerEntity = EventManagerEntity.builder().build();
+
+        eventService.convertToEntity(eventDTO);
+        eventService.convertToDTO(eventEntity);
+        eventService.convertToEntity(managerDTO);
+        eventService.convertToDTO(managerEntity);
+
+        verify(eventMapper).eventDTOToEntity(eventDTO);
+        verify(eventMapper).eventEntityToDTO(eventEntity);
+        verify(eventManagerMapper).eventManagerDTOToEntity(managerDTO);
+        verify(eventManagerMapper).eventManagerEntityToDTO(managerEntity);
+    }
+}

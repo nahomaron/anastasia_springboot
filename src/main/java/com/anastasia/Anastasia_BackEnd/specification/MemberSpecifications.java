@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -87,21 +88,39 @@ public class MemberSpecifications {
 
     public static Specification<MemberEntity> filterByAddress(Address address) {
         return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (address != null) {
-                if (address.getCity() != null && !address.getCity().isEmpty()) {
-                    predicates.add(cb.equal(root.get("address").get("city"), address.getCity()));
-                }
-                if (address.getCountry() != null && !address.getCountry().isEmpty()) {
-                    predicates.add(cb.equal(root.get("address").get("country"), address.getCountry()));
-                }
-                if (address.getZipcode() != null && !address.getZipcode().isEmpty()) {
-                    predicates.add(cb.equal(root.get("address").get("zipcode"), address.getZipcode()));
-                }
+            if (address == null) {
+                return cb.and();
             }
 
-            return cb.and(predicates.toArray(new Predicate[0]));
+            List<Predicate> predicates = new ArrayList<>();
+            var addressPath = root.get("address");
+
+            if (StringUtils.hasText(address.getCity())) {
+                predicates.add(cb.equal(addressPath.get("city"), address.getCity()));
+            }
+            if (StringUtils.hasText(address.getCountry())) {
+                predicates.add(cb.equal(addressPath.get("country"), address.getCountry()));
+            }
+            if (StringUtils.hasText(address.getZipcode())) {
+                predicates.add(cb.equal(addressPath.get("zipcode"), address.getZipcode()));
+            }
+            if (StringUtils.hasText(address.getProvince())) {
+                predicates.add(cb.equal(addressPath.get("province"), address.getProvince()));
+            }
+            if (StringUtils.hasText(address.getStreet())) {
+                predicates.add(cb.equal(addressPath.get("street"), address.getStreet()));
+            }
+
+            if (predicates.isEmpty()) {
+                return cb.and();
+            }
+
+            Predicate combined = predicates.get(0);
+            for (int i = 1; i < predicates.size(); i++) {
+                combined = cb.and(combined, predicates.get(i));
+            }
+
+            return combined;
         };
     }
 

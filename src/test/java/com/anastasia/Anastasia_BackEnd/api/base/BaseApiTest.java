@@ -259,6 +259,14 @@ public class BaseApiTest {
         return cachedAccessToken != null && !cachedAccessToken.isBlank();
     }
 
+    public static String getCachedAccessToken() {
+        return cachedAccessToken;
+    }
+
+    public static String getCachedEmail() {
+        return cachedEmail;
+    }
+
     public static void ensureAuthenticated() {
         boolean needsAuth = (cachedAuth == null || cachedAccessToken == null || cachedAccessToken.isBlank());
 

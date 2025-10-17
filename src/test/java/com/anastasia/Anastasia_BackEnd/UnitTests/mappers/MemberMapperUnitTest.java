@@ -1,0 +1,132 @@
+package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
+
+import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
+import com.anastasia.Anastasia_BackEnd.model.common.Address;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class MemberMapperUnitTest {
+
+    private final MemberMapper mapper = new MemberMapper();
+
+    @Test
+    void memberEntityToDTO_shouldMapAllRelevantFields() {
+        MemberEntity entity = MemberEntity.builder()
+                .churchNumber("CH12345")
+                .status("ACTIVE")
+                .approvedByChurch(true)
+                .approvedByPriest(false)
+                .deacon(true)
+                .title("Mr")
+                .firstName("John")
+                .fatherName("Doe")
+                .grandFatherName("Senior")
+                .motherName("Jane")
+                .mothersFather("Grandpa")
+                .firstNameT("ሃና")
+                .fatherNameT("ምንያም")
+                .grandFatherNameT("እስጢፋኖስ")
+                .motherFullNameT("ሐና ስለም")
+                .gender("Male")
+                .birthday(LocalDate.of(1990, 1, 1))
+                .nationality("Ethiopian")
+                .placeOfBirth("Addis Ababa")
+                .email("john@example.com")
+                .phone("+251900000000")
+                .whatsApp("+251911111111")
+                .emergencyContactNumber("+251922222222")
+                .contactRelation("Brother")
+                .eritreaContact("+251933333333")
+                .maritalStatus("Single")
+                .numberOfChildren(0)
+                .firstLanguage("Amharic")
+                .secondLanguage("English")
+                .profession("Engineer")
+                .levelOfEducation("Masters")
+                .fatherOfConfession("Father Abraham")
+                .spouseIdNumber("SP1234")
+                .address(Address.builder()
+                        .street("123 Main St")
+                        .city("Addis")
+                        .province("AA")
+                        .country("Ethiopia")
+                        .zipcode("12345")
+                        .build())
+                .build();
+
+        MemberDTO dto = mapper.memberEntityToDTO(entity);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.getChurchNumber()).isEqualTo("CH12345");
+        assertThat(dto.getFirstName()).isEqualTo("John");
+        assertThat(dto.getMotherName()).isEqualTo("Jane");
+        assertThat(dto.getProfession()).isEqualTo("Engineer");
+        assertThat(dto.getAddress().getCity()).isEqualTo("Addis");
+    }
+
+    @Test
+    void memberEntityToDTO_withNull_returnsNull() {
+        assertThat(mapper.memberEntityToDTO(null)).isNull();
+    }
+
+    @Test
+    void memberDTOToEntity_shouldMapBackToEntity() {
+        MemberDTO dto = MemberDTO.builder()
+                .churchNumber("CH54321")
+                .deacon(false)
+                .title("Mrs")
+                .firstName("Hanna")
+                .fatherName("Kidane")
+                .grandFatherName("Tsegay")
+                .motherName("Sara")
+                .mothersFather("Berhane")
+                .firstNameT("ሐና")
+                .fatherNameT("ቅዳኔ")
+                .grandFatherNameT("ጸጋይ")
+                .motherFullNameT("ሳራ በርሀነ")
+                .gender("Female")
+                .birthday(LocalDate.of(1995, 5, 10))
+                .nationality("Eritrean")
+                .placeOfBirth("Asmara")
+                .email("hanna@example.com")
+                .phone("+2917000000")
+                .whatsApp("+2917111111")
+                .emergencyContactNumber("+2917222222")
+                .contactRelation("Sister")
+                .eritreaContact("+2917333333")
+                .maritalStatus("Married")
+                .numberOfChildren(2)
+                .firstLanguage("Tigrinya")
+                .secondLanguage("Italian")
+                .profession("Designer")
+                .levelOfEducation("Bachelors")
+                .fatherOfConfession("Father Yohannes")
+                .spouseIdNumber("SP9999")
+                .address(Address.builder()
+                        .street("456 Side Rd")
+                        .city("Asmara")
+                        .province("Central")
+                        .country("Eritrea")
+                        .zipcode("54321")
+                        .build())
+                .build();
+
+        MemberEntity entity = mapper.memberDTOToEntity(dto);
+
+        assertThat(entity).isNotNull();
+        assertThat(entity.getChurchNumber()).isEqualTo("CH54321");
+        assertThat(entity.getFirstName()).isEqualTo("Hanna");
+        assertThat(entity.getProfession()).isEqualTo("Designer");
+        assertThat(entity.getAddress().getCity()).isEqualTo("Asmara");
+    }
+
+    @Test
+    void memberDTOToEntity_withNull_returnsNull() {
+        assertThat(mapper.memberDTOToEntity(null)).isNull();
+    }
+}

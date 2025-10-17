@@ -1,0 +1,196 @@
+package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
+
+import com.anastasia.Anastasia_BackEnd.mappers.ChurchMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.ChurchMapperImpl;
+import com.anastasia.Anastasia_BackEnd.mappers.PriestMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.PriestMapperImpl;
+import com.anastasia.Anastasia_BackEnd.mappers.TenantMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.TenantMapperImpl;
+import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.UsersMapperImpl;
+import com.anastasia.Anastasia_BackEnd.mappers.event.EventManagerMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.event.EventManagerMapperImpl;
+import com.anastasia.Anastasia_BackEnd.mappers.event.EventMapper;
+import com.anastasia.Anastasia_BackEnd.mappers.event.EventMapperImpl;
+import com.anastasia.Anastasia_BackEnd.model.church.ChurchDTO;
+import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.model.common.Address;
+import com.anastasia.Anastasia_BackEnd.model.event.EventDTO;
+import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
+import com.anastasia.Anastasia_BackEnd.model.event.EventVisibilityType;
+import com.anastasia.Anastasia_BackEnd.model.event.Repetition;
+import com.anastasia.Anastasia_BackEnd.model.event.requests.EventManagerDTO;
+import com.anastasia.Anastasia_BackEnd.model.event.EventManagerEntity;
+import com.anastasia.Anastasia_BackEnd.model.priest.PriestDTO;
+import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.model.priest.PriestStatus;
+import com.anastasia.Anastasia_BackEnd.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantType;
+import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class SimpleMappersUnitTest {
+
+    private final TenantMapper tenantMapper = new TenantMapperImpl();
+    private final ChurchMapper churchMapper = new ChurchMapperImpl();
+    private final PriestMapper priestMapper = new PriestMapperImpl();
+    private final UsersMapper usersMapper = new UsersMapperImpl();
+    private final EventMapper eventMapper = new EventMapperImpl();
+    private final EventManagerMapper eventManagerMapper = new EventManagerMapperImpl();
+
+    @Test
+    void tenantMapper_roundTrip_shouldPreserveCoreFields() {
+        TenantDTO dto = TenantDTO.builder()
+                .tenantType(TenantType.CHURCH)
+                .subscriptionPlan(SubscriptionPlan.PREMIUM)
+                .ownerName("St. Anastasia")
+                .email("owner@example.com")
+                .phoneNumber("+251900000000")
+                .password("Password1!")
+                .confirmPassword("Password1!")
+                .build();
+
+        TenantEntity entity = tenantMapper.tenantDTOToEntity(dto);
+        assertThat(entity.getOwnerName()).isEqualTo("St. Anastasia");
+        assertThat(entity.getPhoneNumber()).isEqualTo("+251900000000");
+        assertThat(entity.getTenantType()).isEqualTo(TenantType.CHURCH);
+        assertThat(entity.getSubscriptionPlan()).isEqualTo(SubscriptionPlan.PREMIUM);
+
+        TenantDTO mappedBack = tenantMapper.tenantEntityToDTO(entity);
+        assertThat(mappedBack.getOwnerName()).isEqualTo("St. Anastasia");
+        assertThat(mappedBack.getPhoneNumber()).isEqualTo("+251900000000");
+        assertThat(mappedBack.getTenantType()).isEqualTo(TenantType.CHURCH);
+    }
+
+    @Test
+    void churchMapper_shouldMapAddressAndContactDetails() {
+        ChurchEntity entity = ChurchEntity.builder()
+                .churchName("St. Mary")
+                .diocese("Addis Diocese")
+                .email("church@example.com")
+                .address(Address.builder()
+                        .street("123 Main")
+                        .city("Addis Ababa")
+                        .province("AA")
+                        .country("Ethiopia")
+                        .zipcode("12345")
+                        .build())
+                .gpsLocation("9.03,38.74")
+                .youtubePage("youtube.com/stmary")
+                .build();
+
+        ChurchDTO dto = churchMapper.churchEntityToDTO(entity);
+        assertThat(dto.getChurchName()).isEqualTo("St. Mary");
+        assertThat(dto.getDiocese()).isEqualTo("Addis Diocese");
+        assertThat(dto.getEmail()).isEqualTo("church@example.com");
+        assertThat(dto.getAddress().getCity()).isEqualTo("Addis Ababa");
+
+        ChurchEntity mappedBack = churchMapper.churchDTOToEntity(dto);
+        assertThat(mappedBack.getChurchName()).isEqualTo("St. Mary");
+        assertThat(mappedBack.getEmail()).isEqualTo("church@example.com");
+    }
+
+    @Test
+    void priestMapper_shouldHandleLanguagesAndAddress() {
+        PriestDTO dto = PriestDTO.builder()
+                .firstName("Abba")
+                .fatherName("Gebre")
+                .grandFatherName("Selassie")
+                .phoneNumber("+251911111111")
+                .personalEmail("abba@example.com")
+                .churchEmail("church@example.com")
+                .birthdate("1980-01-01")
+                .languages(Set.of("Amharic", "Geez"))
+                .levelOfEducation("Masters")
+                .address(Address.builder()
+                        .street("Church Rd")
+                        .city("Gondar")
+                        .province("Amhara")
+                        .country("Ethiopia")
+                        .zipcode("98765")
+                        .build())
+                .password("Password1!")
+                .confirmPassword("Password1!")
+                .build();
+
+        PriestEntity entity = priestMapper.priestDTOToEntity(dto);
+        assertThat(entity.getFirstName()).isEqualTo("Abba");
+        assertThat(entity.getLanguages()).containsExactlyInAnyOrder("Amharic", "Geez");
+        assertThat(entity.getAddress().getCity()).isEqualTo("Gondar");
+
+        entity.setStatus(PriestStatus.ACTIVE);
+        PriestDTO mappedBack = priestMapper.priestEntityToDTO(entity);
+        assertThat(mappedBack.getFirstName()).isEqualTo("Abba");
+        assertThat(mappedBack.getLanguages()).contains("Geez");
+    }
+
+    @Test
+    void usersMapper_shouldMapUserCredentials() {
+        UserDTO dto = UserDTO.builder()
+                .fullName("Test User")
+                .email("user@example.com")
+                .password("Password1!")
+                .confirmPassword("Password1!")
+                .build();
+
+        UserEntity entity = usersMapper.userDTOToUserEntity(dto);
+        assertThat(entity.getFullName()).isEqualTo("Test User");
+        assertThat(entity.getEmail()).isEqualTo("user@example.com");
+        assertThat(entity.getPassword()).isEqualTo("Password1!");
+
+        UserDTO mappedBack = usersMapper.userEntityToUserDTO(entity);
+        assertThat(mappedBack.getFullName()).isEqualTo("Test User");
+        assertThat(mappedBack.getEmail()).isEqualTo("user@example.com");
+    }
+
+    @Test
+    void eventMapper_shouldMapCoreEventDetails() {
+        EventDTO dto = EventDTO.builder()
+                .title("Youth Retreat")
+                .description("Weekend retreat")
+                .date(LocalDate.of(2024, 10, 5))
+                .location("Nazareth")
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(14, 0))
+                .visibility(EventVisibilityType.ALL)
+                .repetition(Repetition.NONE)
+                .build();
+
+        EventEntity entity = eventMapper.eventDTOToEntity(dto);
+        assertThat(entity.getTitle()).isEqualTo("Youth Retreat");
+        assertThat(entity.getLocation()).isEqualTo("Nazareth");
+        assertThat(entity.getVisibility()).isEqualTo(EventVisibilityType.ALL);
+
+        EventDTO mappedBack = eventMapper.eventEntityToDTO(entity);
+        assertThat(mappedBack.getTitle()).isEqualTo("Youth Retreat");
+        assertThat(mappedBack.getLocation()).isEqualTo("Nazareth");
+    }
+
+    @Test
+    void eventManagerMapper_shouldMapAuditFields() {
+        EventManagerDTO dto = EventManagerDTO.builder()
+                .eventId(1L)
+                .userId(UUID.randomUUID())
+                .role("ORGANIZER")
+                .assignedAt(LocalDateTime.now())
+                .build();
+
+        EventManagerEntity entity = eventManagerMapper.eventManagerDTOToEntity(dto);
+        assertThat(entity.getRole()).isEqualTo("ORGANIZER");
+        assertThat(entity.getAssignedAt()).isEqualTo(dto.getAssignedAt());
+
+        EventManagerDTO mappedBack = eventManagerMapper.eventManagerEntityToDTO(entity);
+        assertThat(mappedBack.getRole()).isEqualTo("ORGANIZER");
+    }
+}

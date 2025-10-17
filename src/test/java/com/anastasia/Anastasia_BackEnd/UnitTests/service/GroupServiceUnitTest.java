@@ -13,6 +13,7 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.group.GroupServiceImpl;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,6 +54,11 @@ public class GroupServiceUnitTest {
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     void testCreateGroup_success() {
         UUID tenantId = UUID.randomUUID();
@@ -73,6 +79,26 @@ public class GroupServiceUnitTest {
         groupService.createGroup(groupDTO);
 
         verify(groupRepository).save(any(GroupEntity.class));
+    }
+
+    @Test
+    void testCreateGroup_withoutTenant_throwsException() {
+        TenantContext.clear();
+
+        GroupDTO groupDTO = GroupDTO.builder()
+                .groupName("No Tenant Group")
+                .users(new HashSet<>())
+                .managers(new HashSet<>())
+                .build();
+
+        when(groupRepository.existsByGroupName(anyString())).thenReturn(false);
+        when(groupMapper.groupDTOToEntity(any())).thenReturn(testGroup);
+
+        assertThatThrownBy(() -> groupService.createGroup(groupDTO))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Tenant ID not found");
+
+        verify(groupRepository, never()).save(any());
     }
 
     @Test
@@ -150,6 +176,30 @@ public class GroupServiceUnitTest {
     }
 
     @Test
+    void testAddUsersToGroup_whenRequestMissingUsers_throwsException() {
+        assertThatThrownBy(() -> groupService.addUsersToGroup(1L, null))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("No users provided");
+
+        verify(groupRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void testAddUsersToGroup_userNotFound_throwsException() {
+        UUID userId = UUID.randomUUID();
+        AddUsersToGroupRequest request = AddUsersToGroupRequest.builder()
+                .userIds(Set.of(userId))
+                .build();
+
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+        when(userRepository.findAllByUuidIn(Set.of(userId))).thenReturn(List.of());
+
+        assertThatThrownBy(() -> groupService.addUsersToGroup(1L, request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("One or more users not found");
+    }
+
+    @Test
     void testListGroupMembers_success() {
         Pageable pageable = Pageable.unpaged();
 
@@ -220,6 +270,59 @@ public class GroupServiceUnitTest {
         when(groupRepository.existsById(1L)).thenReturn(true);
         groupService.delete(1L);
         verify(groupRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testBatchInviteUsersToGroup_success() {
+        UUID existingUserId = UUID.randomUUID();
+        UserEntity manager = UserEntity.builder().uuid(existingUserId).email("manager@example.com").build();
+        testGroup.getManagers().add(manager);
+
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+
+        UserEntity invitedUser = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("invitee@example.com")
+                .build();
+
+        BatchInviteRequest request = BatchInviteRequest.builder()
+                .groupEmails(Set.of("invitee@example.com"))
+                .build();
+
+        when(userRepository.findAllByEmailIn(request.getGroupEmails()))
+                .thenReturn(List.of(invitedUser));
+
+        BatchInviteResponse response = groupService.batchInviteUsersToGroup(1L, request);
+
+        assertThat(response.getInvitedCount()).isEqualTo(1);
+        assertThat(testGroup.getUsers()).contains(invitedUser);
+        verify(groupRepository).saveAndFlush(testGroup);
+    }
+
+    @Test
+    void testBatchInviteUsersToGroup_withEmptyEmails_throwsException() {
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+
+        BatchInviteRequest request = BatchInviteRequest.builder().groupEmails(Collections.emptySet()).build();
+
+        assertThatThrownBy(() -> groupService.batchInviteUsersToGroup(1L, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Email list cannot be empty");
+    }
+
+    @Test
+    void testBatchInviteUsersToGroup_whenNoUsersFound_throwsException() {
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+
+        BatchInviteRequest request = BatchInviteRequest.builder()
+                .groupEmails(Set.of("missing@example.com"))
+                .build();
+
+        when(userRepository.findAllByEmailIn(request.getGroupEmails())).thenReturn(Collections.emptyList());
+
+        assertThatThrownBy(() -> groupService.batchInviteUsersToGroup(1L, request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("No users found");
     }
 
 

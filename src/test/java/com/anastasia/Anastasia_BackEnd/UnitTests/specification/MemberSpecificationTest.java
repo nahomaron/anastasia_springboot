@@ -152,4 +152,97 @@ class MemberSpecificationTest {
         assertEquals(expectedPredicate, actualPredicate);
     }
 
+    @Test
+    void testHasMaritalStatus() {
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        Root<MemberEntity> root = mock(Root.class);
+        Path<String> maritalStatusPath = mock(Path.class);
+        Predicate expected = mock(Predicate.class);
+
+        Mockito.<Path<String>>when(root.get("maritalStatus")).thenReturn(maritalStatusPath);
+        when(cb.equal(maritalStatusPath, "Married")).thenReturn(expected);
+
+        Specification<MemberEntity> spec = MemberSpecifications.hasMaritalStatus("Married");
+        Predicate actual = spec.toPredicate(root, query, cb);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void testPhoneContains_shouldSearchPhoneAndWhatsapp() {
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        Root<MemberEntity> root = mock(Root.class);
+
+        Path<String> phonePath = mock(Path.class);
+        Path<String> whatsappPath = mock(Path.class);
+
+        Mockito.<Path<String>>when(root.get("phone")).thenReturn(phonePath);
+        Mockito.<Path<String>>when(root.get("whatsApp")).thenReturn(whatsappPath);
+
+        Predicate phonePredicate = mock(Predicate.class);
+        Predicate whatsappPredicate = mock(Predicate.class);
+        Predicate combined = mock(Predicate.class);
+
+        when(cb.like(phonePath, "%1234%")).thenReturn(phonePredicate);
+        when(cb.like(whatsappPath, "%1234%")).thenReturn(whatsappPredicate);
+        when(cb.or(phonePredicate, whatsappPredicate)).thenReturn(combined);
+
+        Specification<MemberEntity> spec = MemberSpecifications.phoneContains("1234");
+        Predicate actual = spec.toPredicate(root, query, cb);
+
+        assertEquals(combined, actual);
+    }
+
+    @Test
+    void filterByAddress_shouldSkipEmptyFields() {
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        Root<MemberEntity> root = mock(Root.class);
+
+        Path<Object> addressPath = mock(Path.class);
+        Path<Object> cityPath = mock(Path.class);
+        Path<Object> zipcodePath = mock(Path.class);
+
+        when(root.get("address")).thenReturn(addressPath);
+        when(addressPath.get("city")).thenReturn(cityPath);
+        when(addressPath.get("zipcode")).thenReturn(zipcodePath);
+
+        Predicate cityPredicate = mock(Predicate.class);
+        Predicate zipcodePredicate = mock(Predicate.class);
+        Predicate combined = mock(Predicate.class);
+
+        when(cb.equal(cityPath, "Adama")).thenReturn(cityPredicate);
+        when(cb.equal(zipcodePath, "1234")).thenReturn(zipcodePredicate);
+        when(cb.and(cityPredicate, zipcodePredicate)).thenReturn(combined);
+
+        Address address = Address.builder()
+                .city("Adama")
+                .country("")
+                .province(null)
+                .street("")
+                .zipcode("1234")
+                .build();
+
+        Specification<MemberEntity> spec = MemberSpecifications.filterByAddress(address);
+        Predicate actual = spec.toPredicate(root, query, cb);
+
+        assertEquals(combined, actual);
+    }
+
+    @Test
+    void filterByAddress_withNullAddress_returnsConjunction() {
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        Root<MemberEntity> root = mock(Root.class);
+        Predicate expected = mock(Predicate.class);
+
+        when(cb.and()).thenReturn(expected);
+
+        Specification<MemberEntity> spec = MemberSpecifications.filterByAddress(null);
+        Predicate actual = spec.toPredicate(root, query, cb);
+
+        assertEquals(expected, actual);
+    }
 }

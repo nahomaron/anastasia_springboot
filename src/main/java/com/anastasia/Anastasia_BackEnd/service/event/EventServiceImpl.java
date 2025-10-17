@@ -63,14 +63,25 @@ public class EventServiceImpl implements EventService{
 
     @Override
     public void removeManager(Long eventId, UUID managerId) {
-        EventEntity event = eventRepository.findById(eventId).orElseThrow();
-        UserEntity user = userRepository.findById(managerId).orElseThrow();
+        EventEntity event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+        UserEntity user = userRepository.findById(managerId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        EventManagerEntity manager = new EventManagerEntity();
-        manager.setEvent(event);
-        manager.setUser(user);
+        if (event.getEventManagers() == null || event.getEventManagers().isEmpty()) {
+            throw new EntityNotFoundException("Manager not assigned to event");
+        }
 
-        event.getEventManagers().remove(manager);
+        boolean removed = event.getEventManagers().removeIf(existingManager -> {
+            UserEntity existingUser = existingManager.getUser();
+            return existingUser != null && managerId.equals(existingUser.getUuid());
+        });
+
+        if (!removed) {
+            throw new EntityNotFoundException("Manager not assigned to event");
+        }
+
+        eventRepository.save(event);
     }
 
     @Override
