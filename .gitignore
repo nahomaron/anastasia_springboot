@@ -95,6 +95,9 @@ ajcore.*
 # Ignore environment variables and sensitive data
 .env
 .env.local
+.env.prod
+.env.staging
+.env.test
 application.yml
 application-dev.properties
 application-prod.properties

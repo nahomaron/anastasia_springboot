@@ -1,0 +1,25 @@
+services:
+  postgres:
+    env_file:
+      - .env.staging
+    environment:
+      POSTGRES_DB: ${DB_NAME:-anastasia_staging}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports: []
+    restart: unless-stopped
+
+  backend:
+    build: null
+    image: ${IMAGE_REFERENCE:?Missing IMAGE_REFERENCE}
+    env_file:
+      - .env.staging
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-staging}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia_staging}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
