@@ -29,7 +29,7 @@ export const options = {
 
 export default function () {
   // Example endpoint — adjust based on your app
-  const url = `${BASE_URL}/members`;
+  const url = `${BASE_URL}/registrar/members`;
 
   // Conditionally set Authorization header
   const headers = AUTH_TOKEN

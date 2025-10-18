@@ -1,7 +1,7 @@
 import http from 'k6/http';
-import { sleep, check, fail } from 'k6';
+import { sleep, check } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
-import { BASE_URL, jsonHeaders } from '../config/environment.js';
+import { BASE_URL, jsonHeaders, provisionOwnerAccount } from '../config/environment.js';
 import { getThresholds } from '../config/thresholds.js';
 
 // ---- Thresholds ----
@@ -17,17 +17,12 @@ const membersErrorRate = new Rate('members_error_rate');
 
 // ---- Setup ----
 export function setup() {
-  const res = http.post(`${BASE_URL}/auth/login`, JSON.stringify({
-    email: __ENV.OWNER_EMAIL || 'loadtest_owner@mail.com',
-    password: __ENV.OWNER_PASSWORD || 'Password@123',
-  }), jsonHeaders());
+  if (__ENV.ACCESS_TOKEN) {
+    return { token: __ENV.ACCESS_TOKEN };
+  }
 
-  check(res, {
-    'owner login ok': (r) => r.status === 200,
-    'token present': (r) => (r.json('access_token') || '').length > 10,
-  }) || fail(`Login failed: ${res.status} ${res.body}`);
-
-  return { token: res.json('access_token') };
+  const ownerSession = provisionOwnerAccount();
+  return { token: ownerSession.accessToken };
 }
 
 // ---- Load Test ----
