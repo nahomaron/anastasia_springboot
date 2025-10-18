@@ -1,68 +1,131 @@
-name: k6 Load Test
+name: ⚡ K6 Load & Performance Dashboard
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # manual trigger
   push:
     branches: [ main ]
 
 jobs:
-  k6-load:
+  # ------------------------------------------------------------
+  # 1️⃣ Run each K6 test (auth, user, member) in parallel
+  # ------------------------------------------------------------
+  k6-load-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [auth, user, member]
 
     steps:
-      - name: Checkout
+      - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: ☕ Set up JDK 23
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 23
           cache: maven
 
-      - name: Build (skip tests)
-        run: ./mvnw -DskipTests package
+      - name: 🏗️ Build backend (skip tests)
+        run: ./mvnw clean package -DskipTests
 
-      - name: Start Spring Boot (background)
+      - name: 🚀 Start Spring Boot backend
         run: |
-          echo "Starting Spring Boot jar with test profile..."
-          nohup java -jar target/*.jar --spring.profiles.active=test --server.port=8080 > app.log 2>&1 &
-          
-          echo "Waiting for application health check..."
-          ATTEMPTS=60
-          for i in $(seq 1 $ATTEMPTS); do
-            if curl -sSf http://localhost:8080/actuator/health > /dev/null; then
-              echo "Application is healthy (attempt $i/${ATTEMPTS})."
-              exit 0
+          nohup java -jar target/*.jar --spring.profiles.active=test > app.log 2>&1 &
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
+              echo "✅ Backend healthy"
+              break
             fi
-            echo "Attempt $i/${ATTEMPTS}: application not yet ready."
-            sleep 2
+            echo "Waiting for backend ($i/30)..."
+            sleep 3
           done
-          
-          echo "Application failed to start within $((ATTEMPTS * 2)) seconds."
-          tail -n 100 app.log
-          exit 1
-        env:
-          MAVEN_OPTS: -Xmx1g
+          tail -n 10 app.log
 
-      - name: Install k6
+      - name: 📦 Install k6
         uses: grafana/setup-k6-action@v1
 
-      - name: Run k6 load test
+      - name: > 
+          Run K6 Performance Test: ${{ matrix.script }}
         run: |
-          k6 run k6/auth_flow.js \
+          mkdir -p performance/k6/results
+          k6 run performance/k6/scripts/${{ matrix.script }}-performance.js \
             -e BASE_URL=http://localhost:8080/api/v1 \
-            --summary-export=k6-summary.json
+            --summary-export=performance/k6/results/${{ matrix.script }}-summary.json
         continue-on-error: false
 
-      - name: Upload k6 summary
+      - name: 📤 Upload K6 results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: k6-summary
-          path: k6-summary.json
+          name: k6-summary-${{ matrix.script }}
+          path: performance/k6/results/${{ matrix.script }}-summary.json
 
-      - name: Upload app log (helpful if failing)
+  # ------------------------------------------------------------
+  # 2️⃣ Merge results and generate Allure dashboard
+  # ------------------------------------------------------------
+  merge-performance-results:
+    runs-on: ubuntu-latest
+    needs: [k6-load-matrix]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Download all K6 summaries
+        uses: actions/download-artifact@v4
+        with:
+          path: performance/k6/results
+
+      - name: 🧩 Merge K6 summaries into Allure environment
+        run: |
+          python3 performance/scripts/merge_k6_to_allure.py
+
+      - name: 🧮 Generate Allure Performance Results
+        run: |
+          python3 performance/scripts/generate_allure_perf_results.py
+
+      - name: 📊 Generate Allure HTML Performance Report
+        uses: simple-elf/allure-report-action@v1.6
+        with:
+          allure_results: target/allure-results
+          allure_report: allure-performance-report
+
+      - name: 📤 Upload Performance Allure HTML artifact
         uses: actions/upload-artifact@v4
         with:
-          name: spring-app-log
-          path: app.log
+          name: allure-performance-html
+          path: allure-performance-report/
+
+  # ------------------------------------------------------------
+  # 3️⃣ Auto-publish dashboard to GitHub Pages
+  # ------------------------------------------------------------
+  publish-performance-dashboard:
+    runs-on: ubuntu-latest
+    needs: [merge-performance-results]
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Allure performance artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-performance-html
+          path: allure-performance-report
+
+      - name: 🚀 Deploy Allure Performance Dashboard to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-performance-report
+          keep_files: false

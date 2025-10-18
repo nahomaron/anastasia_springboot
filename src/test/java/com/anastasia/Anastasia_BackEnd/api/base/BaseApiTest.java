@@ -82,6 +82,11 @@ public class BaseApiTest {
     // -----------------------------------------------------
     //  Lifecycle Hooks
     // -----------------------------------------------------
+
+    /**
+     * One-time suite setup to configure RestAssured and create a seed OWNER tenant.
+     * Aborts the suite if the backend is not reachable.
+     */
     @BeforeAll
     static void beforeAllSuite() {
         log.info("----- Starting API Test Suite -----");
@@ -109,6 +114,9 @@ public class BaseApiTest {
         log.info("Seed OWNER tenant created: {}", cachedTenant.getOwnerName());
     }
 
+    /**
+     * Per-test setup to configure RestAssured and ensure authentication cache is initialized.
+     */
     @BeforeEach
     public void configureRestAssured() {
         // 1. Configure RestAssured to talk to the externalised backend
@@ -116,6 +124,8 @@ public class BaseApiTest {
         RestAssured.defaultParser = Parser.JSON;
         RestAssured.filters(new ApiInterceptor());
 
+        // Write environment info to Allure once
+        // (could be optimized to only run once per suite if needed)
         writeEnvironmentInfo();
 
         // 2. Ensure the expensive one-time setup runs *after* RestAssured is configured
@@ -124,6 +134,11 @@ public class BaseApiTest {
         }
     }
 
+    /**
+     * Per-test teardown to clean up test data on failure.
+     * @param testInfo Information about the current test.
+     * @param reporter Test reporter for logging.
+     */
     @AfterEach
     void afterEachTest(TestInfo testInfo, TestReporter reporter) {
         boolean testFailed = testInfo.getTags().contains("failed"); // fallback, depends on how you mark failures
@@ -139,9 +154,12 @@ public class BaseApiTest {
     }
 
     // -----------------------------------------------------
-    // Existing Auth Initialization Logic
+    //  Auth Initialization Logic
     // -----------------------------------------------------
 
+    /**
+     * Configures RestAssured's base URI, port, and base path based on resolved base URL.
+     */
     private static void configureRestAssuredBase() {
         String configuredBaseUrl = resolveBaseUrl();
 
@@ -165,6 +183,10 @@ public class BaseApiTest {
         }
     }
 
+    /**
+     * Writes environment info to Allure results for better context in reports.
+     * This includes base URL, profile, and generation timestamp.
+     */
     private static void writeEnvironmentInfo() {
         try {
             Path allureResults = Path.of("target/allure-results");
@@ -182,6 +204,12 @@ public class BaseApiTest {
         }
     }
 
+    /**
+     * Resolves the base URL for the API from environment variables, system properties,
+     * or configuration.
+     * @return The resolved base URL.
+     * @throws IllegalStateException if no base URL is configured.
+     */
     private static String resolveBaseUrl() {
         String envOverride = System.getenv("BASE_URL");
         if (hasText(envOverride)) {
@@ -202,10 +230,20 @@ public class BaseApiTest {
                 + ConfigManager.getEnvironment());
     }
 
+    /**
+     * Checks if a string has non-whitespace text.
+     * @param value The string to check.
+     * @return True if the string has text, false otherwise.
+     */
     private static boolean hasText(String value) {
         return value != null && !value.trim().isEmpty();
     }
 
+    /**
+     * Initializes the authentication cache by creating a new user, activating the account,
+     * and logging in to obtain tokens.
+     * This method is expensive and should be called sparingly.
+     */
     protected static void initializeAuthenticationCache() {
         String email = DataGenerator.randomEmail();
         String password = DataGenerator.randomPassword();
@@ -213,7 +251,8 @@ public class BaseApiTest {
         cachedPassword = password;
 
         // Perform the full sign-up -> activate -> login flow.
-        AuthenticationResponse loginResponse = AuthFlowHelper.signUpAndActivateAndLogin(email, password);
+        AuthenticationResponse loginResponse = AuthFlowHelper
+                .signUpAndActivateAndLogin(email, password);
 
         cachedAuth = loginResponse;
         cachedAccessToken = loginResponse.getAccessToken();
@@ -222,14 +261,15 @@ public class BaseApiTest {
         // Build the authenticated spec
         authSpec = new RequestSpecBuilder()
                 .setContentType("application/json")
-                .addHeader("Authorization", "Bearer " + cachedAuth.getAccessToken())
+                .addHeader("Authorization", "Bearer "
+                        + cachedAuth.getAccessToken())
                 .build();
     }
 
-    // --- Utility Methods ---
 
     /**
      * Utility to get the authenticated spec from any test, renewing the token if expired.
+     * @return The authenticated RequestSpecification.
      */
     public static RequestSpecification getAuthenticatedSpec() {
         if (cachedAuth == null) {
@@ -239,25 +279,19 @@ public class BaseApiTest {
 
         if (jwtUtil.isTokenExpired(cachedAuth.getAccessToken())) {
             String email = jwtUtil.extractUsername(cachedAuth.getAccessToken());
-
-
             AuthenticationRequest request = new AuthenticationRequest(email, cachedPassword);
-
             // FIX: Create local instance of AuthService as the static field was null
             AuthService localAuthService = new AuthService();
-
             AuthenticationResponse renewedAuth = localAuthService.loginAndExtractToken(request);
             if (renewedAuth != null) {
                 cachedAuth = renewedAuth;
             }
-
             // Rebuild spec with new token
             authSpec = new RequestSpecBuilder()
                     .setContentType("application/json")
                     .addHeader("Authorization", "Bearer " + cachedAuth.getAccessToken())
                     .build();
         }
-
         return authSpec;
     }
 
@@ -278,6 +312,10 @@ public class BaseApiTest {
         return cachedAccessToken != null && !cachedAccessToken.isBlank();
     }
 
+    /**
+     * Ensures that the cached authentication is valid, refreshing it if necessary.
+     * Logs the duration of the refresh operation to Allure and console.
+     */
     public static void ensureAuthenticated() {
         boolean needsAuth = (cachedAuth == null || cachedAccessToken == null || cachedAccessToken.isBlank());
 

@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.api.utils.factories;
+package com.anastasia.Anastasia_BackEnd.api.factories;
 
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;

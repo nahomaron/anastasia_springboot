@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.api.tests;
+package com.anastasia.Anastasia_BackEnd.api.tests.auth;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
@@ -16,7 +16,6 @@ import org.junit.jupiter.api.*;
 
 @Epic("Authentication")
 @Feature("User Account Management")
-@Story("Sign up, activate, and login flow")
 @Owner("Nahom Aron")
 @Severity(SeverityLevel.CRITICAL)
 public class AuthTests extends BaseApiTest {

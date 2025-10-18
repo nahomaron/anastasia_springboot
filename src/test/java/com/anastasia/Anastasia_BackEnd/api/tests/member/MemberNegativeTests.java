@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.api.tests.negative;
+package com.anastasia.Anastasia_BackEnd.api.tests.member;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
 import io.restassured.http.ContentType;

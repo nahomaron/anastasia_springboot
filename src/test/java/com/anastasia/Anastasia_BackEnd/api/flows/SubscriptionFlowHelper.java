@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.api.flows;
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.services.TenantService;
-import com.anastasia.Anastasia_BackEnd.api.utils.factories.TenantDataFactory;
+import com.anastasia.Anastasia_BackEnd.api.factories.TenantDataFactory;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.sms.PhoneVerificationRequest;

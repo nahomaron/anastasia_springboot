@@ -1,4 +1,4 @@
-name: API Automation Tests
+name: API Automation Tests (api-tests.yml)
 
 on:
   push:
@@ -114,6 +114,19 @@ jobs:
           cp -r target/allure-results/integration/* target/allure-results/ 2>/dev/null || true
           cp -r target/allure-results/api/* target/allure-results/ 2>/dev/null || true
 
+      # ---------------------------------------------------
+      # 🔗 Merge k6 summaries into Allure environment
+      # ---------------------------------------------------
+      - name: Merge k6 summaries into Allure environment
+        run: |
+          python3 performance/scripts/merge_k6_to_allure.py
+
+      - name: Generate detailed Allure performance results
+        run: |
+          python3 performance/scripts/generate_allure_perf_results.py
+
+      # ---------------------------------------------------
+      # 🧮 Generate and upload Allure HTML report
       # ---------------------------------------------------
       - name: 🧮 Generate Allure HTML report
         if: always()

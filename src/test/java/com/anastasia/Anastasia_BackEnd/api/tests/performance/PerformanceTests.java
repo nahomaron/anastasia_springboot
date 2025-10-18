@@ -1,10 +1,9 @@
-package com.anastasia.Anastasia_BackEnd.api.tests;
+package com.anastasia.Anastasia_BackEnd.api.tests.performance;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import io.qameta.allure.*;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
 
@@ -58,6 +57,12 @@ public class PerformanceTests extends BaseApiTest {
 //    }
 
 
+    /**
+     * Generic method to measure endpoint performance
+     * @param label end point label for reporting
+     * @param apiCall API call as a Supplier of Response
+     * @param expectedStatus expected HTTP status code
+     */
     private void measureEndpoint(String label,
                                  java.util.function.Supplier<Response> apiCall,
                                  int expectedStatus) {

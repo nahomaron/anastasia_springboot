@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.api.flows;
 
-import com.anastasia.Anastasia_BackEnd.api.utils.factories.MemberDataFactory;
+import com.anastasia.Anastasia_BackEnd.api.factories.MemberDataFactory;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
 import io.restassured.response.Response;
 
