@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.api.config;
 
 import com.anastasia.Anastasia_BackEnd.api.base.BaseApiTest;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;

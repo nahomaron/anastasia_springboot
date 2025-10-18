@@ -8,9 +8,11 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Step;
+import io.restassured.RestAssured;
 import io.restassured.builder.ResponseBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.slf4j.Logger;
 
 

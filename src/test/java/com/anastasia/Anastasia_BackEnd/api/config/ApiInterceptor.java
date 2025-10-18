@@ -31,10 +31,12 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
             ConfigManager.get("auth.signup.endpoint"),
             ConfigManager.get("auth.activate.endpoint"),
             ConfigManager.get("test.activation.endpoint"),
+            ConfigManager.get("test.tenant.otp.endpoint"),
             "/auth/login",
             "/auth/sign-up",
             "/auth/activate-account",
             "/auth/test/activation-token",
+            "/tenant/test/otp",
             "/auth/refresh-token",
             "/auth/logout"
     );

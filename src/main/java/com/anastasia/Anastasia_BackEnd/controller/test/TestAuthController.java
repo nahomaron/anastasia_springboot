@@ -5,9 +5,9 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
+@Profile({"test", "test-server"})  // Only available in 'test' profile
 @RestController
 @RequestMapping("/api/v1/auth/test")
-@Profile({"test", "test-server"})  // Only available in 'test' profile
 public class TestAuthController {
 
     private final TokenRepository tokenRepository;

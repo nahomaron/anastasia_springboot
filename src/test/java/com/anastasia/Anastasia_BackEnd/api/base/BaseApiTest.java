@@ -3,12 +3,17 @@ package com.anastasia.Anastasia_BackEnd.api.base;
 import com.anastasia.Anastasia_BackEnd.api.config.ApiInterceptor;
 import com.anastasia.Anastasia_BackEnd.api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.api.extensions.TestFailureWatcher;
+import com.anastasia.Anastasia_BackEnd.api.flows.SubscriptionFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.api.utils.DataGenerator;
+import com.anastasia.Anastasia_BackEnd.api.utils.RoleContextFactory;
+import com.anastasia.Anastasia_BackEnd.api.utils.RoleSeeder;
 import com.anastasia.Anastasia_BackEnd.api.utils.TestDataManager;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
+import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
@@ -32,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.net.URI;
+import java.util.UUID;
 
 /**
  * Base class for API integration tests.
@@ -59,11 +65,19 @@ public class BaseApiTest {
     protected static RequestSpecification authSpec;
 
     @Getter
+    private static String ownerAccessToken;
+    private static TenantDTO cachedTenant;
+    @Getter
     protected static String cachedAccessToken;
+    @Getter
     protected static String cachedRefreshToken;
     @Getter
     protected static String cachedEmail;
+    @Getter
     protected static String cachedPassword;
+
+    protected static Map<Long, AuthenticationResponse> tokenCache = new HashMap<>();
+
 
     // -----------------------------------------------------
     //  Lifecycle Hooks
@@ -71,23 +85,34 @@ public class BaseApiTest {
     @BeforeAll
     static void beforeAllSuite() {
         log.info("----- Starting API Test Suite -----");
+        configureRestAssuredBase();
         TestDataManager.resetAllTestData();
 
         String baseUrl = System.getProperty("base.url", "http://localhost:8080");
         try {
             RestAssured.baseURI = baseUrl;
-            RestAssured.get("/actuator/health")
+            RestAssured.given()
+                    .basePath("")
+                    .get("/actuator/health")
                     .then()
                     .statusCode(200);
         } catch (Exception e) {
             Assumptions.abort("Backend not reachable at " + baseUrl + ". Skipping black-box tests.");
         }
+
+        // Subscribe a new tenant (this will create an OWNER)
+        SubscriptionFlowHelper.SubscriptionResult ownerResult =
+                SubscriptionFlowHelper.subscribeTenantAndLoginOwner();
+
+        ownerAccessToken = ownerResult.accessToken();
+        cachedTenant = ownerResult.tenantRequest(); // optional if you need tenant info
+        log.info("Seed OWNER tenant created: {}", cachedTenant.getOwnerName());
     }
 
     @BeforeEach
     public void configureRestAssured() {
         // 1. Configure RestAssured to talk to the externalised backend
-        applyBaseUrlConfiguration();
+        configureRestAssuredBase();
         RestAssured.defaultParser = Parser.JSON;
         RestAssured.filters(new ApiInterceptor());
 
@@ -117,7 +142,7 @@ public class BaseApiTest {
     // Existing Auth Initialization Logic
     // -----------------------------------------------------
 
-    private void applyBaseUrlConfiguration() {
+    private static void configureRestAssuredBase() {
         String configuredBaseUrl = resolveBaseUrl();
 
         URI uri = URI.create(configuredBaseUrl);
@@ -215,6 +240,7 @@ public class BaseApiTest {
         if (jwtUtil.isTokenExpired(cachedAuth.getAccessToken())) {
             String email = jwtUtil.extractUsername(cachedAuth.getAccessToken());
 
+
             AuthenticationRequest request = new AuthenticationRequest(email, cachedPassword);
 
             // FIX: Create local instance of AuthService as the static field was null
@@ -240,31 +266,16 @@ public class BaseApiTest {
         return "Bearer " + cachedAccessToken;
     }
 
-    protected static Map<String, AuthenticationResponse> tokenCache = new HashMap<>();
-
     /**
      * Creates a new user, logs them in, caches the token, and returns an authenticated spec.
      */
     public static RequestSpecification getSpecForRole(String role) {
-        if (!tokenCache.containsKey(role)) {
-            tokenCache.put(role, AuthFlowHelper.signUpAndActivateAndLogin(role + "@mail.com", "Password@123"));
-        }
-        return new RequestSpecBuilder()
-                .setContentType("application/json")
-                .addHeader("Authorization", "Bearer " + tokenCache.get(role).getAccessToken())
-                .build();
+        return RoleContextFactory.getSpecForRole(role);
     }
+
 
     public static boolean hasValidToken() {
         return cachedAccessToken != null && !cachedAccessToken.isBlank();
-    }
-
-    public static String getCachedAccessToken() {
-        return cachedAccessToken;
-    }
-
-    public static String getCachedEmail() {
-        return cachedEmail;
     }
 
     public static void ensureAuthenticated() {
@@ -293,4 +304,6 @@ public class BaseApiTest {
             );
         }
     }
+
+
 }
