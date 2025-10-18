@@ -60,9 +60,8 @@ public class TestDataSeeder {
             tenant.assignChurch(church);
             tenantRepo.save(tenant);
 
-            Role adminRole = TestDataUtil.createTestOwnerRole(tenant);
-            adminRole.setRoleName("ADMIN");
-            adminRole = roleRepo.save(adminRole);
+            Role adminRole = roleRepo.findByRoleName("ADMIN")
+                    .orElseThrow(() -> new IllegalStateException("Admin role not seeded"));
 
             UserEntity user = TestDataUtil.createTestUserEntityA();
             user.setEmail(ADMIN_EMAIL);
