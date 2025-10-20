@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.mappers.ChildMapper;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.model.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
@@ -18,6 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
@@ -51,13 +53,19 @@ public class ChildServiceImpl implements ChildService{
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
 
 
-        ChurchEntity church = churchRepository.findByChurchNumber(childEntity.getChurchNumber())
-                .orElseThrow(() -> new IllegalStateException("No valid church number provided"));
+        String churchNumber = normalizeChurchNumber(childEntity.getChurchNumber());
+        if (!StringUtils.hasText(churchNumber)) {
+            throw new IllegalStateException("Church number must be provided");
+        }
 
+        childEntity.setChurchNumber(churchNumber);
+        ChurchEntity church = churchRepository.findByChurchNumber(churchNumber)
+                .orElseThrow(() -> new IllegalStateException("Church not found for number: " + churchNumber));
+        childEntity.setChurch(church);
 
         childEntity.setMembershipNumber(generateUniqueChildMembershipNumber(6, childEntity.isDeacon()));
         childEntity.setUser(user);
-        childEntity.setChurch(church);
+        childEntity.setStatus(ChildStatus.PENDING.name());
         ChildEntity membership = childRepository.save(childEntity);
 
         return ChildResponse.builder()
@@ -65,6 +73,13 @@ public class ChildServiceImpl implements ChildService{
                 .membershipNumber(membership.getMembershipNumber())
                 .fatherOfConfession(membership.getFatherOfConfession())
                 .build();
+    }
+
+    private String normalizeChurchNumber(String rawChurchNumber) {
+        if (!StringUtils.hasText(rawChurchNumber)) {
+            return rawChurchNumber;
+        }
+        return rawChurchNumber.replace("\"", "").trim();
     }
 
     @Override

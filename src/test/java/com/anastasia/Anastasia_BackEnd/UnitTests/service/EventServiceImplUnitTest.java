@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
+import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.event.EventManagerMapper;
 import com.anastasia.Anastasia_BackEnd.mappers.event.EventMapper;
 import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
@@ -10,6 +11,7 @@ import com.anastasia.Anastasia_BackEnd.repository.EventRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.event.EventServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,15 +48,24 @@ class EventServiceImplUnitTest {
     private EventEntity event;
     private UserEntity user;
     private UUID userId;
+    private UUID tenantId;
 
     @BeforeEach
     void setUp() {
+        tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
+
         userId = UUID.randomUUID();
         user = UserEntity.builder().uuid(userId).build();
         event = EventEntity.builder()
                 .eventId(7L)
                 .eventManagers(new HashSet<>())
                 .build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
@@ -137,6 +148,18 @@ class EventServiceImplUnitTest {
         EventManagerEntity assignedManager = result.getEventManagers().iterator().next();
         assertThat(assignedManager.getEvent()).isEqualTo(event);
         assertThat(assignedManager.getAssignedAt()).isNotNull();
+        assertThat(result.getTenantId()).isEqualTo(tenantId);
+    }
+
+    @Test
+    void createEvent_withoutTenant_throwsException() {
+        TenantContext.clear();
+
+        assertThatThrownBy(() -> eventService.createEvent(event))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Tenant ID not found");
+
+        verify(eventRepository, never()).save(any());
     }
 
     @Test

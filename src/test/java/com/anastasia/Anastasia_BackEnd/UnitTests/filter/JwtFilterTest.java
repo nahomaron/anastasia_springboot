@@ -92,7 +92,7 @@ class JwtFilterTest {
 
         when(jwtUtil.extractUsername("valid-token")).thenReturn("user");
         when(userDetailsService.loadUserByUsername("user")).thenReturn(userDetails);
-        when(tokenRepository.findByToken("valid-token")).thenReturn(Optional.of(Token.builder().expired(false).revoked(false).build()));
+        when(tokenRepository.findTopByTokenOrderByIdDesc("valid-token")).thenReturn(Optional.of(Token.builder().expired(false).revoked(false).build()));
         when(jwtUtil.isTokenValid("valid-token", userDetails)).thenReturn(true);
 
         jwtFilter.doFilter(request, response, filterChain);

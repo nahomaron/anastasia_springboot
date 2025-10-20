@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Avatar Presigned URL",
+  "type": "object",
+  "required": ["objectKey", "uploadUrl"],
+  "properties": {
+    "objectKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "uploadUrl": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": true
+}

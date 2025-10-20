@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.service.event;
 
+import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.event.EventManagerMapper;
 import com.anastasia.Anastasia_BackEnd.mappers.event.EventMapper;
 import com.anastasia.Anastasia_BackEnd.model.event.EventDTO;
@@ -91,6 +92,12 @@ public class EventServiceImpl implements EventService{
 
     @Override
     public EventEntity createEvent(EventEntity event) {
+
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID not found in context while creating event");
+        }
+        event.setTenantId(tenantId);
 
         if (event.getEventManagers() != null) {
             for (EventManagerEntity manager : event.getEventManagers()) {

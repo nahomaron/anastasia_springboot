@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -16,19 +17,19 @@ import java.util.UUID;
 @Repository
 public interface TokenRepository extends JpaRepository<Token, Integer> {
 
-    Optional<Token> findByToken(String token);
+    Optional<Token> findTopByTokenOrderByIdDesc(String token);
 
     @Query("""
             select t from Token t inner join UserEntity u on t.user.id = u.uuid
             where u.uuid = :uuid and (t.expired = false or t.revoked = false)
             """)
-    List<Token> findAllValidUserTokens(UUID uuid);
+    List<Token> findAllValidUserTokens(@Param("uuid") UUID uuid);
 
     @Query("""
         SELECT t FROM Token t JOIN UserEntity u ON t.user.uuid = u.uuid
         WHERE u.uuid = :userId AND t.tokenType = :tokenType AND t.expired = false AND t.revoked = false
     """)
-    List<Token> findAllValidTokensByUser(UUID uuid, TokenType tokenType);
+    List<Token> findAllValidTokensByUser(@Param("userId") UUID uuid, @Param("tokenType") TokenType tokenType);
 
 
     @Transactional

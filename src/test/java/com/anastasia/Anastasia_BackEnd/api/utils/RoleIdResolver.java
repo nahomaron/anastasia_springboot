@@ -18,6 +18,7 @@ public final class RoleIdResolver {
 
     private static Long fetchRoleId(String roleName) {
         Response res = given()
+                .header("Authorization", "Bearer " + RoleContextFactory.ownerToken())
                 .get("/test/roles")
                 .then()
                 .statusCode(200)

@@ -100,7 +100,7 @@ public class UserController {
      * @return ResponseEntity containing the updated UserDTO of the connected user.
      */
     @PatchMapping("/update-user-details")
-    public ResponseEntity<UserDTO> updateUserDetails(@RequestBody UserDTO userDTO, Principal connectedUser){
+    public ResponseEntity<UserDTO> updateUserDetails(@Valid @RequestBody UserDTO userDTO, Principal connectedUser){
         UserEntity user = userService.convertToEntity(userDTO);
         UserEntity updatedUser = userService.updateUserDetails(user, connectedUser);
         return new ResponseEntity<>(userService.convertToDTO(updatedUser), HttpStatus.ACCEPTED);

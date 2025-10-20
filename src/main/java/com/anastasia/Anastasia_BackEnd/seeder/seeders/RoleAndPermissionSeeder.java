@@ -56,10 +56,16 @@ public class RoleAndPermissionSeeder {
         if (!roleRepository.existsByRoleName("ADMIN")) {
             createRole(RoleType.ADMIN);
             System.out.println("ADMIN role created");
+        }
 
-        }  if (!roleRepository.existsByRoleName("PRIEST")) {
+        if (!roleRepository.existsByRoleName("PRIEST")) {
             createRole(RoleType.PRIEST);
             System.out.println("PRIEST role created");
+        }
+
+        if (!roleRepository.existsByRoleName("PLATFORM_ADMIN")) {
+            createRole(RoleType.PLATFORM_ADMIN);
+            System.out.println("PLATFORM_ADMIN role created");
         }
 
 
@@ -74,7 +80,9 @@ public class RoleAndPermissionSeeder {
                     .map(PermissionType::name) // Converts ENUM to String
                     .collect(Collectors.toSet());
 
-            Set<Permission> permissions = permissionRepository.findByNameIn(permissionNames);
+            Set<Permission> permissions = permissionNames.isEmpty()
+                    ? Set.of()
+                    : permissionRepository.findByNameIn(permissionNames);
 
             logger.info("Permissions {}", permissions);
 

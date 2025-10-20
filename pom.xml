@@ -490,12 +490,14 @@
 				<version>3.2.5</version>
 				<configuration>
 					<reuseForks>false</reuseForks>
-					<argLine>@{argLine}</argLine>
-<!--					<testFailureIgnore>true</testFailureIgnore>-->
+
+					<!-- Combine existing argLine (e.g. Jacoco) with the Mockito agent -->
+					<argLine>
+						@{argLine} -javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"
+					</argLine>
+
 					<systemPropertyVariables>
-						<allure.results.directory>
-							${project.build.directory}/allure-results
-						</allure.results.directory>
+						<allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
 						<TESTCONTAINERS_RYUK_DISABLED>false</TESTCONTAINERS_RYUK_DISABLED>
 					</systemPropertyVariables>
 
@@ -558,6 +560,7 @@
 					</container>
 				</configuration>
 			</plugin>
+
 
 		</plugins>
 	</build>

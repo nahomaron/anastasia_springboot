@@ -61,6 +61,8 @@ public class PriestServiceImpl implements PriestService{
         // Try to find an existing user by email
         UserEntity priestUser = userRepository.findByEmail(priestDTO.getPersonalEmail()).orElse(null);
 
+        String sanitizedChurchNumber = sanitizeChurchNumber(priestDTO.getChurchNumber());
+
         Role priestRole = roleRepository.findByRoleName(RoleType.PRIEST.name())
                 .orElseThrow(() -> new RuntimeException("Priest role not found"));
 
@@ -84,14 +86,14 @@ public class PriestServiceImpl implements PriestService{
         }
 
 
-        if(priestDTO.getChurchNumber() == null && priestDTO.getTenantId() == null){
+        if(sanitizedChurchNumber == null && priestDTO.getTenantId() == null){
             throw new IllegalStateException("A priest should provide church number or be a tenant");
         }
         // Start building the PriestEntity
         PriestEntity.PriestEntityBuilder priestBuilder = PriestEntity.builder()
                 .user(priestUser)
                 .priestNumber(generateUniquePriestNumber(6))
-                .churchNumber(priestDTO.getChurchNumber())
+                .churchNumber(sanitizedChurchNumber)
                 .profilePicture(priestDTO.getProfilePicture())
                 .prefixes(priestDTO.getPrefixes())
                 .firstName(priestDTO.getFirstName())
@@ -109,7 +111,7 @@ public class PriestServiceImpl implements PriestService{
                 .isActive(false);
 
         boolean priestIsTenant = priestDTO.getTenantId() != null;
-        boolean priestIsUnderChurch = priestDTO.getChurchNumber() != null;
+        boolean priestIsUnderChurch = sanitizedChurchNumber != null;
 
         // Validation: A priest cannot be both a tenant and belong to a church
         if (priestIsTenant && priestIsUnderChurch) {
@@ -124,8 +126,8 @@ public class PriestServiceImpl implements PriestService{
         }
         // If the priest is under a church, associate with church
         else if (priestIsUnderChurch) {
-            ChurchEntity churchFound = churchRepository.findByChurchNumber(priestDTO.getChurchNumber())
-                    .orElseThrow(() -> new EntityNotFoundException("Church with number " + priestDTO.getChurchNumber() + " not found"));
+            ChurchEntity churchFound = churchRepository.findByChurchNumber(sanitizedChurchNumber)
+                    .orElseThrow(() -> new EntityNotFoundException("Church with number " + sanitizedChurchNumber + " not found"));
             priestBuilder.church(churchFound);
         }
 
@@ -182,6 +184,14 @@ public class PriestServiceImpl implements PriestService{
             priestNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
         } while (priestRepository.existsByPriestNumber(priestNumber)); // Keep generating if it already exists
         return priestNumber;
+    }
+
+    private String sanitizeChurchNumber(String churchNumber) {
+        if (churchNumber == null) {
+            return null;
+        }
+        String sanitized = churchNumber.replace("\"", "").trim();
+        return org.springframework.util.StringUtils.hasText(sanitized) ? sanitized : null;
     }
 
 }

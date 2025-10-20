@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ import java.util.UUID;
         @Index(name = "idx_event_tenant", columnList = "tenantId"),
         @Index(name = "idx_event_date", columnList = "date")
 })
+@EntityListeners(AuditingEntityListener.class)
 public class EventEntity extends Auditable {
 
     @Id

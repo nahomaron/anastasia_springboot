@@ -23,7 +23,7 @@ public class LogoutService implements LogoutHandler {
             token = authHeader.substring(7);
         }
 
-        var storedToken = tokenRepository.findByToken(token).orElse(null);
+        var storedToken = tokenRepository.findTopByTokenOrderByIdDesc(token).orElse(null);
 
         if(storedToken != null){
             storedToken.setExpired(true);

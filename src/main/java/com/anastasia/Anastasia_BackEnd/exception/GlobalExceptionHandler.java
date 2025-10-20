@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.exception;
 import com.anastasia.Anastasia_BackEnd.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.exception.customExceptions.InvalidCredentialsException;
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -196,6 +197,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         .error(exp.getMostSpecificCause().getMessage())
                         .build()
         );
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleEntityNotFound(EntityNotFoundException ex) {
+        return buildResponse(NOT_FOUND, RESOURCE_NOT_FOUND, ex.getMessage());
     }
 
 

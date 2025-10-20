@@ -47,14 +47,14 @@ public class EventController {
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS')")
     @PostMapping("/{eventId}/managers")
     public ResponseEntity<?> assignManager(@PathVariable Long eventId,
-                                                             @RequestBody AssignEventManagerRequest request) {
+                                           @RequestBody AssignEventManagerRequest request) {
        eventService.assignManagerToEvent(eventId, request.getUserId(), request.getRole());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS')")
-    @DeleteMapping("/{managerId}/remove")
+    @DeleteMapping("/{eventId}/managers/{managerId}")
     public ResponseEntity<?> removeManager(@PathVariable Long eventId, @PathVariable UUID managerId) {
         eventService.removeManager(eventId, managerId);
         return ResponseEntity.noContent().build();
@@ -62,7 +62,7 @@ public class EventController {
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS')")
-    @GetMapping
+    @GetMapping("/{eventId}/managers")
     public ResponseEntity<List<EventManagerDTO>> listManagers(@PathVariable Long eventId) {
         List<EventManagerEntity> managers = eventService.getManagers(eventId);
 

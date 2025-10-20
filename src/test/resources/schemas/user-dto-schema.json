@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "User DTO",
+  "type": "object",
+  "required": ["fullName", "email"],
+  "properties": {
+    "fullName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "password": {
+      "type": ["string", "null"]
+    },
+    "confirmPassword": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}

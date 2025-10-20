@@ -61,6 +61,7 @@ public final class RoleSeeder {
 
     private static UUID fetchUserIdByEmail(String email) {
         Response res = given()
+                .header("Authorization", "Bearer " + RoleContextFactory.ownerToken())
                 .queryParam("email", email)
                 .get("/test/users/id")
                 .then()

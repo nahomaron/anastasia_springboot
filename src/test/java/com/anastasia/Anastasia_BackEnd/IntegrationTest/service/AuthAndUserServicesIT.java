@@ -1,0 +1,229 @@
+package com.anastasia.Anastasia_BackEnd.IntegrationTest.service;
+
+import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
+import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
+import com.anastasia.Anastasia_BackEnd.model.role.Role;
+import com.anastasia.Anastasia_BackEnd.model.role.RoleRequest;
+import com.anastasia.Anastasia_BackEnd.model.token.Token;
+import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.repository.AvatarRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
+import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
+import com.anastasia.Anastasia_BackEnd.service.auth.LogoutService;
+import com.anastasia.Anastasia_BackEnd.service.auth.RoleService;
+import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
+import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
+import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
+import com.anastasia.Anastasia_BackEnd.testsupport.ServiceIntegrationTestBase;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import jakarta.mail.MessagingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+
+@Epic("Integration Tests")
+@Feature("Service Layer - Auth & User Domain")
+class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
+
+    @Autowired private AuthService authService;
+    @Autowired private RoleService roleService;
+    @Autowired private UserService userService;
+    @Autowired private LogoutService logoutService;
+    @Autowired private TokenRepository tokenRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private AvatarRepository avatarRepository;
+    @Autowired private ObjectMapper objectMapper;
+
+    @MockitoBean private EmailService emailService;
+    @Captor private ArgumentCaptor<Map<String, Object>> emailTemplateCaptor;
+
+    @BeforeEach
+    void initMocks() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void authAndUserServices_endToEndFlow() throws Exception {
+        // Create user and capture activation mail
+        UserEntity pendingUser = UserEntity.builder()
+                .fullName("Auth Integration User")
+                .email("auth+" + UUID.randomUUID() + "@example.com")
+                .password(TestDataUtil.TEST_PASSWORD)
+                .build();
+
+        authService.createUser(pendingUser);
+
+        verify(emailService).sendEmail(
+                eq(pendingUser.getEmail()),
+                eq("Account Activation for Anastasia"),
+                eq(EmailTemplateName.ACTIVATE_ACCOUNT),
+                emailTemplateCaptor.capture()
+        );
+
+        Map<String, Object> activationProps = emailTemplateCaptor.getValue();
+        String activationCode = activationProps.get("activation_code").toString();
+        authService.activateAccount(activationCode);
+
+        UserEntity activatedUser = userRepository.findByEmail(pendingUser.getEmail())
+                .orElseThrow(() -> new AssertionError("User not persisted"));
+        assertThat(activatedUser.isVerified()).isTrue();
+
+        AuthenticationResponse loginResponse = authService.authenticate(
+                AuthenticationRequest.builder()
+                        .email(pendingUser.getEmail())
+                        .password(TestDataUtil.TEST_PASSWORD)
+                        .build()
+        );
+
+        assertThat(loginResponse.getAccessToken()).isNotBlank();
+        assertThat(loginResponse.getRefreshToken()).isNotBlank();
+
+        // Refresh token lifecycle
+        MockHttpServletRequest refreshRequest = new MockHttpServletRequest();
+        refreshRequest.addHeader("Authorization", "Bearer " + loginResponse.getRefreshToken());
+        MockHttpServletResponse refreshResponse = new MockHttpServletResponse();
+
+        authService.refreshToken(refreshRequest, refreshResponse);
+
+        AuthenticationResponse refreshed = objectMapper.readValue(
+                refreshResponse.getContentAsString(StandardCharsets.UTF_8),
+                AuthenticationResponse.class
+        );
+        assertThat(refreshed.getAccessToken()).isNotBlank();
+        assertThat(refreshed.getRefreshToken()).isEqualTo(loginResponse.getRefreshToken());
+
+        Token storedAccessToken = tokenRepository.findTopByTokenOrderByIdDesc(loginResponse.getAccessToken())
+                .orElseThrow(() -> new AssertionError("Access token not found"));
+
+        MockHttpServletRequest logoutRequest = new MockHttpServletRequest();
+        logoutRequest.addHeader("Authorization", "Bearer " + loginResponse.getAccessToken());
+
+        logoutService.logout(logoutRequest, new MockHttpServletResponse(), null);
+
+        Token revokedAccessToken = tokenRepository.findById(storedAccessToken.getId()).orElseThrow();
+        assertThat(revokedAccessToken.isExpired()).isTrue();
+        assertThat(revokedAccessToken.isRevoked()).isTrue();
+
+        // Password reset flow
+        reset(emailService);
+        authService.initiatePasswordReset(pendingUser.getEmail());
+
+        verify(emailService).sendEmail(
+                eq(pendingUser.getEmail()),
+                eq("Password Reset for Anastasia Account"),
+                eq(EmailTemplateName.RESET_PASSWORD),
+                emailTemplateCaptor.capture()
+        );
+        Map<String, Object> resetProps = emailTemplateCaptor.getValue();
+        String resetToken = resetProps.get("reset_token").toString();
+        String newPassword = "NewPassw0rd!";
+        authService.resetPassword(resetToken, newPassword);
+
+        AuthenticationResponse postResetResponse = authService.authenticate(
+                AuthenticationRequest.builder()
+                        .email(pendingUser.getEmail())
+                        .password(newPassword)
+                        .build()
+        );
+        assertThat(postResetResponse.getAccessToken()).isNotBlank();
+
+        // Role creation and assignment
+        String dynamicRoleName = "IT_ROLE_" + UUID.randomUUID();
+        RoleRequest roleRequest = RoleRequest.builder()
+                .roleName(dynamicRoleName)
+                .description("Integration Test Role")
+                .permissions(Set.of(PermissionType.VIEW_MEMBERS, PermissionType.ADD_MEMBERS))
+                .build();
+
+        roleService.createRole(roleRequest);
+
+        Role createdRole = roleRepository.findByRoleName(dynamicRoleName)
+                .orElseThrow(() -> new AssertionError("Role not persisted"));
+        assertThat(createdRole.getTenantId()).isEqualTo(tenant.getId());
+
+        userService.assignRolesToUser(activatedUser.getUuid(), new AssignRolesRequest(Set.of(createdRole.getId())));
+
+        UserEntity userWithRoles = userRepository.findById(activatedUser.getUuid()).orElseThrow();
+        assertThat(userWithRoles.getRoles())
+                .extracting(Role::getRoleName)
+                .contains(dynamicRoleName);
+
+        // Update user profile details
+        UserPrincipal principalAfterRoles = new UserPrincipal(userWithRoles);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                principalAfterRoles,
+                userWithRoles.getPassword(),
+                principalAfterRoles.getAuthorities()
+        );
+
+        UserEntity updatePayload = UserEntity.builder()
+                .fullName("Updated Auth User")
+                .email("updated+" + UUID.randomUUID() + "@example.com")
+                .build();
+
+        UserEntity updatedDetails = userService.updateUserDetails(updatePayload, authentication);
+        assertThat(updatedDetails.getFullName()).isEqualTo("Updated Auth User");
+        assertThat(updatedDetails.getEmail()).isEqualTo(updatePayload.getEmail());
+
+        UserPrincipal principalAfterUpdate = new UserPrincipal(updatedDetails);
+        Authentication updatedAuth = new UsernamePasswordAuthenticationToken(
+                principalAfterUpdate,
+                updatedDetails.getPassword(),
+                principalAfterUpdate.getAuthorities()
+        );
+
+        ChangePasswordRequest changePasswordRequest = ChangePasswordRequest.builder()
+                .currentPassword(newPassword)
+                .newPassword("FinalPassw0rd!")
+                .confirmNewPassword("FinalPassw0rd!")
+                .build();
+        userService.changePassword(changePasswordRequest, updatedAuth);
+
+        AuthenticationResponse afterChange = authService.authenticate(
+                AuthenticationRequest.builder()
+                        .email(updatedDetails.getEmail())
+                        .password("FinalPassw0rd!")
+                        .build()
+        );
+        assertThat(afterChange.getAccessToken()).isNotBlank();
+
+        // Avatar update uses SecurityContext
+        authenticate(updatedDetails);
+        userService.updateProfileAvatar(new AvatarDTO("https://cdn.example.com/avatar.png", "21KB"));
+
+        var storedAvatar = avatarRepository.findByOwnerId(updatedDetails.getUuid())
+                .orElseThrow(() -> new AssertionError("Avatar not persisted"));
+        assertThat(storedAvatar.getImageUrl()).isEqualTo("https://cdn.example.com/avatar.png");
+        assertThat(storedAvatar.getAvatarType()).isEqualTo(AvatarType.USER);
+    }
+}

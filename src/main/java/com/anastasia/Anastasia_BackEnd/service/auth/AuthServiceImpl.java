@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void activateAccount(String token){
-        Token savedToken = tokenRepository.findByToken(token)
+        Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
 
 //        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
@@ -224,7 +224,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void resetPassword(String token, String newPassword) {
-        Token savedToken = tokenRepository.findByToken(token)
+        Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
                 .orElseThrow(() -> new RuntimeException("Invalid or expired password reset token."));
 
         // Validate token type (ensure it's a password reset token)
@@ -274,6 +274,7 @@ public class AuthServiceImpl implements AuthService {
         var token = Token.builder()
                 .token(theToken)
                 .user(user)
+                .tokenType(tokenType)
                 .expired(false)
                 .revoked(false)
                 .build();

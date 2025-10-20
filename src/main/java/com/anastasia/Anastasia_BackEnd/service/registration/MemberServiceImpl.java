@@ -69,6 +69,7 @@ public class MemberServiceImpl implements MemberService {
         memberEntity.setChurch(church);
         memberEntity.setApprovedByChurch(false);
         memberEntity.setApprovedByPriest(false);
+        memberEntity.setStatus(MemberStatus.PENDING.name());
         MemberEntity membership = memberRepository.save(memberEntity);
 
         user.assignMembership(membership);

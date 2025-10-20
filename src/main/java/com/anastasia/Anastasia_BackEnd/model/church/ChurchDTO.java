@@ -16,6 +16,9 @@ import java.util.UUID;
 @Builder
 public class ChurchDTO {
 
+    private Long churchId;
+
+    private String churchNumber;
 
     private String prefix;
 

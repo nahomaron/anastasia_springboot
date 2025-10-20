@@ -44,6 +44,8 @@ public final class RoleContextFactory {
                 yield buildSpec(roleName, subscription.authResponse().getAccessToken());
             }
             case "ADMIN" -> buildSpecForProvisionedUser(roleName, Set.of(requireRole("ADMIN")));
+            case "PLATFORM_ADMIN" ->
+                    buildSpecForProvisionedUser(roleName, Set.of(requireRole("PLATFORM_ADMIN")));
             case "PRIEST" -> buildSpecForProvisionedUser(roleName, Set.of(requireRole("PRIEST")));
             case "MEMBER" -> {
                 Set<Long> extras = new HashSet<>();
@@ -91,7 +93,7 @@ public final class RoleContextFactory {
         return RoleIdResolver.getRoleId(roleName);
     }
 
-    private static String ownerToken() {
+    static String ownerToken() {
         String token = BaseApiTest.getOwnerAccessToken();
         if (token == null || token.isBlank()) {
             token = SubscriptionFlowHelper.subscribeTenantAndLoginOwner().accessToken();

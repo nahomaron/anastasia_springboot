@@ -50,11 +50,7 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
         RequestTracker.record(resolvedUri);
         requestSpec.header("X-Request-URI", resolvedUri);
 
-        // Automatically add Authorization header if missing
         boolean isPublicAuthRequest = isPublicAuthEndpoint(requestSpec);
-        if (!isPublicAuthRequest && cachedAuth != null && requestSpec.getHeaders().getValue("Authorization") == null) {
-            requestSpec.header("Authorization", bearerToken());
-        }
 
         log.info("➡️  [{}]  {}", requestSpec.getMethod(), requestSpec.getURI());
         if (requestSpec.getBody() != null)
@@ -66,7 +62,7 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
             response = ctx.next(requestSpec, responseSpec);
             if (response != null) {
                 log.info("⬅️  Status: {}", response.getStatusCode());
-                log.info("Response Body: {}", response.asPrettyString());
+//                log.info("Response Body: {}", response.asPrettyString());
 
                 // 3. Handle token expiration only if we have a real response
                 boolean hasAuthorizationHeader = requestSpec.getHeaders().hasHeaderWithName("Authorization");

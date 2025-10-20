@@ -5,7 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value; // Import Value annotation
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -25,11 +25,16 @@ public class EmailService {
     private final Logger log = LoggerFactory.getLogger(EmailService.class);
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
+    private final boolean emailSendingEnabled;
 
     @Autowired
-    public EmailService(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
+    public EmailService(
+            JavaMailSender mailSender,
+            SpringTemplateEngine templateEngine,
+            @Value("${email.sending.enabled:true}") boolean emailSendingEnabled) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
+        this.emailSendingEnabled = emailSendingEnabled;
     }
 
     @Async
@@ -39,6 +44,11 @@ public class EmailService {
             EmailTemplateName emailTemplate,
             Map<String, Object> templateProperties // This is the key change: dynamic properties
     ) throws MessagingException {
+
+        if (!emailSendingEnabled) {
+            log.debug("Email sending disabled via configuration; skipping dispatch to {}", to);
+            return;
+        }
 
         // Use the 'name' field from the EmailTemplateName enum, which directly corresponds
         // to your Thymeleaf template file names (e.g., "activate_account" for activate_account.html)

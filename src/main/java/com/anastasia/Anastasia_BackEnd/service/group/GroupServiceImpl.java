@@ -166,7 +166,7 @@ public class GroupServiceImpl implements GroupService{
         GroupEntity group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found"));
 
-        List<UserEntity> users = userRepository.findAllById(request.getUserIds());
+        List<UserEntity> users = new ArrayList<>(userRepository.findAllById(request.getUserIds()));
 
         for (UserEntity user : users){
             group.getUsers().remove(user);
