@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.api.factories.GroupDataFactory;
 import com.anastasia.Anastasia_BackEnd.api.services.GroupService;
 import com.anastasia.Anastasia_BackEnd.model.group.AddUsersToGroupRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.model.group.GroupManagerRequest;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -40,6 +41,22 @@ class GroupNegativeTests extends BaseApiTest {
     void addingUsersToUnknownGroupShouldFail() {
         AddUsersToGroupRequest request = GroupDataFactory.addUsersRequest(Set.of(UUID.randomUUID()));
         Response response = groupService.addUsers(getSpecForRole("OWNER"), 9_999_999L, request);
+        assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
+    }
+
+    @Test
+    @Story("Adding managers to unknown group returns error")
+    void addingManagersToUnknownGroupShouldFail() {
+        GroupManagerRequest request = GroupDataFactory.managerRequest(Set.of(UUID.randomUUID()));
+        Response response = groupService.addManagers(getSpecForRole("OWNER"), 9_999_999L, request);
+        assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
+    }
+
+    @Test
+    @Story("Removing managers from unknown group returns error")
+    void removingManagersFromUnknownGroupShouldFail() {
+        GroupManagerRequest request = GroupDataFactory.managerRequest(Set.of(UUID.randomUUID()));
+        Response response = groupService.removeManagers(getSpecForRole("OWNER"), 9_999_999L, request);
         assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
     }
 }

@@ -6,14 +6,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RemoveUsersFromGroupRequest {
-    @NotEmpty(message = "At least one user identifier is required")
-    private List<UUID> userIds;
+public class GroupManagerRequest {
+
+    @NotEmpty(message = "At least one manager identifier is required")
+    private Set<UUID> managerIds;
 }

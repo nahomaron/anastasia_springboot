@@ -12,12 +12,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BatchInviteResponse{
+public class RemoveManagersResponse {
+
     private String groupName;
-    private int invitedCount;
-    private int skippedCount;
+    private int removedCount;
+    private int notManagersCount;
     private int notFoundCount;
-    private List<UUID> invitedUserIds;
-    private List<String> skippedEmails;
-    private List<String> notFoundEmails;
+    private List<UUID> removedManagerIds;
+    private List<UUID> notManagerIds;
+    private List<UUID> notFoundManagerIds;
 }

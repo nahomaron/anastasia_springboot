@@ -63,4 +63,10 @@ class GroupRepositoryUnitTest {
     void existsByGroupName_shouldReturnFalseForUnknownName() {
         assertThat(groupRepository.existsByGroupName("Missing Group")).isFalse();
     }
+
+    @Test
+    void existsByGroupNameAndTenant_shouldRespectTenantScope() {
+        assertThat(groupRepository.existsByGroupNameAndTenantId(group.getGroupName(), group.getTenantId())).isTrue();
+        assertThat(groupRepository.existsByGroupNameAndTenantId(group.getGroupName(), UUID.randomUUID())).isFalse();
+    }
 }

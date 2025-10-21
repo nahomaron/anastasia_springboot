@@ -32,7 +32,11 @@ public interface GroupService {
 
     AddUsersToGroupResponse addUsersToGroup(Long groupId, AddUsersToGroupRequest request);
 
-    String removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request);
+    RemoveUsersFromGroupResponse removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request);
+
+    AddManagersResponse addManagersToGroup(Long groupId, GroupManagerRequest request);
+
+    RemoveManagersResponse removeManagersFromGroup(Long groupId, GroupManagerRequest request);
 
     Page<SimpleUserDTO> listGroupMembers(Long groupId, Pageable pageable);
 

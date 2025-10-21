@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.api.factories;
 import com.anastasia.Anastasia_BackEnd.model.group.AddUsersToGroupRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.BatchInviteRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.model.group.GroupManagerRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.RemoveUsersFromGroupRequest;
 
 import java.util.List;
@@ -43,6 +44,12 @@ public final class GroupDataFactory {
     public static RemoveUsersFromGroupRequest removeUsersRequest(List<UUID> users) {
         return RemoveUsersFromGroupRequest.builder()
                 .userIds(users)
+                .build();
+    }
+
+    public static GroupManagerRequest managerRequest(Set<UUID> managerIds) {
+        return GroupManagerRequest.builder()
+                .managerIds(managerIds)
                 .build();
     }
 

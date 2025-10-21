@@ -16,4 +16,9 @@ public class AddUsersToGroupResponse {
 
     private String groupName;
     private int addedCount;
+    private int skippedCount;
+    private int notFoundCount;
+    private List<UUID> addedUserIds;
+    private List<UUID> skippedUserIds;
+    private List<UUID> notFoundUserIds;
 }

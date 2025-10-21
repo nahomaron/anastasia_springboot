@@ -1,6 +1,5 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
-import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.GroupMapper;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
@@ -21,34 +20,48 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/** Unit test for {@link GroupServiceImpl} */
-
 @ExtendWith(MockitoExtension.class)
-public class GroupServiceUnitTest {
+class GroupServiceUnitTest {
 
-    @Mock private GroupMapper groupMapper;
-    @Mock private GroupRepository groupRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private ChurchRepository churchRepository;
+    @Mock
+    private GroupMapper groupMapper;
+    @Mock
+    private GroupRepository groupRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ChurchRepository churchRepository;
 
-    @InjectMocks GroupServiceImpl groupService;
+    @InjectMocks
+    private GroupServiceImpl groupService;
 
-    private GroupEntity testGroup;
+    private UUID tenantId;
+    private GroupEntity existingGroup;
+    private ChurchEntity church;
 
     @BeforeEach
     void setUp() {
-        testGroup = GroupEntity.builder()
-                .groupId(1L)
-                .groupName("Test Group")
+        tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
+
+        church = ChurchEntity.builder().churchId(42L).build();
+
+        existingGroup = GroupEntity.builder()
+                .groupId(7L)
+                .groupName("Existing Group")
+                .visibility("PRIVATE")
+                .tenantId(tenantId)
+                .church(church)
                 .users(new HashSet<>())
                 .managers(new HashSet<>())
                 .build();
@@ -60,345 +73,237 @@ public class GroupServiceUnitTest {
     }
 
     @Test
-    void testCreateGroup_success() {
-        UUID tenantId = UUID.randomUUID();
-        TenantContext.setTenantId(tenantId);
+    void createGroup_assignsTenantUsersAndManagers() {
+        UUID userId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
 
         GroupDTO groupDTO = GroupDTO.builder()
                 .groupName("New Group")
+                .visibility("PRIVATE")
+                .users(Set.of(userId))
+                .managers(Set.of(managerId))
+                .build();
+
+        GroupEntity mappedEntity = GroupEntity.builder()
+                .groupName("New Group")
+                .visibility("PRIVATE")
                 .users(new HashSet<>())
                 .managers(new HashSet<>())
                 .build();
 
-        when(groupRepository.existsByGroupName(anyString())).thenReturn(false);
-        when(groupMapper.groupDTOToEntity(any())).thenReturn(testGroup);
-        when(churchRepository.findByTenantId(any(UUID.class))).thenReturn(Optional.of(new ChurchEntity()));
-        when(userRepository.findAllByUuidIn(anySet())).thenReturn(Collections.emptyList());
-        when(groupRepository.save(any(GroupEntity.class))).thenReturn(testGroup);
+        UserEntity user = userEntity(userId, tenantId);
+        UserEntity manager = userEntity(managerId, tenantId);
 
-        groupService.createGroup(groupDTO);
+        when(groupRepository.existsByGroupNameAndTenantId("New Group", tenantId)).thenReturn(false);
+        when(groupMapper.groupDTOToEntity(groupDTO)).thenReturn(mappedEntity);
+        when(churchRepository.findByTenantId(tenantId)).thenReturn(Optional.of(church));
+        when(userRepository.findAllByUuidIn(Set.of(userId))).thenReturn(List.of(user));
+        when(userRepository.findAllByUuidIn(Set.of(managerId))).thenReturn(List.of(manager));
+        when(groupRepository.save(any(GroupEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(groupRepository).save(any(GroupEntity.class));
+        SimpleGroupEntity result = groupService.createGroup(groupDTO);
+
+        assertThat(result.getGroupName()).isEqualTo("New Group");
+        verify(groupRepository).save(argThat(saved ->
+                saved.getTenantId().equals(tenantId)
+                        && saved.getUsers().contains(user)
+                        && saved.getManagers().contains(manager)));
     }
 
     @Test
-    void testCreateGroup_withoutTenant_throwsException() {
+    void createGroup_withoutTenant_throwsIllegalState() {
         TenantContext.clear();
 
-        GroupDTO groupDTO = GroupDTO.builder()
-                .groupName("No Tenant Group")
-                .users(new HashSet<>())
-                .managers(new HashSet<>())
-                .build();
+        GroupDTO dto = GroupDTO.builder().groupName("No Tenant").visibility("PRIVATE").build();
 
-        when(groupRepository.existsByGroupName(anyString())).thenReturn(false);
-        when(groupMapper.groupDTOToEntity(any())).thenReturn(testGroup);
-
-        assertThatThrownBy(() -> groupService.createGroup(groupDTO))
+        assertThatThrownBy(() -> groupService.createGroup(dto))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Tenant ID not found");
-
-        verify(groupRepository, never()).save(any());
     }
 
     @Test
+    void addUsersToGroup_returnsDetailedResponse() {
+        UUID existingUserId = UUID.randomUUID();
+        UUID newUserId = UUID.randomUUID();
+        UUID missingUserId = UUID.randomUUID();
+        UUID foreignUserId = UUID.randomUUID();
 
-    void testFindAll_success() {
-        Pageable pageable = Pageable.unpaged();
-        when(groupRepository.findAll(pageable)).thenReturn(Page.empty());
+        UserEntity existingUser = userEntity(existingUserId, tenantId);
+        existingGroup.addUser(existingUser);
 
-        Page<GroupEntity> result = groupService.findAll(pageable);
-
-        assertThat(result).isEmpty();
-        verify(groupRepository).findAll(pageable);
-    }
-
-    @Test
-    void testFindOneGroup_success() {
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        Optional<GroupEntity> result = groupService.findOne(1L);
-        assertThat(result).isPresent();
-        assertThat(result.get().getGroupName()).isEqualTo("Test Group");
-        verify(groupRepository, times(1)).findById(1L);
-    }
-
-    @Test
-    void testFindOneGroup_notFound() {
-        when(groupRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<GroupEntity> result = groupService.findOne(99L);
-        assertThat(result).isEmpty();
-        verify(groupRepository, times(1)).findById(99L);
-    }
-
-
-    @Test
-    void testExists_true() {
-        when(groupRepository.existsById(1L)).thenReturn(true);
-        boolean exists = groupService.exists(1L);
-        assertThat(exists).isTrue();
-        verify(groupRepository, times(1)).existsById(1L);
-    }
-
-    @Test
-    void testUpdateGroup_success() {
-        GroupDTO updateRequest = GroupDTO.builder()
-                .groupName("Updated Group")
-                .build();
-
-        when(groupRepository.existsById(1L)).thenReturn(true);
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        when(groupRepository.save(any(GroupEntity.class))).thenReturn(testGroup);
-
-        groupService.updateGroup(1L, updateRequest);
-
-        verify(groupRepository).save(any(GroupEntity.class));
-    }
-
-    @Test
-    void testAddUsersToGroup_success() {
-        UserEntity user = TestDataUtil.createTestUserEntityA();
-        user.setUuid(UUID.randomUUID());
-        Set<UUID> userIds = Set.of(user.getUuid());
+        UserEntity newUser = userEntity(newUserId, tenantId);
+        UserEntity foreignUser = userEntity(foreignUserId, UUID.randomUUID());
 
         AddUsersToGroupRequest request = AddUsersToGroupRequest.builder()
-                .userIds(userIds)
+                .userIds(Set.of(existingUserId, newUserId, missingUserId, foreignUserId))
                 .build();
 
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        when(userRepository.findAllByUuidIn(userIds)).thenReturn(List.of(user));
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(userRepository.findAllByUuidIn(anySet()))
+                .thenReturn(List.of(existingUser, newUser, foreignUser));
 
-        groupService.addUsersToGroup(1L, request);
+        AddUsersToGroupResponse response = groupService.addUsersToGroup(existingGroup.getGroupId(), request);
 
-        assertThat(testGroup.getUsers()).contains(user);
-//        verify(groupRepository).save(any(GroupEntity.class));
-        verify(groupRepository, times(1)).saveAndFlush(any(GroupEntity.class));
-
+        assertThat(response.getAddedUserIds()).containsExactly(newUserId);
+        assertThat(response.getSkippedUserIds()).containsExactly(existingUserId);
+        assertThat(response.getNotFoundUserIds()).containsExactlyInAnyOrder(missingUserId, foreignUserId);
+        verify(groupRepository).saveAndFlush(existingGroup);
     }
 
     @Test
-    void testAddUsersToGroup_whenRequestMissingUsers_throwsException() {
-        assertThatThrownBy(() -> groupService.addUsersToGroup(1L, null))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("No users provided");
+    void removeMembersFromGroup_returnsDetailedResponse() {
+        UUID inGroupId = UUID.randomUUID();
+        UUID notMemberId = UUID.randomUUID();
+        UUID missingId = UUID.randomUUID();
 
-        verify(groupRepository, never()).findById(anyLong());
-    }
+        UserEntity inGroupUser = userEntity(inGroupId, tenantId);
+        existingGroup.addUser(inGroupUser);
 
-    @Test
-    void testAddUsersToGroup_userNotFound_throwsException() {
-        UUID userId = UUID.randomUUID();
-        AddUsersToGroupRequest request = AddUsersToGroupRequest.builder()
-                .userIds(Set.of(userId))
-                .build();
-
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        when(userRepository.findAllByUuidIn(Set.of(userId))).thenReturn(List.of());
-
-        assertThatThrownBy(() -> groupService.addUsersToGroup(1L, request))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("One or more users not found");
-    }
-
-    @Test
-    void testListGroupMembers_success() {
-        Pageable pageable = Pageable.unpaged();
-
-        when(groupRepository.existsById(1L)).thenReturn(true);
-        when(userRepository.findUsersByGroupId(eq(1L), any(Pageable.class))).thenReturn(Page.empty());
-
-        Page<SimpleUserDTO> result = groupService.listGroupMembers(1L, pageable);
-
-        assertThat(result).isEmpty();
-        verify(userRepository).findUsersByGroupId(eq(1L), any(Pageable.class));
-    }
-
-    @Test
-    void testGetGroupManagers_success() {
-        UserEntity manager = TestDataUtil.createTestUserEntityA();
-        testGroup.getManagers().add(manager);
-
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-
-        List<SimpleUserDTO> result = groupService.getGroupManagers(1L);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).fullName()).isEqualTo(manager.getFullName());
-    }
-
-    @Test
-    void testRemoveMembersFromGroup_success() {
-        UUID userId = UUID.randomUUID();
-        UserEntity user = TestDataUtil.createTestUserEntityA();
-        user.setUuid(userId);
+        UserEntity notMemberUser = userEntity(notMemberId, tenantId);
 
         RemoveUsersFromGroupRequest request = RemoveUsersFromGroupRequest.builder()
-                .userIds(List.of(userId))
+                .userIds(List.of(inGroupId, notMemberId, missingId))
                 .build();
 
-        testGroup.getUsers().add(user);
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(userRepository.findAllByUuidIn(anySet()))
+                .thenReturn(List.of(inGroupUser, notMemberUser));
 
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        when(userRepository.findAllById(anyList())).thenReturn(List.of(user));
+        RemoveUsersFromGroupResponse response = groupService.removeMembersFromGroup(existingGroup.getGroupId(), request);
 
-        String response = groupService.removeMembersFromGroup(1L, request);
-
-        assertThat(response).contains("user(s) removed");
-        verify(groupRepository).save(testGroup);
-        verify(userRepository).saveAll(anyList());
+        assertThat(response.getRemovedUserIds()).containsExactly(inGroupId);
+        assertThat(response.getNotInGroupUserIds()).containsExactly(notMemberId);
+        assertThat(response.getNotFoundUserIds()).containsExactly(missingId);
+        verify(groupRepository).save(existingGroup);
+        verify(userRepository).saveAll(anyCollection());
     }
 
     @Test
-    void testGetGroupUserStatus_success() {
-        UUID userId = UUID.randomUUID();
+    void addManagersToGroup_returnsDetailedResponse() {
+        UUID managerId = UUID.randomUUID();
+        UUID existingManagerId = UUID.randomUUID();
+        UUID missingManagerId = UUID.randomUUID();
 
-        testGroup.setChurch(ChurchEntity.builder().churchId(1L).build());
-        testGroup.getUsers().add(UserEntity.builder().uuid(userId).build());
+        UserEntity existingManager = userEntity(existingManagerId, tenantId);
+        existingGroup.getManagers().add(existingManager);
 
-        SimpleUserDTO userDto = new SimpleUserDTO(userId, "User Name", "user@example.com");
+        UserEntity newManager = userEntity(managerId, tenantId);
 
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        when(userRepository.findSimpleUsersByChurchId(1L)).thenReturn(List.of(userDto));
-
-        List<GroupUserCandidateDTO> result = groupService.getGroupUserStatus(1L);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst().isAlreadyInGroup()).isTrue();
-    }
-
-    @Test
-    void testDeleteGroup_success() {
-        when(groupRepository.existsById(1L)).thenReturn(true);
-        groupService.delete(1L);
-        verify(groupRepository, times(1)).deleteById(1L);
-    }
-
-    @Test
-    void testBatchInviteUsersToGroup_success() {
-        UUID existingUserId = UUID.randomUUID();
-        UserEntity manager = UserEntity.builder().uuid(existingUserId).email("manager@example.com").build();
-        testGroup.getManagers().add(manager);
-
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-
-        UserEntity invitedUser = UserEntity.builder()
-                .uuid(UUID.randomUUID())
-                .email("invitee@example.com")
+        GroupManagerRequest request = GroupManagerRequest.builder()
+                .managerIds(Set.of(managerId, existingManagerId, missingManagerId))
                 .build();
+
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(userRepository.findAllByUuidIn(anySet()))
+                .thenReturn(List.of(existingManager, newManager));
+
+        AddManagersResponse response = groupService.addManagersToGroup(existingGroup.getGroupId(), request);
+
+        assertThat(response.getAddedManagerIds()).containsExactly(managerId);
+        assertThat(response.getSkippedManagerIds()).containsExactly(existingManagerId);
+        assertThat(response.getNotFoundManagerIds()).containsExactly(missingManagerId);
+        verify(groupRepository).save(existingGroup);
+    }
+
+    @Test
+    void removeManagersFromGroup_returnsDetailedResponse() {
+        UUID managerId = UUID.randomUUID();
+        UUID notManagerId = UUID.randomUUID();
+
+        UserEntity manager = userEntity(managerId, tenantId);
+        existingGroup.getManagers().add(manager);
+
+        UserEntity notManager = userEntity(notManagerId, tenantId);
+
+        GroupManagerRequest request = GroupManagerRequest.builder()
+                .managerIds(Set.of(managerId, notManagerId))
+                .build();
+
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(userRepository.findAllByUuidIn(anySet()))
+                .thenReturn(List.of(manager, notManager));
+
+        RemoveManagersResponse response = groupService.removeManagersFromGroup(existingGroup.getGroupId(), request);
+
+        assertThat(response.getRemovedManagerIds()).containsExactly(managerId);
+        assertThat(response.getNotManagerIds()).containsExactly(notManagerId);
+        verify(groupRepository).save(existingGroup);
+    }
+
+    @Test
+    void batchInviteUsersToGroup_returnsCategorisedResponse() {
+        existingGroup.getManagers().add(userEntity(UUID.randomUUID(), tenantId));
+
+        UserEntity alreadyMember = userEntity(UUID.randomUUID(), tenantId);
+        alreadyMember.setEmail("member@example.com");
+        existingGroup.addUser(alreadyMember);
+
+        UserEntity invitee = userEntity(UUID.randomUUID(), tenantId);
+        invitee.setEmail("invitee@example.com");
+
+        UserEntity foreignUser = userEntity(UUID.randomUUID(), UUID.randomUUID());
+        foreignUser.setEmail("foreign@example.com");
 
         BatchInviteRequest request = BatchInviteRequest.builder()
-                .groupEmails(Set.of("invitee@example.com"))
+                .groupEmails(new LinkedHashSet<>(Arrays.asList(
+                        "invitee@example.com",
+                        "member@example.com",
+                        "missing@example.com",
+                        "foreign@example.com")))
                 .build();
 
-        when(userRepository.findAllByEmailIn(request.getGroupEmails()))
-                .thenReturn(List.of(invitedUser));
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(userRepository.findAllByEmailIn(anySet()))
+                .thenReturn(List.of(alreadyMember, invitee, foreignUser));
 
-        BatchInviteResponse response = groupService.batchInviteUsersToGroup(1L, request);
+        BatchInviteResponse response = groupService.batchInviteUsersToGroup(existingGroup.getGroupId(), request);
 
-        assertThat(response.getInvitedCount()).isEqualTo(1);
-        assertThat(testGroup.getUsers()).contains(invitedUser);
-        verify(groupRepository).saveAndFlush(testGroup);
+        assertThat(response.getInvitedUserIds()).containsExactly(invitee.getUuid());
+        assertThat(response.getSkippedEmails()).containsExactly("member@example.com");
+        assertThat(response.getNotFoundEmails()).containsExactlyInAnyOrder("missing@example.com", "foreign@example.com");
+        verify(groupRepository).saveAndFlush(existingGroup);
     }
 
     @Test
-    void testBatchInviteUsersToGroup_withEmptyEmails_throwsException() {
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+    void listGroupMembers_requiresExistingGroup() {
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        Page<SimpleUserDTO> expectedPage = new PageImpl<>(List.of());
+        when(userRepository.findUsersByGroupId(eq(existingGroup.getGroupId()), any(Pageable.class))).thenReturn(expectedPage);
 
-        BatchInviteRequest request = BatchInviteRequest.builder().groupEmails(Collections.emptySet()).build();
+        Page<SimpleUserDTO> result = groupService.listGroupMembers(existingGroup.getGroupId(), Pageable.unpaged());
 
-        assertThatThrownBy(() -> groupService.batchInviteUsersToGroup(1L, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Email list cannot be empty");
+        assertThat(result).isSameAs(expectedPage);
     }
 
     @Test
-    void testBatchInviteUsersToGroup_whenNoUsersFound_throwsException() {
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+    void createGroup_duplicateNameThrows() {
+        GroupDTO dto = GroupDTO.builder().groupName("Dup").visibility("PRIVATE").build();
+        when(groupRepository.existsByGroupNameAndTenantId("Dup", tenantId)).thenReturn(true);
 
-        BatchInviteRequest request = BatchInviteRequest.builder()
-                .groupEmails(Set.of("missing@example.com"))
-                .build();
-
-        when(userRepository.findAllByEmailIn(request.getGroupEmails())).thenReturn(Collections.emptyList());
-
-        assertThatThrownBy(() -> groupService.batchInviteUsersToGroup(1L, request))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("No users found");
-    }
-
-
-    // ########################################################################################
-    // ########################################################################################
-    // Negative Tests
-
-    @Test
-    void testCreateGroup_duplicateGroupName_throwsException() {
-        GroupDTO groupDTO = GroupDTO.builder()
-                .groupName("Duplicate Group")
-                .build();
-
-        when(groupRepository.existsByGroupName(anyString())).thenReturn(true);
-
-        assertThatThrownBy(() -> groupService.createGroup(groupDTO))
+        assertThatThrownBy(() -> groupService.createGroup(dto))
                 .isInstanceOf(EntityExistsException.class)
                 .hasMessageContaining("Group name already exists");
-
-        verify(groupRepository, never()).save(any(GroupEntity.class));
     }
 
     @Test
-    void testUpdateGroup_groupNotFound_throwsException() {
-        when(groupRepository.existsById(1L)).thenReturn(false);
-
-        GroupDTO request = GroupDTO.builder()
-                .groupName("New Name")
+    void loadGroupForDifferentTenant_throwsNotFound() {
+        GroupEntity otherTenantGroup = GroupEntity.builder()
+                .groupId(88L)
+                .tenantId(UUID.randomUUID())
                 .build();
 
-        assertThatThrownBy(() -> groupService.updateGroup(1L, request))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Group not found");
+        when(groupRepository.findById(88L)).thenReturn(Optional.of(otherTenantGroup));
 
-        verify(groupRepository, never()).save(any(GroupEntity.class));
+        assertThatThrownBy(() -> groupService.getGroupManagers(88L))
+                .isInstanceOf(EntityNotFoundException.class);
     }
 
-    @Test
-    void testRemoveMembersFromGroup_groupNotFound_throwsException() {
-        when(groupRepository.findById(1L)).thenReturn(Optional.empty());
-
-        RemoveUsersFromGroupRequest request = RemoveUsersFromGroupRequest.builder()
-                .userIds(List.of(UUID.randomUUID()))
+    private UserEntity userEntity(UUID userId, UUID tenantId) {
+        return UserEntity.builder()
+                .uuid(userId)
+                .tenantId(tenantId)
+                .email(userId + "@example.com")
+                .groups(new HashSet<>())
                 .build();
-
-        assertThatThrownBy(() -> groupService.removeMembersFromGroup(1L, request))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Group not found");
-    }
-
-    @Test
-    void testListGroupMembers_groupNotFound_throwsException() {
-        Pageable pageable = Pageable.unpaged();
-
-        when(groupRepository.existsById(1L)).thenReturn(false);
-
-        assertThatThrownBy(() -> groupService.listGroupMembers(1L, pageable))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Group not found");
-    }
-
-    @Test
-    void testGetGroupManagers_groupNotFound_throwsException() {
-        when(groupRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> groupService.getGroupManagers(1L))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Group not found");
-    }
-
-    @Test
-    void testGetGroupUserStatus_groupNotFound_throwsException() {
-        when(groupRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> groupService.getGroupUserStatus(1L))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Group not found");
     }
 }

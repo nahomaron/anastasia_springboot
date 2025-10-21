@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.model.group.AddUsersToGroupRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.BatchInviteRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.model.group.GroupManagerRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.RemoveUsersFromGroupRequest;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
@@ -126,6 +127,28 @@ public class GroupService {
                 .spec(spec)
                 .when()
                 .get(BASE_PATH + "/" + groupId + "/managers")
+                .then()
+                .extract()
+                .response();
+    }
+
+    public Response addManagers(RequestSpecification spec, Long groupId, GroupManagerRequest payload) {
+        return given()
+                .spec(spec)
+                .body(payload)
+                .when()
+                .post(BASE_PATH + "/" + groupId + "/managers")
+                .then()
+                .extract()
+                .response();
+    }
+
+    public Response removeManagers(RequestSpecification spec, Long groupId, GroupManagerRequest payload) {
+        return given()
+                .spec(spec)
+                .body(payload)
+                .when()
+                .delete(BASE_PATH + "/" + groupId + "/managers")
                 .then()
                 .extract()
                 .response();

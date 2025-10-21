@@ -41,7 +41,7 @@ public class GroupController {
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS')")
     public ResponseEntity<SimpleGroupEntity> createGroup(@RequestBody GroupDTO groupDTO){
         SimpleGroupEntity simpleGroupEntity = groupService.createGroup(groupDTO);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(simpleGroupEntity, HttpStatus.CREATED);
     }
 
     // Get list of Groups
@@ -155,10 +155,10 @@ public class GroupController {
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'REMOVE_MEMBERS_FROM_GROUPS')")
     @DeleteMapping("/{groupId}/members")
-    public ResponseEntity<String> removeMembersFromGroup(
+    public ResponseEntity<RemoveUsersFromGroupResponse> removeMembersFromGroup(
             @PathVariable Long groupId,
-            @RequestBody RemoveUsersFromGroupRequest request) {
-        String response = groupService.removeMembersFromGroup(groupId, request);
+            @Valid @RequestBody RemoveUsersFromGroupRequest request) {
+        RemoveUsersFromGroupResponse response = groupService.removeMembersFromGroup(groupId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -180,6 +180,24 @@ public class GroupController {
          List<SimpleUserDTO> managers = groupService.getGroupManagers(groupId);
          return new ResponseEntity<>(managers, HttpStatus.OK);
      }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
+    @PostMapping("/{groupId}/managers")
+    public ResponseEntity<AddManagersResponse> addManagersToGroup(@PathVariable Long groupId,
+                                                                  @Valid @RequestBody GroupManagerRequest request) {
+        AddManagersResponse response = groupService.addManagersToGroup(groupId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'REMOVE_MEMBERS_FROM_GROUPS')")
+    @DeleteMapping("/{groupId}/managers")
+    public ResponseEntity<RemoveManagersResponse> removeManagersFromGroup(@PathVariable Long groupId,
+                                                                          @Valid @RequestBody GroupManagerRequest request) {
+        RemoveManagersResponse response = groupService.removeManagersFromGroup(groupId, request);
+        return ResponseEntity.ok(response);
+    }
 
     // Add batch invites with email or UUID instead of user ID
     @PostMapping("/{groupId}/batch-invite")

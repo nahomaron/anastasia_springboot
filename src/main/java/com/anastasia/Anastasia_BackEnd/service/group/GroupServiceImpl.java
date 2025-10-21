@@ -4,35 +4,43 @@ import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.GroupMapper;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.group.*;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupUserCandidateDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.GroupRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class GroupServiceImpl implements GroupService{
+public class GroupServiceImpl implements GroupService {
+
+    private static final String GROUP_NOT_FOUND = "Group not found";
+    private static final String USERS_REQUIRED_MESSAGE = "No users provided";
 
     private final GroupMapper groupMapper;
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final ChurchRepository churchRepository;
-
-    private static final Logger logger = LoggerFactory.getLogger(GroupServiceImpl.class);  // Use SLF4J logger
 
     @Override
     public GroupEntity convertToEntity(GroupDTO groupDTO) {
@@ -46,28 +54,26 @@ public class GroupServiceImpl implements GroupService{
 
     @Override
     public SimpleGroupEntity createGroup(GroupDTO groupDTO) {
-        if(groupRepository.existsByGroupName(groupDTO.getGroupName())){
-            throw new EntityExistsException("Group name already exists");
+        UUID tenantId = requireTenantId();
+
+        if (groupRepository.existsByGroupNameAndTenantId(groupDTO.getGroupName(), tenantId)) {
+            throw new EntityExistsException("Group name already exists for this tenant");
         }
+
         GroupEntity groupEntity = groupMapper.groupDTOToEntity(groupDTO);
 
-
-        UUID tenantId = TenantContext.getTenantId();
-
-        if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID not found in context");
-        }
-
         ChurchEntity church = churchRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> new EntityNotFoundException("Church not found for tenant "));
-
-        Set<UserEntity> users = new HashSet<>(userRepository.findAllByUuidIn(groupDTO.getUsers()));
-        Set<UserEntity> managers = new HashSet<>(userRepository.findAllByUuidIn(groupDTO.getManagers()));
+                .orElseThrow(() -> new EntityNotFoundException("Church not found for tenant"));
 
         groupEntity.setTenantId(tenantId);
         groupEntity.setChurch(church);
-        groupEntity.setUsers(users);
-        groupEntity.setManagers(managers);
+        groupEntity.setUsers(new HashSet<>());
+        groupEntity.setManagers(new HashSet<>());
+
+        loadUsersForTenant(toNonNullSet(groupDTO.getUsers()), tenantId)
+                .forEach(groupEntity::addUser);
+
+        groupEntity.getManagers().addAll(loadUsersForTenant(toNonNullSet(groupDTO.getManagers()), tenantId));
 
         GroupEntity savedGroup = groupRepository.save(groupEntity);
 
@@ -85,114 +91,296 @@ public class GroupServiceImpl implements GroupService{
 
     @Override
     public Optional<GroupEntity> findOne(Long groupId) {
-        return groupRepository.findById(groupId);
+        try {
+            return Optional.of(loadGroupForTenant(groupId));
+        } catch (EntityNotFoundException ex) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public boolean exists(Long groupId) {
-        return groupRepository.existsById(groupId);
+        try {
+            loadGroupForTenant(groupId);
+            return true;
+        } catch (EntityNotFoundException ex) {
+            return false;
+        }
     }
 
     @Override
     public void updateGroup(Long groupId, GroupDTO request) {
+        GroupEntity group = loadGroupForTenant(groupId);
+        UUID tenantId = group.getTenantId();
 
-        if(!exists(groupId)){
-            throw new EntityNotFoundException("Group not found");
+        if (StringUtils.hasText(request.getGroupName()) && !request.getGroupName().equals(group.getGroupName())) {
+            if (groupRepository.existsByGroupNameAndTenantId(request.getGroupName(), tenantId)) {
+                throw new EntityExistsException("Group name already exists for this tenant");
+            }
+            group.setGroupName(request.getGroupName());
         }
-        groupRepository.findById(groupId).map(groupEntity -> {
-            Optional.ofNullable(request.getGroupName()).ifPresent(groupEntity::setGroupName);
-            Optional.ofNullable(request.getDescription()).ifPresent(groupEntity::setDescription);
-            Optional.ofNullable(request.getAvatar()).ifPresent(groupEntity::setAvatar);
-            Optional.ofNullable(request.getVisibility()).ifPresent(groupEntity::setVisibility);
 
-             Optional.ofNullable(request.getManagers()).ifPresent(managerUUIDs -> {
-                 Set<UserEntity> managers = new HashSet<>(userRepository.findAllByUuidIn(managerUUIDs));
-                 groupEntity.setManagers(managers);
-             });
+        Optional.ofNullable(request.getDescription()).ifPresent(group::setDescription);
+        Optional.ofNullable(request.getAvatar()).ifPresent(group::setAvatar);
+        Optional.ofNullable(request.getVisibility()).ifPresent(group::setVisibility);
 
-             Optional.ofNullable(request.getUsers()).ifPresent(userUUIDs -> {
-                 Set<UserEntity> users = new HashSet<>(userRepository.findAllByUuidIn(userUUIDs));
-                 groupEntity.setUsers(users);
-             });
+        if (request.getManagers() != null) {
+            List<UserEntity> managers = loadUsersForTenant(request.getManagers(), tenantId);
+            group.getManagers().clear();
+            group.getManagers().addAll(managers);
+        }
 
-             return groupRepository.save(groupEntity);
+        if (request.getUsers() != null) {
+            List<UserEntity> users = loadUsersForTenant(request.getUsers(), tenantId);
+            group.getUsers().clear();
+            users.forEach(group::addUser);
+        }
 
-        }).orElseThrow(() -> new RuntimeException("Group could not be updated"));
+        groupRepository.save(group);
     }
 
     @Override
     public void delete(Long groupId) {
-        if(!exists(groupId)){
-            throw new IllegalStateException("Group does not exist in system");
-        }
-        groupRepository.deleteById(groupId);
+        GroupEntity group = loadGroupForTenant(groupId);
+        groupRepository.delete(group);
     }
-
 
     @Transactional
     @Override
     public AddUsersToGroupResponse addUsersToGroup(Long groupId, AddUsersToGroupRequest request) {
-
         if (request == null || request.getUserIds() == null || request.getUserIds().isEmpty()) {
-            throw new EntityNotFoundException("No users provided");
+            throw new IllegalArgumentException(USERS_REQUIRED_MESSAGE);
         }
 
-        GroupEntity group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+        GroupEntity group = loadGroupForTenant(groupId);
+        UUID tenantId = group.getTenantId();
 
-        List<UserEntity> users = userRepository.findAllByUuidIn(request.getUserIds());
+        Set<UUID> requestedUserIds = new LinkedHashSet<>(request.getUserIds());
+        Map<UUID, UserEntity> fetchedUsers = userRepository.findAllByUuidIn(requestedUserIds).stream()
+                .collect(Collectors.toMap(UserEntity::getUuid, Function.identity()));
 
-        if (users.size() != request.getUserIds().size()) {
-            throw new EntityNotFoundException("One or more users not found");
-        }
+        List<UUID> notFoundUserIds = requestedUserIds.stream()
+                .filter(id -> !fetchedUsers.containsKey(id))
+                .toList();
 
-        Set<UserEntity> newUsersToAdd = users.stream()
-                .filter(user -> !group.getUsers().contains(user))
+        List<UUID> tenantMismatchUserIds = fetchedUsers.values().stream()
+                .filter(user -> !belongsToTenant(user, tenantId))
+                .map(UserEntity::getUuid)
+                .toList();
+
+        tenantMismatchUserIds.forEach(fetchedUsers::remove);
+
+        Set<UUID> existingUserIds = group.getUsers().stream()
+                .map(UserEntity::getUuid)
                 .collect(Collectors.toSet());
 
-        newUsersToAdd.forEach(group::addUser);
+        List<UUID> addedIds = new ArrayList<>();
+        List<UUID> skippedIds = new ArrayList<>();
 
-        groupRepository.saveAndFlush(group);  // Immediately flush batch insert/update
+        for (UUID userId : requestedUserIds) {
+            if (notFoundUserIds.contains(userId) || tenantMismatchUserIds.contains(userId)) {
+                continue;
+            }
+
+            if (existingUserIds.contains(userId)) {
+                skippedIds.add(userId);
+                continue;
+            }
+
+            UserEntity user = fetchedUsers.get(userId);
+            group.addUser(user);
+            addedIds.add(userId);
+        }
+
+        groupRepository.saveAndFlush(group);
 
         return AddUsersToGroupResponse.builder()
                 .groupName(group.getGroupName())
-                .addedCount(newUsersToAdd.size())
+                .addedCount(addedIds.size())
+                .skippedCount(skippedIds.size())
+                .notFoundCount(notFoundUserIds.size() + tenantMismatchUserIds.size())
+                .addedUserIds(addedIds)
+                .skippedUserIds(skippedIds)
+                .notFoundUserIds(mergeLists(notFoundUserIds, tenantMismatchUserIds))
                 .build();
     }
 
-
     @Override
-    public String removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request) {
-        GroupEntity group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+    public RemoveUsersFromGroupResponse removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request) {
+        if (request == null || request.getUserIds() == null || request.getUserIds().isEmpty()) {
+            throw new IllegalArgumentException(USERS_REQUIRED_MESSAGE);
+        }
 
-        List<UserEntity> users = new ArrayList<>(userRepository.findAllById(request.getUserIds()));
+        GroupEntity group = loadGroupForTenant(groupId);
+        UUID tenantId = group.getTenantId();
 
-        for (UserEntity user : users){
-            group.getUsers().remove(user);
+        Set<UUID> requestedUserIds = new LinkedHashSet<>(request.getUserIds());
+        Map<UUID, UserEntity> fetchedUsers = userRepository.findAllByUuidIn(new HashSet<>(requestedUserIds)).stream()
+                .collect(Collectors.toMap(UserEntity::getUuid, Function.identity()));
+
+        List<UUID> notFoundUserIds = requestedUserIds.stream()
+                .filter(id -> !fetchedUsers.containsKey(id))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        List<UUID> tenantMismatchUserIds = fetchedUsers.values().stream()
+                .filter(user -> !belongsToTenant(user, tenantId))
+                .map(UserEntity::getUuid)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        tenantMismatchUserIds.forEach(fetchedUsers::remove);
+
+        List<UUID> removedUserIds = new ArrayList<>();
+        List<UUID> notInGroupUserIds = new ArrayList<>();
+
+        for (UUID userId : requestedUserIds) {
+            if (notFoundUserIds.contains(userId) || tenantMismatchUserIds.contains(userId)) {
+                continue;
+            }
+
+            UserEntity user = fetchedUsers.get(userId);
+            if (!group.getUsers().remove(user)) {
+                notInGroupUserIds.add(userId);
+                continue;
+            }
             user.getGroups().remove(group);
+            removedUserIds.add(userId);
         }
 
         groupRepository.save(group);
-        userRepository.saveAll(users);
+        userRepository.saveAll(fetchedUsers.values());
 
-        return users.size() + " user(s) removed from "+group.getGroupName();
+        return RemoveUsersFromGroupResponse.builder()
+                .groupName(group.getGroupName())
+                .removedCount(removedUserIds.size())
+                .notInGroupCount(notInGroupUserIds.size())
+                .notFoundCount(notFoundUserIds.size() + tenantMismatchUserIds.size())
+                .removedUserIds(removedUserIds)
+                .notInGroupUserIds(notInGroupUserIds)
+                .notFoundUserIds(mergeLists(notFoundUserIds, tenantMismatchUserIds))
+                .build();
+    }
+
+    @Override
+    public AddManagersResponse addManagersToGroup(Long groupId, GroupManagerRequest request) {
+        if (request == null || request.getManagerIds() == null || request.getManagerIds().isEmpty()) {
+            throw new IllegalArgumentException("Manager identifiers cannot be empty");
+        }
+
+        GroupEntity group = loadGroupForTenant(groupId);
+        UUID tenantId = group.getTenantId();
+
+        Set<UUID> requestedManagerIds = new LinkedHashSet<>(request.getManagerIds());
+        Map<UUID, UserEntity> fetchedUsers = userRepository.findAllByUuidIn(requestedManagerIds).stream()
+                .collect(Collectors.toMap(UserEntity::getUuid, Function.identity()));
+
+        List<UUID> notFoundManagerIds = requestedManagerIds.stream()
+                .filter(id -> !fetchedUsers.containsKey(id))
+                .toList();
+
+        List<UUID> tenantMismatchManagerIds = fetchedUsers.values().stream()
+                .filter(user -> !belongsToTenant(user, tenantId))
+                .map(UserEntity::getUuid)
+                .toList();
+
+        tenantMismatchManagerIds.forEach(fetchedUsers::remove);
+
+        Set<UUID> existingManagerIds = group.getManagers().stream()
+                .map(UserEntity::getUuid)
+                .collect(Collectors.toSet());
+
+        List<UUID> addedManagerIds = new ArrayList<>();
+        List<UUID> skippedManagerIds = new ArrayList<>();
+
+        for (UUID managerId : requestedManagerIds) {
+            if (notFoundManagerIds.contains(managerId) || tenantMismatchManagerIds.contains(managerId)) {
+                continue;
+            }
+
+            if (existingManagerIds.contains(managerId)) {
+                skippedManagerIds.add(managerId);
+                continue;
+            }
+
+            UserEntity manager = fetchedUsers.get(managerId);
+            group.getManagers().add(manager);
+            addedManagerIds.add(managerId);
+        }
+
+        groupRepository.save(group);
+
+        return AddManagersResponse.builder()
+                .groupName(group.getGroupName())
+                .addedCount(addedManagerIds.size())
+                .skippedCount(skippedManagerIds.size())
+                .notFoundCount(notFoundManagerIds.size() + tenantMismatchManagerIds.size())
+                .addedManagerIds(addedManagerIds)
+                .skippedManagerIds(skippedManagerIds)
+                .notFoundManagerIds(mergeLists(notFoundManagerIds, tenantMismatchManagerIds))
+                .build();
+    }
+
+    @Override
+    public RemoveManagersResponse removeManagersFromGroup(Long groupId, GroupManagerRequest request) {
+        if (request == null || request.getManagerIds() == null || request.getManagerIds().isEmpty()) {
+            throw new IllegalArgumentException("Manager identifiers cannot be empty");
+        }
+
+        GroupEntity group = loadGroupForTenant(groupId);
+        UUID tenantId = group.getTenantId();
+
+        Set<UUID> requestedManagerIds = new LinkedHashSet<>(request.getManagerIds());
+        Map<UUID, UserEntity> fetchedUsers = userRepository.findAllByUuidIn(new HashSet<>(requestedManagerIds)).stream()
+                .collect(Collectors.toMap(UserEntity::getUuid, Function.identity()));
+
+        List<UUID> notFoundManagerIds = requestedManagerIds.stream()
+                .filter(id -> !fetchedUsers.containsKey(id))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        List<UUID> tenantMismatchManagerIds = fetchedUsers.values().stream()
+                .filter(user -> !belongsToTenant(user, tenantId))
+                .map(UserEntity::getUuid)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        tenantMismatchManagerIds.forEach(fetchedUsers::remove);
+
+        List<UUID> removedManagerIds = new ArrayList<>();
+        List<UUID> notManagerIds = new ArrayList<>();
+
+        for (UUID managerId : requestedManagerIds) {
+            if (notFoundManagerIds.contains(managerId) || tenantMismatchManagerIds.contains(managerId)) {
+                continue;
+            }
+
+            UserEntity manager = fetchedUsers.get(managerId);
+            if (!group.getManagers().remove(manager)) {
+                notManagerIds.add(managerId);
+                continue;
+            }
+            removedManagerIds.add(managerId);
+        }
+
+        groupRepository.save(group);
+
+        return RemoveManagersResponse.builder()
+                .groupName(group.getGroupName())
+                .removedCount(removedManagerIds.size())
+                .notManagersCount(notManagerIds.size())
+                .notFoundCount(notFoundManagerIds.size() + tenantMismatchManagerIds.size())
+                .removedManagerIds(removedManagerIds)
+                .notManagerIds(notManagerIds)
+                .notFoundManagerIds(mergeLists(notFoundManagerIds, tenantMismatchManagerIds))
+                .build();
     }
 
     @Override
     public Page<SimpleUserDTO> listGroupMembers(Long groupId, Pageable pageable) {
-           if(!groupRepository.existsById(groupId)){
-               throw new EntityNotFoundException("Group not found");
-            }
-
+        loadGroupForTenant(groupId);
         return userRepository.findUsersByGroupId(groupId, pageable);
     }
 
     @Override
     public List<SimpleUserDTO> getGroupManagers(Long groupId) {
-        GroupEntity group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
-
+        GroupEntity group = loadGroupForTenant(groupId);
         return group.getManagers().stream()
                 .map(manager -> SimpleUserDTO.builder()
                         .uuid(manager.getUuid())
@@ -204,11 +392,9 @@ public class GroupServiceImpl implements GroupService{
 
     @Override
     public List<GroupUserCandidateDTO> getGroupUserStatus(Long groupId) {
-        GroupEntity group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+        GroupEntity group = loadGroupForTenant(groupId);
 
         Long churchId = group.getChurch().getChurchId();
-
 
         List<SimpleUserDTO> simpleUsers = userRepository.findSimpleUsersByChurchId(churchId);
 
@@ -216,52 +402,151 @@ public class GroupServiceImpl implements GroupService{
                 .map(UserEntity::getUuid)
                 .collect(Collectors.toSet());
 
-        // Build the candidate DTOs
         return simpleUsers.stream()
                 .map(user -> GroupUserCandidateDTO.builder()
                         .uuid(user.uuid())
                         .fullName(user.fullName())
-                        .avatarUrl(null) // todo -> later we can load avatar here if needed
+                        .avatarUrl(null)
                         .alreadyInGroup(usersAlreadyInGroup.contains(user.uuid()))
                         .build())
                 .toList();
-
     }
 
     @Override
-    // todo -> this need to be addressed in detail ..
+    @Transactional
     public BatchInviteResponse batchInviteUsersToGroup(Long groupId, BatchInviteRequest request) {
-        GroupEntity group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
-
         if (request.getGroupEmails() == null || request.getGroupEmails().isEmpty()) {
             throw new IllegalArgumentException("Email list cannot be empty");
         }
 
-        List<UserEntity> usersToInvite = userRepository.findAllByEmailIn(request.getGroupEmails());
+        GroupEntity group = loadGroupForTenant(groupId);
+        UUID tenantId = group.getTenantId();
 
-        if (usersToInvite.isEmpty()) {
-            throw new EntityNotFoundException("No users found with provided emails");
-        }
+        Set<String> emailSet = request.getGroupEmails().stream()
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        Set<UserEntity> alreadyInGroup = group.getUsers();
-        Set<UserEntity> managers = group.getManagers();
+        List<UserEntity> usersToInvite = userRepository.findAllByEmailIn(emailSet);
 
-        List<UserEntity> invitedUsers = new ArrayList<>();
+        Set<String> foundEmails = usersToInvite.stream()
+                .map(user -> user.getEmail().toLowerCase())
+                .collect(Collectors.toSet());
+
+        List<String> normalizedEmails = emailSet.stream()
+                .map(String::toLowerCase)
+                .toList();
+
+        List<String> notFoundEmails = normalizedEmails.stream()
+                .filter(email -> !foundEmails.contains(email))
+                .map(email -> email)
+                .toList();
+
+        List<String> tenantMismatchEmails = usersToInvite.stream()
+                .filter(user -> !belongsToTenant(user, tenantId))
+                .map(user -> user.getEmail().toLowerCase())
+                .toList();
+
+        Set<UUID> existingUserIds = group.getUsers().stream()
+                .map(UserEntity::getUuid)
+                .collect(Collectors.toSet());
+
+        Set<UUID> managerIds = group.getManagers().stream()
+                .map(UserEntity::getUuid)
+                .collect(Collectors.toSet());
+
+        List<UUID> invitedUserIds = new ArrayList<>();
+        List<String> skippedEmails = new ArrayList<>();
 
         for (UserEntity user : usersToInvite) {
-            if (!alreadyInGroup.contains(user) && !managers.contains(user)) {
-                group.addUser(user);
-                invitedUsers.add(user);
+            String normalizedEmail = user.getEmail().toLowerCase();
+            if (tenantMismatchEmails.contains(normalizedEmail)) {
+                continue;
             }
+
+            if (existingUserIds.contains(user.getUuid()) || managerIds.contains(user.getUuid())) {
+                skippedEmails.add(normalizedEmail);
+                continue;
+            }
+
+            group.addUser(user);
+            invitedUserIds.add(user.getUuid());
         }
 
         groupRepository.saveAndFlush(group);
 
         return BatchInviteResponse.builder()
                 .groupName(group.getGroupName())
-                .invitedCount(invitedUsers.size())
+                .invitedCount(invitedUserIds.size())
+                .skippedCount(skippedEmails.size())
+                .notFoundCount(notFoundEmails.size() + tenantMismatchEmails.size())
+                .invitedUserIds(invitedUserIds)
+                .skippedEmails(skippedEmails)
+                .notFoundEmails(mergeLists(notFoundEmails, tenantMismatchEmails))
                 .build();
     }
 
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID not found in context");
+        }
+        return tenantId;
+    }
+
+    private GroupEntity loadGroupForTenant(Long groupId) {
+        UUID tenantId = requireTenantId();
+        GroupEntity group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new EntityNotFoundException(GROUP_NOT_FOUND));
+
+        if (!tenantId.equals(group.getTenantId())) {
+            throw new EntityNotFoundException(GROUP_NOT_FOUND);
+        }
+
+        return group;
+    }
+
+    private List<UserEntity> loadUsersForTenant(Set<UUID> userIds, UUID tenantId) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<UserEntity> users = userRepository.findAllByUuidIn(userIds);
+        Map<UUID, UserEntity> userMap = users.stream()
+                .collect(Collectors.toMap(UserEntity::getUuid, Function.identity()));
+
+        List<UUID> missing = userIds.stream()
+                .filter(id -> !userMap.containsKey(id))
+                .toList();
+
+        if (!missing.isEmpty()) {
+            throw new EntityNotFoundException("Users not found: " + missing);
+        }
+
+        users.forEach(user -> {
+            if (!belongsToTenant(user, tenantId)) {
+                throw new IllegalArgumentException("User " + user.getUuid() + " does not belong to this tenant");
+            }
+        });
+
+        return users;
+    }
+
+    private Set<UUID> toNonNullSet(Set<UUID> source) {
+        return source == null ? Collections.emptySet() : source;
+    }
+
+    private <T> List<T> mergeLists(List<T> first, List<T> second) {
+        List<T> merged = new ArrayList<>(first);
+        merged.addAll(second);
+        return merged;
+    }
+
+    private boolean belongsToTenant(UserEntity user, UUID tenantId) {
+        UUID userTenantId = user.getTenantId();
+        if (userTenantId == null && user.getTenant() != null) {
+            userTenantId = user.getTenant().getId();
+        }
+        return userTenantId != null && userTenantId.equals(tenantId);
+    }
 }

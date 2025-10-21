@@ -8,10 +8,14 @@ import com.anastasia.Anastasia_BackEnd.model.event.attendance.CheckInQRRequestDT
 import com.anastasia.Anastasia_BackEnd.model.event.attendance.CheckInRequestDTO;
 import com.anastasia.Anastasia_BackEnd.model.event.attendance.MarkAbsentRequestDTO;
 import com.anastasia.Anastasia_BackEnd.model.event.report.EventReport;
+import com.anastasia.Anastasia_BackEnd.model.group.AddManagersResponse;
 import com.anastasia.Anastasia_BackEnd.model.group.AddUsersToGroupRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.BatchInviteRequest;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.model.group.GroupManagerRequest;
+import com.anastasia.Anastasia_BackEnd.model.group.RemoveManagersResponse;
 import com.anastasia.Anastasia_BackEnd.model.group.RemoveUsersFromGroupRequest;
+import com.anastasia.Anastasia_BackEnd.model.group.RemoveUsersFromGroupResponse;
 import com.anastasia.Anastasia_BackEnd.model.group.SimpleGroupEntity;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
@@ -102,16 +106,26 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
         Page<SimpleUserDTO> membersPage = groupService.listGroupMembers(simpleGroup.getGroupId(), PageRequest.of(0, 10));
         assertThat(membersPage.getContent()).extracting(SimpleUserDTO::uuid).contains(memberUser.getUuid(), extraUser.getUuid());
 
-        groupService.removeMembersFromGroup(simpleGroup.getGroupId(),
+        RemoveUsersFromGroupResponse removalResponse = groupService.removeMembersFromGroup(simpleGroup.getGroupId(),
                 RemoveUsersFromGroupRequest.builder()
                         .userIds(new ArrayList<>(List.of(memberUser.getUuid())))
                         .build());
+        assertThat(removalResponse.getRemovedCount()).isEqualTo(1);
+        assertThat(removalResponse.getRemovedUserIds()).containsExactly(memberUser.getUuid());
 
         savedGroup = groupRepository.findById(simpleGroup.getGroupId()).orElseThrow();
         assertThat(savedGroup.getUsers()).extracting(UserEntity::getUuid).containsExactly(extraUser.getUuid());
 
         List<SimpleUserDTO> managers = groupService.getGroupManagers(simpleGroup.getGroupId());
         assertThat(managers).extracting(SimpleUserDTO::uuid).containsExactly(managerUser.getUuid());
+
+        AddManagersResponse addManagersResponse = groupService.addManagersToGroup(simpleGroup.getGroupId(),
+                GroupManagerRequest.builder().managerIds(Set.of(extraUser.getUuid())).build());
+        assertThat(addManagersResponse.getAddedManagerIds()).containsExactly(extraUser.getUuid());
+
+        RemoveManagersResponse removeManagersResponse = groupService.removeManagersFromGroup(simpleGroup.getGroupId(),
+                GroupManagerRequest.builder().managerIds(Set.of(extraUser.getUuid())).build());
+        assertThat(removeManagersResponse.getRemovedManagerIds()).containsExactly(extraUser.getUuid());
 
         List<com.anastasia.Anastasia_BackEnd.model.group.GroupUserCandidateDTO> userStatus =
                 groupService.getGroupUserStatus(simpleGroup.getGroupId());
@@ -122,6 +136,7 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
                 .build();
         var inviteResponse = groupService.batchInviteUsersToGroup(simpleGroup.getGroupId(), inviteRequest);
         assertThat(inviteResponse.getInvitedCount()).isEqualTo(1);
+        assertThat(inviteResponse.getInvitedUserIds()).containsExactly(qrUser.getUuid());
 
         // ---- Event lifecycle ----
         EventEntity event = EventEntity.builder()

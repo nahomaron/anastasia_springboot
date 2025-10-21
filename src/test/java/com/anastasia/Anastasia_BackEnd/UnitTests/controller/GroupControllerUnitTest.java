@@ -1,15 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
 
 import com.anastasia.Anastasia_BackEnd.controller.GroupController;
-import com.anastasia.Anastasia_BackEnd.model.group.AddUsersToGroupRequest;
-import com.anastasia.Anastasia_BackEnd.model.group.AddUsersToGroupResponse;
-import com.anastasia.Anastasia_BackEnd.model.group.BatchInviteRequest;
-import com.anastasia.Anastasia_BackEnd.model.group.BatchInviteResponse;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupUserCandidateDTO;
-import com.anastasia.Anastasia_BackEnd.model.group.RemoveUsersFromGroupRequest;
-import com.anastasia.Anastasia_BackEnd.model.group.SimpleGroupEntity;
+import com.anastasia.Anastasia_BackEnd.model.group.*;
 import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
@@ -73,11 +65,13 @@ class GroupControllerUnitTest {
 
     @Test
     void createGroup_shouldReturnCreated() {
-        when(groupService.createGroup(groupDTO)).thenReturn(SimpleGroupEntity.builder().build());
+        SimpleGroupEntity expected = SimpleGroupEntity.builder().groupId(10L).groupName("Choir").build();
+        when(groupService.createGroup(groupDTO)).thenReturn(expected);
 
         ResponseEntity<SimpleGroupEntity> response = groupController.createGroup(groupDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isEqualTo(expected);
         verify(groupService).createGroup(groupDTO);
     }
 
@@ -152,7 +146,15 @@ class GroupControllerUnitTest {
     @Test
     void addUsersToGroup_shouldDelegateToService() {
         AddUsersToGroupRequest request = AddUsersToGroupRequest.builder().userIds(Set.of(UUID.randomUUID())).build();
-        AddUsersToGroupResponse expected = new AddUsersToGroupResponse("Choir", 1);
+        AddUsersToGroupResponse expected = AddUsersToGroupResponse.builder()
+                .groupName("Choir")
+                .addedCount(1)
+                .skippedCount(0)
+                .notFoundCount(0)
+                .addedUserIds(List.of(UUID.randomUUID()))
+                .skippedUserIds(List.of())
+                .notFoundUserIds(List.of())
+                .build();
         when(groupService.addUsersToGroup(5L, request)).thenReturn(expected);
 
         ResponseEntity<AddUsersToGroupResponse> response = groupController.addUsersToGroup(5L, request);
@@ -205,13 +207,22 @@ class GroupControllerUnitTest {
     }
 
     @Test
-    void removeMembersFromGroup_shouldReturnServiceMessage() {
+    void removeMembersFromGroup_shouldReturnResponse() {
         RemoveUsersFromGroupRequest request = RemoveUsersFromGroupRequest.builder().userIds(List.of(UUID.randomUUID())).build();
-        when(groupService.removeMembersFromGroup(5L, request)).thenReturn("Removed");
+        RemoveUsersFromGroupResponse expected = RemoveUsersFromGroupResponse.builder()
+                .groupName("Choir")
+                .removedCount(1)
+                .notInGroupCount(0)
+                .notFoundCount(0)
+                .removedUserIds(List.of(UUID.randomUUID()))
+                .notInGroupUserIds(List.of())
+                .notFoundUserIds(List.of())
+                .build();
+        when(groupService.removeMembersFromGroup(5L, request)).thenReturn(expected);
 
-        ResponseEntity<String> response = groupController.removeMembersFromGroup(5L, request);
+        ResponseEntity<RemoveUsersFromGroupResponse> response = groupController.removeMembersFromGroup(5L, request);
 
-        assertThat(response.getBody()).isEqualTo("Removed");
+        assertThat(response.getBody()).isEqualTo(expected);
     }
 
     @Test
@@ -236,12 +247,60 @@ class GroupControllerUnitTest {
     @Test
     void batchInviteUsersToGroup_shouldReturnCreatedResponse() {
         BatchInviteRequest request = BatchInviteRequest.builder().groupEmails(Set.of("a@example.com")).build();
-        BatchInviteResponse expected = new BatchInviteResponse("Choir", 1);
+        BatchInviteResponse expected = BatchInviteResponse.builder()
+                .groupName("Choir")
+                .invitedCount(1)
+                .skippedCount(0)
+                .notFoundCount(0)
+                .invitedUserIds(List.of(UUID.randomUUID()))
+                .skippedEmails(List.of())
+                .notFoundEmails(List.of())
+                .build();
         when(groupService.batchInviteUsersToGroup(5L, request)).thenReturn(expected);
 
         ResponseEntity<BatchInviteResponse> response = groupController.batchInviteUsersToGroup(5L, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isEqualTo(expected);
+    }
+
+    @Test
+    void addManagersToGroup_shouldReturnResponse() {
+        GroupManagerRequest request = GroupManagerRequest.builder().managerIds(Set.of(UUID.randomUUID())).build();
+        AddManagersResponse expected = AddManagersResponse.builder()
+                .groupName("Choir")
+                .addedCount(1)
+                .skippedCount(0)
+                .notFoundCount(0)
+                .addedManagerIds(List.of(UUID.randomUUID()))
+                .skippedManagerIds(List.of())
+                .notFoundManagerIds(List.of())
+                .build();
+        when(groupService.addManagersToGroup(5L, request)).thenReturn(expected);
+
+        ResponseEntity<AddManagersResponse> response = groupController.addManagersToGroup(5L, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expected);
+    }
+
+    @Test
+    void removeManagersFromGroup_shouldReturnResponse() {
+        GroupManagerRequest request = GroupManagerRequest.builder().managerIds(Set.of(UUID.randomUUID())).build();
+        RemoveManagersResponse expected = RemoveManagersResponse.builder()
+                .groupName("Choir")
+                .removedCount(1)
+                .notManagersCount(0)
+                .notFoundCount(0)
+                .removedManagerIds(List.of(UUID.randomUUID()))
+                .notManagerIds(List.of())
+                .notFoundManagerIds(List.of())
+                .build();
+        when(groupService.removeManagersFromGroup(5L, request)).thenReturn(expected);
+
+        ResponseEntity<RemoveManagersResponse> response = groupController.removeManagersFromGroup(5L, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expected);
     }
 }
