@@ -13,6 +13,8 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.restassured.RestAssured.given;
 
@@ -21,6 +23,7 @@ public final class SubscriptionFlowHelper {
     private static final TenantService tenantService = new TenantService();
     private static final AuthService authService = new AuthService();
     private static final JwtUtil jwtUtil = new JwtUtil();
+    private static final Map<String, TenantDTO> tenantCache = new ConcurrentHashMap<>();
 
     private SubscriptionFlowHelper() {
         // utility
@@ -31,6 +34,12 @@ public final class SubscriptionFlowHelper {
     }
 
     public static SubscriptionResult subscribeTenantAndLoginOwner(TenantDTO tenantRequest) {
+
+        SubscriptionResult existingTenant = findExistingTenant(tenantRequest);
+        if (existingTenant != null) {
+            return existingTenant;
+        }
+
         // 1 Subscribe tenant
         Response subscriptionResponse = tenantService.subscribeTenant(tenantRequest);
         Assertions.assertEquals(201, subscriptionResponse.statusCode(),
@@ -56,18 +65,8 @@ public final class SubscriptionFlowHelper {
                 "Account activation failed: " + activationResponse.asString());
 
         // 5 Login as OWNER
-        AuthenticationRequest loginRequest =
-                new AuthenticationRequest(tenantRequest.getEmail(), tenantRequest.getPassword());
-        AuthenticationResponse authentication = authService.loginAndExtractToken(loginRequest);
-
-        Assertions.assertNotNull(authentication, "Authentication response must not be null");
-        Assertions.assertNotNull(authentication.getAccessToken(), "Access token must not be null");
-        Assertions.assertNotNull(authentication.getRefreshToken(), "Refresh token must not be null");
-
-        List<String> roles = jwtUtil.extractRoles(authentication.getAccessToken());
-        Assertions.assertTrue(roles.contains("ROLE_OWNER"),
-                "Expected ROLE_OWNER but received roles: " + roles);
-
+        AuthenticationResponse authentication = authenticateOwner(tenantRequest);
+        cacheTenant(tenantRequest);
         return new SubscriptionResult(tenantRequest, authentication);
     }
 
@@ -123,6 +122,59 @@ public final class SubscriptionFlowHelper {
             return value.trim();
         }
         return fallback;
+    }
+
+    private static SubscriptionResult findExistingTenant(TenantDTO incomingTenant) {
+        if (incomingTenant == null || !hasText(incomingTenant.getPhoneNumber())) {
+            return null;
+        }
+
+        TenantDTO cachedTenant = tenantCache.get(incomingTenant.getPhoneNumber());
+        if (cachedTenant == null) {
+            return null;
+        }
+
+        AuthenticationResponse authentication = authenticateOwner(cachedTenant);
+        return new SubscriptionResult(cachedTenant, authentication);
+    }
+
+    private static AuthenticationResponse authenticateOwner(TenantDTO tenant) {
+        Assertions.assertNotNull(tenant, "Tenant details are required for authentication");
+        AuthenticationRequest loginRequest =
+                new AuthenticationRequest(tenant.getEmail(), tenant.getPassword());
+        AuthenticationResponse authentication = authService.loginAndExtractToken(loginRequest);
+
+        Assertions.assertNotNull(authentication, "Authentication response must not be null");
+        Assertions.assertNotNull(authentication.getAccessToken(), "Access token must not be null");
+        Assertions.assertNotNull(authentication.getRefreshToken(), "Refresh token must not be null");
+
+        List<String> roles = jwtUtil.extractRoles(authentication.getAccessToken());
+        Assertions.assertTrue(roles.contains("ROLE_OWNER"),
+                "Expected ROLE_OWNER but received roles: " + roles);
+
+        return authentication;
+    }
+
+    private static void cacheTenant(TenantDTO tenant) {
+        if (tenant == null || !hasText(tenant.getPhoneNumber())) {
+            return;
+        }
+        tenantCache.put(tenant.getPhoneNumber(), copyOf(tenant));
+    }
+
+    private static TenantDTO copyOf(TenantDTO source) {
+        if (source == null) {
+            return null;
+        }
+        return TenantDTO.builder()
+                .tenantType(source.getTenantType())
+                .subscriptionPlan(source.getSubscriptionPlan())
+                .ownerName(source.getOwnerName())
+                .email(source.getEmail())
+                .phoneNumber(source.getPhoneNumber())
+                .password(source.getPassword())
+                .confirmPassword(source.getConfirmPassword())
+                .build();
     }
 
     public record SubscriptionResult(TenantDTO tenantRequest, AuthenticationResponse authResponse) {

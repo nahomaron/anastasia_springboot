@@ -31,21 +31,21 @@ class AvatarPositiveTests extends BaseApiTest {
     @Story("User uploads and retrieves avatar successfully")
     void shouldGeneratePresignedUrlAndPersistAvatar() {
         String email = BaseApiTest.getCachedEmail();
-        var userId = UserLookupHelper.findUserIdByEmail(email);
-        Assumptions.assumeTrue(userId.isPresent(), "User id available for " + email);
+        UUID userId = BaseApiTest.getCachedUserId();
+
 
         Response urlResponse = avatarService.requestPresignedUrl(RequestSpecFactory.authenticatedSpec(), "profile.png");
         assertThat(urlResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(urlResponse, "schemas/avatar-presigned-url-schema.json");
 
         AvatarDTO payload = AvatarDataFactory.newValidAvatar();
-        UUID uuid = userId.get();
 
-        Response saveResponse = avatarService.saveAvatar(RequestSpecFactory.authenticatedSpec(), "USER", uuid, payload);
+
+        Response saveResponse = avatarService.saveAvatar(RequestSpecFactory.authenticatedSpec(), "USER", userId, payload);
         assertThat(saveResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(saveResponse, "schemas/avatar-schema.json");
 
-        Response fetchResponse = avatarService.getAvatar(RequestSpecFactory.authenticatedSpec(), "USER", uuid);
+        Response fetchResponse = avatarService.getAvatar(RequestSpecFactory.authenticatedSpec(), "USER", userId);
         assertThat(fetchResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(fetchResponse, "schemas/avatar-schema.json");
     }

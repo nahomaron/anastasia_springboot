@@ -28,14 +28,13 @@ class AvatarSecurityTests extends BaseApiTest {
 
     @Test
     void savingAvatarWithoutTokenShouldReturnForbidden() {
-        var userId = UserLookupHelper.findUserIdByEmail(BaseApiTest.getCachedEmail());
-        Assumptions.assumeTrue(userId.isPresent(), "User id available");
+        UUID userId = BaseApiTest.getCachedUserId();
 
         var response = given()
                 .contentType(ContentType.JSON)
                 .body(AvatarDataFactory.newValidAvatar())
                 .when()
-                .post("/avatars/USER/" + userId.orElse(UUID.randomUUID()))
+                .post("/avatars/USER/" + userId)
                 .then()
                 .extract()
                 .response();

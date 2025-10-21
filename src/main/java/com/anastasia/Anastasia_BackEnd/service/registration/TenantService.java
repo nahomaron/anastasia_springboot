@@ -25,11 +25,14 @@ public interface TenantService {
 
     Optional<TenantEntity> findTenantById(UUID tenantId);
 
+    Optional<TenantEntity> findTenantByPhoneNumber(String phone);
+
     void unsubscribeTenant(UUID tenantId);
 
     void updateTenant(UUID tenantId, @Valid TenantDTO tenantDTO);
 
     boolean verifyTenantPhone(String phone, String otp);
+
 
 //    void checkAndActivateTenant(TenantEntity tenant);
 }

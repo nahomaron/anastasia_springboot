@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface TenantRepository extends JpaRepository<TenantEntity, UUID> {
 
     Optional<TenantEntity> findByPhoneNumber(String phone);
+
+    boolean existsByPhoneNumber(String phoneNumber);
 }

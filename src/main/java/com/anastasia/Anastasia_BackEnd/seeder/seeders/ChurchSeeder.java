@@ -71,7 +71,7 @@ public class ChurchSeeder {
                 tenantRepository.save(tenant);
             }
 
-            logger.info("Seeded {} fake churches", churches.size());
+//            logger.info("Seeded {} fake churches", churches.size());
             return churches;
         }
 

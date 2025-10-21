@@ -35,8 +35,8 @@ public class Role {
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
-
-    private Set<Permission> permissions;
+    @Builder.Default
+    private Set<Permission> permissions = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "tenant_id")
@@ -44,4 +44,8 @@ public class Role {
 
     @Column(name = "tenant_id", insertable = false, updatable = false)
     private UUID tenantId;
+
+    public void setPermissions(Set<Permission> permissions) {
+        this.permissions = permissions == null ? new HashSet<>() : new HashSet<>(permissions);
+    }
 }

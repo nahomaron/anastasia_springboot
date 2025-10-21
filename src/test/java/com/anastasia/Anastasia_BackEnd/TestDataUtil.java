@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd;
 
+import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
 import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
@@ -25,9 +26,11 @@ import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,7 +43,7 @@ public class TestDataUtil {
     public static UserEntity createTestUserEntityA(){
         return UserEntity.builder()
                 .fullName("Gebray weldu")
-                .email("gebray@gmail.com")
+                .email(uniqueEmail("gebray", "gmail.com"))
                 .password(TEST_PASSWORD)
                 .build();
     }
@@ -48,15 +51,15 @@ public class TestDataUtil {
     public static UserDTO createTestUserDTO(){
         return UserDTO.builder()
                 .fullName("Gebray weldu")
-                .email("gebray@gmail.com")
+                .email(uniqueEmail("gebray", "gmail.com"))
                 .password(TEST_PASSWORD)
                 .confirmPassword(TEST_PASSWORD)
                 .build();
     }
 
-    public static AuthenticationRequest createTestAuthenticationRequest() {
+    public static AuthenticationRequest createTestAuthenticationRequest(String email) {
         return AuthenticationRequest.builder()
-                .email("gebray@gmail.com")
+                .email(email)
                 .password(TEST_PASSWORD)
                 .build();
     }
@@ -64,7 +67,7 @@ public class TestDataUtil {
     public static GroupDTO createTestGroupDTO(String churchId){
         return GroupDTO.builder()
                 .churchId(churchId)
-                .groupName("Integration Test Group")
+                .groupName("Integration Test Group " + uniqueSuffix())
                 .description("Integration description")
                 .visibility("public")
                 .users(Collections.emptySet())
@@ -75,28 +78,28 @@ public class TestDataUtil {
     public static ChurchEntity createTestChurchEntity(TenantEntity tenant) {
         return ChurchEntity.builder()
                 .churchName("St. Michael Church")
-                .churchNumber("M123")
+                .churchNumber("M" + uniqueSuffix())
                 .tenant(tenant)
-                .email("stmichael@church.org")
+                .email("stmichael+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
-                .facebookPage("facebook.com/stmichael")
+                .facebookPage("facebook.com/stmichael/" + uniqueSuffix())
                 .build();
     }
 
     public static ChurchDTO createTestChurchDTO() {
         return ChurchDTO.builder()
                 .churchName("St. Michael Church")
-                .email("stgebriel@church.org")
+                .email("stgebriel+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
-                .facebookPage("facebook.com/stmichael")
+                .facebookPage("facebook.com/stmichael/" + uniqueSuffix())
                 .build();
     }
     public static ChurchDTO createTestChurchDTO_B() {
         return ChurchDTO.builder()
                 .churchName("St. Mary Church")
-                .email("stmary@church.org")
+                .email("stmary+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
-                .facebookPage("facebook.com/st.mary")
+                .facebookPage("facebook.com/st.mary/" + uniqueSuffix())
                 .build();
     }
 
@@ -106,7 +109,7 @@ public class TestDataUtil {
 //                .groupId(1L)
                 .tenantId(tenantId)
                 .church(church)
-                .groupName("Integration Test Group")
+                .groupName("Integration Test Group " + uniqueSuffix())
                 .description("Integration description")
                 .visibility("public")
                 .users(Collections.emptySet())
@@ -129,11 +132,11 @@ public class TestDataUtil {
         return TenantDTO.builder()
                 .tenantType(TenantType.CHURCH) // or PRIEST
                 .ownerName("St. Mary Church")
-                .phoneNumber("+1555000111")
+                .phoneNumber("+1555" + randomDigits(7))
                 .subscriptionPlan(SubscriptionPlan.PREMIUM) // or BASIC, PRO, etc.
                 .password(TEST_PASSWORD)
                 .confirmPassword(TEST_PASSWORD)
-                .email("welday@gmail.com")
+                .email(uniqueEmail("tenant.owner", "example.com"))
                 .build();
     }
 
@@ -151,7 +154,7 @@ public class TestDataUtil {
 
     public static MemberEntity createTestMember(ChurchEntity church) {
         return MemberEntity.builder()
-                .membershipNumber("MBR-001")
+                .membershipNumber("MBR-" + uniqueSuffix())
                 .church(church)
                 .churchNumber(church.getChurchNumber())
                 .status("ACTIVE")
@@ -173,7 +176,7 @@ public class TestDataUtil {
                 .phone("+1234567890")
                 .maritalStatus("Single")
                 .fatherOfConfession("Abba Abraham")
-                .email("gebray@gmail.com")
+                .email(uniqueEmail("gebray.member", "gmail.com"))
                 .nationality("Eritrean")
                 .placeOfBirth("Asmara")
                 .whatsApp("+1234567890")
@@ -204,10 +207,13 @@ public class TestDataUtil {
                 .motherFullNameT("ሩት ዮሓንስ")
                 .gender("Male")
                 .birthday(LocalDate.of(1990, Month.DECEMBER, 3))
+                .avatar(AvatarDTO.builder()
+                        .imageUrl("https://example.com/avatars/" + uniqueSuffix() + ".jpg")
+                        .build())
                 .phone("+1234567890")
                 .maritalStatus("Single")
                 .fatherOfConfession("Abba Abraham")
-                .email("gebray@gmail.com")
+                .email(uniqueEmail("gebray.member", "gmail.com"))
                 .nationality("Eritrean")
                 .placeOfBirth("Asmara")
                 .whatsApp("+1234567890")
@@ -224,7 +230,7 @@ public class TestDataUtil {
 
     public static ChildEntity createTestChild(ChurchEntity church) {
         return ChildEntity.builder()
-                .membershipNumber("CHD-001")
+                .membershipNumber("CHD-" + uniqueSuffix())
                 .church(church)
                 .churchNumber(church.getChurchNumber())
                 .status("ACTIVE")
@@ -243,7 +249,7 @@ public class TestDataUtil {
                 .birthday(LocalDate.of(2015, Month.MARCH, 15))
                 .nationality("Eritrean")
                 .placeOfBirth("Keren")
-                .email("yonas.child@gmail.com")
+                .email(uniqueEmail("yonas.child", "gmail.com"))
                 .phone("+1234500012")
                 .whatsApp("+1234500012")
                 .emergencyContactNumber("+1987612345")
@@ -280,7 +286,7 @@ public class TestDataUtil {
                 .birthday(LocalDate.of(2015, Month.MARCH, 15))
                 .nationality("Eritrean")
                 .placeOfBirth("Keren")
-                .email("yonas.child@gmail.com")
+                .email(uniqueEmail("yonas.child", "gmail.com"))
                 .phone("+1234500012")
                 .whatsApp("+1234500012")
                 .emergencyContactNumber("+1987612345")
@@ -308,10 +314,10 @@ public class TestDataUtil {
                 .firstName("Dawit")
                 .fatherName("Tekle")
                 .grandFatherName("Berhane")
-                .phoneNumber("+251911223344")
+                .phoneNumber(uniquePhoneNumber("+2519"))
                 .personalEmail("abba.dawit" + UUID.randomUUID() + "@mail.com")
                 .churchEmail("church.contact@mail.com")
-                .priesthoodCardId("PR-2025-XYZ")
+                .priesthoodCardId("PR-2025-XYZ" + uniqueSuffix())
                 .priesthoodCardScan("https://example.com/card-scan.png")
                 .birthdate("1990-04-15")
                 .languages(Set.of("Tigrigna", "Amharic", "English"))
@@ -337,10 +343,10 @@ public class TestDataUtil {
                 .firstName("Michael")
                 .fatherName("Abraham")
                 .grandFatherName("Hagos")
-                .phoneNumber("+251911778899")
-                .personalEmail("keshi.michael@example.com")
+                .phoneNumber(uniquePhoneNumber("+2519"))
+                .personalEmail("keshi.michael" + UUID.randomUUID() + "@mail.com")
                 .churchEmail("michael.church@church.org")
-                .priesthoodCardId("PRT-1002")
+                .priesthoodCardId("PRT-1002" + uniqueSuffix())
                 .priesthoodCardScan("https://example.com/docs/priest_card_b.pdf")
                 .birthdate("1972-04-18")
                 .languages(Set.of("Amharic", "English"))
@@ -370,9 +376,9 @@ public class TestDataUtil {
                 .firstName("Yohannes")
                 .fatherName("Tesfay")
                 .grandFatherName("Kifle")
-                .phoneNumber("+251911334455")
+                .phoneNumber(uniquePhoneNumber("+2519"))
                 .churchEmail("abba.yohannes@church.org")
-                .priesthoodCardId("PCID-2025-003")
+                .priesthoodCardId("PCID-2025-003" + uniqueSuffix())
                 .priesthoodCardScan("https://example.com/scans/priest_card.png")
                 .birthdate("1985-08-25")
                 .languages(Set.of("Geez", "Tigrigna", "English"))
@@ -414,11 +420,31 @@ public class TestDataUtil {
         // Prepare user with role assigned (not saved!)
         return UserEntity.builder()
                 .fullName("Test User")
-                .email("gebray@gmail.com")
+                .email(uniqueEmail("gebray.user", "gmail.com"))
                 .password(TEST_PASSWORD)
-                .roles(Set.of(savedRole))
+                .roles(new HashSet<>(Set.of(savedRole)))
                 .build();
     }
 
+    private static final SecureRandom RANDOM = new SecureRandom();
 
+    private static String uniqueSuffix() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+    }
+
+    private static String uniqueEmail(String prefix, String domain) {
+        return prefix + "." + uniqueSuffix() + "@" + domain;
+    }
+
+    private static String uniquePhoneNumber(String prefix) {
+        return prefix + randomDigits(8);
+    }
+
+    private static String randomDigits(int length) {
+        StringBuilder builder = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            builder.append(RANDOM.nextInt(10));
+        }
+        return builder.toString();
+    }
 }

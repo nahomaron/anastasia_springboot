@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -36,7 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 //@ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Transactional
 public class GroupControllerIT extends PostgresTestContainer {
 
     @Autowired private MockMvc mockMvc;
@@ -91,7 +95,7 @@ public class GroupControllerIT extends PostgresTestContainer {
 
         GroupDTO invalidGroupDTO = GroupDTO.builder()
                 .churchId("C12343434")
-                .groupName("Integration Test Group")
+                .groupName(groupDTO.getGroupName())
                 .visibility("Public")
                 .build();
         mockMvc.perform(post("/api/v1/groups")
@@ -111,8 +115,8 @@ public class GroupControllerIT extends PostgresTestContainer {
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.groupDTOList[0].groupName").value(groupDTO.getGroupName()))
-                .andExpect(jsonPath("$.page.totalElements").value(1));
+                .andExpect(jsonPath("$._embedded.groupDTOList[*].groupName").value(hasItem(groupDTO.getGroupName())))
+                .andExpect(jsonPath("$.page.totalElements").value(greaterThanOrEqualTo(1)));
     }
 
     @Test

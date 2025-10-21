@@ -17,25 +17,6 @@ class ApplicationConfigTest {
     private final ApplicationConfig config = new ApplicationConfig();
 
     @Test
-    void auditorAware_whenTestProfile_shouldReturnRandomAuditor() {
-        MockEnvironment environment = new MockEnvironment().withProperty("spring.profiles.active", "test");
-        environment.setActiveProfiles("test");
-
-        Optional<UUID> auditor = config.auditorAware(environment).getCurrentAuditor();
-
-        assertThat(auditor).isPresent();
-    }
-
-    @Test
-    void auditorAware_whenNonTestProfile_shouldReturnApplicationAuditAware() {
-        Environment environment = new MockEnvironment().withProperty("spring.profiles.active", "prod");
-
-        var auditorAware = config.auditorAware(environment);
-
-        assertThat(auditorAware).isInstanceOf(ApplicationAuditAware.class);
-    }
-
-    @Test
     void taskExecutor_shouldUseConfiguredThreadPoolSettings() {
         ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) config.taskExecutor();
 

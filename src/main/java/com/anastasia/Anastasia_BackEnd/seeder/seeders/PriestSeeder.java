@@ -1,16 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.model.common.Address;
 import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.model.priest.PriestStatus;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.registration.ChurchService;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchServiceImpl;
 import com.anastasia.Anastasia_BackEnd.service.registration.TenantServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +35,8 @@ public class PriestSeeder {
         if(priestRepository.count() == 0) {
             net.datafaker.Faker faker = new Faker();
             List<PriestEntity> priests = new ArrayList<>();
+            Set<String> generatedPriestNumbers = new HashSet<>();
+            Set<String> generatedPhoneNumbers = new HashSet<>();
 
             if (churches.isEmpty()) {
                 churches = churchService.getChurches();
@@ -73,8 +72,18 @@ public class PriestSeeder {
                 languages.add(faker.nation().language());
                 languages.add(faker.options().option("Amharic", "Tigrinya", "Oromo", "English"));
 
+                String priestNumber;
+                do {
+                    priestNumber = "P" + faker.number().numberBetween(10000, 99999);
+                } while (!generatedPriestNumbers.add(priestNumber));
+
+                String phoneNumber;
+                do {
+                    phoneNumber = "+2519" + faker.number().digits(8);
+                } while (!generatedPhoneNumbers.add(phoneNumber));
+
                 PriestEntity priest = PriestEntity.builder()
-                        .priestNumber("P" + faker.number().numberBetween(10000,99999 ))
+                        .priestNumber(priestNumber)
                         .user(savedUser)
                         .church(assignedChurch)
                         .churchNumber(assignedChurch.getChurchNumber())
@@ -85,7 +94,7 @@ public class PriestSeeder {
                         .firstName(faker.name().firstName())
                         .fatherName(faker.name().lastName())
                         .grandFatherName(faker.name().lastName())
-                        .phoneNumber("+2519" + faker.number().digits(8))
+                        .phoneNumber(phoneNumber)
                         .churchEmail(faker.internet().emailAddress("church"))
                         .priesthoodCardId(faker.idNumber().valid())
                         .priesthoodCardScan("scan_" + faker.file().fileName())
@@ -102,11 +111,10 @@ public class PriestSeeder {
 
 
             List<PriestEntity> savedPriests = priestRepository.saveAll(priests);
-            log.info("Seeded {}", savedPriests.size());
+//            log.info("Seeded {}", savedPriests.size());
 //            return savedPriests;
         }
 
 //        return Collections.emptyList();
     }
 }
-

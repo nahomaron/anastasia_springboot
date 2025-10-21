@@ -119,7 +119,7 @@ public class MemberSeeder {
             }
 
 //            memberRepository.saveAll(members);
-            logger.info("Seeded {} fake members", members.size());
+//            logger.info("Seeded {} fake members", members.size());
         }
     }
 

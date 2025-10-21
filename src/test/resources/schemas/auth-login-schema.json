@@ -2,8 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "AuthenticationResponse",
   "type": "object",
-  "required": ["access_token", "refresh_token"],
+  "required": ["user_id","access_token", "refresh_token"],
   "properties": {
+    "user_id": {
+      "minLength": 10
+    },
     "access_token": {
       "type": "string",
       "minLength": 10

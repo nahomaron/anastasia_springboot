@@ -15,15 +15,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -36,8 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Feature("Internal Layer")
 @SpringBootTest(classes = AnastasiaBackEndApplication.class)
 //@ExtendWith(SpringExtension.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
+@Transactional
 public class AuthControllerIT extends PostgresTestContainer {
 
 
@@ -47,14 +50,16 @@ public class AuthControllerIT extends PostgresTestContainer {
     @Autowired private final AuthService authService;
     @Autowired private TestDataSeeder testDataSeeder;
 
-    @Mock
+    @MockitoBean
     private RateLimiterConfig rateLimiterConfig;
 
-    public Bucket bucket;
+    @MockitoBean
+    private Bucket bucket;
 
 
     @BeforeEach
     void setUp() {
+        Mockito.reset(rateLimiterConfig);
         testDataSeeder.createAdminUser();
         testDataSeeder.createMember("Nahom");
         bucket = Bucket.builder()
@@ -148,7 +153,7 @@ public class AuthControllerIT extends PostgresTestContainer {
         );
 
 
-        AuthenticationRequest testAuth = TestDataUtil.createTestAuthenticationRequest();
+        AuthenticationRequest testAuth = TestDataUtil.createTestAuthenticationRequest(testUserDTOA.getEmail());
         String testAuthJson = objectMapper.writeValueAsString(testAuth);
 
         mockMvc.perform(

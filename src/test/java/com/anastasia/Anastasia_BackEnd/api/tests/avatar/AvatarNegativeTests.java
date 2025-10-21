@@ -35,14 +35,15 @@ class AvatarNegativeTests extends BaseApiTest {
     @Test
     @Story("Invalid owner type is rejected")
     void savingAvatarWithUnknownOwnerTypeShouldFail() {
-        var userId = UserLookupHelper.findUserIdByEmail(BaseApiTest.getCachedEmail());
-        Assumptions.assumeTrue(userId.isPresent(), "User id available");
+        var userId = BaseApiTest.getCachedUserId();
 
         Response response = avatarService.saveAvatar(
                 RequestSpecFactory.authenticatedSpec(),
                 "UNKNOWN",
-                userId.orElse(UUID.randomUUID()),
+                userId, // Use the extracted UUID directly
                 AvatarDataFactory.newValidAvatar());
+
+        // 3. Assert the result.
         assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
     }
 }

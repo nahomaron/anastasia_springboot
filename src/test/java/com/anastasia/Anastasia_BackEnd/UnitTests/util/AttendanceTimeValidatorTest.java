@@ -28,7 +28,7 @@ class AttendanceTimeValidatorTest {
         LocalTime now = LocalTime.now();
         EventEntity event = EventEntity.builder()
                 .date(LocalDate.now())
-                .startTime(now.plusMinutes(5))
+                .startTime(now.plusMinutes(10))
                 .endTime(now.plusMinutes(30))
                 .build();
 

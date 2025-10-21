@@ -32,7 +32,7 @@ public class RoleAndPermissionSeeder {
                 if (!permissionRepository.existsByName(perm)) {
                     Permission permission = new Permission(perm);
                     permissionRepository.save(permission);
-                    System.out.println("Permission " + perm.name() + " saved successfully.");
+//                    System.out.println("Permission " + perm.name() + " saved successfully.");
                 }
             }
         } catch (Exception e) {
@@ -45,27 +45,27 @@ public class RoleAndPermissionSeeder {
     public void seedDefaultRoles() {
         if (!roleRepository.existsByRoleName("USER")) {
             createRole(RoleType.USER);
-            System.out.println("USER role created");
+//            System.out.println("USER role created");
         }
 
         if (!roleRepository.existsByRoleName("OWNER")) {
             createRole(RoleType.OWNER);
-            System.out.println("OWNER role created");
+//            System.out.println("OWNER role created");
         }
 
         if (!roleRepository.existsByRoleName("ADMIN")) {
             createRole(RoleType.ADMIN);
-            System.out.println("ADMIN role created");
+//            System.out.println("ADMIN role created");
         }
 
         if (!roleRepository.existsByRoleName("PRIEST")) {
             createRole(RoleType.PRIEST);
-            System.out.println("PRIEST role created");
+//            System.out.println("PRIEST role created");
         }
 
         if (!roleRepository.existsByRoleName("PLATFORM_ADMIN")) {
             createRole(RoleType.PLATFORM_ADMIN);
-            System.out.println("PLATFORM_ADMIN role created");
+//            System.out.println("PLATFORM_ADMIN role created");
         }
 
 
@@ -84,7 +84,7 @@ public class RoleAndPermissionSeeder {
                     ? Set.of()
                     : permissionRepository.findByNameIn(permissionNames);
 
-            logger.info("Permissions {}", permissions);
+//            logger.info("Permissions {}", permissions);
 
             Role role = Role.builder()
                     .roleName(roleType.name())

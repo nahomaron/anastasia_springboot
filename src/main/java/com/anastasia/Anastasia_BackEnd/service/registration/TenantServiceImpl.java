@@ -15,11 +15,13 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -51,6 +53,17 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public void subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
 
+        // 1. ADD DUPLICATE PHONE NUMBER CHECK
+        if (tenantRepository.existsByPhoneNumber(tenantDTO.getPhoneNumber())) {
+            throw new DuplicateKeyException("Phone number already in use.");
+            // Or throw a more specific exception that your controller can handle and return a 409 Conflict.
+        }
+
+        // 2. Add Email Duplication check (Good Practice)
+        if (userRepository.existsByEmail(tenantDTO.getEmail())) {
+            throw new DuplicateKeyException("Email address already in use.");
+        }
+
         TenantEntity tenantEntity = TenantEntity.builder()
                 .tenantType(tenantDTO.getTenantType())
                 .ownerName(tenantDTO.getOwnerName())
@@ -69,7 +82,7 @@ public class TenantServiceImpl implements TenantService {
                 .email(tenantDTO.getEmail())
                 .password(tenantDTO.getPassword())
                 .tenant(savedTenant)
-                .roles(Set.of(ownerRole))
+                .roles(new HashSet<>(Set.of(ownerRole)))
                 .userType(UserType.TENANT)
                 .build();
 
@@ -118,6 +131,11 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public Optional<TenantEntity> findTenantById(UUID tenantId) {
         return tenantRepository.findById(tenantId);
+    }
+
+    @Override
+    public Optional<TenantEntity> findTenantByPhoneNumber(String phone) {
+        return tenantRepository.findByPhoneNumber(phone);
     }
 
     @Override

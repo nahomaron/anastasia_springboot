@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -52,7 +53,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @Feature("Internal Layer")
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Transactional
 class ChildControllerIT extends PostgresTestContainer {
 
     @Autowired private MockMvc mockMvc;
@@ -89,7 +91,8 @@ class ChildControllerIT extends PostgresTestContainer {
                 Set.of(
                         PermissionType.VIEW_CHILDREN,
                         PermissionType.EDIT_CHILDREN,
-                        PermissionType.DELETE_CHILDREN
+                        PermissionType.DELETE_CHILDREN,
+                        PermissionType.ADD_MEMBERS
                 ),
                 tenant,
                 roleRepository,
@@ -115,7 +118,9 @@ class ChildControllerIT extends PostgresTestContainer {
         assertNotNull(token);
         authService.activateAccount(token);
 
-        AuthenticationResponse authResponse = authService.authenticate(TestDataUtil.createTestAuthenticationRequest());
+        AuthenticationResponse authResponse = authService.authenticate(
+                TestDataUtil.createTestAuthenticationRequest(user.getEmail())
+        );
         jwtToken = authResponse.getAccessToken();
 
         childDTO = TestDataUtil.createTestChildDTO(church);

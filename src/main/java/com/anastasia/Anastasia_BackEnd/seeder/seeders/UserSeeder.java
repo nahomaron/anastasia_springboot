@@ -41,7 +41,7 @@ public class UserSeeder {
             }
 
             List<UserEntity> savedUsers = userRepository.saveAll(users);
-            logger.info("Seeded {} fake users", savedUsers.size());
+//            logger.info("Seeded {} fake users", savedUsers.size());
             return savedUsers;
         }
 

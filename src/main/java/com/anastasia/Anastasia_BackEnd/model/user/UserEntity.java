@@ -101,6 +101,10 @@ public class UserEntity{
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
 
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles == null ? new HashSet<>() : new HashSet<>(roles);
+    }
+
     public void assignMembership(MemberEntity membership){
         this.setMembership(membership);
         membership.setUser(this);

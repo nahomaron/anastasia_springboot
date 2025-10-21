@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import jakarta.transaction.Transactional;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -10,8 +11,9 @@ import org.springframework.test.annotation.DirtiesContext;
 @Epic("Integration Tests")
 @Feature("Internal Layer")
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
+@Transactional
 public class EventControllerIT extends PostgresTestContainer {
     // This class is used for integration tests of the EventController.
     // It will contain test methods that interact with the EventController

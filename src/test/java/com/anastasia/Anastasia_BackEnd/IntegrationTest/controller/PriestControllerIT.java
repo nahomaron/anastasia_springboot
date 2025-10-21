@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Feature("Internal Layer")
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Transactional
 class PriestControllerIT extends PostgresTestContainer {
 
     @Autowired private MockMvc mockMvc;
@@ -87,20 +89,20 @@ class PriestControllerIT extends PostgresTestContainer {
         PriestDTO priestDTO = TestDataUtil.createTestPriestDTO(church.getChurchNumber());
         priestService.registerPriest(priestDTO);
 
-        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
-
         verify(emailService).sendEmail(
                 eq(priestDTO.getPersonalEmail()),
-                nameCaptor.capture(),
+                eq("Account Activation for Anastasia"),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
                 templatePropertiesCaptor.capture()
         );
 
-        assertEquals(priestDTO.getFirstName() + " " + priestDTO.getFatherName() + " " + priestDTO.getGrandFatherName(), nameCaptor.getValue());
-
         Map<String, Object> capturedProperties = templatePropertiesCaptor.getValue();
         assertNotNull(capturedProperties);
         assertNotNull(capturedProperties.get("username"));
+        assertEquals(
+                priestDTO.getFirstName() + " " + priestDTO.getFatherName() + " " + priestDTO.getGrandFatherName(),
+                capturedProperties.get("username")
+        );
         assertNotNull(capturedProperties.get("confirmation_url"));
         String token = (String) capturedProperties.get("activation_code"); // Extract the token
         assertNotNull(token);

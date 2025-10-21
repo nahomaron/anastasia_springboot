@@ -80,7 +80,7 @@ public class UserRepositoryUnitTest {
 
     @Test
     void testFindByEmail() {
-        Optional<UserEntity> found = userRepository.findByEmail("gebray@gmail.com");
+        Optional<UserEntity> found = userRepository.findByEmail(user.getEmail());
         assertThat(found).isPresent();
     }
 
@@ -96,14 +96,14 @@ public class UserRepositoryUnitTest {
 
     @Test
     void testExistsByEmail() {
-        assertThat(userRepository.existsByEmail("gebray@gmail.com")).isTrue();
+        assertThat(userRepository.existsByEmail(user.getEmail())).isTrue();
     }
 
     @Test
     void testFindUsersByGroupId() {
         Page<SimpleUserDTO> page = userRepository.findUsersByGroupId(group.getGroupId(), PageRequest.of(0, 10));
         assertThat(page).hasSize(1);
-        assertThat(page.getContent().get(0).email()).isEqualTo("gebray@gmail.com");
+        assertThat(page.getContent().getFirst().email()).isEqualTo(user.getEmail());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class UserRepositoryUnitTest {
     void testFindSimpleUsersByChurchId() {
         List<SimpleUserDTO> dtos = userRepository.findSimpleUsersByChurchId(church.getChurchId());
         assertThat(dtos).hasSize(1);
-        assertThat(dtos.get(0).email()).isEqualTo("gebray@gmail.com");
+        assertThat(dtos.getFirst().email()).isEqualTo(user.getEmail());
     }
 
 }

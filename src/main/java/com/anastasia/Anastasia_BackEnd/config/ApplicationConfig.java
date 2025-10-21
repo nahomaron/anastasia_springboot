@@ -7,6 +7,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -14,7 +15,10 @@ import java.util.concurrent.Executor;
 @Configuration
 public class ApplicationConfig {
 
+    private static final UUID TEST_AUDITOR_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
 //    @Bean
+//    @Profile({"prod", "dev", "test-server"})
 //    public AuditorAware<UUID> auditorAware(){
 //        return new ApplicationAuditAware();
 //    }
@@ -22,12 +26,9 @@ public class ApplicationConfig {
     @Bean
     public AuditorAware<UUID> auditorAware(Environment environment) {
         if (isTestProfile(environment)) {
-            // Test profile: return dummy auditor
-            return () -> Optional.of(UUID.randomUUID());
-        } else {
-            // Production: return actual implementation
-            return new ApplicationAuditAware();
+            return () -> Optional.of(TEST_AUDITOR_ID);
         }
+        return new ApplicationAuditAware();
     }
 
     @Bean(name = "taskExecutor")
@@ -43,11 +44,8 @@ public class ApplicationConfig {
 
 
     private boolean isTestProfile(Environment environment) {
-        for (String profile : environment.getActiveProfiles()) {
-            if (profile.equalsIgnoreCase("test")) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(environment.getActiveProfiles())
+                .map(String::toLowerCase)
+                .anyMatch(profile -> profile.contains("test"));
     }
 }

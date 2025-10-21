@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -72,7 +73,7 @@ public class PriestServiceImpl implements PriestService{
                     .fullName(priestDTO.getFirstName() + " " + priestDTO.getFatherName() + " " + priestDTO.getGrandFatherName())
                     .email(priestDTO.getPersonalEmail())
                     .password(passwordEncoder.encode(priestDTO.getPassword()))
-                    .roles(Set.of(priestRole))
+                    .roles(new HashSet<>(Set.of(priestRole)))
                     .userType(UserType.PRIEST)
                     .build();
 

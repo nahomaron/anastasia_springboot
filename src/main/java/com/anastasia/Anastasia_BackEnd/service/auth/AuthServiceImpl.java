@@ -126,6 +126,7 @@ public class AuthServiceImpl implements AuthService {
         saveUserToken(refreshToken, user, TokenType.REFRESH);
 
         return AuthenticationResponse.builder()
+                .userId(user.getUuid())
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .build();

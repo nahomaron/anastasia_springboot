@@ -39,6 +39,8 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,8 +85,8 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
     void groupAndEventServices_endToEndFlow() {
         // ---- Group lifecycle ----
         GroupDTO groupDTO = TestDataUtil.createTestGroupDTO(church.getChurchNumber());
-        groupDTO.setManagers(Set.of(managerUser.getUuid()));
-        groupDTO.setUsers(Set.of(memberUser.getUuid()));
+        groupDTO.setManagers(new HashSet<>(Set.of(managerUser.getUuid())));
+        groupDTO.setUsers(new HashSet<>(Set.of(memberUser.getUuid())));
 
         SimpleGroupEntity simpleGroup = groupService.createGroup(groupDTO);
         assertThat(simpleGroup.getGroupId()).isNotNull();
@@ -101,7 +103,9 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
         assertThat(membersPage.getContent()).extracting(SimpleUserDTO::uuid).contains(memberUser.getUuid(), extraUser.getUuid());
 
         groupService.removeMembersFromGroup(simpleGroup.getGroupId(),
-                RemoveUsersFromGroupRequest.builder().userIds(List.of(memberUser.getUuid())).build());
+                RemoveUsersFromGroupRequest.builder()
+                        .userIds(new ArrayList<>(List.of(memberUser.getUuid())))
+                        .build());
 
         savedGroup = groupRepository.findById(simpleGroup.getGroupId()).orElseThrow();
         assertThat(savedGroup.getUsers()).extracting(UserEntity::getUuid).containsExactly(extraUser.getUuid());
@@ -114,7 +118,7 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
         assertThat(userStatus).isNotNull();
 
         BatchInviteRequest inviteRequest = BatchInviteRequest.builder()
-                .groupEmails(Set.of(qrUser.getEmail()))
+                .groupEmails(new HashSet<>(Set.of(qrUser.getEmail())))
                 .build();
         var inviteResponse = groupService.batchInviteUsersToGroup(simpleGroup.getGroupId(), inviteRequest);
         assertThat(inviteResponse.getInvitedCount()).isEqualTo(1);

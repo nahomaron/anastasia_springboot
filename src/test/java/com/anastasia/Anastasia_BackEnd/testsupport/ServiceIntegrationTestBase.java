@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -108,7 +109,7 @@ public abstract class ServiceIntegrationTestBase {
                 .email(email)
                 .password(passwordEncoder.encode(TestDataUtil.TEST_PASSWORD))
                 .verified(true)
-                .roles(Set.of(role))
+                .roles(new HashSet<>(Set.of(role)))
                 .tenant(tenant)
                 .build();
         return userRepository.save(user);

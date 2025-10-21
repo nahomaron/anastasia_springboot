@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import jakarta.transaction.Transactional;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -29,7 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Feature("Internal Layer")
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Transactional
 public class TenantControllerIT extends PostgresTestContainer {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -42,7 +44,8 @@ public class TenantControllerIT extends PostgresTestContainer {
     @BeforeEach
     void setup() {
         tenantDTO = TestDataUtil.createTestTenantDTO();
-        savedTenant = tenantRepository.save(tenantService.convertTenantToEntity(tenantDTO));
+        TenantDTO existingTenantDTO = TestDataUtil.createTestTenantDTO();
+        savedTenant = tenantRepository.save(tenantService.convertTenantToEntity(existingTenantDTO));
     }
 
     @Test

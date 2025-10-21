@@ -44,7 +44,7 @@ public class TenantSeeder {
             }
 
             List<TenantEntity> savedTenants = tenantRepository.saveAll(tenants);
-            logger.info("Seeded {} fake tenants", savedTenants.size());
+//            logger.info("Seeded {} fake tenants", savedTenants.size());
             return savedTenants;
         }
         return Collections.emptyList();

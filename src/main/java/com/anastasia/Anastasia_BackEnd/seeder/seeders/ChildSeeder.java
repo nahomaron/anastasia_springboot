@@ -107,7 +107,7 @@ public class ChildSeeder {
             }
 
             childRepository.saveAll(children);
-            logger.info("Seeded {} fake members", children.size());
+//            logger.info("Seeded {} fake members", children.size());
         }
     }
 

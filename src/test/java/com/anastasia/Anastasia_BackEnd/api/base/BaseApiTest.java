@@ -75,6 +75,8 @@ public class BaseApiTest {
     protected static String cachedEmail;
     @Getter
     protected static String cachedPassword;
+    @Getter
+    protected static UUID cachedUserId;
 
     protected static Map<Long, AuthenticationResponse> tokenCache = new HashMap<>();
 
@@ -255,6 +257,7 @@ public class BaseApiTest {
                 .signUpAndActivateAndLogin(email, password);
 
         cachedAuth = loginResponse;
+        cachedUserId = loginResponse.getUserId();
         cachedAccessToken = loginResponse.getAccessToken();
         cachedRefreshToken = loginResponse.getRefreshToken();
 
