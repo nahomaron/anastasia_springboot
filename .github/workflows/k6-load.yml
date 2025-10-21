@@ -51,10 +51,10 @@ jobs:
       - name: > 
           Run K6 Performance Test: ${{ matrix.script }}
         run: |
-          mkdir -p performance/k6/results
+          mkdir -p performance/results
           k6 run performance/k6/scripts/${{ matrix.script }}-performance.js \
             -e BASE_URL=http://localhost:8080/api/v1 \
-            --summary-export=performance/k6/results/${{ matrix.script }}-summary.json
+            --summary-export=performance/results/${{ matrix.script }}-summary.json
         continue-on-error: false
 
       - name: 📤 Upload K6 results
@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: k6-summary-${{ matrix.script }}
-          path: performance/k6/results/${{ matrix.script }}-summary.json
+          path: performance/results/${{ matrix.script }}-summary.json
 
   # ------------------------------------------------------------
   # 2️⃣ Merge results and generate Allure dashboard
@@ -78,7 +78,7 @@ jobs:
       - name: 📦 Download all K6 summaries
         uses: actions/download-artifact@v4
         with:
-          path: performance/k6/results
+          path: performance/results
 
       - name: 🧩 Merge K6 summaries into Allure environment
         run: |

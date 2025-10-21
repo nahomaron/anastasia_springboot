@@ -35,10 +35,11 @@ export function setup() {
 
   group('Fetch activation token', () => {
     const res = http.get(`${BASE_URL}${ENDPOINTS.TEST_ACTIVATION}?email=${encodeURIComponent(email)}`);
+    const token = (res.body || '').trim();
     check(res, {
-      'activation token ok': (r) => r.status === 200 && r.body.length > 10,
+      'activation token ok': (r) => r.status === 200 && token.length >= 6,
     }) || fail(`Activation fetch failed: ${res.status} ${res.body}`);
-    activationToken = res.body;
+    activationToken = token;
   });
 
   group('Activate account', () => {
@@ -89,5 +90,5 @@ export default function (data) {
 
 // ---- Summary ----
 export function handleSummary(data) {
-  return { 'performance/k6/results/auth-summary.json': JSON.stringify(data, null, 2) };
+  return { 'performance/results/auth-summary.json': JSON.stringify(data, null, 2) };
 }

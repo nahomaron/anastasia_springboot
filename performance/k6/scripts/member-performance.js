@@ -46,5 +46,5 @@ export default function (data) {
 
 // ---- Summary ----
 export function handleSummary(data) {
-  return { 'performance/k6/results/member-summary.json': JSON.stringify(data, null, 2) };
+  return { 'performance/results/member-summary.json': JSON.stringify(data, null, 2) };
 }

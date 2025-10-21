@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
-import { BASE_URL, jsonHeaders, provisionOwnerAccount } from '../config/environment.js';
+import { BASE_URL, provisionOwnerAccount } from '../config/environment.js';
 import { getThresholds } from '../config/thresholds.js';
 
 // ---- Thresholds ----
@@ -12,7 +12,7 @@ export const options = {
 };
 
 // ---- Metrics ----
-const userFetchDuration = new Trend('user_fetch_duration');
+const userDashboardDuration = new Trend('user_dashboard_duration');
 const userErrorRate = new Rate('user_error_rate');
 
 // ---- Setup ----
@@ -28,14 +28,15 @@ export function setup() {
 // ---- Default ----
 export default function (data) {
   const start = Date.now();
-  const res = http.get(`${BASE_URL}/users/`, {
+  const res = http.get(`${BASE_URL}/users/dashboard`, {
     headers: { Authorization: `Bearer ${data.token}` },
   });
   const elapsed = Date.now() - start;
-  userFetchDuration.add(elapsed);
+  userDashboardDuration.add(elapsed);
 
   const ok = check(res, {
-    'fetch users 200': (r) => r.status === 200,
+    'dashboard 200': (r) => r.status === 200,
+    'dashboard body not empty': (r) => (r.body || '').length > 0,
   });
 
   userErrorRate.add(!ok);
@@ -46,5 +47,5 @@ export default function (data) {
 
 // ---- Summary ----
 export function handleSummary(data) {
-  return { 'performance/k6/results/user-summary.json': JSON.stringify(data, null, 2) };
+  return { 'performance/results/user-summary.json': JSON.stringify(data, null, 2) };
 }

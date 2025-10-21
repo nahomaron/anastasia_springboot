@@ -26,7 +26,7 @@ export const thresholds = {
   // User Management APIs
   users: {
     http_req_failed: ['rate<0.01'],
-    user_fetch_duration: ['p(95)<600'],      // tighter SLA for smaller payloads
+    user_dashboard_duration: ['p(95)<600'],      // tighter SLA for smaller payloads
   },
 
   // Default global thresholds (applied when not overridden)
