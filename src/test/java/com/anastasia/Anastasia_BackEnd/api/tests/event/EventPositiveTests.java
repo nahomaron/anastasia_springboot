@@ -53,4 +53,12 @@ class EventPositiveTests extends BaseApiTest {
         Response createResponse = eventService.createEvent(ownerSpec, eventPayload);
         assertThat(createResponse.statusCode()).isIn(200, 201);
     }
+
+    @Test
+    @Story("Owner lists visible events")
+    void ownerCanListVisibleEvents() {
+        RequestSpecification ownerSpec = getSpecForRole("OWNER");
+        Response response = eventService.listVisibleEvents(ownerSpec);
+        assertThat(response.statusCode()).isEqualTo(200);
+    }
 }

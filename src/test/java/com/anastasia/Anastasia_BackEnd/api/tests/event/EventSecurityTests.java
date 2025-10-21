@@ -47,4 +47,16 @@ class EventSecurityTests extends BaseApiTest {
 
         assertThat(response.statusCode()).isEqualTo(403);
     }
+
+    @Test
+    void anonymousCannotListVisibleEvents() {
+        var response = given()
+                .when()
+                .get("/events/visible")
+                .then()
+                .extract()
+                .response();
+
+        assertThat(response.statusCode()).isEqualTo(403);
+    }
 }

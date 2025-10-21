@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.model.event.*;
 import com.anastasia.Anastasia_BackEnd.model.event.attendance.*;
 import com.anastasia.Anastasia_BackEnd.model.event.requests.AssignEventManagerRequest;
 import com.anastasia.Anastasia_BackEnd.model.event.requests.EventManagerDTO;
+import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.service.event.EventAttendanceService;
 import com.anastasia.Anastasia_BackEnd.service.event.EventService;
 import com.anastasia.Anastasia_BackEnd.service.event.QrCheckInService;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +27,15 @@ public class EventController {
     private final EventService eventService;
     private final EventAttendanceService attendanceService;
     private final QrCheckInService qrCheckInService;
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENTS')")
+    @GetMapping("/visible")
+    public ResponseEntity<List<EventDTO>> getVisibleEventsForCurrentUser() {
+        UUID userId = resolveCurrentUserId();
+        List<EventDTO> events = eventService.getVisibleEventsForUser(userId);
+        return ResponseEntity.ok(events);
+    }
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS')")
@@ -135,4 +147,11 @@ public class EventController {
         return ResponseEntity.ok(attendanceService.getAttendanceByUserAndStatus(userId, status));
     }
 
+    private UUID resolveCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
+            return userPrincipal.getUserUuid();
+        }
+        throw new IllegalStateException("Unable to resolve the authenticated user");
+    }
 }

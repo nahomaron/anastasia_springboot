@@ -45,6 +45,22 @@ public class EventServiceImpl implements EventService{
     }
 
     @Override
+    public List<EventDTO> getVisibleEventsForUser(UUID userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID is required to resolve visible events");
+        }
+
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID not found in context while fetching visible events");
+        }
+
+        return eventRepository.findVisibleForUser(tenantId, userId).stream()
+                .map(eventMapper::eventEntityToDTO)
+                .toList();
+    }
+
+    @Override
     public void assignManagerToEvent(Long eventId, UUID userId, String role) {
 
         EventEntity event = eventRepository.findById(eventId)

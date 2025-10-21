@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.event.EventManagerMapper;
 import com.anastasia.Anastasia_BackEnd.mappers.event.EventMapper;
+import com.anastasia.Anastasia_BackEnd.model.event.EventDTO;
 import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
 import com.anastasia.Anastasia_BackEnd.model.event.EventManagerEntity;
 import com.anastasia.Anastasia_BackEnd.model.event.requests.EventManagerDTO;
@@ -21,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -66,6 +68,37 @@ class EventServiceImplUnitTest {
     @AfterEach
     void tearDown() {
         TenantContext.clear();
+    }
+
+    @Test
+    void getVisibleEventsForUser_whenUserIdMissing_throwsException() {
+        assertThatThrownBy(() -> eventService.getVisibleEventsForUser(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User ID is required");
+    }
+
+    @Test
+    void getVisibleEventsForUser_whenTenantMissing_throwsException() {
+        TenantContext.clear();
+
+        assertThatThrownBy(() -> eventService.getVisibleEventsForUser(userId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Tenant ID not found");
+    }
+
+    @Test
+    void getVisibleEventsForUser_returnsMappedDtosFromRepository() {
+        EventEntity visibleEvent = EventEntity.builder().eventId(99L).build();
+        EventDTO visibleDto = EventDTO.builder().title("Visible").build();
+
+        when(eventRepository.findVisibleForUser(tenantId, userId)).thenReturn(List.of(visibleEvent));
+        when(eventMapper.eventEntityToDTO(visibleEvent)).thenReturn(visibleDto);
+
+        List<EventDTO> actual = eventService.getVisibleEventsForUser(userId);
+
+        assertThat(actual).containsExactly(visibleDto);
+        verify(eventRepository).findVisibleForUser(tenantId, userId);
+        verify(eventMapper).eventEntityToDTO(visibleEvent);
     }
 
     @Test

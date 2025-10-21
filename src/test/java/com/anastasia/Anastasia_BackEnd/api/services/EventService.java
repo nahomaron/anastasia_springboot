@@ -161,4 +161,18 @@ public class EventService {
                 .extract()
                 .response();
     }
+
+    public Response listVisibleEvents(RequestSpecification spec) {
+        return given()
+                .spec(spec)
+                .when()
+                .get(BASE_PATH + "/visible")
+                .then()
+                .extract()
+                .response();
+    }
+
+    public Response listVisibleEvents() {
+        return listVisibleEvents(RequestSpecFactory.authenticatedSpec());
+    }
 }

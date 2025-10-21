@@ -31,7 +31,8 @@ public interface EventService {
 
     EventEntity updateEvent(Long eventId, EventEntity event);
 
+    List<EventDTO> getVisibleEventsForUser(UUID userId);
+
     void deleteEvent(Long eventId);
 }
-
 

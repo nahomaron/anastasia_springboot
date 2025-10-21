@@ -38,4 +38,11 @@ class EventNegativeTests extends BaseApiTest {
         Response response = eventService.updateEvent(getSpecForRole("OWNER"), 9_999_999L, payload);
         assertThat(response.statusCode()).isIn(404, 400);
     }
+
+    @Test
+    @Story("User without permissions cannot fetch visible events")
+    void userRoleCannotListVisibleEvents() {
+        Response response = eventService.listVisibleEvents(getSpecForRole("USER"));
+        assertThat(response.statusCode()).isEqualTo(403);
+    }
 }
