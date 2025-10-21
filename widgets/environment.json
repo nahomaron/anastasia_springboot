@@ -1,16 +1,1 @@
-[ {
-  "values" : [ "http://localhost:8080" ],
-  "name" : "BaseURL"
-}, {
-  "values" : [ "Local Test" ],
-  "name" : "Environment"
-}, {
-  "values" : [ "2025-10-17T02:06:23.668569537" ],
-  "name" : "GeneratedAt"
-}, {
-  "values" : [ "test" ],
-  "name" : "Profile"
-}, {
-  "values" : [ "https://nahomaron.github.io/anastasia_springboot" ],
-  "name" : "URL"
-} ]
+[ ]
