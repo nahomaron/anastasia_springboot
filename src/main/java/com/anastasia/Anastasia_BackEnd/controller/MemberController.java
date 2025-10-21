@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -143,44 +144,48 @@ public class MemberController {
             @RequestParam(required = false) String levelOfEducation,
             @RequestBody(required = false) Address address
     ) {
-        Specification<MemberEntity> spec = Specification.where(null);
+        List<Specification<MemberEntity>> specs = new ArrayList<>();
 
         if (membershipNumber != null) {
-            spec = spec.and(MemberSpecifications.hasMembershipNumber(membershipNumber));
+            specs.add(MemberSpecifications.hasMembershipNumber(membershipNumber));
         }
         if (status != null && !status.isBlank()) {
-            spec = spec.and(MemberSpecifications.hasStatus(status));
+            specs.add(MemberSpecifications.hasStatus(status));
         }
         if (Boolean.TRUE.equals(deacon)) {
-            spec = spec.and(MemberSpecifications.isDeacon(true));
+            specs.add(MemberSpecifications.isDeacon(true));
         }
         if (name != null && !name.isBlank()) {
-            spec = spec.and(MemberSpecifications.nameContains(name));
+            specs.add(MemberSpecifications.nameContains(name));
         }
         if (motherName != null && !motherName.isBlank()) {
-            spec = spec.and(MemberSpecifications.motherNameContains(motherName));
+            specs.add(MemberSpecifications.motherNameContains(motherName));
         }
         if (gender != null && !gender.isBlank()) {
-            spec = spec.and(MemberSpecifications.hasGender(gender));
+            specs.add(MemberSpecifications.hasGender(gender));
         }
         if (minAge != null && maxAge >= minAge) {
-            spec = spec.and(MemberSpecifications.ageBetween(minAge, maxAge));
+            specs.add(MemberSpecifications.ageBetween(minAge, maxAge));
         }
         if (phone != null && !phone.isBlank()) {
-            spec = spec.and(MemberSpecifications.phoneContains(phone));
+            specs.add(MemberSpecifications.phoneContains(phone));
         }
         if (maritalStatus != null && !maritalStatus.isBlank()) {
-            spec = spec.and(MemberSpecifications.hasMaritalStatus(maritalStatus));
+            specs.add(MemberSpecifications.hasMaritalStatus(maritalStatus));
         }
         if (profession != null && !profession.isBlank()) {
-            spec = spec.and(MemberSpecifications.hasProfession(profession));
+            specs.add(MemberSpecifications.hasProfession(profession));
         }
         if (levelOfEducation != null && !levelOfEducation.isBlank()) {
-            spec = spec.and(MemberSpecifications.hasLevelOfEducation(levelOfEducation));
+            specs.add(MemberSpecifications.hasLevelOfEducation(levelOfEducation));
         }
         if (address != null) {
-            spec = spec.and(MemberSpecifications.filterByAddress(address));
+            specs.add(MemberSpecifications.filterByAddress(address));
         }
+
+        Specification<MemberEntity> spec = specs.stream()
+                .reduce(Specification::and)
+                .orElse(null);
 
 //        Sort sortOrder = Sort.by(Sort.Direction.fromString(sort[1]), sort[0]);
         Sort sortOrder = Sort.by("firstName").descending();

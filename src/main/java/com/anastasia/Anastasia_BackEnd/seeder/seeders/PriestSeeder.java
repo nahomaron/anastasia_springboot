@@ -57,7 +57,7 @@ public class PriestSeeder {
                         .zipcode(faker.address().zipCode())
                         .build();
 
-                String password = faker.internet().password(8, 12, true, true, true) + "@1A";
+                String password = SeederRandomUtils.generateSecurePassword(8, 12);
 
                 UserEntity user = UserEntity.builder()
                         .fullName(faker.name().fullName())
@@ -98,7 +98,7 @@ public class PriestSeeder {
                         .churchEmail(faker.internet().emailAddress("church"))
                         .priesthoodCardId(faker.idNumber().valid())
                         .priesthoodCardScan("scan_" + faker.file().fileName())
-                        .birthdate(faker.date().birthday(30, 70).toString())
+                        .birthdate(SeederRandomUtils.randomBirthdate(30, 70).toString())
                         .languages(languages)
                         .levelOfEducation(faker.educator().course())
                         .address(address)

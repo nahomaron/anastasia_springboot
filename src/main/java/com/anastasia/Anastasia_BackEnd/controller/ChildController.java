@@ -19,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -97,38 +99,42 @@ public class ChildController {
             @RequestParam(required = false) String levelOfEducation,
             @RequestBody(required = false) Address address
     ) {
-        Specification<ChildEntity> spec = Specification.where(null);
+        List<Specification<ChildEntity>> specs = new ArrayList<>();
 
         if (membershipNumber != null) {
-            spec = spec.and(ChildSpecifications.hasMembershipNumber(membershipNumber));
+            specs.add(ChildSpecifications.hasMembershipNumber(membershipNumber));
         }
         if (status != null && !status.isBlank()) {
-            spec = spec.and(ChildSpecifications.hasStatus(status));
+            specs.add(ChildSpecifications.hasStatus(status));
         }
         if (Boolean.TRUE.equals(deacon)) {
-            spec = spec.and(ChildSpecifications.isDeacon(true));
+            specs.add(ChildSpecifications.isDeacon(true));
         }
         if (name != null && !name.isBlank()) {
-            spec = spec.and(ChildSpecifications.nameContains(name));
+            specs.add(ChildSpecifications.nameContains(name));
         }
         if (motherName != null && !motherName.isBlank()) {
-            spec = spec.and(ChildSpecifications.motherNameContains(motherName));
+            specs.add(ChildSpecifications.motherNameContains(motherName));
         }
         if (gender != null && !gender.isBlank()) {
-            spec = spec.and(ChildSpecifications.hasGender(gender));
+            specs.add(ChildSpecifications.hasGender(gender));
         }
         if (minAge != null && maxAge >= minAge) {
-            spec = spec.and(ChildSpecifications.ageBetween(minAge, maxAge));
+            specs.add(ChildSpecifications.ageBetween(minAge, maxAge));
         }
         if (phone != null && !phone.isBlank()) {
-            spec = spec.and(ChildSpecifications.phoneContains(phone));
+            specs.add(ChildSpecifications.phoneContains(phone));
         }
         if (levelOfEducation != null && !levelOfEducation.isBlank()) {
-            spec = spec.and(ChildSpecifications.hasLevelOfEducation(levelOfEducation));
+            specs.add(ChildSpecifications.hasLevelOfEducation(levelOfEducation));
         }
         if (address != null) {
-            spec = spec.and(ChildSpecifications.filterByAddress(address));
+            specs.add(ChildSpecifications.filterByAddress(address));
         }
+
+        Specification<ChildEntity> spec = specs.stream()
+                .reduce(Specification::and)
+                .orElse(null);
 
 //        Sort sortOrder = Sort.by(Sort.Direction.fromString(sort[1]), sort[0]);
         Sort sortOrder = Sort.by("firstName").descending();

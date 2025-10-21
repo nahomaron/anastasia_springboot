@@ -18,9 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.time.ZoneId;
 
 @Profile("!test") // disable in test profile
 @Component
@@ -38,9 +36,6 @@ public class MemberSeeder {
             Faker faker = new Faker();
             List<MemberEntity> members = new ArrayList<>();
 
-            Date startDate = Date.from(LocalDate.now().minusYears(60).atStartOfDay(ZoneId.systemDefault()).toInstant());
-            Date endDate = Date.from(LocalDate.now().minusYears(18).atStartOfDay(ZoneId.systemDefault()).toInstant());
-
             if (churches.isEmpty()) {
                 churches = churchService.getChurches();
             }
@@ -50,7 +45,7 @@ public class MemberSeeder {
             for (int i = 0; i <= 50; i++) {
                 ChurchEntity assignedChurch = selectedChurches.get(i % selectedChurches.size());
 
-                String password = faker.internet().password(8, 12, true, true, true) + "@1A";
+                String password = SeederRandomUtils.generateSecurePassword(8, 12);
 
                 UserEntity user = UserEntity.builder()
                         .fullName(faker.name().fullName())
@@ -61,10 +56,7 @@ public class MemberSeeder {
 
                 UserEntity savedUser = userRepository.save(user);
 
-
-                LocalDate birthday = faker.date().between(startDate, endDate).toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
+                LocalDate birthday = SeederRandomUtils.randomBirthdate(18, 60);
 
                 MemberEntity member = MemberEntity.builder()
                         .churchNumber(assignedChurch.getChurchNumber())
