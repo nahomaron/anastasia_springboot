@@ -412,6 +412,12 @@ public class GroupServiceImpl implements GroupService {
                 .toList();
     }
 
+    /**
+     * Batch invite users to a group based on their email addresses.
+     * @param groupId The ID of the group to which users will be invited.
+     * @param request The batch invite request containing email addresses.
+     * @return A response summarizing the invitation results.
+     */
     @Override
     @Transactional
     public BatchInviteResponse batchInviteUsersToGroup(Long groupId, BatchInviteRequest request) {

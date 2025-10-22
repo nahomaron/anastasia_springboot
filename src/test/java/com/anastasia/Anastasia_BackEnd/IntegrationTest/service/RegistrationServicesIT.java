@@ -15,11 +15,11 @@ import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChildService;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchService;
@@ -40,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,7 +62,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
     @Autowired private TestSmsService testSmsService;
     @Autowired private TokenRepository tokenRepository;
 
-    @MockitoBean private EmailService emailService;
+    @MockitoBean private EmailNotificationService emailNotificationService;
     @Captor private ArgumentCaptor<Map<String, Object>> emailTemplateCaptor;
 
     @BeforeEach
@@ -81,7 +80,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
 
         tenantService.subscribeTenant(tenantDTO);
 
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(tenantDTO.getEmail()),
                 eq("Account Activation for Anastasia"),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
@@ -196,13 +195,13 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
 
     @Test
     void priestService_registerAndUpdateFlow() throws MessagingException {
-        reset(emailService);
+        reset(emailNotificationService);
 
         PriestDTO priestDTO = TestDataUtil.createTestPriestDTO(church.getChurchNumber());
 
         priestService.registerPriest(priestDTO);
 
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(priestDTO.getPersonalEmail()),
                 eq("Account Activation for Anastasia"),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),

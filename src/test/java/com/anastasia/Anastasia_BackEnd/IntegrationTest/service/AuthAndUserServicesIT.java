@@ -21,13 +21,12 @@ import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import com.anastasia.Anastasia_BackEnd.service.auth.LogoutService;
 import com.anastasia.Anastasia_BackEnd.service.auth.RoleService;
 import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.testsupport.ServiceIntegrationTestBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -64,7 +63,7 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
     @Autowired private AvatarRepository avatarRepository;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockitoBean private EmailService emailService;
+    @MockitoBean private EmailNotificationService emailNotificationService;
     @Captor private ArgumentCaptor<Map<String, Object>> emailTemplateCaptor;
 
     @BeforeEach
@@ -83,7 +82,7 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
 
         authService.createUser(pendingUser);
 
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(pendingUser.getEmail()),
                 eq("Account Activation for Anastasia"),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
@@ -135,10 +134,10 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
         assertThat(revokedAccessToken.isRevoked()).isTrue();
 
         // Password reset flow
-        reset(emailService);
+        reset(emailNotificationService);
         authService.initiatePasswordReset(pendingUser.getEmail());
 
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(pendingUser.getEmail()),
                 eq("Password Reset for Anastasia Account"),
                 eq(EmailTemplateName.RESET_PASSWORD),

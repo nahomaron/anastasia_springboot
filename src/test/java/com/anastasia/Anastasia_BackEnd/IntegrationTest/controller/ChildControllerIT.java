@@ -10,13 +10,13 @@ import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +35,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
@@ -43,7 +42,6 @@ import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
         import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -67,7 +65,7 @@ class ChildControllerIT extends PostgresTestContainer {
     @Autowired private RoleRepository roleRepository;
     @Autowired private PermissionRepository permissionRepository;
 
-    @MockitoBean private EmailService emailService;
+    @MockitoBean private EmailNotificationService emailNotificationService;
 //    @Captor private ArgumentCaptor<String> tokenCaptor;
 
     @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor; // Captor for the properties map
@@ -100,7 +98,7 @@ class ChildControllerIT extends PostgresTestContainer {
         );
         authService.createUser(user);
 
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(user.getEmail()),
                 eq("Account Activation for Anastasia"), // Subject
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),

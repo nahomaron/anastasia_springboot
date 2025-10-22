@@ -9,9 +9,9 @@ import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.model.user.UserType;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
-    private final EmailService emailService;
+    private final EmailNotificationService emailNotificationService;
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
@@ -214,7 +214,7 @@ public class AuthServiceImpl implements AuthService {
         templateProperties.put("reset_url", "http://localhost:3000/reset-password?token=" + resetTokenValue);
         templateProperties.put("reset_token", resetTokenValue); // Also provide the raw token if needed
 
-        emailService.sendEmail(
+        emailNotificationService.sendEmail(
                 user.getEmail(),
                 "Password Reset for Anastasia Account",
                 EmailTemplateName.RESET_PASSWORD, // Make sure you have a reset_password.html template
@@ -312,7 +312,7 @@ public class AuthServiceImpl implements AuthService {
         templateProperties.put("activation_code", newToken);
 
         // Call the enhanced EmailService with the dynamic properties map
-        emailService.sendEmail(
+        emailNotificationService.sendEmail(
                 user.getEmail(),
                 "Account Activation for Anastasia",
                 EmailTemplateName.ACTIVATE_ACCOUNT,

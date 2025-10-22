@@ -16,7 +16,7 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -43,7 +42,6 @@ import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -67,7 +65,7 @@ class MemberControllerIT extends PostgresTestContainer {
     @Autowired private RoleRepository roleRepository;
     @Autowired private PermissionRepository permissionRepository;
 
-    @MockitoBean private EmailService emailService;
+    @MockitoBean private EmailNotificationService emailNotificationService;
     @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor;
 
 
@@ -101,7 +99,7 @@ class MemberControllerIT extends PostgresTestContainer {
         authService.createUser(user);
 
         // Capture the token passed to emailService
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(user.getEmail()),
                 eq("Account Activation for Anastasia"),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),

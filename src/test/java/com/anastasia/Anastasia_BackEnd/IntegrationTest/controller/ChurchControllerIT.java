@@ -12,7 +12,7 @@ import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchService;
 import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
@@ -33,7 +33,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
@@ -63,7 +62,7 @@ class ChurchControllerIT extends PostgresTestContainer {
     @Autowired private TenantService tenantService;
     @Autowired private JwtUtil jwtUtil;
 
-    @MockitoBean private EmailService emailService;
+    @MockitoBean private EmailNotificationService emailNotificationService;
     @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor; // Captor for the properties map
 
 
@@ -80,7 +79,7 @@ class ChurchControllerIT extends PostgresTestContainer {
         TenantDTO tenantDTO = TestDataUtil.createTestTenantDTO();
         tenantService.subscribeTenant(tenantDTO);
 
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(tenantDTO.getEmail()),
                 eq("Account Activation for Anastasia"), // Subject
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),

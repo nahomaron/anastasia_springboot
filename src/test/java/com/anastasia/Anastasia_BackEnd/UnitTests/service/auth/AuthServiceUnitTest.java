@@ -6,11 +6,11 @@ import com.anastasia.Anastasia_BackEnd.model.token.Token;
 import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserType;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthServiceImpl;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtilTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ public class AuthServiceUnitTest {
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
     @Mock private TokenRepository tokenRepository;
-    @Mock private EmailService emailService;
+    @Mock private EmailNotificationService emailNotificationService;
     @Mock private RoleRepository roleRepository;
 
     @InjectMocks

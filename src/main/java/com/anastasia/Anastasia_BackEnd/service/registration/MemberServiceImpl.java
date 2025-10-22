@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.service.registration;
 
+import com.anastasia.Anastasia_BackEnd.events.MemberBirthdayEvent;
 import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
@@ -14,6 +15,7 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,6 +24,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,6 +37,8 @@ public class MemberServiceImpl implements MemberService {
     private final UserRepository userRepository;
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
+    private final ApplicationEventPublisher publisher;
+
 
     @Override
     public MemberEntity convertToEntity(MemberDTO memberDTO) {
@@ -185,6 +191,13 @@ public class MemberServiceImpl implements MemberService {
             membershipNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
         } while (memberRepository.existsByMembershipNumber(membershipNumber)); // Keep generating if it already exists
         return membershipNumber;
+    }
+
+    public void checkBirthdays() {
+        List<MemberEntity> birthdaysToday = memberRepository.findByBirthDate(LocalDate.now());
+        for (MemberEntity member : birthdaysToday) {
+            publisher.publishEvent(new MemberBirthdayEvent(this, member));
+        }
     }
 
 }

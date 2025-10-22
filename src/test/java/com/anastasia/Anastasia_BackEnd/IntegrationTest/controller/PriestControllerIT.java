@@ -8,17 +8,14 @@ import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.email.EmailService;
+import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.service.registration.PriestService;
-import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
-import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -35,7 +32,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
@@ -64,7 +60,7 @@ class PriestControllerIT extends PostgresTestContainer {
     @Autowired private TenantRepository tenantRepository;
     @Autowired private ChurchRepository churchRepository;
 
-    @MockitoBean private EmailService emailService;
+    @MockitoBean private EmailNotificationService emailNotificationService;
     @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor;
 
     private String jwtToken;
@@ -89,7 +85,7 @@ class PriestControllerIT extends PostgresTestContainer {
         PriestDTO priestDTO = TestDataUtil.createTestPriestDTO(church.getChurchNumber());
         priestService.registerPriest(priestDTO);
 
-        verify(emailService).sendEmail(
+        verify(emailNotificationService).sendEmail(
                 eq(priestDTO.getPersonalEmail()),
                 eq("Account Activation for Anastasia"),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
