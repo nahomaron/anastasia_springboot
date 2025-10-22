@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.events;
+package com.anastasia.Anastasia_BackEnd.notification.domain.events;
 
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import lombok.Getter;

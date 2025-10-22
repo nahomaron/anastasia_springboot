@@ -6,6 +6,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+/**
+ * Listens for NotificationEvent and delegates processing to NotificationOrchestrator.
+ * notification bus entrypoint
+ * listens for NotificationEvent and forwards it to the orchestrator.
+ * This is the single place that consumes NotificationEvent and hands off to routing
+ */
 @Component
 public class NotificationListener {
 

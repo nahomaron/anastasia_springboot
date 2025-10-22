@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.service.registration;
 
-import com.anastasia.Anastasia_BackEnd.events.MemberBirthdayEvent;
+import com.anastasia.Anastasia_BackEnd.notification.domain.events.MemberBirthdayEvent;
 import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;

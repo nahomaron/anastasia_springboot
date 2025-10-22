@@ -1,14 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.notification.listener;
 
-import com.anastasia.Anastasia_BackEnd.events.PaymentCompletedEvent;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.notification.domain.NotificationEvent;
-import com.anastasia.Anastasia_BackEnd.notification.domain.NotificationType;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 public class PaymentEventListener {

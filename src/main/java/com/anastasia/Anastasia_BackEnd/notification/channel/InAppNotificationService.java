@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-import static com.anastasia.Anastasia_BackEnd.notification.domain.NotificationType.*;
-
 @Service
 public class InAppNotificationService {
 
@@ -62,7 +60,7 @@ public class InAppNotificationService {
         return switch (event.getType()) {
             case ACCOUNT_ACTIVATION -> "Welcome " + event.getUser().getFullName() + "!";
             case PASSWORD_RESET -> "Your password reset request was processed.";
-            case MEMBER_BIRTHDAY -> "Happy Birthday 🎉";
+            case MEMBER_BIRTHDAY -> "Happy Birthday 🎉" + event.getUser().getFullName() + "!";
             default -> "You have a new notification.";
         };
     }

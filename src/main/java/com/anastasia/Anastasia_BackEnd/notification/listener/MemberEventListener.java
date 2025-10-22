@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.notification.listener;
 
-import com.anastasia.Anastasia_BackEnd.events.MemberBirthdayEvent;
+import com.anastasia.Anastasia_BackEnd.notification.domain.events.MemberBirthdayEvent;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.notification.domain.NotificationEvent;
 import com.anastasia.Anastasia_BackEnd.notification.domain.NotificationType;

@@ -10,6 +10,7 @@ import java.util.UUID;
 
 /**
  * Snapshot of recipient contact points for a notification.
+ * centralized, computed target (email/phone/whatsapp/tenant) to avoid scattering contact lookups
  */
 public record NotificationTarget(
         UUID userId,

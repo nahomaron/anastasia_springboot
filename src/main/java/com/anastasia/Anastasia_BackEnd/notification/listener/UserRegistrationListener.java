@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.notification.listener;
 
 
-import com.anastasia.Anastasia_BackEnd.events.UserRegisteredEvent;
+import com.anastasia.Anastasia_BackEnd.notification.domain.events.UserRegisteredEvent;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.notification.domain.NotificationEvent;
 import com.anastasia.Anastasia_BackEnd.notification.domain.NotificationType;
