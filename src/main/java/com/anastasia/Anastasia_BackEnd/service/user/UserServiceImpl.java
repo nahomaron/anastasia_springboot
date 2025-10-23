@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.service.auth.user;
+package com.anastasia.Anastasia_BackEnd.service.user;
 
 import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
@@ -11,7 +11,6 @@ import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.role.Role;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
-import com.anastasia.Anastasia_BackEnd.model.user.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.repository.AvatarRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;

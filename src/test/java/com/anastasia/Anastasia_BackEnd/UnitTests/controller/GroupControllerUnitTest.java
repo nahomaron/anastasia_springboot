@@ -4,7 +4,7 @@ import com.anastasia.Anastasia_BackEnd.controller.GroupController;
 import com.anastasia.Anastasia_BackEnd.model.group.*;
 import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
+import com.anastasia.Anastasia_BackEnd.service.user.UserService;
 import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -7,7 +7,7 @@ import com.anastasia.Anastasia_BackEnd.model.auth.ResetPasswordRequest;
 import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
+import com.anastasia.Anastasia_BackEnd.service.user.UserService;
 import io.github.bucket4j.Bucket;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -5,7 +5,7 @@ import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
 import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
+import com.anastasia.Anastasia_BackEnd.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
