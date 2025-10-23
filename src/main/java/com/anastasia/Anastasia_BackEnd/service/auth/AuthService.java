@@ -25,7 +25,7 @@ public interface AuthService {
 
     boolean exists(UUID userId);
 
-    void activateAccount(String token);
+    void activateAccount(String token) throws MessagingException;
 
     Optional<UserEntity> findUserByEmail(@NotBlank(message = "Email is required") @Email(message = "Invalid Email format") String email);
 

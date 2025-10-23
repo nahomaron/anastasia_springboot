@@ -12,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.model.user.UserType;
 import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
+import com.anastasia.Anastasia_BackEnd.service.cache.CacheWarmupService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
     private final EmailNotificationService emailNotificationService;
+    private final CacheWarmupService cacheWarmupService;
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
@@ -69,14 +71,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void activateAccount(String token){
+    public void activateAccount(String token) throws MessagingException {
         Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
 
-//        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
-//            sendValidationEmail(savedToken.getUser());
-//            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
-//        }
+        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
+            sendValidationEmail(savedToken.getUser());
+            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
+        }
 
         var user = userRepository.findById(savedToken.getUser().getUuid())
                 .orElseThrow(() -> new UsernameNotFoundException("Activation - Username not found"));
@@ -124,6 +126,12 @@ public class AuthServiceImpl implements AuthService {
 
         saveUserToken(jwtToken, user, TokenType.BEARER);
         saveUserToken(refreshToken, user, TokenType.REFRESH);
+
+        // Warm up cache if user has ADMIN role
+        if (userPrincipal.getRoles().stream().anyMatch(role -> role.getRoleName().equals("ADMIN"))) {
+            UUID tenantId = user.getTenant().getId();
+            cacheWarmupService.warmUpTenantCache(tenantId);
+        }
 
         return AuthenticationResponse.builder()
                 .userId(user.getUuid())

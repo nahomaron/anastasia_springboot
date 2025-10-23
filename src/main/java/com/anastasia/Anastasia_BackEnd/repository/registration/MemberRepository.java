@@ -13,5 +13,5 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long>, Jpa
 
     boolean existsByMembershipNumber(String membershipNumber);
 
-    List<MemberEntity> findByBirthDate(LocalDate now);
+    List<MemberEntity> findByBirthday(LocalDate date);
 }

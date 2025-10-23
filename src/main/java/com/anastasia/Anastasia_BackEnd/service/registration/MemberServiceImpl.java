@@ -15,8 +15,14 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
@@ -38,6 +44,8 @@ public class MemberServiceImpl implements MemberService {
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final ApplicationEventPublisher publisher;
+    private final CacheManager cacheManager;
+
 
 
     @Override
@@ -50,6 +58,21 @@ public class MemberServiceImpl implements MemberService {
         return memberMapper.memberEntityToDTO(memberEntity);
     }
 
+    @Caching(
+            put = {
+                    @CachePut(
+                            value = "members",
+                            key = "T(com.anastasia.Anastasia_BackEnd.config.TenantContext).getTenantId() + ':' + #result.id"
+                    )
+            },
+            evict = {
+                    @CacheEvict(
+                            value = "members_all",
+                            key = "T(com.anastasia.Anastasia_BackEnd.config.TenantContext).getTenantId()",
+                            allEntries = true
+                    )
+            }
+    )
     @Override
     public MemberResponse registerMember(MemberEntity memberEntity) {
 
@@ -91,16 +114,25 @@ public class MemberServiceImpl implements MemberService {
                 .build();
     }
 
+
+    @Cacheable(value = "members_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<MemberEntity> findAll(Pageable pageable) {
         return memberRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<MemberEntity> findMemberById(Long memberId) {
         return memberRepository.findById(memberId);
     }
 
+    @Caching(
+            put = {@CachePut(value = "members",
+                    keyGenerator = "tenantAwareKeyGenerator")},
+            evict = {@CacheEvict( value = "members_all",
+                    keyGenerator = "tenantAwareKeyGenerator",  allEntries = true)}
+    )
     @Override
     public void updateMembershipDetails(Long memberId, MemberDTO request) {
         memberRepository.findById(memberId).ifPresent(memberEntity -> {
@@ -142,11 +174,23 @@ public class MemberServiceImpl implements MemberService {
         });
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "members",
+                            keyGenerator = "tenantAwareKeyGenerator"
+                    ),
+                    @CacheEvict(value = "members_all",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true
+                    )
+            }
+    )
     @Override
     public void deleteMembership(Long memberId) {
         memberRepository.deleteById(memberId);
     }
 
+    @CachePut(value = "members", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public void approveByChurch(Long memberId) {
         MemberEntity member = memberRepository.findById(memberId)
@@ -161,6 +205,7 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.save(member);
     }
 
+    @CachePut(value = "members", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public void approveByPriest(Long memberId) {
         MemberEntity member = memberRepository.findById(memberId)
@@ -194,10 +239,22 @@ public class MemberServiceImpl implements MemberService {
     }
 
     public void checkBirthdays() {
-        List<MemberEntity> birthdaysToday = memberRepository.findByBirthDate(LocalDate.now());
+        List<MemberEntity> birthdaysToday = memberRepository.findByBirthday(LocalDate.now());
         for (MemberEntity member : birthdaysToday) {
             publisher.publishEvent(new MemberBirthdayEvent(this, member));
         }
+    }
+
+    @CacheEvict(
+            value = "members_all",
+            allEntries = true)
+    public void clearAllCache() {
+        System.out.println("Clearing members_all cache...");
+    }
+
+    public void evictMemberCachesForTenant(String tenantId) {
+        cacheManager.getCache("members").invalidate(); // clear all if needed
+        cacheManager.getCache("members_all").invalidate();
     }
 
 }
