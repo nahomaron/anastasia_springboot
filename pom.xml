@@ -35,6 +35,12 @@
 		<allure.version>2.16.1</allure.version>
 		<lombok.version>1.18.42</lombok.version>
 	</properties>
+	<repositories>
+		<repository>
+			<id>confluent</id>
+			<url>https://packages.confluent.io/maven/</url>
+		</repository>
+	</repositories>
 	<profiles>
 		<!-- Integration + Testcontainers -->
 		<profile>
@@ -450,7 +456,31 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Stripe -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>24.12.0</version>
+		</dependency>
 
+		<!-- Spring Kafka core (provides KafkaTemplate, listener containers, etc.) -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- Confluent Avro serializer (for Schema Registry integration) -->
+		<dependency>
+			<groupId>io.confluent</groupId>
+			<artifactId>kafka-avro-serializer</artifactId>
+			<version>7.6.1</version>
+		</dependency>
+
+		<!-- Optional but recommended: Spring Boot autoconfig for Kafka -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
 
 	</dependencies>
 	<dependencyManagement>
@@ -599,7 +629,6 @@
 					</container>
 				</configuration>
 			</plugin>
-
 
 		</plugins>
 	</build>

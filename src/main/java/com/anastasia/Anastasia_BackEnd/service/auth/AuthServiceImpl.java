@@ -71,14 +71,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void activateAccount(String token) throws MessagingException {
+    public void activateAccount(String token) {
         Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
 
-        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
-            sendValidationEmail(savedToken.getUser());
-            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
-        }
+//        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
+//            sendValidationEmail(savedToken.getUser());
+//            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
+//        }
 
         var user = userRepository.findById(savedToken.getUser().getUuid())
                 .orElseThrow(() -> new UsernameNotFoundException("Activation - Username not found"));
