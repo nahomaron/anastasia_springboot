@@ -10,6 +10,10 @@ import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,11 +32,6 @@ public class ChurchServiceImpl implements ChurchService{
     private final TenantRepository tenantRepository;
     private final SecurityUtils securityUtils;
 
-//    @Override
-//    public ChurchEntity convertToEntity(ChurchDTO churchDTO) {
-//        return churchMapper.churchDTOToEntity(churchDTO);
-//    }
-
     @Override
     public ChurchEntity convertToEntity(ChurchDTO churchDTO) {
         ChurchEntity entity = churchMapper.churchDTOToEntity(churchDTO);
@@ -47,48 +46,25 @@ public class ChurchServiceImpl implements ChurchService{
         return entity;
     }
 
-
     @Override
     public ChurchDTO convertToDTO(ChurchEntity churchEntity) {
         return churchMapper.churchEntityToDTO(churchEntity);
     }
 
-    @Override
-    public Page<ChurchEntity> findAll(Pageable pageable) {
-        return churchRepository.findAll(pageable);
-    }
 
-    @Override
-    public boolean exists(Long churchId) {
-        return churchRepository.existsById(churchId);
-    }
-
-    @Override
-    public void updateChurch(Long churchId, ChurchEntity churchEntity) {
-        ChurchEntity existingChurch = churchRepository.findById(churchId)
-                .orElseThrow(()-> new EntityNotFoundException("Church Not Found"));
-
-        churchEntity.setChurchId(existingChurch.getChurchId());
-        churchEntity.setTenant(existingChurch.getTenant());
-        churchEntity.setChurchNumber(existingChurch.getChurchNumber()); // ✅ Fix here
-        churchRepository.save(churchEntity);
-    }
-
-    @Override
-    public void deleteChurch(Long churchId) {
-        // todo -> deletion should be executed after 30 days of request
-        churchRepository.deleteById(churchId);
-    }
-
-    @Override
-    public Optional<ChurchEntity> findOne(Long churchId) {
-        return churchRepository.findById(churchId);
-    }
-
-    public List<ChurchEntity> getChurches(){
-        return churchRepository.findAll();
-    }
-
+    @Caching(
+            put = {@CachePut(value = "churches",
+                    keyGenerator = "tenantAwareKeyGenerator")
+            },
+            evict = {
+                    @CacheEvict(value = "churches_all",
+                        keyGenerator = "tenantAwareKeyGenerator",
+                        allEntries = true),
+                    @CacheEvict(value = "churches_all_list",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true)
+            }
+    )
     @Override
     public String createChurch(ChurchEntity churchEntity) {
 
@@ -104,13 +80,83 @@ public class ChurchServiceImpl implements ChurchService{
 
 
         churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchName(), 5));
-         var savedChurch = churchRepository.save(churchEntity);
+        var savedChurch = churchRepository.save(churchEntity);
 
-         // assign the church back to the tenant
-         tenant.assignChurch(savedChurch);
-         tenantRepository.save(tenant);
+        // assign the church back to the tenant
+        tenant.assignChurch(savedChurch);
+        tenantRepository.save(tenant);
 
-         return savedChurch.getChurchNumber();
+        return savedChurch.getChurchNumber();
+    }
+
+    @Cacheable(value = "churches_all", keyGenerator = "tenantAwareKeyGenerator")
+    @Override
+    public Page<ChurchEntity> findAll(Pageable pageable) {
+        return churchRepository.findAll(pageable);
+    }
+
+    @Cacheable(value = "churches", keyGenerator = "tenantAwareKeyGenerator")
+    @Override
+    public Optional<ChurchEntity> findOne(Long churchId) {
+        return churchRepository.findById(churchId);
+    }
+
+    @Cacheable(value = "churches_all_list", keyGenerator = "tenantAwareKeyGenerator")
+    public List<ChurchEntity> getChurches(){
+        return churchRepository.findAll();
+    }
+
+
+    @Override
+    public boolean exists(Long churchId) {
+        return churchRepository.existsById(churchId);
+    }
+
+    @Caching(
+            evict = {
+                    @CacheEvict( value = "churches_all",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true),
+                    @CacheEvict(value = "churches_all_list",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true),
+                    @CacheEvict(value = "churches",
+                            key = "#churchId",
+                            keyGenerator = "tenantAwareKeyGenerator")
+            }
+    )
+    @Override
+    public void updateChurch(Long churchId, ChurchEntity churchEntity) {
+        ChurchEntity existingChurch = churchRepository.findById(churchId)
+                .orElseThrow(()-> new EntityNotFoundException("Church Not Found"));
+
+        churchEntity.setChurchId(existingChurch.getChurchId());
+        churchEntity.setTenant(existingChurch.getTenant());
+        churchEntity.setChurchNumber(existingChurch.getChurchNumber()); // ✅ Fix here
+        churchRepository.save(churchEntity);
+
+    }
+
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "churches",
+                            key = "#churchId",
+                            keyGenerator = "tenantAwareKeyGenerator"
+                    ),
+                    @CacheEvict(value = "churches_all",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true
+                    ),
+                    @CacheEvict(value = "churches_all_list",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true
+                    )
+            }
+    )
+    @Override
+    public void deleteChurch(Long churchId) {
+        // todo -> deletion should be executed after 30 days of request
+        churchRepository.deleteById(churchId);
     }
 
     private String generateUniqueChurchNumber(String churchName, int length) {

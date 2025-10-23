@@ -13,6 +13,10 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -43,6 +47,12 @@ public class ChildServiceImpl implements ChildService{
         return childMapper.childEntityToDTO(childEntity);
     }
 
+    @Caching(
+            evict = {@CacheEvict(value = "children_all",
+                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true)
+            }
+    )
     @Override
     public ChildResponse registerChild(ChildEntity childEntity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -82,19 +92,28 @@ public class ChildServiceImpl implements ChildService{
         return rawChurchNumber.replace("\"", "").trim();
     }
 
+    @Cacheable(value = "children_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<ChildEntity> findAll(Pageable pageable) {
         return childRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "children", key = "#childId", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Optional<ChildEntity> findChildById(Long memberId) {
-        return childRepository.findById(memberId);
+    public Optional<ChildEntity> findChildById(Long childId) {
+        return childRepository.findById(childId);
     }
 
+    @Caching(
+            evict = {@CacheEvict( value = "children_all",
+                        keyGenerator = "tenantAwareKeyGenerator",  allEntries = true),
+                    @CacheEvict(value = "children",
+                            key = "#childId",
+                            keyGenerator = "tenantAwareKeyGenerator")}
+    )
     @Override
-    public void updateChildDetails(Long memberId, ChildDTO request) {
-        childRepository.findById(memberId).ifPresent(memberEntity -> {
+    public void updateChildDetails(Long childId, ChildDTO request) {
+        childRepository.findById(childId).ifPresent(memberEntity -> {
 
             Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
             Optional.ofNullable(request.getTitle()).ifPresent(memberEntity::setTitle);
@@ -128,9 +147,21 @@ public class ChildServiceImpl implements ChildService{
         });
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "children",
+                            key ="#childId",
+                            keyGenerator = "tenantAwareKeyGenerator"
+                    ),
+                    @CacheEvict(value = "children_all",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true
+                    )
+            }
+    )
     @Override
-    public void deleteChildMembership(Long memberId) {
-        childRepository.deleteById(memberId);
+    public void deleteChildMembership(Long childId) {
+        childRepository.deleteById(childId);
 
     }
 

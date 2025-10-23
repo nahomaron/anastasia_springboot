@@ -58,21 +58,10 @@ public class MemberServiceImpl implements MemberService {
         return memberMapper.memberEntityToDTO(memberEntity);
     }
 
-    @Caching(
-            put = {
-                    @CachePut(
-                            value = "members",
-                            key = "T(com.anastasia.Anastasia_BackEnd.config.TenantContext).getTenantId() + ':' + #result.id"
-                    )
-            },
-            evict = {
-                    @CacheEvict(
-                            value = "members_all",
-                            key = "T(com.anastasia.Anastasia_BackEnd.config.TenantContext).getTenantId()",
-                            allEntries = true
-                    )
-            }
-    )
+   @CacheEvict(
+           value = "members_all",
+           keyGenerator = "tenantAwareKeyGenerator",
+           allEntries = true)
     @Override
     public MemberResponse registerMember(MemberEntity memberEntity) {
 
@@ -128,9 +117,11 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Caching(
-            put = {@CachePut(value = "members",
-                    keyGenerator = "tenantAwareKeyGenerator")},
+//            put = {@CachePut(value = "members",
+//                    key = "#memberId",
+//                    keyGenerator = "tenantAwareKeyGenerator")},
             evict = {@CacheEvict( value = "members_all",
+                    key = "#memberId",
                     keyGenerator = "tenantAwareKeyGenerator",  allEntries = true)}
     )
     @Override
@@ -177,6 +168,7 @@ public class MemberServiceImpl implements MemberService {
     @Caching(
             evict = {
                     @CacheEvict(value = "members",
+                            key = "#memberId",
                             keyGenerator = "tenantAwareKeyGenerator"
                     ),
                     @CacheEvict(value = "members_all",
@@ -190,7 +182,7 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.deleteById(memberId);
     }
 
-    @CachePut(value = "members", keyGenerator = "tenantAwareKeyGenerator")
+    @CachePut(value = "members",key = "#memberId", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public void approveByChurch(Long memberId) {
         MemberEntity member = memberRepository.findById(memberId)
@@ -205,7 +197,7 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.save(member);
     }
 
-    @CachePut(value = "members", keyGenerator = "tenantAwareKeyGenerator")
+    @CachePut(value = "members", key = "#memberId", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public void approveByPriest(Long memberId) {
         MemberEntity member = memberRepository.findById(memberId)

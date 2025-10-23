@@ -19,6 +19,10 @@ import com.anastasia.Anastasia_BackEnd.service.auth.AuthServiceImpl;
 import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -56,6 +60,15 @@ public class PriestServiceImpl implements PriestService{
 
 
 
+    @Caching(
+            put = {@CachePut(value = "priests",
+                    keyGenerator = "tenantAwareKeyGenerator")
+            },
+            evict = {@CacheEvict(value = "priests_all",
+                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true)
+            }
+    )
     @Override
     public void registerPriest(PriestDTO priestDTO) {
 
@@ -136,16 +149,24 @@ public class PriestServiceImpl implements PriestService{
         priestRepository.save(priestBuilder.build());
     }
 
+    @Cacheable(value = "priests_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<PriestEntity> findAllPriests(Pageable pageable) {
         return priestRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "priests", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<PriestEntity> findPriestById(Long priestId) {
         return priestRepository.findById(priestId);
     }
 
+    @Caching(
+            put = {@CachePut(value = "priests",
+                    keyGenerator = "tenantAwareKeyGenerator")},
+            evict = {@CacheEvict( value = "priests_all",
+                    keyGenerator = "tenantAwareKeyGenerator",  allEntries = true)}
+    )
     @Override
     public PriestEntity updatePriestDetails(Long priestId, PriestEntity priestEntity) {
 
@@ -172,6 +193,17 @@ public class PriestServiceImpl implements PriestService{
         }).orElseThrow(() -> new UsernameNotFoundException("Priest not found"));
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "priests",
+                            keyGenerator = "tenantAwareKeyGenerator"
+                    ),
+                    @CacheEvict(value = "priests_all",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true
+                    )
+            }
+    )
     @Override
     public void deletePriest(Long priestId) {
         priestRepository.deleteById(priestId);

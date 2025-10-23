@@ -16,6 +16,11 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.Cache;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -54,17 +59,30 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    @Cacheable(value = "users_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<UserEntity> findAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "users", key = "#userId", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<UserEntity> findOne(UUID userId) {
         return userRepository.findById(userId);
     }
 
 
+    @Caching(
+            put = {
+                    @CachePut(value = "users",
+                            key = "#result.uuid", // Use the ID of the returned (saved) entity
+                            keyGenerator = "tenantAwareKeyGenerator")
+            },
+            evict = {
+                    @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
+                    @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
+            }
+    )
     @Override
     public UserEntity updateUserDetails(UserEntity userEntity, Principal connectedUser) {
 //        var currentUser = (UserEntity) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
@@ -90,6 +108,14 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    @Caching(
+            evict = {
+                    // Assuming the UserPrincipal object has a consistent key with the cache, or fetch the user first:
+                    @CacheEvict(value = "users",
+                            key = "#user.uuid", // Needs SpEL access to the 'user' variable.
+                            keyGenerator = "tenantAwareKeyGenerator")
+            }
+    )
     @Override
     public void changePassword(ChangePasswordRequest request, Principal connectedUser) {
         if (!(connectedUser instanceof Authentication)) {
@@ -124,6 +150,12 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "users", key = "#userId", keyGenerator = "tenantAwareKeyGenerator"),
+                    @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
+            }
+    )
     @Override
     public void assignRolesToUser(UUID userId, AssignRolesRequest request) {
 
@@ -149,11 +181,19 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Cacheable(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public List<UserEntity> findAll() {
         return userRepository.findAll();
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "users", key = "#userId", keyGenerator = "tenantAwareKeyGenerator"),
+                    @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
+                    @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
+            }
+    )
     @Override
     public void deleteUser(UUID userId) {
         UserEntity user = userRepository.findById(userId)
@@ -170,6 +210,9 @@ public class UserServiceImpl implements UserService {
         throw new RuntimeException("No authenticated user found.");
     }
 
+    @CachePut(value = "users",
+            key = "#result.uuid", // Use the ID of the returned (saved) entity
+            keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public void updateProfileAvatar(AvatarDTO avatarDTO) {
         UUID userId = getCurrentUserId();
