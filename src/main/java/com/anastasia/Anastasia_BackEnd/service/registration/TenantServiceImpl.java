@@ -15,6 +15,9 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +52,12 @@ public class TenantServiceImpl implements TenantService {
         return tenantMapper.tenantEntityToDTO(tenantEntity);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "tenants_page", allEntries = true),
+            @CacheEvict(value = "tenants_all", allEntries = true),
+            @CacheEvict(value = "tenants", allEntries = true),
+            @CacheEvict(value = "tenants_by_phone", allEntries = true)
+    })
     @Transactional
     @Override
     public void subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
@@ -92,6 +101,12 @@ public class TenantServiceImpl implements TenantService {
         phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "tenants_by_phone", key = "#phone"),
+            @CacheEvict(value = "tenants", allEntries = true),
+            @CacheEvict(value = "tenants_page", allEntries = true),
+            @CacheEvict(value = "tenants_all", allEntries = true)
+    })
     @Transactional
     @Override
     public boolean verifyTenantPhone(String phone, String rawOtp) {
@@ -119,25 +134,35 @@ public class TenantServiceImpl implements TenantService {
 //                });
 //    }
 
+    @Cacheable(value = "tenants_page", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<TenantEntity> findAll(Pageable pageable) {
         return tenantRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "tenants_all")
     public List<TenantEntity> getTenants(){
         return tenantRepository.findAll();
     }
 
+    @Cacheable(value = "tenants", key = "#tenantId")
     @Override
     public Optional<TenantEntity> findTenantById(UUID tenantId) {
         return tenantRepository.findById(tenantId);
     }
 
+    @Cacheable(value = "tenants_by_phone", key = "#phone")
     @Override
     public Optional<TenantEntity> findTenantByPhoneNumber(String phone) {
         return tenantRepository.findByPhoneNumber(phone);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "tenants", key = "#tenantId"),
+            @CacheEvict(value = "tenants_page", allEntries = true),
+            @CacheEvict(value = "tenants_all", allEntries = true),
+            @CacheEvict(value = "tenants_by_phone", allEntries = true)
+    })
     @Override
     public void unsubscribeTenant(UUID tenantId) {
         TenantEntity tenantToBeUnsubscribed = tenantRepository.findById(tenantId)
@@ -147,6 +172,12 @@ public class TenantServiceImpl implements TenantService {
         tenantRepository.save(tenantToBeUnsubscribed);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "tenants", key = "#tenantId"),
+            @CacheEvict(value = "tenants_page", allEntries = true),
+            @CacheEvict(value = "tenants_all", allEntries = true),
+            @CacheEvict(value = "tenants_by_phone", allEntries = true)
+    })
     @Override
     public void updateTenant(UUID tenantId, TenantDTO tenantDTO) {
         tenantRepository.findById(tenantId).ifPresent(tenantEntity -> {

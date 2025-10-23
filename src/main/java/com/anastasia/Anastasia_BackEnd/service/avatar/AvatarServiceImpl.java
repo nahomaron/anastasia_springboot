@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.service.avatar;
 
+import com.anastasia.Anastasia_BackEnd.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarType;
@@ -8,6 +9,8 @@ import com.anastasia.Anastasia_BackEnd.repository.AvatarRepository;
 import com.anastasia.Anastasia_BackEnd.service.aws.S3Service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -30,6 +33,7 @@ public class AvatarServiceImpl implements AvatarService{
         return s3Service.generatePresignedUploadUrl(fileName);
     }
 
+    @CachePut(value = "avatars", key = "#root.target.buildAvatarCacheKey(#ownerType, #ownerId)")
     @Override
     public AvatarDTO saveAvatar(String ownerType, UUID ownerId, AvatarDTO avatarDTO) {
         AvatarType avatarType = resolveAvatarType(ownerType);
@@ -49,6 +53,7 @@ public class AvatarServiceImpl implements AvatarService{
         return new AvatarDTO(saved.getImageUrl(), saved.getImageSize());
     }
 
+    @Cacheable(value = "avatars", key = "#root.target.buildAvatarCacheKey(#ownerType, #ownerId)")
     @Override
     public AvatarDTO getAvatar(String ownerType, UUID ownerId) {
         AvatarType avatarType = resolveAvatarType(ownerType);
@@ -67,6 +72,16 @@ public class AvatarServiceImpl implements AvatarService{
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported avatar owner type: " + ownerType);
         }
+    }
+
+    private String buildAvatarCacheKey(String ownerType, UUID ownerId) {
+        AvatarType avatarType = resolveAvatarType(ownerType);
+        return buildAvatarCacheKey(avatarType, ownerId);
+    }
+
+    private String buildAvatarCacheKey(AvatarType avatarType, UUID ownerId) {
+        String tenantKey = String.valueOf(TenantContext.getTenantId());
+        return tenantKey + ":" + avatarType.name() + ":" + ownerId;
     }
 
 }

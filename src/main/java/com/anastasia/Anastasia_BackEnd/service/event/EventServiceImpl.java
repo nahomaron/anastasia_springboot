@@ -12,6 +12,9 @@ import com.anastasia.Anastasia_BackEnd.repository.EventRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -44,6 +47,7 @@ public class EventServiceImpl implements EventService{
         return eventManagerMapper.eventManagerEntityToDTO(eventManagerEntity);
     }
 
+    @Cacheable(value = "events_visible", key = "#root.target.visibleEventsCacheKey(#userId)")
     @Override
     public List<EventDTO> getVisibleEventsForUser(UUID userId) {
         if (userId == null) {
@@ -60,6 +64,10 @@ public class EventServiceImpl implements EventService{
                 .toList();
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)"),
+            @CacheEvict(value = "events_visible", allEntries = true)
+    })
     @Override
     public void assignManagerToEvent(Long eventId, UUID userId, String role) {
 
@@ -78,6 +86,10 @@ public class EventServiceImpl implements EventService{
         eventRepository.save(event);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)"),
+            @CacheEvict(value = "events_visible", allEntries = true)
+    })
     @Override
     public void removeManager(Long eventId, UUID managerId) {
         EventEntity event = eventRepository.findById(eventId)
@@ -101,11 +113,16 @@ public class EventServiceImpl implements EventService{
         eventRepository.save(event);
     }
 
+    @Cacheable(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
     @Override
     public List<EventManagerEntity> getManagers(Long eventId) {
         return eventRepository.findAllManagersByEventId(eventId);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "events_visible", allEntries = true),
+            @CacheEvict(value = "event_managers", allEntries = true)
+    })
     @Override
     public EventEntity createEvent(EventEntity event) {
 
@@ -124,6 +141,10 @@ public class EventServiceImpl implements EventService{
         return eventRepository.save(event);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "events_visible", allEntries = true),
+            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
+    })
     @Override
     public EventEntity updateEvent(Long eventId, EventEntity event) {
         if(!eventRepository.existsById(eventId)){
@@ -133,6 +154,10 @@ public class EventServiceImpl implements EventService{
         return eventRepository.save(event);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "events_visible", allEntries = true),
+            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
+    })
     @Override
     public void deleteEvent(Long eventId) {
         if(!eventRepository.existsById(eventId)){
@@ -141,5 +166,12 @@ public class EventServiceImpl implements EventService{
         eventRepository.deleteById(eventId);
     }
 
+    private String visibleEventsCacheKey(UUID userId) {
+        return String.valueOf(TenantContext.getTenantId()) + ":visible:" + userId;
+    }
+
+    private String eventManagersCacheKey(Long eventId) {
+        return String.valueOf(TenantContext.getTenantId()) + ":managers:" + eventId;
+    }
 
 }
