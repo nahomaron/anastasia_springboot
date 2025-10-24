@@ -7,5 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentIntentRepository extends JpaRepository<PaymentIntent, UUID> {
-    Optional<PaymentIntent> findByIdempotencyKey(String key);
+    Optional<PaymentIntent> findByTenantIdAndIdempotencyKey(String tenantId, String key);
 }

@@ -15,13 +15,14 @@ import java.util.UUID;
 public class OutboxPublisher {
 
     @PersistenceContext private EntityManager em;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
     @Transactional
     public void publish(String type, String aggregateId, String tenantId, Map<String,Object> payload) {
         var entity = new OutboxEntity();
         entity.setId(UUID.randomUUID());
-        entity.setAggregateType("Payment");
+        String aggregateType = type.startsWith("Subscription") ? "PaymentSubscription" : "Payment";
+        entity.setAggregateType(aggregateType);
         entity.setAggregateId(aggregateId);
         entity.setTenantId(tenantId);
         entity.setType(type);

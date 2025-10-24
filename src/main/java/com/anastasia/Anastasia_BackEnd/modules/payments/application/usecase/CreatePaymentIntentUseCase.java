@@ -1,39 +1,69 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
-import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.*;
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.stripe.StripeClient;
+import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CreatePaymentIntentUseCase {
     private final PaymentIntentRepository repo;
     private final StripeClient stripeClient;
 
     @Transactional
-    public PaymentIntent execute(String tenantId, PaymentPurpose purpose, long amountMinor, String currency,
-                                 String memberId, String fundId, String idempotencyKey) {
+    public PaymentIntent execute(String tenantId,
+                                 PaymentPurpose purpose,
+                                 long amountMinor,
+                                 String currency,
+                                 String memberId,
+                                 String fundId,
+                                 String idempotencyKey) {
 
-        // Idempotency: return existing if same key
-        var existing = repo.findByIdempotencyKey(idempotencyKey);
-        if (existing.isPresent()) return existing.get();
+        String normalizedTenantId = Objects.requireNonNull(tenantId, "tenantId must not be null").trim();
+        String normalizedIdempotencyKey = Objects.requireNonNull(idempotencyKey, "idempotencyKey must not be null").trim();
+        String normalizedCurrency = Objects.requireNonNull(currency, "currency must not be null").trim().toUpperCase(Locale.ROOT);
 
-        var intent = PaymentIntent.newInitiated(tenantId, purpose, amountMinor, currency, memberId, fundId, idempotencyKey);
+        var existing = repo.findByTenantIdAndIdempotencyKey(normalizedTenantId, normalizedIdempotencyKey);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        var intent = PaymentIntent.newInitiated(
+                normalizedTenantId,
+                purpose,
+                amountMinor,
+                normalizedCurrency,
+                memberId,
+                fundId,
+                normalizedIdempotencyKey);
         intent.setProvider("STRIPE");
 
-        // create checkout session on Stripe
         try {
             var session = stripeClient.createCheckoutSession(
-                    intent.getId().toString(), amountMinor, currency, purpose.name());
-            intent.setProviderRef(session.getId());
+                    intent.getId().toString(),
+                    normalizedTenantId,
+                    amountMinor,
+                    normalizedCurrency,
+                    purpose.name(),
+                    normalizedIdempotencyKey);
+            intent.setProviderRef(session.getPaymentIntent());
             intent.setCheckoutUrl(session.getUrl());
-        } catch (Exception e) {
+        } catch (StripeException e) {
             intent.markFailed();
             repo.save(intent);
-            throw new RuntimeException("Stripe session creation failed", e);
+            log.warn("Stripe session creation failed for tenant={} idempotencyKey={}: {}", normalizedTenantId,
+                    normalizedIdempotencyKey, e.getMessage());
+            throw new IllegalStateException("Stripe session creation failed", e);
         }
 
         return repo.save(intent);

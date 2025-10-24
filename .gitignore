@@ -98,12 +98,19 @@ ajcore.*
 .env.prod
 .env.staging
 .env.test
-application.yml
 application-dev.properties
 application-prod.properties
 application-test.properties
 application-api.properties
 application.properties
+
+application-*.yml
+application.yml
+application-dev.yml
+application-prod.yml
+application-test.yml
+application-api.yml
+application-test-server.yml
 
 config/*.properties
 config/*.yml

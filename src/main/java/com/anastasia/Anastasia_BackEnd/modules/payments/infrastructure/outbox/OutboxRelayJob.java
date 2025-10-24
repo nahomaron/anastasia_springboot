@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.PaymentEventPublisher;
 import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +14,11 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OutboxRelayJob {
     @PersistenceContext private EntityManager em;
     private final PaymentEventPublisher publisher;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
     @Scheduled(fixedDelay = 1000L)
     @Transactional
@@ -33,6 +35,8 @@ public class OutboxRelayJob {
                 e.setPublished(true);
                 em.merge(e);
             } catch (Exception ex) {
+                log.error("Failed to publish outbox event id={} type={} tenant={}: {}", e.getId(), e.getType(),
+                        e.getTenantId(), ex.getMessage());
                 // leave as is; will retry next tick
             }
         }

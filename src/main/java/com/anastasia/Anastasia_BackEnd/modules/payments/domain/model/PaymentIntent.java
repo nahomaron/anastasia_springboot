@@ -6,7 +6,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payment_intents")
+@Table(name = "payment_intents",
+        uniqueConstraints = @UniqueConstraint(name = "uk_payment_intents_tenant_idempotency",
+                columnNames = {"tenant_id", "idempotency_key"}))
 @Getter @Setter
 @NoArgsConstructor
 public class PaymentIntent {
@@ -14,7 +16,7 @@ public class PaymentIntent {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable=false)
+    @Column(name = "tenant_id", nullable=false)
     private String tenantId;
 
     @Enumerated(EnumType.STRING)
@@ -32,7 +34,8 @@ public class PaymentIntent {
     private String memberId;
     private String fundId;
 
-    @Column(unique=true) private String idempotencyKey;
+    @Column(name = "idempotency_key", nullable = false)
+    private String idempotencyKey;
     private String checkoutUrl;
 
     private Instant createdAt;
@@ -55,18 +58,41 @@ public class PaymentIntent {
     }
 
     public void markAuthorized(String providerRef) {
-        this.providerRef = providerRef;
-        this.status = PaymentStatus.AUTHORIZED;
+        ensureProviderReference(providerRef);
+        if (status == PaymentStatus.CAPTURED || status == PaymentStatus.REFUNDED) {
+            return;
+        }
+        if (status != PaymentStatus.AUTHORIZED) {
+            this.status = PaymentStatus.AUTHORIZED;
+        }
         this.updatedAt = Instant.now();
     }
 
-    public void markCaptured() {
+    public void markCaptured(String providerRef) {
+        ensureProviderReference(providerRef);
+        if (status == PaymentStatus.CAPTURED || status == PaymentStatus.REFUNDED) {
+            return;
+        }
         this.status = PaymentStatus.CAPTURED;
         this.updatedAt = Instant.now();
     }
 
     public void markFailed() {
+        if (status == PaymentStatus.CAPTURED || status == PaymentStatus.REFUNDED) {
+            return;
+        }
         this.status = PaymentStatus.FAILED;
         this.updatedAt = Instant.now();
+    }
+
+    private void ensureProviderReference(String providerRef) {
+        if (providerRef == null || providerRef.isBlank()) {
+            throw new IllegalArgumentException("providerRef must be provided");
+        }
+        if (this.providerRef == null) {
+            this.providerRef = providerRef;
+        } else if (!this.providerRef.equals(providerRef)) {
+            throw new IllegalStateException("PaymentIntent provider reference mismatch");
+        }
     }
 }
