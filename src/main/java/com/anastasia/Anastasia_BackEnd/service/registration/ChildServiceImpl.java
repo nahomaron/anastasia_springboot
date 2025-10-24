@@ -98,7 +98,7 @@ public class ChildServiceImpl implements ChildService{
         return childRepository.findAll(pageable);
     }
 
-    @Cacheable(value = "children", key = "#childId", keyGenerator = "tenantAwareKeyGenerator")
+    @Cacheable(value = "children", key = "#childId")
     @Override
     public Optional<ChildEntity> findChildById(Long childId) {
         return childRepository.findById(childId);
@@ -108,8 +108,7 @@ public class ChildServiceImpl implements ChildService{
             evict = {@CacheEvict( value = "children_all",
                         keyGenerator = "tenantAwareKeyGenerator",  allEntries = true),
                     @CacheEvict(value = "children",
-                            key = "#childId",
-                            keyGenerator = "tenantAwareKeyGenerator")}
+                            key = "#childId")}
     )
     @Override
     public void updateChildDetails(Long childId, ChildDTO request) {
@@ -150,8 +149,7 @@ public class ChildServiceImpl implements ChildService{
     @Caching(
             evict = {
                     @CacheEvict(value = "children",
-                            key ="#childId",
-                            keyGenerator = "tenantAwareKeyGenerator"
+                            key ="#childId"
                     ),
                     @CacheEvict(value = "children_all",
                             keyGenerator = "tenantAwareKeyGenerator",

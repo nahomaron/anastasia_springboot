@@ -54,7 +54,7 @@ public class ChurchServiceImpl implements ChurchService{
 
     @Caching(
             put = {@CachePut(value = "churches",
-                    keyGenerator = "tenantAwareKeyGenerator")
+                    key = "#churchId")
             },
             evict = {
                     @CacheEvict(value = "churches_all",
@@ -121,8 +121,7 @@ public class ChurchServiceImpl implements ChurchService{
                             keyGenerator = "tenantAwareKeyGenerator",
                             allEntries = true),
                     @CacheEvict(value = "churches",
-                            key = "#churchId",
-                            keyGenerator = "tenantAwareKeyGenerator")
+                            key = "#churchId")
             }
     )
     @Override
@@ -140,8 +139,7 @@ public class ChurchServiceImpl implements ChurchService{
     @Caching(
             evict = {
                     @CacheEvict(value = "churches",
-                            key = "#churchId",
-                            keyGenerator = "tenantAwareKeyGenerator"
+                            key = "#churchId"
                     ),
                     @CacheEvict(value = "churches_all",
                             keyGenerator = "tenantAwareKeyGenerator",

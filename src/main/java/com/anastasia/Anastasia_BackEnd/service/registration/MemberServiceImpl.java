@@ -122,7 +122,8 @@ public class MemberServiceImpl implements MemberService {
 //                    keyGenerator = "tenantAwareKeyGenerator")},
             evict = {@CacheEvict( value = "members_all",
                     key = "#memberId",
-                    keyGenerator = "tenantAwareKeyGenerator",  allEntries = true)}
+//                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true)}
     )
     @Override
     public void updateMembershipDetails(Long memberId, MemberDTO request) {
@@ -168,8 +169,8 @@ public class MemberServiceImpl implements MemberService {
     @Caching(
             evict = {
                     @CacheEvict(value = "members",
-                            key = "#memberId",
-                            keyGenerator = "tenantAwareKeyGenerator"
+                            key = "#memberId"
+//                            keyGenerator = "tenantAwareKeyGenerator"
                     ),
                     @CacheEvict(value = "members_all",
                             keyGenerator = "tenantAwareKeyGenerator",
@@ -182,7 +183,9 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.deleteById(memberId);
     }
 
-    @CachePut(value = "members",key = "#memberId", keyGenerator = "tenantAwareKeyGenerator")
+    @CachePut(value = "members",key = "#memberId"
+//            , keyGenerator = "tenantAwareKeyGenerator"
+    )
     @Override
     public void approveByChurch(Long memberId) {
         MemberEntity member = memberRepository.findById(memberId)
@@ -197,7 +200,9 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.save(member);
     }
 
-    @CachePut(value = "members", key = "#memberId", keyGenerator = "tenantAwareKeyGenerator")
+    @CachePut(value = "members", key = "#memberId"
+//            , keyGenerator = "tenantAwareKeyGenerator"
+    )
     @Override
     public void approveByPriest(Long memberId) {
         MemberEntity member = memberRepository.findById(memberId)

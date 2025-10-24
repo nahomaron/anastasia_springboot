@@ -15,10 +15,10 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 @Profile({"dev", "prod"})
 public class S3Config {
 
-    @Value("${aws.access.key}")
+    @Value("${aws.accessKeyId}")
     private String awsAccessKey;
 
-    @Value("${aws.secret.key}")
+    @Value("${aws.secretKey}")
     private String awsSecretKey;
 
     @Value("${aws.region}")
