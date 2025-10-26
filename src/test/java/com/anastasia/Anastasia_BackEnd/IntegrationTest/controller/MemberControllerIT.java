@@ -16,7 +16,7 @@ import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
+import com.anastasia.Anastasia_BackEnd.modules.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.service.registration.ChurchService;
 import com.fasterxml.jackson.databind.ObjectMapper;

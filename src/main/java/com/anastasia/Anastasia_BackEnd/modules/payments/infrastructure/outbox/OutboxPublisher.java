@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox;
 
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
@@ -18,18 +19,18 @@ public class OutboxPublisher {
     private final ObjectMapper mapper;
 
     @Transactional
-    public void publish(String type, String aggregateId, String tenantId, Map<String,Object> payload) {
+    public void publish(PaymentEventType type, String aggregateId, String tenantId, Map<String,Object> payload) {
         var entity = new OutboxEntity();
         entity.setId(UUID.randomUUID());
-        String aggregateType = type.startsWith("Subscription") ? "PaymentSubscription" : "Payment";
-        entity.setAggregateType(aggregateType);
+        entity.setAggregateType(type.getAggregateType());
         entity.setAggregateId(aggregateId);
         entity.setTenantId(tenantId);
-        entity.setType(type);
+        entity.setType(type.name());
         entity.setPayload(mapper.valueToTree(payload).toString());
         entity.setHeaders(mapper.valueToTree(Map.of("tenantId", tenantId)).toString());
         entity.setCreatedAt(Instant.now());
         entity.setPublished(false);
         em.persist(entity);
     }
+
 }

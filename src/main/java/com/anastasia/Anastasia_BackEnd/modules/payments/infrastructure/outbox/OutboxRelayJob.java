@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.PaymentEventPublisher;
+import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.publisher.PaymentEventPublisher;
 import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

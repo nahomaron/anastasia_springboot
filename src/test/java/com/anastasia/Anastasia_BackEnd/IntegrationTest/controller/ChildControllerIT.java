@@ -10,7 +10,7 @@ import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
+import com.anastasia.Anastasia_BackEnd.modules.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;

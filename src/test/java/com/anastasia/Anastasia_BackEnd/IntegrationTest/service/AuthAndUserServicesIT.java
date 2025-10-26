@@ -21,7 +21,7 @@ import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
 import com.anastasia.Anastasia_BackEnd.service.auth.LogoutService;
 import com.anastasia.Anastasia_BackEnd.service.auth.RoleService;
 import com.anastasia.Anastasia_BackEnd.service.user.UserService;
-import com.anastasia.Anastasia_BackEnd.notification.channel.EmailNotificationService;
+import com.anastasia.Anastasia_BackEnd.modules.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.testsupport.ServiceIntegrationTestBase;
 import com.fasterxml.jackson.databind.ObjectMapper;

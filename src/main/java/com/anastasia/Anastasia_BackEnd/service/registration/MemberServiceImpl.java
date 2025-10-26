@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.service.registration;
 
-import com.anastasia.Anastasia_BackEnd.notification.domain.events.MemberBirthdayEvent;
+import com.anastasia.Anastasia_BackEnd.modules.notification.domain.events.MemberBirthdayEvent;
 import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
@@ -22,7 +22,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentSubscription;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox.OutboxPublisher;
@@ -69,7 +70,7 @@ public class CreateSubscriptionUseCase {
 
         var saved = subscriptionRepository.save(subscription);
         outboxPublisher.publish(
-                "SubscriptionInitiated",
+                PaymentEventType.SUBSCRIPTION_INITIATED,
                 saved.getId().toString(),
                 saved.getTenantId(),
                 Map.of(

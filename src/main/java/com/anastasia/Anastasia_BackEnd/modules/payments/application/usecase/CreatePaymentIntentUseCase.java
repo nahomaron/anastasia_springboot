@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentInte
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.stripe.StripeClient;
+import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,9 @@ import java.util.Objects;
 public class CreatePaymentIntentUseCase {
     private final PaymentIntentRepository repo;
     private final StripeClient stripeClient;
+
+//    private final MemberRepository memberRepo;
+//    private final FundRepository fundRepo;
 
     @Transactional
     public PaymentIntent execute(String tenantId,
@@ -68,4 +72,18 @@ public class CreatePaymentIntentUseCase {
 
         return repo.save(intent);
     }
+
+//    private void validateReferences(String tenantId, String memberId, String fundId) {
+//        if (memberId != null && !memberId.isBlank()) {
+//            var exists = memberRepo.existsByIdAndTenantId(UUID.fromString(memberId), tenantId);
+//            if (!exists)
+//                throw new IllegalArgumentException("Member does not belong to this tenant: " + memberId);
+//        }
+//
+//        if (fundId != null && !fundId.isBlank()) {
+//            var exists = fundRepo.existsByIdAndTenantId(UUID.fromString(fundId), tenantId);
+//            if (!exists)
+//                throw new IllegalArgumentException("Fund does not belong to this tenant: " + fundId);
+//        }
+//    }
 }

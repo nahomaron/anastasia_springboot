@@ -1,9 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.notification.template;
 
-import com.anastasia.Anastasia_BackEnd.notification.template.TemplateRenderer;
-import com.anastasia.Anastasia_BackEnd.notification.template.TemplateResolution;
-import com.anastasia.Anastasia_BackEnd.notification.template.TemplateResolver;
-import com.anastasia.Anastasia_BackEnd.notification.template.TemplateService;
+import com.anastasia.Anastasia_BackEnd.modules.notification.template.TemplateRenderer;
+import com.anastasia.Anastasia_BackEnd.modules.notification.template.TemplateResolution;
+import com.anastasia.Anastasia_BackEnd.modules.notification.template.TemplateResolver;
+import com.anastasia.Anastasia_BackEnd.modules.notification.template.TemplateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

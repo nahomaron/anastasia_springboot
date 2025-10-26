@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox.OutboxPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
@@ -29,7 +30,7 @@ public class HandleWebhookEventUseCase {
         paymentRepo.save(pi);
 
         outbox.publish(
-                "PaymentAuthorized",
+                PaymentEventType.PAYMENT_AUTHORIZED,
                 pi.getId().toString(),
                 pi.getTenantId(),
                 Map.of(
@@ -50,7 +51,7 @@ public class HandleWebhookEventUseCase {
         paymentRepo.save(pi);
 
         outbox.publish(
-                "PaymentCaptured",
+                PaymentEventType.PAYMENT_CAPTURED,
                 pi.getId().toString(),
                 pi.getTenantId(),
                 Map.of(
