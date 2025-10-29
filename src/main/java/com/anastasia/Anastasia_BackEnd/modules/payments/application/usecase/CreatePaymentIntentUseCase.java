@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentInte
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.stripe.StripeClient;
+import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
 import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
@@ -13,27 +14,39 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
+
+/**
+ * Use case for creating a payment intent.
+ * Creates a new payment intent or returns an existing one based on the idempotency key.
+ * Validates member and fund references if provided.
+ * Interacts with Stripe to create a checkout session.
+ * Handles Stripe exceptions and marks the intent as failed if necessary.
+ * Saves the payment intent to the repository.
+ * Returns the created or existing payment intent.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CreatePaymentIntentUseCase {
     private final PaymentIntentRepository repo;
     private final StripeClient stripeClient;
+    private final MemberRepository memberRepo;
 
-//    private final MemberRepository memberRepo;
-//    private final FundRepository fundRepo;
-
+    // Creates or retrieves a payment intent based on the provided parameters.
     @Transactional
-    public PaymentIntent execute(String tenantId,
+    public PaymentIntent execute(UUID tenantId,
                                  PaymentPurpose purpose,
                                  long amountMinor,
                                  String currency,
-                                 String memberId,
+                                 Long memberId,
+                                 UUID userId,
                                  String fundId,
                                  String idempotencyKey) {
 
-        String normalizedTenantId = Objects.requireNonNull(tenantId, "tenantId must not be null").trim();
+        UUID normalizedTenantId = Objects.requireNonNull(tenantId, "tenantId must not be null");
         String normalizedIdempotencyKey = Objects.requireNonNull(idempotencyKey, "idempotencyKey must not be null").trim();
         String normalizedCurrency = Objects.requireNonNull(currency, "currency must not be null").trim().toUpperCase(Locale.ROOT);
 
@@ -42,12 +55,34 @@ public class CreatePaymentIntentUseCase {
             return existing.get();
         }
 
+        /**
+         * Resolve memberId and userId:
+         * - If memberId is provided, fetch the member and use its userId if userId is not provided.
+         * - If only userId is provided, ensure the user belongs to the tenant and fetch the corresponding memberId if available.
+         * - This ensures consistency and validity of references within the tenant context.
+         * - AtomicReference is used for memberId to allow modification within the lambda expression.
+         */
+        UUID resolvedUserId = userId;
+        AtomicReference<Long> resolvedMemberId = new AtomicReference<>(memberId);
+
+        if (resolvedMemberId.get() != null) {
+            MemberEntity member = memberRepo.findByIdAndTenantId(resolvedMemberId.get(), normalizedTenantId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Member does not belong to tenant: " + resolvedMemberId));
+            resolvedUserId = resolvedUserId != null ? resolvedUserId : member.getUserId();
+        } else if (resolvedUserId != null) {
+            // Ensure provided user belongs to tenant if possible
+            memberRepo.findByUserIdAndTenantId(resolvedUserId, normalizedTenantId)
+                    .ifPresent(found -> resolvedMemberId.set(found.getId()));
+        }
+
         var intent = PaymentIntent.newInitiated(
                 normalizedTenantId,
                 purpose,
                 amountMinor,
                 normalizedCurrency,
-                memberId,
+                resolvedMemberId.get(),
+                resolvedUserId,
                 fundId,
                 normalizedIdempotencyKey);
         intent.setProvider("STRIPE");

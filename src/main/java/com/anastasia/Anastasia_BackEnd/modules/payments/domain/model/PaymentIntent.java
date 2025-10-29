@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "payment_intents",
-        uniqueConstraints = @UniqueConstraint(name = "uk_payment_intents_tenant_idempotency",
+        uniqueConstraints = @UniqueConstraint(name = "usa_payment_intents_tenant_idempotency",
                 columnNames = {"tenant_id", "idempotency_key"}))
 @Getter @Setter
 @NoArgsConstructor
@@ -17,7 +17,7 @@ public class PaymentIntent {
     private UUID id;
 
     @Column(name = "tenant_id", nullable=false)
-    private String tenantId;
+    private UUID tenantId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
@@ -31,8 +31,10 @@ public class PaymentIntent {
 
     private String provider;        // e.g., STRIPE
     private String providerRef;     // e.g., Stripe PaymentIntent/Session id
-    private String memberId;
+    private Long memberId;
+    private UUID userId;
     private String fundId;
+    private String fundName;
 
     @Column(name = "idempotency_key", nullable = false)
     private String idempotencyKey;
@@ -41,8 +43,10 @@ public class PaymentIntent {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public static PaymentIntent newInitiated(String tenantId, PaymentPurpose purpose, long amt, String curr,
-                                             String memberId, String fundId, String idempotencyKey) {
+    // Factory method to create a new initiated PaymentIntent
+    // Note: does not persist to DB
+    public static PaymentIntent newInitiated(UUID tenantId, PaymentPurpose purpose, long amt, String curr,
+                                             Long memberId, UUID userId, String fundId, String idempotencyKey) {
         var pi = new PaymentIntent();
         pi.id = UUID.randomUUID();
         pi.tenantId = tenantId;
@@ -50,6 +54,7 @@ public class PaymentIntent {
         pi.amount = new Money(amt, curr);
         pi.status = PaymentStatus.INITIATED;
         pi.memberId = memberId;
+        pi.userId = userId;
         pi.fundId = fundId;
         pi.idempotencyKey = idempotencyKey;
         pi.createdAt = Instant.now();
@@ -57,6 +62,7 @@ public class PaymentIntent {
         return pi;
     }
 
+    // State transition methods
     public void markAuthorized(String providerRef) {
         ensureProviderReference(providerRef);
         if (status == PaymentStatus.CAPTURED || status == PaymentStatus.REFUNDED) {
@@ -68,6 +74,7 @@ public class PaymentIntent {
         this.updatedAt = Instant.now();
     }
 
+    // State transition methods
     public void markCaptured(String providerRef) {
         ensureProviderReference(providerRef);
         if (status == PaymentStatus.CAPTURED || status == PaymentStatus.REFUNDED) {

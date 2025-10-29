@@ -1,5 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.domain.events;
 
+import lombok.Data;
+import lombok.Getter;
+
+/**
+ * Enumeration of payment event types with their associated aggregate types.
+ */
+@Getter
 public enum PaymentEventType {
     PAYMENT_INITIATED("Payment"),
     PAYMENT_AUTHORIZED("Payment"),
@@ -16,8 +23,5 @@ public enum PaymentEventType {
         this.aggregateType = aggregateType;
     }
 
-    public String getAggregateType() {
-        return aggregateType;
-    }
 }
 

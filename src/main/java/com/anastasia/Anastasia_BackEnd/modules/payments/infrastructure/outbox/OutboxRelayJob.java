@@ -12,6 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * A scheduled job that relays unpublished outbox events to the Kafka publisher.
+ * It runs every second and processes events in batches.
+ * It’s like a postman that looks into the “Outbox mailbox” every second and
+ * sends any unsent messages.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j

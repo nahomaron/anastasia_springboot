@@ -13,7 +13,8 @@ public class PaymentView {
     private long amount;
     private String currency;
     private String status;
-    private String memberId;
+    private Long memberId;
+    private UUID userId;
     private String memberName;
     private String memberEmail;
     private String fundId;
@@ -28,10 +29,9 @@ public class PaymentView {
         v.setCurrency(p.getAmount().getCurrency());
         v.setStatus(p.getStatus().name());
         v.setMemberId(p.getMemberId());
-//        v.setMemberName(p.getMemberName());
-//        v.setMemberEmail(p.getMemberEmail());
+        v.setUserId(p.getUserId());
         v.setFundId(p.getFundId());
-//        v.setFundName(p.getFundName());
+        v.setFundName(p.getFundName());
         v.setCreatedAt(p.getCreatedAt());
         return v;
     }

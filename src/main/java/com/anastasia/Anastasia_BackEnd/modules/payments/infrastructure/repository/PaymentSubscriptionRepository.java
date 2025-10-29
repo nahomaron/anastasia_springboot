@@ -9,10 +9,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentSubscriptionRepository extends JpaRepository<PaymentSubscription, UUID> {
-    Optional<PaymentSubscription> findByTenantIdAndIdempotencyKey(String tenantId, String idempotencyKey);
+    Optional<PaymentSubscription> findByTenantIdAndIdempotencyKey(UUID tenantId, String idempotencyKey);
 
     // PaymentSubscriptionRepository
-    Page<PaymentSubscription> findByTenantIdOrderByCreatedAtDesc(String tenantId, Pageable pageable);
-    Optional<PaymentSubscription> findByIdAndTenantId(UUID id, String tenantId);
+    Page<PaymentSubscription> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
+    Optional<PaymentSubscription> findByIdAndTenantId(UUID id, UUID tenantId);
 
 }

@@ -17,5 +17,7 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long>, Jpa
 
     List<MemberEntity> findByBirthday(LocalDate date);
 
-    Optional<MemberEntity> findByMembershipIdAndTenantId(UUID uuid, String tenantId);
+    Optional<MemberEntity> findByUserIdAndTenantId(UUID userId, UUID tenantId);
+
+    Optional<MemberEntity> findByIdAndTenantId(Long id, UUID tenantId);
 }

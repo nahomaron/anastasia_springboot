@@ -9,9 +9,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Use case for handling webhook events from payment providers.
+ * Processes authorized and captured events for payment intents.
+ * Validates the payment intent and provider reference.
+ * Updates the payment intent status and saves it to the repository.
+ * Publishes relevant events to the outbox for further processing.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -50,18 +59,25 @@ public class HandleWebhookEventUseCase {
         pi.markCaptured(providerRef);
         paymentRepo.save(pi);
 
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("paymentId", pi.getId().toString());
+        payload.put("providerRef", providerRef);
+        payload.put("gross", gross);
+        payload.put("fees", fees);
+        payload.put("net", net);
+        payload.put("currency", pi.getAmount() != null ? pi.getAmount().getCurrency() : null);
+        payload.put("status", pi.getStatus().name());
+        payload.put("tenantId", pi.getTenantId() != null ? pi.getTenantId().toString() : null);
+        payload.put("purpose", pi.getPurpose() != null ? pi.getPurpose().name() : null);
+        payload.put("fundId", pi.getFundId());
+        payload.put("memberId", pi.getMemberId());
+        payload.put("capturedAt", Instant.now().toString());
+
         outbox.publish(
                 PaymentEventType.PAYMENT_CAPTURED,
                 pi.getId().toString(),
                 pi.getTenantId(),
-                Map.of(
-                        "paymentId", pi.getId().toString(),
-                        "providerRef", providerRef,
-                        "gross", gross,
-                        "fees", fees,
-                        "net", net,
-                        "status", pi.getStatus().name()
-                )
+                payload
         );
     }
 

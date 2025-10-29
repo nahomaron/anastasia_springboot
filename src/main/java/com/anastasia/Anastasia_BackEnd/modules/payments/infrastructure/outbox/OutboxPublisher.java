@@ -19,7 +19,7 @@ public class OutboxPublisher {
     private final ObjectMapper mapper;
 
     @Transactional
-    public void publish(PaymentEventType type, String aggregateId, String tenantId, Map<String,Object> payload) {
+    public void publish(PaymentEventType type, String aggregateId, UUID tenantId, Map<String,Object> payload) {
         var entity = new OutboxEntity();
         entity.setId(UUID.randomUUID());
         entity.setAggregateType(type.getAggregateType());
@@ -27,7 +27,7 @@ public class OutboxPublisher {
         entity.setTenantId(tenantId);
         entity.setType(type.name());
         entity.setPayload(mapper.valueToTree(payload).toString());
-        entity.setHeaders(mapper.valueToTree(Map.of("tenantId", tenantId)).toString());
+        entity.setHeaders(mapper.valueToTree(Map.of("tenantId", tenantId.toString())).toString());
         entity.setCreatedAt(Instant.now());
         entity.setPublished(false);
         em.persist(entity);

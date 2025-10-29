@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class CreateSubscriptionUseCase {
     private final OutboxPublisher outboxPublisher;
 
     @Transactional
-    public PaymentSubscription execute(String tenantId,
+    public PaymentSubscription execute(UUID tenantId,
                                        PaymentPurpose purpose,
                                        long amountMinor,
                                        String currency,
@@ -34,7 +35,7 @@ public class CreateSubscriptionUseCase {
                                        String fundId,
                                        String idempotencyKey) {
 
-        String normalizedTenantId = Objects.requireNonNull(tenantId, "tenantId must not be null").trim();
+        UUID normalizedTenantId = Objects.requireNonNull(tenantId, "tenantId must not be null");
         String normalizedIdempotencyKey = Objects.requireNonNull(idempotencyKey, "idempotencyKey must not be null").trim();
         String normalizedCurrency = Objects.requireNonNull(currency, "currency must not be null").trim().toUpperCase(Locale.ROOT);
 

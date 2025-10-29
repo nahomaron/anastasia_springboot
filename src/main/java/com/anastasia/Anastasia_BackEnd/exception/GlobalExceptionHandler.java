@@ -2,10 +2,14 @@ package com.anastasia.Anastasia_BackEnd.exception;
 
 import com.anastasia.Anastasia_BackEnd.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.exception.customExceptions.InvalidCredentialsException;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.exception.InsufficientFundsException;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.exception.InvalidTransactionException;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
@@ -34,6 +38,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.anastasia.Anastasia_BackEnd.exception.BusinessErrorCodes.*;
 import static org.springframework.http.HttpStatus.*;
@@ -253,6 +258,49 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     // with more specific handlers and overridden methods from ResponseEntityExceptionHandler.
 
 
+
+    // Accounting module exceptions
+    // todo - make the below accounting exceptions align with the global exception structure
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidTransactionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransactionException(InvalidTransactionException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientFundsException(InsufficientFundsException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        fieldError -> fieldError.getField(),
+                        fieldError -> fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "Invalid value"
+                ));
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    // Simple DTO for error responses
+    @Getter
+    private static class ErrorResponse {
+        private int status;
+        private String message;
+
+        public ErrorResponse(int status, String message) {
+            this.status = status;
+            this.message = message;
+        }
+
+    }
 
 
     // ===================================== Helper methods ============================================== //

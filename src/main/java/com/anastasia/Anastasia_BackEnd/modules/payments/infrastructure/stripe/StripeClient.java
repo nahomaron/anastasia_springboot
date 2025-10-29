@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
+import java.util.UUID;
 
 @Component
 public class StripeClient {
@@ -15,7 +16,7 @@ public class StripeClient {
     @Value("${stripe.cancel-url}")  private String cancelUrlTemplate;
 
     public Session createCheckoutSession(String paymentId,
-                                         String tenantId,
+                                         UUID tenantId,
                                          long amountMinor,
                                          String currency,
                                          String purposeLabel,
@@ -24,10 +25,11 @@ public class StripeClient {
         String successUrl = successUrlTemplate.replace("{PAYMENT_ID}", paymentId);
         String cancelUrl  = cancelUrlTemplate.replace("{PAYMENT_ID}", paymentId);
         String normalizedCurrency = currency.toLowerCase(Locale.ROOT);
+        String tenant = tenantId.toString();
 
         var paymentIntentData = SessionCreateParams.PaymentIntentData.builder()
                 .putMetadata("paymentId", paymentId)
-                .putMetadata("tenantId", tenantId)
+                .putMetadata("tenantId", tenant)
                 .putMetadata("purpose", purposeLabel)
                 .build();
 
@@ -37,7 +39,7 @@ public class StripeClient {
                 .setSuccessUrl(successUrl)
                 .setCancelUrl(cancelUrl)
                 .putMetadata("paymentId", paymentId)
-                .putMetadata("tenantId", tenantId)
+                .putMetadata("tenantId", tenant)
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
                         .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
@@ -52,14 +54,14 @@ public class StripeClient {
                 .build();
 
         var options = RequestOptions.builder()
-                .setIdempotencyKey("checkout:" + tenantId + ":" + idempotencyKey)
+                .setIdempotencyKey("checkout:" + tenant + ":" + idempotencyKey)
                 .build();
 
         return Session.create(params, options);
     }
 
     public Session createSubscriptionCheckoutSession(String subscriptionId,
-                                                     String tenantId,
+                                                     UUID tenantId,
                                                      long amountMinor,
                                                      String currency,
                                                      String purposeLabel,
@@ -68,6 +70,7 @@ public class StripeClient {
         String successUrl = successUrlTemplate.replace("{PAYMENT_ID}", subscriptionId);
         String cancelUrl  = cancelUrlTemplate.replace("{PAYMENT_ID}", subscriptionId);
         String normalizedCurrency = currency.toLowerCase(Locale.ROOT);
+        String tenant = tenantId.toString();
 
         var recurring = SessionCreateParams.LineItem.PriceData.Recurring.builder()
                 .setInterval(SessionCreateParams.LineItem.PriceData.Recurring.Interval.MONTH)
@@ -84,7 +87,7 @@ public class StripeClient {
 
         var subscriptionData = SessionCreateParams.SubscriptionData.builder()
                 .putMetadata("subscriptionId", subscriptionId)
-                .putMetadata("tenantId", tenantId)
+                .putMetadata("tenantId", tenant)
                 .putMetadata("purpose", purposeLabel)
                 .build();
 
@@ -94,7 +97,7 @@ public class StripeClient {
                 .setSuccessUrl(successUrl)
                 .setCancelUrl(cancelUrl)
                 .putMetadata("subscriptionId", subscriptionId)
-                .putMetadata("tenantId", tenantId)
+                .putMetadata("tenantId", tenant)
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
                         .setPriceData(priceData)
@@ -103,7 +106,7 @@ public class StripeClient {
                 .build();
 
         var options = RequestOptions.builder()
-                .setIdempotencyKey("subscription:" + tenantId + ":" + idempotencyKey)
+                .setIdempotencyKey("subscription:" + tenant + ":" + idempotencyKey)
                 .build();
 
         return Session.create(params, options);

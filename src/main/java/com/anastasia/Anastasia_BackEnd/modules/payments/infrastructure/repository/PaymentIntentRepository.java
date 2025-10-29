@@ -1,7 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
-import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentSubscription;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,11 +12,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentIntentRepository extends JpaRepository<PaymentIntent, UUID> {
-    Optional<PaymentIntent> findByTenantIdAndIdempotencyKey(String tenantId, String key);
+    Optional<PaymentIntent> findByTenantIdAndIdempotencyKey(UUID tenantId, String key);
 
     // PaymentIntentRepository
-    Page<PaymentIntent> findByTenantIdOrderByCreatedAtDesc(String tenantId, Pageable pageable);
-    Optional<PaymentIntent> findByIdAndTenantId(UUID id, String tenantId);
+    Page<PaymentIntent> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
+    Optional<PaymentIntent> findByIdAndTenantId(UUID id, UUID tenantId);
 
     @Query("""
     SELECT new map(p.fundId as fundId, SUM(p.amount.amount) as total)
@@ -25,5 +24,5 @@ public interface PaymentIntentRepository extends JpaRepository<PaymentIntent, UU
     WHERE p.tenantId = :tenantId AND p.status = com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentStatus.CAPTURED
     GROUP BY p.fundId
 """)
-    List<Map<String, Object>> totalCapturedByFund(String tenantId);
+    List<Map<String, Object>> totalCapturedByFund(UUID tenantId);
 }

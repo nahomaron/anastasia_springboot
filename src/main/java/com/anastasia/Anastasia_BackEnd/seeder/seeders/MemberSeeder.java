@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Profile("!test") // disable in test profile
 @Component
@@ -58,7 +60,12 @@ public class MemberSeeder {
 
                 LocalDate birthday = SeederRandomUtils.randomBirthdate(18, 60);
 
+                UUID tenantId = Optional.ofNullable(assignedChurch.getTenant())
+                        .map(tenant -> tenant.getId())
+                        .orElseThrow(() -> new IllegalStateException("Assigned church has no tenant"));
+
                 MemberEntity member = MemberEntity.builder()
+                        .tenantId(tenantId)
                         .churchNumber(assignedChurch.getChurchNumber())
                         .church(assignedChurch)
                         .membershipNumber("M" + faker.number().numberBetween(10000,99999 ))

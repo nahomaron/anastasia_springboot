@@ -8,6 +8,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.kafka.support.SendResult;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -15,7 +17,7 @@ public class PaymentEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publish(String type, String tenantId, String key, JsonNode payload) {
+    public void publish(String type, UUID tenantId, String key, JsonNode payload) {
         String topic = switch (type) {
             case "PaymentAuthorized" -> "payments.authorized";
             case "PaymentCaptured" -> "payments.captured";
@@ -23,7 +25,8 @@ public class PaymentEventPublisher {
         };
 
         ProducerRecord<String, Object> record = new ProducerRecord<>(topic, key, payload.toString());
-        record.headers().add("tenantId", tenantId.getBytes());
+        String tenantHeader = tenantId != null ? tenantId.toString() : "";
+        record.headers().add("tenantId", tenantHeader.getBytes());
         record.headers().add("type", type.getBytes());
 
         kafkaTemplate.send(record).whenComplete((SendResult<String, Object> result, Throwable ex) -> {

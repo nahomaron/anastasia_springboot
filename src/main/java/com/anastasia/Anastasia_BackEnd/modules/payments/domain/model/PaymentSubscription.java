@@ -22,7 +22,7 @@ public class PaymentSubscription {
     private UUID id;
 
     @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    private UUID tenantId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -49,7 +49,7 @@ public class PaymentSubscription {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public static PaymentSubscription newPending(String tenantId,
+    public static PaymentSubscription newPending(UUID tenantId,
                                                  PaymentPurpose purpose,
                                                  long amountMinor,
                                                  String currency,

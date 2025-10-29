@@ -15,12 +15,12 @@ public class SubscriptionQueryService {
 
     private final PaymentSubscriptionRepository repo;
 
-    public Page<SubscriptionView> findAll(String tenantId, Pageable pageable) {
+    public Page<SubscriptionView> findAll(UUID tenantId, Pageable pageable) {
         return repo.findByTenantIdOrderByCreatedAtDesc(tenantId, pageable)
                 .map(SubscriptionView::fromEntity);
     }
 
-    public SubscriptionView findById(String tenantId, UUID id) {
+    public SubscriptionView findById(UUID tenantId, UUID id) {
         var sub = repo.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Subscription not found: " + id));
         return SubscriptionView.fromEntity(sub);

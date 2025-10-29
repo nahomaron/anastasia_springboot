@@ -1,20 +1,19 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
-import com.anastasia.Anastasia_BackEnd.modules.payments.application.query.PaymentQueryService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.query.SubscriptionQueryService;
-import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.PaymentView;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.SubscriptionView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/payments")
+@RequestMapping("/api/v1/payments/subscriptions")
 @RequiredArgsConstructor
 public class SubscriptionQueryController {
     private final SubscriptionQueryService queryService;
@@ -23,14 +22,16 @@ public class SubscriptionQueryController {
     public ResponseEntity<Page<SubscriptionView>> findAll(
             @RequestHeader("X-Tenant-Id") String tenantId,
             Pageable pageable) {
-        return ResponseEntity.ok(queryService.findAll(tenantId, pageable));
+        UUID tenantUuid = parseTenantId(tenantId);
+        return ResponseEntity.ok(queryService.findAll(tenantUuid, pageable));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SubscriptionView> findById(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @PathVariable UUID id) {
-        return ResponseEntity.ok(queryService.findById(tenantId, id));
+        UUID tenantUuid = parseTenantId(tenantId);
+        return ResponseEntity.ok(queryService.findById(tenantUuid, id));
     }
 
 //    @GetMapping("/summary")
@@ -45,4 +46,11 @@ public class SubscriptionQueryController {
 //        ));
 //    }
 
+    private UUID parseTenantId(String headerValue) {
+        try {
+            return UUID.fromString(headerValue);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid tenant id");
+        }
+    }
 }

@@ -84,6 +84,8 @@ public class MemberServiceImpl implements MemberService {
         memberEntity.setMembershipNumber(generateUniqueMembershipNumber(6, memberEntity.isDeacon()));
         memberEntity.setUser(user);
         memberEntity.setChurch(church);
+        Optional.ofNullable(church.getTenant())
+                .ifPresent(tenant -> memberEntity.setTenantId(tenant.getId()));
         memberEntity.setApprovedByChurch(false);
         memberEntity.setApprovedByPriest(false);
         memberEntity.setStatus(MemberStatus.PENDING.name());

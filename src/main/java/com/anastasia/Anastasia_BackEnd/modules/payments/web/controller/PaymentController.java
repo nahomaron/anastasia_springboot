@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -28,9 +31,10 @@ public class PaymentController {
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
             @Valid @RequestBody CreateIntentRequest req) {
 
+        UUID tenantUuid = parseTenantId(tenantId);
         var pi = createIntent.execute(
-                tenantId, req.getPurpose(), req.getAmount(), req.getCurrency(),
-                req.getMemberId(), req.getFundId(), idempotencyKey);
+                tenantUuid, req.getPurpose(), req.getAmount(), req.getCurrency(),
+                req.getMemberId(), req.getUserId(), req.getFundId(), idempotencyKey);
 
         var resp = new PaymentResponse();
         resp.setPaymentId(pi.getId());
@@ -45,8 +49,9 @@ public class PaymentController {
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
             @Valid @RequestBody CreateSubscriptionRequest req) {
 
+        UUID tenantUuid = parseTenantId(tenantId);
         var subscription = createSubscription.execute(
-                tenantId,
+                tenantUuid,
                 req.getPurpose(),
                 req.getAmount(),
                 req.getCurrency(),
@@ -59,5 +64,13 @@ public class PaymentController {
         resp.setStatus(subscription.getStatus().name());
         resp.setCheckoutUrl(subscription.getCheckoutUrl());
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+    }
+
+    private UUID parseTenantId(String headerValue) {
+        try {
+            return UUID.fromString(headerValue);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid tenant id");
+        }
     }
 }

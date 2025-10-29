@@ -9,6 +9,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -21,8 +25,11 @@ import java.util.UUID;
 @SuperBuilder
 @Entity
 @Table(name = "members", indexes = {
-        @Index(name = "idx_member_church", columnList = "church_id")
+        @Index(name = "idx_member_church", columnList = "church_id"),
+        @Index(name = "idx_member_tenant", columnList = "tenant_id")
 })
+//@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
+//@Filters(@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId"))
 @EntityListeners(AuditingEntityListener.class)
 public class MemberEntity extends Auditable {
 
@@ -32,6 +39,9 @@ public class MemberEntity extends Auditable {
     private Long id;
 
     private String membershipNumber;
+
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
 
     @Column(nullable = false)
     private String churchNumber;
