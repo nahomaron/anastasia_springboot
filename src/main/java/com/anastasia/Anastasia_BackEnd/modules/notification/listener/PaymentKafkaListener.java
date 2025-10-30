@@ -1,14 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.modules.notification.listener;
 
+import com.anastasia.Anastasia_BackEnd.modules.kafka.util.KafkaConsumerGroupNames;
 import com.anastasia.Anastasia_BackEnd.modules.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -17,7 +17,7 @@ public class PaymentKafkaListener {
 
     private final EmailNotificationService emailService;
 
-    @KafkaListener(topics = {"payments.captured"}, groupId = "anastasia-notifications")
+    @KafkaListener(topics = "#{@kafkaTopicNameResolver.paymentsCaptured()}", groupId = KafkaConsumerGroupNames.NOTIFICATIONS)
     public void handlePaymentCaptured(JsonNode payload) {
         try {
             String email = payload.path("memberEmail").asText(null);
@@ -46,7 +46,7 @@ public class PaymentKafkaListener {
         }
     }
 
-    @KafkaListener(topics = {"subscriptions.activated"}, groupId = "anastasia-notifications")
+    @KafkaListener(topics = "#{@kafkaTopicNameResolver.subscriptionsActivated()}", groupId = KafkaConsumerGroupNames.NOTIFICATIONS)
     public void handleSubscriptionActivated(JsonNode payload) {
         try {
             String email = payload.path("memberEmail").asText(null);
@@ -70,7 +70,7 @@ public class PaymentKafkaListener {
         }
     }
 
-    @KafkaListener(topics = {"subscriptions.canceled"}, groupId = "anastasia-notifications")
+    @KafkaListener(topics = "#{@kafkaTopicNameResolver.subscriptionsCanceled()}", groupId = KafkaConsumerGroupNames.NOTIFICATIONS)
     public void handleSubscriptionCanceled(JsonNode payload) {
         try {
             String email = payload.path("memberEmail").asText(null);

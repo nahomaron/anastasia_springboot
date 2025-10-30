@@ -44,7 +44,8 @@ public class SecurityConfig {
             "/oauth2/**",
             "/api/v1/tenant/**",
             "/api/v1/priests/register",
-            "/actuator/**"
+            "/actuator/**",
+            "/swagger-ui/**"
     };
 
     @Bean

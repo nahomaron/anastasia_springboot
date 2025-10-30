@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.messaging;
 
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.PaymentCapturedMessage;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.TransactionService;
+import com.anastasia.Anastasia_BackEnd.modules.kafka.util.KafkaConsumerGroupNames;
+import com.anastasia.Anastasia_BackEnd.modules.kafka.util.KafkaHeaderNames;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +23,10 @@ public class PaymentAccountingListener {
     private final ObjectMapper objectMapper;
     private final TransactionService transactionService;
 
-    @KafkaListener(topics = "payments.captured", groupId = "anastasia-accounting")
+    @KafkaListener(
+            topics = "#{@kafkaTopicNameResolver.paymentsCaptured()}",
+            groupId = KafkaConsumerGroupNames.ACCOUNTING
+    )
     public void handlePaymentCaptured(ConsumerRecord<String, String> record) {
         try {
             PaymentCapturedMessage message = mapRecord(record);
@@ -61,7 +66,7 @@ public class PaymentAccountingListener {
         if (payloadTenant != null && !payloadTenant.isBlank()) {
             return payloadTenant;
         }
-        Header header = record.headers().lastHeader("tenantId");
+        Header header = record.headers().lastHeader(KafkaHeaderNames.TENANT_ID);
         if (header != null) {
             return new String(header.value(), StandardCharsets.UTF_8);
         }

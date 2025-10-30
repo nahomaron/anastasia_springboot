@@ -1,14 +1,16 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.publisher;
 
+import com.anastasia.Anastasia_BackEnd.modules.kafka.support.KafkaTopicNameResolver;
+import com.anastasia.Anastasia_BackEnd.modules.kafka.util.KafkaHeaderNames;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.kafka.support.SendResult;
-
-import java.util.UUID;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -16,18 +18,15 @@ import java.util.UUID;
 public class PaymentEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTopicNameResolver topicNameResolver;
 
     public void publish(String type, UUID tenantId, String key, JsonNode payload) {
-        String topic = switch (type) {
-            case "PaymentAuthorized" -> "payments.authorized";
-            case "PaymentCaptured" -> "payments.captured";
-            default -> "payments.events";
-        };
+        String topic = resolveTopic(type);
 
         ProducerRecord<String, Object> record = new ProducerRecord<>(topic, key, payload.toString());
-        String tenantHeader = tenantId != null ? tenantId.toString() : "";
-        record.headers().add("tenantId", tenantHeader.getBytes());
-        record.headers().add("type", type.getBytes());
+        byte[] tenantBytes = tenantId != null ? tenantId.toString().getBytes(StandardCharsets.UTF_8) : new byte[0];
+        record.headers().add(KafkaHeaderNames.TENANT_ID, tenantBytes);
+        record.headers().add(KafkaHeaderNames.EVENT_TYPE, type.getBytes(StandardCharsets.UTF_8));
 
         kafkaTemplate.send(record).whenComplete((SendResult<String, Object> result, Throwable ex) -> {
             if (ex != null) {
@@ -41,5 +40,16 @@ public class PaymentEventPublisher {
                         result.getRecordMetadata().offset());
             }
         });
+    }
+
+    private String resolveTopic(String eventType) {
+        return switch (eventType) {
+            case "PaymentAuthorized" -> topicNameResolver.paymentsAuthorized();
+            case "PaymentCaptured" -> topicNameResolver.paymentsCaptured();
+            default -> {
+                log.debug("Falling back to generic payments.events topic for eventType={}", eventType);
+                yield topicNameResolver.paymentsEvents();
+            }
+        };
     }
 }
