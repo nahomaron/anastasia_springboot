@@ -1,14 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
 
-import com.anastasia.Anastasia_BackEnd.config.RateLimiterConfig;
-import com.anastasia.Anastasia_BackEnd.controller.AuthController;
-import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
-import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.model.auth.ResetPasswordRequest;
-import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.user.UserService;
+import com.anastasia.Anastasia_BackEnd.common.config.RateLimiterConfig;
+import com.anastasia.Anastasia_BackEnd.core.auth.controller.AuthController;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.ResetPasswordRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import io.github.bucket4j.Bucket;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;

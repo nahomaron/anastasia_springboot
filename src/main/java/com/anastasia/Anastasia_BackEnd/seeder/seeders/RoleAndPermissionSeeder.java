@@ -1,12 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
-import com.anastasia.Anastasia_BackEnd.model.permission.Permission;
-import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
-import com.anastasia.Anastasia_BackEnd.model.role.Role;
-import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
-import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
-import com.anastasia.Anastasia_BackEnd.seeder.DataSeeder;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.PermissionRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

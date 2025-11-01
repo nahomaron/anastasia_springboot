@@ -1,18 +1,18 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.auth;
 
 
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-import com.anastasia.Anastasia_BackEnd.mappers.UsersMapper;
-import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
-import com.anastasia.Anastasia_BackEnd.model.role.Role;
-import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
-import com.anastasia.Anastasia_BackEnd.model.user.UserType;
-import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.user.UserServiceImpl;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.UsersMapper;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;

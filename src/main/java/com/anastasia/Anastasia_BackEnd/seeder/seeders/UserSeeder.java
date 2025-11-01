@@ -1,9 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserType;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.seeder.DataSeeder;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.slf4j.Logger;

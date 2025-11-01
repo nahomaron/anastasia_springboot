@@ -1,18 +1,17 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
-import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
-import com.anastasia.Anastasia_BackEnd.service.registration.TenantService;
+import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

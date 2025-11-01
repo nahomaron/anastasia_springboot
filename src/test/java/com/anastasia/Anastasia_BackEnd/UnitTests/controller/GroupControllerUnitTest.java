@@ -1,11 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
 
-import com.anastasia.Anastasia_BackEnd.controller.GroupController;
-import com.anastasia.Anastasia_BackEnd.model.group.*;
-import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.service.user.UserService;
-import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
+import com.anastasia.Anastasia_BackEnd.modules.groups.GroupController;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.*;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
+import com.anastasia.Anastasia_BackEnd.modules.groups.service.GroupService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

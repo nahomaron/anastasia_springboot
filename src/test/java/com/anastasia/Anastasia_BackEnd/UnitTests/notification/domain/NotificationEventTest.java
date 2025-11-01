@@ -1,10 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.notification.domain;
 
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.modules.notification.domain.NotificationChannelType;
-import com.anastasia.Anastasia_BackEnd.modules.notification.domain.NotificationEvent;
-import com.anastasia.Anastasia_BackEnd.modules.notification.domain.NotificationType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;

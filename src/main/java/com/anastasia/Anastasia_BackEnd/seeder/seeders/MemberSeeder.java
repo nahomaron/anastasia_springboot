@@ -1,14 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 
-import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.common.Address;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserType;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
-import com.anastasia.Anastasia_BackEnd.service.registration.ChurchServiceImpl;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchServiceImpl;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.slf4j.Logger;

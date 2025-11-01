@@ -1,16 +1,18 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
-import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
-import com.anastasia.Anastasia_BackEnd.api.utils.TestDataSeeder;
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
-import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.group.*;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.repository.ChurchRepository;
-import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
-import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
+import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
+import com.anastasia.Anastasia_BackEnd.Api.utils.TestDataSeeder;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.AddUsersToGroupRequest;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.SimpleGroupEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
+import com.anastasia.Anastasia_BackEnd.modules.groups.service.GroupService;
+import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -22,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 

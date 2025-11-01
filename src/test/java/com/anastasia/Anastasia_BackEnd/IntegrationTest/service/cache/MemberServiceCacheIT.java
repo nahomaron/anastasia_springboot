@@ -2,12 +2,12 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.service.cache;
 
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
-import com.anastasia.Anastasia_BackEnd.api.config.PostgresTestContainer;
-import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
-import com.anastasia.Anastasia_BackEnd.service.registration.MemberService;
+import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,6 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;

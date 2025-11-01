@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.filter;
 
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-import com.anastasia.Anastasia_BackEnd.filter.HibernateTenantFilter;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.filter.HibernateTenantFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;

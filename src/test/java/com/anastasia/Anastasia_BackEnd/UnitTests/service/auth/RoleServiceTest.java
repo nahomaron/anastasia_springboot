@@ -1,15 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.auth;
 
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-import com.anastasia.Anastasia_BackEnd.model.permission.Permission;
-import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
-import com.anastasia.Anastasia_BackEnd.model.role.Role;
-import com.anastasia.Anastasia_BackEnd.model.role.RoleRequest;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.PermissionRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
-import com.anastasia.Anastasia_BackEnd.service.auth.RoleService;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.PermissionRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.RoleService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.specification;
 
-import com.anastasia.Anastasia_BackEnd.model.common.Address;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.specification.MemberSpecifications;
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.common.specification.MemberSpecifications;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.jpa.domain.Specification;

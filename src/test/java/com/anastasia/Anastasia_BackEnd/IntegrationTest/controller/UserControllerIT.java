@@ -2,19 +2,19 @@
 //
 //import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 //import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-//import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
-//import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationResponse;
-//import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
+//import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
+//import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
+//import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
 //import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
 //import com.anastasia.Anastasia_BackEnd.model.tenant.TenantDTO;
-//import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
-//import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-//import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
+//import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
+//import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+//import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 //import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-//import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
+//import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 //import com.anastasia.Anastasia_BackEnd.service.auth.user.UserService;
 //import com.anastasia.Anastasia_BackEnd.notification.channel.EmailService;
-//import com.anastasia.Anastasia_BackEnd.service.email.EmailTemplateName;
+//import com.anastasia.Anastasia_BackEnd.modules.notification.template.EmailTemplateName;
 //import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
 //import com.fasterxml.jackson.databind.ObjectMapper;
 //import jakarta.mail.MessagingException;

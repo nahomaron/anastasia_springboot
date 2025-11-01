@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.util;
 
-import com.anastasia.Anastasia_BackEnd.util.SecurityUtils;
+import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

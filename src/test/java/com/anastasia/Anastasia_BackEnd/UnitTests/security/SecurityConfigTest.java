@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.security;
 
-import com.anastasia.Anastasia_BackEnd.filter.JwtFilter;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.security.SecurityConfig;
+import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.common.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

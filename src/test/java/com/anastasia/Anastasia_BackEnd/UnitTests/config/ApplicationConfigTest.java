@@ -1,14 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.config;
 
-import com.anastasia.Anastasia_BackEnd.config.ApplicationConfig;
-import com.anastasia.Anastasia_BackEnd.auditing.ApplicationAuditAware;
+import com.anastasia.Anastasia_BackEnd.common.config.ApplicationConfig;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.env.Environment;
-import org.springframework.mock.env.MockEnvironment;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
-import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

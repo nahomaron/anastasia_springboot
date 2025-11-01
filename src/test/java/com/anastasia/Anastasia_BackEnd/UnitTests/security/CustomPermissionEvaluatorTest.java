@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.security;
 
-import com.anastasia.Anastasia_BackEnd.security.CustomPermissionEvaluator;
+import com.anastasia.Anastasia_BackEnd.common.security.CustomPermissionEvaluator;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

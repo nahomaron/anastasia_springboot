@@ -1,11 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 
-import com.anastasia.Anastasia_BackEnd.mappers.GroupMapper;
-import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.service.user.UserService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.GroupMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

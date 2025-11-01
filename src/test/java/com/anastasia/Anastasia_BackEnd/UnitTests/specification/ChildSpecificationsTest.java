@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.specification;
 
-import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
-import com.anastasia.Anastasia_BackEnd.model.common.Address;
-import com.anastasia.Anastasia_BackEnd.specification.ChildSpecifications;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.common.specification.ChildSpecifications;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;

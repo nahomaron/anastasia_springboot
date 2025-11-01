@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.config;
 
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

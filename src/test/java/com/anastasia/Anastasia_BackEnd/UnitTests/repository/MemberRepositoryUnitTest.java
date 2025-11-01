@@ -1,11 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.repository;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
-import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
-import com.anastasia.Anastasia_BackEnd.testsupport.TestAuditorAwareConfig;
+import com.anastasia.Anastasia_BackEnd.common.config.ApplicationConfig;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.TestSupport.TestAuditorAwareConfig;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles({"test", "test-server"})
 @DataJpaTest(
         excludeAutoConfiguration = {
-                com.anastasia.Anastasia_BackEnd.config.ApplicationConfig.class
+                ApplicationConfig.class
         }
 )
 @Import(TestAuditorAwareConfig.class)

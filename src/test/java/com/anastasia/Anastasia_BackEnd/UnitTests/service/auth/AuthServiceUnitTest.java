@@ -1,16 +1,16 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.auth;
 
 
-import com.anastasia.Anastasia_BackEnd.model.auth.AuthenticationRequest;
-import com.anastasia.Anastasia_BackEnd.model.token.Token;
-import com.anastasia.Anastasia_BackEnd.model.token.TokenType;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserType;
-import com.anastasia.Anastasia_BackEnd.modules.notification.channel.EmailNotificationService;
-import com.anastasia.Anastasia_BackEnd.repository.auth.RoleRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.auth.AuthServiceImpl;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthServiceImpl;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtilTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

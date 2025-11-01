@@ -1,35 +1,36 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.service;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.AttendanceStatus;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.CheckInQRRequestDTO;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.CheckInRequestDTO;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.MarkAbsentRequestDTO;
-import com.anastasia.Anastasia_BackEnd.model.event.report.EventReport;
-import com.anastasia.Anastasia_BackEnd.model.group.AddManagersResponse;
-import com.anastasia.Anastasia_BackEnd.model.group.AddUsersToGroupRequest;
-import com.anastasia.Anastasia_BackEnd.model.group.BatchInviteRequest;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupDTO;
-import com.anastasia.Anastasia_BackEnd.model.group.GroupManagerRequest;
-import com.anastasia.Anastasia_BackEnd.model.group.RemoveManagersResponse;
-import com.anastasia.Anastasia_BackEnd.model.group.RemoveUsersFromGroupRequest;
-import com.anastasia.Anastasia_BackEnd.model.group.RemoveUsersFromGroupResponse;
-import com.anastasia.Anastasia_BackEnd.model.group.SimpleGroupEntity;
-import com.anastasia.Anastasia_BackEnd.model.role.Role;
-import com.anastasia.Anastasia_BackEnd.model.role.RoleType;
-import com.anastasia.Anastasia_BackEnd.model.user.SimpleUserDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.repository.EventAttendanceRepository;
-import com.anastasia.Anastasia_BackEnd.repository.EventRepository;
-import com.anastasia.Anastasia_BackEnd.repository.GroupRepository;
-import com.anastasia.Anastasia_BackEnd.service.event.EventAttendanceService;
-import com.anastasia.Anastasia_BackEnd.service.event.EventReportService;
-import com.anastasia.Anastasia_BackEnd.service.event.EventService;
-import com.anastasia.Anastasia_BackEnd.service.event.QrCheckInService;
-import com.anastasia.Anastasia_BackEnd.service.group.GroupService;
-import com.anastasia.Anastasia_BackEnd.testsupport.ServiceIntegrationTestBase;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInQRRequestDTO;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRequestDTO;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MarkAbsentRequestDTO;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.report.EventReport;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.AddManagersResponse;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.AddUsersToGroupRequest;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.BatchInviteRequest;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupManagerRequest;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupUserCandidateDTO;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.RemoveManagersResponse;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.RemoveUsersFromGroupRequest;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.RemoveUsersFromGroupResponse;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.SimpleGroupEntity;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventAttendanceRepository;
+import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
+import com.anastasia.Anastasia_BackEnd.modules.groups.GroupRepository;
+import com.anastasia.Anastasia_BackEnd.modules.events.service.EventAttendanceService;
+import com.anastasia.Anastasia_BackEnd.modules.events.service.EventReportService;
+import com.anastasia.Anastasia_BackEnd.modules.events.service.EventService;
+import com.anastasia.Anastasia_BackEnd.modules.events.service.QrCheckInService;
+import com.anastasia.Anastasia_BackEnd.modules.groups.service.GroupService;
+import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +47,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -127,7 +127,7 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
                 GroupManagerRequest.builder().managerIds(Set.of(extraUser.getUuid())).build());
         assertThat(removeManagersResponse.getRemovedManagerIds()).containsExactly(extraUser.getUuid());
 
-        List<com.anastasia.Anastasia_BackEnd.model.group.GroupUserCandidateDTO> userStatus =
+        List<GroupUserCandidateDTO> userStatus =
                 groupService.getGroupUserStatus(simpleGroup.getGroupId());
         assertThat(userStatus).isNotNull();
 

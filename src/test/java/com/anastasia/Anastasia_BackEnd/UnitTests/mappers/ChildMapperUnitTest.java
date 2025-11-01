@@ -1,10 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 
 
-import com.anastasia.Anastasia_BackEnd.mappers.ChildMapper;
-import com.anastasia.Anastasia_BackEnd.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.model.child.ChildEntity;
-import com.anastasia.Anastasia_BackEnd.service.registration.ChildServiceImpl;
+import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

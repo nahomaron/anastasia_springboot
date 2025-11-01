@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.util;
 
-import com.anastasia.Anastasia_BackEnd.config.RateLimiterConfig;
-import com.anastasia.Anastasia_BackEnd.util.RateLimiterService;
+import com.anastasia.Anastasia_BackEnd.common.config.RateLimiterConfig;
+import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
 import io.github.bucket4j.Bucket;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

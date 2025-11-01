@@ -1,13 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
 
-import com.anastasia.Anastasia_BackEnd.controller.UserController;
-import com.anastasia.Anastasia_BackEnd.model.auth.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.model.role.AssignRolesRequest;
-import com.anastasia.Anastasia_BackEnd.model.user.UserDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.service.auth.AuthService;
-import com.anastasia.Anastasia_BackEnd.service.user.UserService;
+import com.anastasia.Anastasia_BackEnd.core.auth.controller.UserController;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

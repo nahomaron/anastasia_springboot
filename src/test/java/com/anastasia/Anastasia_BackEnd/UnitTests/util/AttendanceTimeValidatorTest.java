@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.util;
 
-import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
-import com.anastasia.Anastasia_BackEnd.util.AttendanceTimeValidator;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
+import com.anastasia.Anastasia_BackEnd.common.utils.AttendanceTimeValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;

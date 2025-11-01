@@ -4,8 +4,8 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentInte
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.stripe.StripeClient;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

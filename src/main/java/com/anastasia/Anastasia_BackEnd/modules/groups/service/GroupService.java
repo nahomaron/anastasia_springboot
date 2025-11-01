@@ -1,0 +1,46 @@
+package com.anastasia.Anastasia_BackEnd.modules.groups.service;
+
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.*;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public interface GroupService {
+    GroupEntity convertToEntity(GroupDTO groupDTO);
+    GroupDTO convertToDTO(GroupEntity groupEntity);
+
+    SimpleGroupEntity createGroup(GroupDTO groupDTO);
+
+    Page<GroupEntity> findAll(Pageable pageable);
+
+    Optional<GroupEntity> findOne(Long groupId);
+
+    boolean exists(Long groupId);
+
+    void updateGroup(Long groupId, GroupDTO groupDTO);
+
+    void delete(Long groupId);
+
+    AddUsersToGroupResponse addUsersToGroup(Long groupId, AddUsersToGroupRequest request);
+
+    RemoveUsersFromGroupResponse removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request);
+
+    AddManagersResponse addManagersToGroup(Long groupId, GroupManagerRequest request);
+
+    RemoveManagersResponse removeManagersFromGroup(Long groupId, GroupManagerRequest request);
+
+    Page<SimpleUserDTO> listGroupMembers(Long groupId, Pageable pageable);
+
+    List<SimpleUserDTO> getGroupManagers(Long groupId);
+
+    List<GroupUserCandidateDTO> getGroupUserStatus(Long groupId);
+
+    BatchInviteResponse batchInviteUsersToGroup(Long groupId, @Valid BatchInviteRequest request);
+}

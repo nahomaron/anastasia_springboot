@@ -1,0 +1,28 @@
+package com.anastasia.Anastasia_BackEnd.core.auth.controller;
+
+import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.RoleService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/admin")
+@PreAuthorize("hasAuthority('MANAGE_ROLES')")
+public class RoleController {
+
+    private final RoleService roleService;
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
+    @PostMapping("/roles")
+    public ResponseEntity<?> createRole(@RequestBody RoleRequest request){
+        roleService.createRole(request);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+}

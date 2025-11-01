@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.config;
 
-import com.anastasia.Anastasia_BackEnd.config.EmailConfig;
+import com.anastasia.Anastasia_BackEnd.common.config.EmailConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 

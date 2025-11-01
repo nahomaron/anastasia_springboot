@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.publisher;
 
-import com.anastasia.Anastasia_BackEnd.modules.kafka.support.KafkaTopicNameResolver;
-import com.anastasia.Anastasia_BackEnd.modules.kafka.util.KafkaHeaderNames;
+import com.anastasia.Anastasia_BackEnd.core.kafka.support.KafkaTopicNameResolver;
+import com.anastasia.Anastasia_BackEnd.core.kafka.util.KafkaHeaderNames;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;

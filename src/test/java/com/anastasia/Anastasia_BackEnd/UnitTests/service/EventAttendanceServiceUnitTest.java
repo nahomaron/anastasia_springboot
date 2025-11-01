@@ -1,15 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
-import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.AttendanceStatus;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.CheckInRequestDTO;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.EventAttendance;
-import com.anastasia.Anastasia_BackEnd.model.event.attendance.MarkAbsentRequestDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.repository.EventAttendanceRepository;
-import com.anastasia.Anastasia_BackEnd.repository.EventRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.event.EventAttendanceService;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRequestDTO;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendance;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MarkAbsentRequestDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventAttendanceRepository;
+import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.events.service.EventAttendanceService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

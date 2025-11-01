@@ -1,12 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.notification.template;
 
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-import com.anastasia.Anastasia_BackEnd.modules.notification.config.S3TemplateLoader;
-import com.anastasia.Anastasia_BackEnd.modules.notification.repository.EmailTemplateRepository;
-import com.anastasia.Anastasia_BackEnd.modules.notification.template.EmailTemplateEntity;
-import com.anastasia.Anastasia_BackEnd.modules.notification.template.TemplateResolution;
-import com.anastasia.Anastasia_BackEnd.modules.notification.template.TemplateResolver;
-import com.anastasia.Anastasia_BackEnd.modules.notification.template.TemplateSource;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.notification.config.S3TemplateLoader;
+import com.anastasia.Anastasia_BackEnd.core.notification.repository.EmailTemplateRepository;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateEntity;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateResolution;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateResolver;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

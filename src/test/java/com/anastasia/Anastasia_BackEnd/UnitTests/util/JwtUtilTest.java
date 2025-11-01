@@ -1,14 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.util;
 
-import com.anastasia.Anastasia_BackEnd.model.permission.Permission;
-import com.anastasia.Anastasia_BackEnd.model.permission.PermissionType;
-import com.anastasia.Anastasia_BackEnd.model.principal.UserPrincipal;
-import com.anastasia.Anastasia_BackEnd.model.role.Role;
-import com.anastasia.Anastasia_BackEnd.model.tenant.SubscriptionPlan;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantType;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;

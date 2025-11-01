@@ -1,15 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
-import com.anastasia.Anastasia_BackEnd.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.model.common.Address;
-import com.anastasia.Anastasia_BackEnd.model.priest.PriestEntity;
-import com.anastasia.Anastasia_BackEnd.model.priest.PriestStatus;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.model.user.UserType;
-import com.anastasia.Anastasia_BackEnd.repository.PriestRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.registration.ChurchServiceImpl;
-import com.anastasia.Anastasia_BackEnd.service.registration.TenantServiceImpl;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchServiceImpl;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;

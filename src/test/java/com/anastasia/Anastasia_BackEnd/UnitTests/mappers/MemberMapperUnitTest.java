@@ -1,9 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 
-import com.anastasia.Anastasia_BackEnd.mappers.MemberMapper;
-import com.anastasia.Anastasia_BackEnd.model.common.Address;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

@@ -1,10 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
-import com.anastasia.Anastasia_BackEnd.model.tenant.SubscriptionPlan;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.model.tenant.TenantType;
-import com.anastasia.Anastasia_BackEnd.repository.TenantRepository;
-import com.anastasia.Anastasia_BackEnd.seeder.DataSeeder;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.slf4j.Logger;

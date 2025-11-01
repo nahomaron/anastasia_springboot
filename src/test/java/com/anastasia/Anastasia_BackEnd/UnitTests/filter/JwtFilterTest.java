@@ -1,12 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.filter;
 
-import com.anastasia.Anastasia_BackEnd.filter.JwtFilter;
-import com.anastasia.Anastasia_BackEnd.model.token.Token;
-import com.anastasia.Anastasia_BackEnd.repository.auth.TokenRepository;
-import com.anastasia.Anastasia_BackEnd.util.JwtUtil;
+import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

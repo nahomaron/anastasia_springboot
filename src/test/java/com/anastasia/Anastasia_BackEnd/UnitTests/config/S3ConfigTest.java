@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.config;
 
-import com.anastasia.Anastasia_BackEnd.config.S3Config;
+import com.anastasia.Anastasia_BackEnd.common.config.S3Config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;

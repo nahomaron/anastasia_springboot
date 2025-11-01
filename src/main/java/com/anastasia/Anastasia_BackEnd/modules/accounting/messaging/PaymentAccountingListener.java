@@ -2,8 +2,8 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.messaging;
 
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.PaymentCapturedMessage;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.TransactionService;
-import com.anastasia.Anastasia_BackEnd.modules.kafka.util.KafkaConsumerGroupNames;
-import com.anastasia.Anastasia_BackEnd.modules.kafka.util.KafkaHeaderNames;
+import com.anastasia.Anastasia_BackEnd.core.kafka.util.KafkaConsumerGroupNames;
+import com.anastasia.Anastasia_BackEnd.core.kafka.util.KafkaHeaderNames;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;

@@ -1,16 +1,16 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
-import com.anastasia.Anastasia_BackEnd.config.TenantContext;
-import com.anastasia.Anastasia_BackEnd.mappers.event.EventManagerMapper;
-import com.anastasia.Anastasia_BackEnd.mappers.event.EventMapper;
-import com.anastasia.Anastasia_BackEnd.model.event.EventDTO;
-import com.anastasia.Anastasia_BackEnd.model.event.EventEntity;
-import com.anastasia.Anastasia_BackEnd.model.event.EventManagerEntity;
-import com.anastasia.Anastasia_BackEnd.model.event.requests.EventManagerDTO;
-import com.anastasia.Anastasia_BackEnd.model.user.UserEntity;
-import com.anastasia.Anastasia_BackEnd.repository.EventRepository;
-import com.anastasia.Anastasia_BackEnd.repository.auth.UserRepository;
-import com.anastasia.Anastasia_BackEnd.service.event.EventServiceImpl;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventManagerMapper;
+import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventMapper;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.EventManagerEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.requests.EventManagerDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.events.service.EventServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -236,7 +236,7 @@ class EventServiceImplUnitTest {
 
     @Test
     void convertMethods_delegateToMappers() {
-        var eventDTO = com.anastasia.Anastasia_BackEnd.model.event.EventDTO.builder().build();
+        var eventDTO = com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO.builder().build();
         var eventEntity = EventEntity.builder().build();
         var managerDTO = EventManagerDTO.builder().build();
         var managerEntity = EventManagerEntity.builder().build();

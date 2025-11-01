@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.application.query;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.FundRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.PaymentView;
-import com.anastasia.Anastasia_BackEnd.repository.registration.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

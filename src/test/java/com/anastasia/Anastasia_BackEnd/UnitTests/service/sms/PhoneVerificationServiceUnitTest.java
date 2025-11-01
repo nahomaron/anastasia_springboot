@@ -1,10 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.sms;
 
-import com.anastasia.Anastasia_BackEnd.model.sms.OtpEntity;
-import com.anastasia.Anastasia_BackEnd.repository.sms.OtpRepository;
-import com.anastasia.Anastasia_BackEnd.service.sms.PhoneVerificationService;
-import com.anastasia.Anastasia_BackEnd.service.sms.SmsService;
-import com.anastasia.Anastasia_BackEnd.service.sms.SmsTemplateType;
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.OtpEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsService;
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsTemplateType;
 import com.google.common.hash.Hashing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
