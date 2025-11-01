@@ -30,12 +30,18 @@ public class HandleWebhookEventUseCase {
     private final OutboxPublisher outbox;
 
     @Transactional
-    public void handleAuthorized(UUID paymentId, String providerRef) {
+    public void handleAuthorized(UUID paymentId,
+                                 String providerRef,
+                                 String stripeEventId,
+                                 String stripeEventType,
+                                 Instant occurredAt,
+                                 Long amountMinor) {
         var pi = paymentRepo.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown payment intent: " + paymentId));
 
         enforceStripeProvider(pi, providerRef);
-        pi.markAuthorized(providerRef);
+        pi.recordStripeEvent(stripeEventId, stripeEventType, occurredAt);
+        pi.markAuthorized(providerRef, occurredAt, amountMinor);
         paymentRepo.save(pi);
 
         outbox.publish(
@@ -45,18 +51,31 @@ public class HandleWebhookEventUseCase {
                 Map.of(
                         "paymentId", pi.getId().toString(),
                         "providerRef", providerRef,
-                        "status", pi.getStatus().name()
+                        "status", pi.getStatus().name(),
+                        "authorizedAt", pi.getAuthorizedAt() != null ? pi.getAuthorizedAt().toString() : null,
+                        "authorizedAmountMinor", pi.getAuthorizedAmountMinor(),
+                        "stripeEventId", pi.getLastStripeEventId(),
+                        "stripeEventType", pi.getLastStripeEventType()
                 )
         );
     }
 
     @Transactional
-    public void handleCaptured(UUID paymentId, String providerRef, long gross, long fees, long net) {
+    public void handleCaptured(UUID paymentId,
+                               String providerRef,
+                               long gross,
+                               long fees,
+                               long net,
+                               String currency,
+                               String stripeEventId,
+                               String stripeEventType,
+                               Instant occurredAt) {
         var pi = paymentRepo.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown payment intent: " + paymentId));
 
         enforceStripeProvider(pi, providerRef);
-        pi.markCaptured(providerRef);
+        pi.recordStripeEvent(stripeEventId, stripeEventType, occurredAt);
+        pi.markCaptured(providerRef, gross, fees, net, currency, occurredAt);
         paymentRepo.save(pi);
 
         Map<String, Object> payload = new HashMap<>();
@@ -65,13 +84,15 @@ public class HandleWebhookEventUseCase {
         payload.put("gross", gross);
         payload.put("fees", fees);
         payload.put("net", net);
-        payload.put("currency", pi.getAmount() != null ? pi.getAmount().getCurrency() : null);
+        payload.put("currency", currency != null ? currency : (pi.getAmount() != null ? pi.getAmount().getCurrency() : null));
         payload.put("status", pi.getStatus().name());
         payload.put("tenantId", pi.getTenantId() != null ? pi.getTenantId().toString() : null);
         payload.put("purpose", pi.getPurpose() != null ? pi.getPurpose().name() : null);
         payload.put("fundId", pi.getFundId());
         payload.put("memberId", pi.getMemberId());
-        payload.put("capturedAt", Instant.now().toString());
+        payload.put("capturedAt", pi.getCapturedAt() != null ? pi.getCapturedAt().toString() : Instant.now().toString());
+        payload.put("stripeEventId", pi.getLastStripeEventId());
+        payload.put("stripeEventType", pi.getLastStripeEventType());
 
         outbox.publish(
                 PaymentEventType.PAYMENT_CAPTURED,

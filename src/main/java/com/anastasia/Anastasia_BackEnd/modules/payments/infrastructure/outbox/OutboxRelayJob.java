@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.publisher.PaymentEventPublisher;
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,8 @@ public class OutboxRelayJob {
         for (var e : batch) {
             try {
                 JsonNode payload = mapper.readTree(e.getPayload());
-                publisher.publish(e.getType(), e.getTenantId(), e.getAggregateId(), payload);
+                PaymentEventType type = PaymentEventType.valueOf(e.getType());
+                publisher.publish(type, e.getTenantId(), e.getAggregateId(), payload);
                 e.setPublished(true);
                 em.merge(e);
             } catch (Exception ex) {

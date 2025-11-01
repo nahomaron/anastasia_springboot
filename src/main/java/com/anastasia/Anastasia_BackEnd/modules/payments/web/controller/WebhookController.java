@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -90,7 +91,15 @@ public class WebhookController {
                 return;
             }
 
-            paymentHandler.handleAuthorized(UUID.fromString(paymentId), session.getPaymentIntent());
+            Long amountMinor = session.getAmountTotal();
+            paymentHandler.handleAuthorized(
+                    UUID.fromString(paymentId),
+                    session.getPaymentIntent(),
+                    event.getId(),
+                    event.getType(),
+                    event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now(),
+                    amountMinor
+            );
         }, () -> log.warn("Unable to deserialize checkout.session.completed payload"));
     }
 
@@ -108,7 +117,17 @@ public class WebhookController {
                     ? paymentIntent.getAmountReceived()
                     : paymentIntent.getAmount();
             // Fees require Stripe Balance Transactions API; keep placeholder for now
-            paymentHandler.handleCaptured(UUID.fromString(paymentId), paymentIntent.getId(), gross, 0L, gross);
+            paymentHandler.handleCaptured(
+                    UUID.fromString(paymentId),
+                    paymentIntent.getId(),
+                    gross,
+                    0L,
+                    gross,
+                    paymentIntent.getCurrency(),
+                    event.getId(),
+                    event.getType(),
+                    event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now()
+            );
         }, () -> log.warn("Unable to deserialize payment_intent.succeeded payload"));
     }
 

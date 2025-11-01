@@ -27,7 +27,12 @@ public class OutboxPublisher {
         entity.setTenantId(tenantId);
         entity.setType(type.name());
         entity.setPayload(mapper.valueToTree(payload).toString());
-        entity.setHeaders(mapper.valueToTree(Map.of("tenantId", tenantId.toString())).toString());
+        Map<String, Object> headers = new java.util.HashMap<>();
+        if (tenantId != null) {
+            headers.put("tenantId", tenantId.toString());
+        }
+        headers.put("eventType", type.name());
+        entity.setHeaders(mapper.valueToTree(headers).toString());
         entity.setCreatedAt(Instant.now());
         entity.setPublished(false);
         em.persist(entity);

@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.pu
 
 import com.anastasia.Anastasia_BackEnd.core.kafka.support.KafkaTopicNameResolver;
 import com.anastasia.Anastasia_BackEnd.core.kafka.util.KafkaHeaderNames;
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -20,13 +21,13 @@ public class PaymentEventPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final KafkaTopicNameResolver topicNameResolver;
 
-    public void publish(String type, UUID tenantId, String key, JsonNode payload) {
+    public void publish(PaymentEventType type, UUID tenantId, String key, JsonNode payload) {
         String topic = resolveTopic(type);
 
         ProducerRecord<String, Object> record = new ProducerRecord<>(topic, key, payload.toString());
         byte[] tenantBytes = tenantId != null ? tenantId.toString().getBytes(StandardCharsets.UTF_8) : new byte[0];
         record.headers().add(KafkaHeaderNames.TENANT_ID, tenantBytes);
-        record.headers().add(KafkaHeaderNames.EVENT_TYPE, type.getBytes(StandardCharsets.UTF_8));
+        record.headers().add(KafkaHeaderNames.EVENT_TYPE, type.name().getBytes(StandardCharsets.UTF_8));
 
         kafkaTemplate.send(record).whenComplete((SendResult<String, Object> result, Throwable ex) -> {
             if (ex != null) {
@@ -42,10 +43,10 @@ public class PaymentEventPublisher {
         });
     }
 
-    private String resolveTopic(String eventType) {
+    private String resolveTopic(PaymentEventType eventType) {
         return switch (eventType) {
-            case "PaymentAuthorized" -> topicNameResolver.paymentsAuthorized();
-            case "PaymentCaptured" -> topicNameResolver.paymentsCaptured();
+            case PAYMENT_AUTHORIZED -> topicNameResolver.paymentsAuthorized();
+            case PAYMENT_CAPTURED -> topicNameResolver.paymentsCaptured();
             default -> {
                 log.debug("Falling back to generic payments.events topic for eventType={}", eventType);
                 yield topicNameResolver.paymentsEvents();

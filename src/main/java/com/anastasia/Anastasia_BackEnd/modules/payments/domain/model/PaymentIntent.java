@@ -42,6 +42,16 @@ public class PaymentIntent {
 
     private Instant createdAt;
     private Instant updatedAt;
+    private Instant authorizedAt;
+    private Instant capturedAt;
+    private Long authorizedAmountMinor;
+    private Long capturedGrossAmountMinor;
+    private Long capturedFeeAmountMinor;
+    private Long capturedNetAmountMinor;
+    private String capturedCurrency;
+    private String lastStripeEventId;
+    private String lastStripeEventType;
+    private Instant lastStripeEventReceivedAt;
 
     // Factory method to create a new initiated PaymentIntent
     // Note: does not persist to DB
@@ -63,7 +73,7 @@ public class PaymentIntent {
     }
 
     // State transition methods
-    public void markAuthorized(String providerRef) {
+    public void markAuthorized(String providerRef, Instant occurredAt, Long amountMinor) {
         ensureProviderReference(providerRef);
         if (status == PaymentStatus.CAPTURED || status == PaymentStatus.REFUNDED) {
             return;
@@ -71,16 +81,30 @@ public class PaymentIntent {
         if (status != PaymentStatus.AUTHORIZED) {
             this.status = PaymentStatus.AUTHORIZED;
         }
+        this.authorizedAmountMinor = amountMinor;
+        this.authorizedAt = occurredAt != null ? occurredAt : Instant.now();
         this.updatedAt = Instant.now();
     }
 
     // State transition methods
-    public void markCaptured(String providerRef) {
+    public void markCaptured(String providerRef,
+                             Long gross,
+                             Long fees,
+                             Long net,
+                             String currency,
+                             Instant occurredAt) {
         ensureProviderReference(providerRef);
         if (status == PaymentStatus.CAPTURED || status == PaymentStatus.REFUNDED) {
             return;
         }
         this.status = PaymentStatus.CAPTURED;
+        this.capturedGrossAmountMinor = gross;
+        this.capturedFeeAmountMinor = fees;
+        this.capturedNetAmountMinor = net;
+        if (currency != null && !currency.isBlank()) {
+            this.capturedCurrency = currency;
+        }
+        this.capturedAt = occurredAt != null ? occurredAt : Instant.now();
         this.updatedAt = Instant.now();
     }
 
@@ -89,6 +113,17 @@ public class PaymentIntent {
             return;
         }
         this.status = PaymentStatus.FAILED;
+        this.updatedAt = Instant.now();
+    }
+
+    public void recordStripeEvent(String eventId, String eventType, Instant receivedAt) {
+        if (eventId != null && !eventId.isBlank()) {
+            this.lastStripeEventId = eventId;
+        }
+        if (eventType != null && !eventType.isBlank()) {
+            this.lastStripeEventType = eventType;
+        }
+        this.lastStripeEventReceivedAt = receivedAt != null ? receivedAt : Instant.now();
         this.updatedAt = Instant.now();
     }
 

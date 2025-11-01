@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
-import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.CreatePaymentIntentUseCase;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.CreateSubscriptionUseCase;
+import com.anastasia.Anastasia_BackEnd.modules.payments.application.saga.PaymentCheckoutSaga;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.CreateIntentRequest;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.CreateSubscriptionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.PaymentResponse;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @Validated
 public class PaymentController {
 
-    private final CreatePaymentIntentUseCase createIntent;
+    private final PaymentCheckoutSaga checkoutSaga;
     private final CreateSubscriptionUseCase createSubscription;
 
     @PostMapping("/intents")
@@ -32,7 +32,7 @@ public class PaymentController {
             @Valid @RequestBody CreateIntentRequest req) {
 
         UUID tenantUuid = parseTenantId(tenantId);
-        var pi = createIntent.execute(
+        var pi = checkoutSaga.startCheckout(
                 tenantUuid, req.getPurpose(), req.getAmount(), req.getCurrency(),
                 req.getMemberId(), req.getUserId(), req.getFundId(), idempotencyKey);
 
