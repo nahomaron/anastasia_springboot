@@ -13,5 +13,6 @@ public class CreateIntentRequest {
     @NotBlank private String currency; // "USD"
     private Long memberId;
     private UUID userId;
+    @Email private String userEmail;
     private String fundId;
 }

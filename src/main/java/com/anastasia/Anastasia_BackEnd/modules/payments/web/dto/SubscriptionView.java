@@ -14,6 +14,8 @@ public class SubscriptionView {
     private String currency;
     private String status;
     private String memberId;
+    private UUID userId;
+    private String userEmail;
     private String fundId;
     private Instant createdAt;
 
@@ -25,6 +27,8 @@ public class SubscriptionView {
         v.setCurrency(s.getAmount().getCurrency());
         v.setStatus(s.getStatus().name());
         v.setMemberId(s.getMemberId());
+        v.setUserId(s.getUserId());
+        v.setUserEmail(s.getUserEmail());
         v.setFundId(s.getFundId());
         v.setCreatedAt(s.getCreatedAt());
         return v;

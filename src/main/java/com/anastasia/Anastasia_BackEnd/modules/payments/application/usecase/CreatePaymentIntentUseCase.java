@@ -45,6 +45,7 @@ public class CreatePaymentIntentUseCase {
                                  String currency,
                                  Long memberId,
                                  UUID userId,
+                                 String userEmail,
                                  String fundId,
                                  String idempotencyKey) {
 
@@ -66,16 +67,25 @@ public class CreatePaymentIntentUseCase {
          */
         UUID resolvedUserId = userId;
         AtomicReference<Long> resolvedMemberId = new AtomicReference<>(memberId);
+        AtomicReference<String> resolvedUserEmail = new AtomicReference<>(userEmail);
 
         if (resolvedMemberId.get() != null) {
             MemberEntity member = memberRepo.findByIdAndTenantId(resolvedMemberId.get(), normalizedTenantId)
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Member does not belong to tenant: " + resolvedMemberId));
             resolvedUserId = resolvedUserId != null ? resolvedUserId : member.getUserId();
+            if (resolvedUserEmail.get() == null || resolvedUserEmail.get().isBlank()) {
+                resolvedUserEmail.set(member.getEmail());
+            }
         } else if (resolvedUserId != null) {
             // Ensure provided user belongs to tenant if possible
             memberRepo.findByUserIdAndTenantId(resolvedUserId, normalizedTenantId)
-                    .ifPresent(found -> resolvedMemberId.set(found.getId()));
+                    .ifPresent(found -> {
+                        resolvedMemberId.set(found.getId());
+                        if (resolvedUserEmail.get() == null || resolvedUserEmail.get().isBlank()) {
+                            resolvedUserEmail.set(found.getEmail());
+                        }
+                    });
         }
 
         var intent = PaymentIntent.newInitiated(
@@ -85,6 +95,7 @@ public class CreatePaymentIntentUseCase {
                 normalizedCurrency,
                 resolvedMemberId.get(),
                 resolvedUserId,
+                resolvedUserEmail.get(),
                 fundId,
                 normalizedIdempotencyKey);
         intent.setProvider("STRIPE");

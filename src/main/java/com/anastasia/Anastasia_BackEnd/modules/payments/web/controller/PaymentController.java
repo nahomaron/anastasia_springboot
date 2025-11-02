@@ -33,8 +33,15 @@ public class PaymentController {
 
         UUID tenantUuid = parseTenantId(tenantId);
         var pi = checkoutSaga.startCheckout(
-                tenantUuid, req.getPurpose(), req.getAmount(), req.getCurrency(),
-                req.getMemberId(), req.getUserId(), req.getFundId(), idempotencyKey);
+                tenantUuid,
+                req.getPurpose(),
+                req.getAmount(),
+                req.getCurrency(),
+                req.getMemberId(),
+                req.getUserId(),
+                req.getUserEmail(),
+                req.getFundId(),
+                idempotencyKey);
 
         var resp = new PaymentResponse();
         resp.setPaymentId(pi.getId());
@@ -56,6 +63,8 @@ public class PaymentController {
                 req.getAmount(),
                 req.getCurrency(),
                 req.getMemberId(),
+                req.getUserId(),
+                req.getUserEmail(),
                 req.getFundId(),
                 idempotencyKey);
 

@@ -33,6 +33,7 @@ public class PaymentIntent {
     private String providerRef;     // e.g., Stripe PaymentIntent/Session id
     private Long memberId;
     private UUID userId;
+    private String userEmail;
     private String fundId;
     private String fundName;
 
@@ -56,7 +57,7 @@ public class PaymentIntent {
     // Factory method to create a new initiated PaymentIntent
     // Note: does not persist to DB
     public static PaymentIntent newInitiated(UUID tenantId, PaymentPurpose purpose, long amt, String curr,
-                                             Long memberId, UUID userId, String fundId, String idempotencyKey) {
+                                             Long memberId, UUID userId, String userEmail, String fundId, String idempotencyKey) {
         var pi = new PaymentIntent();
         pi.id = UUID.randomUUID();
         pi.tenantId = tenantId;
@@ -65,6 +66,7 @@ public class PaymentIntent {
         pi.status = PaymentStatus.INITIATED;
         pi.memberId = memberId;
         pi.userId = userId;
+        pi.userEmail = userEmail != null && !userEmail.isBlank() ? userEmail.trim() : null;
         pi.fundId = fundId;
         pi.idempotencyKey = idempotencyKey;
         pi.createdAt = Instant.now();

@@ -44,19 +44,25 @@ public class HandleWebhookEventUseCase {
         pi.markAuthorized(providerRef, occurredAt, amountMinor);
         paymentRepo.save(pi);
 
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("paymentId", pi.getId().toString());
+        payload.put("providerRef", providerRef);
+        payload.put("status", pi.getStatus().name());
+        payload.put("authorizedAt", pi.getAuthorizedAt() != null ? pi.getAuthorizedAt().toString() : null);
+        payload.put("authorizedAmountMinor", pi.getAuthorizedAmountMinor());
+        payload.put("stripeEventId", pi.getLastStripeEventId());
+        payload.put("stripeEventType", pi.getLastStripeEventType());
+        payload.put("tenantId", pi.getTenantId() != null ? pi.getTenantId().toString() : null);
+        payload.put("memberId", pi.getMemberId());
+        payload.put("userId", pi.getUserId() != null ? pi.getUserId().toString() : null);
+        payload.put("userEmail", pi.getUserEmail());
+
         outbox.publish(
                 PaymentEventType.PAYMENT_AUTHORIZED,
                 pi.getId().toString(),
                 pi.getTenantId(),
-                Map.of(
-                        "paymentId", pi.getId().toString(),
-                        "providerRef", providerRef,
-                        "status", pi.getStatus().name(),
-                        "authorizedAt", pi.getAuthorizedAt() != null ? pi.getAuthorizedAt().toString() : null,
-                        "authorizedAmountMinor", pi.getAuthorizedAmountMinor(),
-                        "stripeEventId", pi.getLastStripeEventId(),
-                        "stripeEventType", pi.getLastStripeEventType()
-                )
+                pi.getUserEmail(),
+                payload
         );
     }
 
@@ -93,11 +99,14 @@ public class HandleWebhookEventUseCase {
         payload.put("capturedAt", pi.getCapturedAt() != null ? pi.getCapturedAt().toString() : Instant.now().toString());
         payload.put("stripeEventId", pi.getLastStripeEventId());
         payload.put("stripeEventType", pi.getLastStripeEventType());
+        payload.put("userId", pi.getUserId() != null ? pi.getUserId().toString() : null);
+        payload.put("userEmail", pi.getUserEmail());
 
         outbox.publish(
                 PaymentEventType.PAYMENT_CAPTURED,
                 pi.getId().toString(),
                 pi.getTenantId(),
+                pi.getUserEmail(),
                 payload
         );
     }

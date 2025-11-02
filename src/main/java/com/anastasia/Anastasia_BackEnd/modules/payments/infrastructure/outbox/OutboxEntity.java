@@ -16,6 +16,8 @@ public class OutboxEntity {
     private String aggregateId;
     private UUID tenantId;
     private String type;
+    @Column(name = "user_email")
+    private String userEmail;
     @Column(columnDefinition="jsonb") private String payload;
     @Column(columnDefinition="jsonb") private String headers;
     private Instant createdAt;

@@ -36,6 +36,10 @@ public class PaymentSubscription {
     private SubscriptionStatus status;
 
     private String memberId;
+    @Column(name = "user_id")
+    private UUID userId;
+    @Column(name = "user_email")
+    private String userEmail;
     private String fundId;
 
     private String provider;
@@ -54,6 +58,8 @@ public class PaymentSubscription {
                                                  long amountMinor,
                                                  String currency,
                                                  String memberId,
+                                                 UUID userId,
+                                                 String userEmail,
                                                  String fundId,
                                                  String idempotencyKey) {
         var subscription = new PaymentSubscription();
@@ -63,6 +69,8 @@ public class PaymentSubscription {
         subscription.amount = new Money(amountMinor, currency);
         subscription.status = SubscriptionStatus.PENDING;
         subscription.memberId = memberId;
+        subscription.userId = userId;
+        subscription.userEmail = userEmail != null && !userEmail.isBlank() ? userEmail.trim() : null;
         subscription.fundId = fundId;
         subscription.idempotencyKey = idempotencyKey;
         subscription.createdAt = Instant.now();

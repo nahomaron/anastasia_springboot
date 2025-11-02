@@ -41,15 +41,21 @@ public class HandleSubscriptionWebhookUseCase {
         subscription.markActive(providerSubscriptionId);
         subscriptionRepository.save(subscription);
 
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("subscriptionId", subscription.getId().toString());
+        payload.put("providerRef", subscription.getProviderRef());
+        payload.put("status", subscription.getStatus().name());
+        payload.put("memberId", subscription.getMemberId());
+        payload.put("userId", subscription.getUserId() != null ? subscription.getUserId().toString() : null);
+        payload.put("userEmail", subscription.getUserEmail());
+        payload.put("memberEmail", subscription.getUserEmail());
+
         outboxPublisher.publish(
                 PaymentEventType.SUBSCRIPTION_ACTIVATED,
                 subscription.getId().toString(),
                 subscription.getTenantId(),
-                Map.of(
-                        "subscriptionId", subscription.getId().toString(),
-                        "providerRef", subscription.getProviderRef(),
-                        "status", subscription.getStatus().name()
-                )
+                subscription.getUserEmail(),
+                payload
         );
     }
 
@@ -70,14 +76,20 @@ public class HandleSubscriptionWebhookUseCase {
         subscription.markCanceled();
         subscriptionRepository.save(subscription);
 
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("subscriptionId", subscription.getId().toString());
+        payload.put("status", subscription.getStatus().name());
+        payload.put("memberId", subscription.getMemberId());
+        payload.put("userId", subscription.getUserId() != null ? subscription.getUserId().toString() : null);
+        payload.put("userEmail", subscription.getUserEmail());
+        payload.put("memberEmail", subscription.getUserEmail());
+
         outboxPublisher.publish(
                 PaymentEventType.SUBSCRIPTION_CANCELED,
                 subscription.getId().toString(),
                 subscription.getTenantId(),
-                Map.of(
-                        "subscriptionId", subscription.getId().toString(),
-                        "status", subscription.getStatus().name()
-                )
+                subscription.getUserEmail(),
+                payload
         );
     }
 }

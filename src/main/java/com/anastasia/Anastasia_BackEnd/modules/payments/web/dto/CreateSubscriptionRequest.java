@@ -1,10 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.dto;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import java.util.UUID;
 
 @Data
 public class CreateSubscriptionRequest {
@@ -12,5 +15,7 @@ public class CreateSubscriptionRequest {
     @Min(50) private long amount;
     @NotBlank private String currency;
     private String memberId;
+    private UUID userId;
+    @Email private String userEmail;
     private String fundId;
 }

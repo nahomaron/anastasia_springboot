@@ -39,6 +39,7 @@ public class PaymentCheckoutSaga {
                                        String currency,
                                        Long memberId,
                                        UUID userId,
+                                       String userEmail,
                                        String fundId,
                                        String idempotencyKey) {
 
@@ -48,7 +49,7 @@ public class PaymentCheckoutSaga {
                             existing.getId(), tenantId, idempotencyKey);
                     return existing;
                 })
-                .orElseGet(() -> createAndPublish(tenantId, purpose, amountMinor, currency, memberId, userId, fundId, idempotencyKey));
+                .orElseGet(() -> createAndPublish(tenantId, purpose, amountMinor, currency, memberId, userId, userEmail, fundId, idempotencyKey));
     }
 
     private PaymentIntent createAndPublish(UUID tenantId,
@@ -57,6 +58,7 @@ public class PaymentCheckoutSaga {
                                            String currency,
                                            Long memberId,
                                            UUID userId,
+                                           String userEmail,
                                            String fundId,
                                            String idempotencyKey) {
         PaymentIntent intent = createIntentUseCase.execute(
@@ -66,6 +68,7 @@ public class PaymentCheckoutSaga {
                 currency,
                 memberId,
                 userId,
+                userEmail,
                 fundId,
                 idempotencyKey);
 
@@ -78,11 +81,14 @@ public class PaymentCheckoutSaga {
         payload.put("currency", intent.getAmount() != null ? intent.getAmount().getCurrency() : currency);
         payload.put("fundId", intent.getFundId());
         payload.put("memberId", intent.getMemberId());
+        payload.put("userId", intent.getUserId() != null ? intent.getUserId().toString() : null);
+        payload.put("userEmail", intent.getUserEmail());
 
         outboxPublisher.publish(
                 PaymentEventType.PAYMENT_INITIATED,
                 intent.getId().toString(),
                 intent.getTenantId(),
+                intent.getUserEmail(),
                 payload
         );
         return intent;
