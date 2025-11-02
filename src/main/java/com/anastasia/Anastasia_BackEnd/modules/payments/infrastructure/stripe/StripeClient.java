@@ -10,6 +10,13 @@ import org.springframework.stereotype.Component;
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Client for interacting with the Stripe API to create checkout sessions.
+ * Provides methods for creating one-time payment sessions and subscription sessions.
+ * Uses configuration properties for success and cancel URLs.
+ * Handles idempotency to prevent duplicate session creation.
+ * Returns the created Stripe Session object.
+ */
 @Component
 public class StripeClient {
     @Value("${stripe.success-url}") private String successUrlTemplate;
@@ -27,12 +34,14 @@ public class StripeClient {
         String normalizedCurrency = currency.toLowerCase(Locale.ROOT);
         String tenant = tenantId.toString();
 
+        // Metadata for the PaymentIntent
         var paymentIntentData = SessionCreateParams.PaymentIntentData.builder()
                 .putMetadata("paymentId", paymentId)
                 .putMetadata("tenantId", tenant)
                 .putMetadata("purpose", purposeLabel)
                 .build();
 
+        // Create the checkout session parameters
         var params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setClientReferenceId(paymentId)

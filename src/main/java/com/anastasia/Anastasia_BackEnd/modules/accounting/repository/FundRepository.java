@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface FundRepository extends JpaRepository<Fund, Long> {
@@ -13,6 +14,8 @@ public interface FundRepository extends JpaRepository<Fund, Long> {
     List<Fund> findByTenantId(String tenantId);
 
     Optional<Fund> findByIdAndTenantId(Long id, String tenantId);
+
+    boolean existsByIdAndTenantId(Long id, UUID tenantId);
 
     boolean existsByTenantIdAndNameIgnoreCase(String tenantId, String name);
 }

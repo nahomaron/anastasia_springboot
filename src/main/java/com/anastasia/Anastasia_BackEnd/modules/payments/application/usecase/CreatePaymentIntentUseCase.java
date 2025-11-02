@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
+import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.FundRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
@@ -31,9 +32,10 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 @Slf4j
 public class CreatePaymentIntentUseCase {
-    private final PaymentIntentRepository repo;
+    private final PaymentIntentRepository paymentIntentRepository;
     private final StripeClient stripeClient;
     private final MemberRepository memberRepo;
+    private final FundRepository fundRepo;
 
     // Creates or retrieves a payment intent based on the provided parameters.
     @Transactional
@@ -50,7 +52,7 @@ public class CreatePaymentIntentUseCase {
         String normalizedIdempotencyKey = Objects.requireNonNull(idempotencyKey, "idempotencyKey must not be null").trim();
         String normalizedCurrency = Objects.requireNonNull(currency, "currency must not be null").trim().toUpperCase(Locale.ROOT);
 
-        var existing = repo.findByTenantIdAndIdempotencyKey(normalizedTenantId, normalizedIdempotencyKey);
+        var existing = paymentIntentRepository.findByTenantIdAndIdempotencyKey(normalizedTenantId, normalizedIdempotencyKey);
         if (existing.isPresent()) {
             return existing.get();
         }
@@ -99,26 +101,33 @@ public class CreatePaymentIntentUseCase {
             intent.setCheckoutUrl(session.getUrl());
         } catch (StripeException e) {
             intent.markFailed();
-            repo.save(intent);
+            paymentIntentRepository.save(intent);
             log.warn("Stripe session creation failed for tenant={} idempotencyKey={}: {}", normalizedTenantId,
                     normalizedIdempotencyKey, e.getMessage());
             throw new IllegalStateException("Stripe session creation failed", e);
         }
 
-        return repo.save(intent);
+        return paymentIntentRepository.save(intent);
     }
 
-//    private void validateReferences(String tenantId, String memberId, String fundId) {
-//        if (memberId != null && !memberId.isBlank()) {
-//            var exists = memberRepo.existsByIdAndTenantId(UUID.fromString(memberId), tenantId);
-//            if (!exists)
-//                throw new IllegalArgumentException("Member does not belong to this tenant: " + memberId);
-//        }
-//
-//        if (fundId != null && !fundId.isBlank()) {
-//            var exists = fundRepo.existsByIdAndTenantId(UUID.fromString(fundId), tenantId);
-//            if (!exists)
-//                throw new IllegalArgumentException("Fund does not belong to this tenant: " + fundId);
-//        }
-//    }
+    /**
+     * Validates that the provided memberId and fundId belong to the specified tenantId.
+     * @param tenantId tenant UUID
+     * @param memberId member ID
+     * @param fundId fund ID
+     * @throws IllegalArgumentException if memberId or fundId do not belong to the tenant
+     */
+    private void validateReferences(UUID tenantId, Long memberId, Long fundId) {
+        if (memberId != null) {
+            var exists = memberRepo.findByIdAndTenantId(memberId, tenantId);
+            if (exists.isEmpty())
+                throw new IllegalArgumentException("Member does not belong to this tenant: " + memberId);
+        }
+
+        if (fundId != null) {
+            var exists = fundRepo.existsByIdAndTenantId(fundId, tenantId);
+            if (!exists)
+                throw new IllegalArgumentException("Fund does not belong to this tenant: " + fundId);
+        }
+    }
 }

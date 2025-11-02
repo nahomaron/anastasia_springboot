@@ -56,6 +56,7 @@ public class WebhookController {
         }
     }
 
+    // checkout was successful (but not captured yet)
     private void handleCheckoutCompleted(Event event) {
         event.getDataObjectDeserializer().getObject().ifPresentOrElse(data -> {
             Session session = (Session) data;
@@ -103,6 +104,7 @@ public class WebhookController {
         }, () -> log.warn("Unable to deserialize checkout.session.completed payload"));
     }
 
+    // means the payment has been captured (money transferred)
     private void handlePaymentSucceeded(Event event) {
         event.getDataObjectDeserializer().getObject().ifPresentOrElse(data -> {
             PaymentIntent paymentIntent = (PaymentIntent) data;
@@ -116,6 +118,7 @@ public class WebhookController {
             long gross = paymentIntent.getAmountReceived() != null
                     ? paymentIntent.getAmountReceived()
                     : paymentIntent.getAmount();
+
             // Fees require Stripe Balance Transactions API; keep placeholder for now
             paymentHandler.handleCaptured(
                     UUID.fromString(paymentId),
