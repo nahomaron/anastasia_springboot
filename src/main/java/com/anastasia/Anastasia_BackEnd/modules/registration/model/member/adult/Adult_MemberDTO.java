@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.registration.model.member;
+package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MemberDTO {
+public class Adult_MemberDTO {
 
     @NotBlank
     @Pattern(regexp = "^[A-Za-z]{1,2}\\d{5}$", message = "Invalid church number")

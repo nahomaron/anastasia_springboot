@@ -1,10 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildService;
 import com.anastasia.Anastasia_BackEnd.common.specification.ChildSpecifications;
 import jakarta.validation.Valid;
@@ -33,19 +33,19 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADD_MEMBERS')")
     @PostMapping("/register-child")
-    public ResponseEntity<ChildResponse> registerChild(@Valid @RequestBody ChildDTO childDTO){
+    public ResponseEntity<ChildResponse> registerChild(@Valid @RequestBody Child_MemberDTO childMemberDTO){
 
-        ChildEntity childEntity = childService.convertToEntity(childDTO);
-        childEntity.setStatus(ChildStatus.PENDING.name());
-        ChildResponse response = childService.registerChild(childEntity);
+        Child_MemberEntity childMemberEntity = childService.convertToEntity(childMemberDTO);
+        childMemberEntity.setStatus(ChildStatus.PENDING.name());
+        ChildResponse response = childService.registerChild(childMemberEntity);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
-    public ResponseEntity<Page<ChildDTO>> listOfChildren(Pageable pageable){
-        Page<ChildEntity> children = childService.findAll(pageable);
+    public ResponseEntity<Page<Child_MemberDTO>> listOfChildren(Pageable pageable){
+        Page<Child_MemberEntity> children = childService.findAll(pageable);
         return new ResponseEntity<>(
                 children.map(childService::convertToDTO), HttpStatus.OK);
     }
@@ -53,11 +53,11 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{memberId}")
-    public ResponseEntity<ChildDTO> getChild(@PathVariable Long memberId){
-        Optional<ChildEntity> foundChild = childService.findChildById(memberId);
+    public ResponseEntity<Child_MemberDTO> getChild(@PathVariable Long memberId){
+        Optional<Child_MemberEntity> foundChild = childService.findChildById(memberId);
         return foundChild.map(childEntity -> {
-            ChildDTO childDTO = childService.convertToDTO(childEntity);
-            return new ResponseEntity<>(childDTO, HttpStatus.FOUND);
+            Child_MemberDTO childMemberDTO = childService.convertToDTO(childEntity);
+            return new ResponseEntity<>(childMemberDTO, HttpStatus.FOUND);
         }).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
@@ -66,7 +66,7 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_CHILDREN')")
     @PatchMapping("/{memberId}")
-    public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody ChildDTO request){
+    public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Child_MemberDTO request){
         childService.updateChildDetails(memberId, request);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
@@ -83,7 +83,7 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') OR " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADVANCED_SEARCH_MEMBERS')")
     @PostMapping("/advanced-search")
-    public ResponseEntity<Page<ChildDTO>> searchChildren(
+    public ResponseEntity<Page<Child_MemberDTO>> searchChildren(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,asc") String[] sort,
@@ -99,7 +99,7 @@ public class ChildController {
             @RequestParam(required = false) String levelOfEducation,
             @RequestBody(required = false) Address address
     ) {
-        List<Specification<ChildEntity>> specs = new ArrayList<>();
+        List<Specification<Child_MemberEntity>> specs = new ArrayList<>();
 
         if (membershipNumber != null) {
             specs.add(ChildSpecifications.hasMembershipNumber(membershipNumber));
@@ -132,7 +132,7 @@ public class ChildController {
             specs.add(ChildSpecifications.filterByAddress(address));
         }
 
-        Specification<ChildEntity> spec = specs.stream()
+        Specification<Child_MemberEntity> spec = specs.stream()
                 .reduce(Specification::and)
                 .orElse(null);
 
@@ -141,7 +141,7 @@ public class ChildController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Page<ChildEntity> members = childService.findAllBySpecification(spec, pageable);
+        Page<Child_MemberEntity> members = childService.findAllBySpecification(spec, pageable);
 
         return new ResponseEntity<>(members.map(
                 childService::convertToDTO), HttpStatus.OK);

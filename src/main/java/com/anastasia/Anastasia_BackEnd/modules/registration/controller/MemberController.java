@@ -1,10 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
 import com.anastasia.Anastasia_BackEnd.common.specification.MemberSpecifications;
 import jakarta.validation.Valid;
@@ -33,19 +33,19 @@ public class MemberController {
     //
     @PreAuthorize("hasAnyRole('USER') or hasAuthority('ADD_MEMBERS')")
     @PostMapping("/register-member")
-    public ResponseEntity<MemberResponse> registerMember(@Valid @RequestBody MemberDTO memberDTO){
+    public ResponseEntity<MemberResponse> registerMember(@Valid @RequestBody Adult_MemberDTO adultMemberDTO){
 
-        MemberEntity memberEntity = memberService.convertToEntity(memberDTO);
-        memberEntity.setStatus(MemberStatus.PENDING.name());
-        MemberResponse response = memberService.registerMember(memberEntity);
+        Adult_MemberEntity adultMemberEntity = memberService.convertToEntity(adultMemberDTO);
+        adultMemberEntity.setStatus(MemberStatus.PENDING.name());
+        MemberResponse response = memberService.registerMember(adultMemberEntity);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping
-    public ResponseEntity<Page<MemberDTO>> listOfMembers(Pageable pageable){
-        Page<MemberEntity> members = memberService.findAll(pageable);
+    public ResponseEntity<Page<Adult_MemberDTO>> listOfMembers(Pageable pageable){
+        Page<Adult_MemberEntity> members = memberService.findAll(pageable);
         return new ResponseEntity<>(
                 members.map(memberService::convertToDTO), HttpStatus.OK);
     }
@@ -53,11 +53,11 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{memberId}")
-    public ResponseEntity<MemberDTO> getMember(@PathVariable Long memberId){
-        Optional<MemberEntity> foundMember = memberService.findMemberById(memberId);
+    public ResponseEntity<Adult_MemberDTO> getMember(@PathVariable Long memberId){
+        Optional<Adult_MemberEntity> foundMember = memberService.findMemberById(memberId);
         return foundMember.map(memberEntity -> {
-            MemberDTO memberDTO = memberService.convertToDTO(memberEntity);
-            return new ResponseEntity<>(memberDTO, HttpStatus.FOUND);
+            Adult_MemberDTO adultMemberDTO = memberService.convertToDTO(memberEntity);
+            return new ResponseEntity<>(adultMemberDTO, HttpStatus.FOUND);
         }).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
@@ -66,7 +66,7 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_MEMBERS')")
     @PatchMapping("/{memberId}")
-    public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody MemberDTO request){
+    public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Adult_MemberDTO request){
         memberService.updateMembershipDetails(memberId, request);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
@@ -124,7 +124,7 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'ADVANCED_SEARCH_MEMBERS')")
     @PostMapping("/advanced-search")
-    public ResponseEntity<Page<MemberDTO>> searchMembers(
+    public ResponseEntity<Page<Adult_MemberDTO>> searchMembers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,asc") String[] sort,
@@ -142,7 +142,7 @@ public class MemberController {
             @RequestParam(required = false) String levelOfEducation,
             @RequestBody(required = false) Address address
     ) {
-        List<Specification<MemberEntity>> specs = new ArrayList<>();
+        List<Specification<Adult_MemberEntity>> specs = new ArrayList<>();
 
         if (membershipNumber != null) {
             specs.add(MemberSpecifications.hasMembershipNumber(membershipNumber));
@@ -181,7 +181,7 @@ public class MemberController {
             specs.add(MemberSpecifications.filterByAddress(address));
         }
 
-        Specification<MemberEntity> spec = specs.stream()
+        Specification<Adult_MemberEntity> spec = specs.stream()
                 .reduce(Specification::and)
                 .orElse(null);
 
@@ -190,7 +190,7 @@ public class MemberController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Page<MemberEntity> members = memberService.findAllBySpecification(spec, pageable);
+        Page<Adult_MemberEntity> members = memberService.findAllBySpecification(spec, pageable);
 
         return new ResponseEntity<>(members.map(
                 memberService::convertToDTO), HttpStatus.OK);

@@ -2,8 +2,8 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -16,7 +16,7 @@ class MemberMapperUnitTest {
 
     @Test
     void memberEntityToDTO_shouldMapAllRelevantFields() {
-        MemberEntity entity = MemberEntity.builder()
+        Adult_MemberEntity entity = Adult_MemberEntity.builder()
                 .churchNumber("CH12345")
                 .status("ACTIVE")
                 .approvedByChurch(true)
@@ -59,7 +59,7 @@ class MemberMapperUnitTest {
                         .build())
                 .build();
 
-        MemberDTO dto = mapper.memberEntityToDTO(entity);
+        Adult_MemberDTO dto = mapper.memberEntityToDTO(entity);
 
         assertThat(dto).isNotNull();
         assertThat(dto.getChurchNumber()).isEqualTo("CH12345");
@@ -76,7 +76,7 @@ class MemberMapperUnitTest {
 
     @Test
     void memberDTOToEntity_shouldMapBackToEntity() {
-        MemberDTO dto = MemberDTO.builder()
+        Adult_MemberDTO dto = Adult_MemberDTO.builder()
                 .churchNumber("CH54321")
                 .deacon(false)
                 .title("Mrs")
@@ -116,7 +116,7 @@ class MemberMapperUnitTest {
                         .build())
                 .build();
 
-        MemberEntity entity = mapper.memberDTOToEntity(dto);
+        Adult_MemberEntity entity = mapper.memberDTOToEntity(dto);
 
         assertThat(entity).isNotNull();
         assertThat(entity.getChurchNumber()).isEqualTo("CH54321");

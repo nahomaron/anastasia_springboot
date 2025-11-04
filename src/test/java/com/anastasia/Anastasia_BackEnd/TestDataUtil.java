@@ -2,15 +2,15 @@ package com.anastasia.Anastasia_BackEnd;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
@@ -152,8 +152,8 @@ public class TestDataUtil {
                 .build();
     }
 
-    public static MemberEntity createTestMember(ChurchEntity church) {
-        return MemberEntity.builder()
+    public static Adult_MemberEntity createTestMember(ChurchEntity church) {
+        return Adult_MemberEntity.builder()
                 .membershipNumber("MBR-" + uniqueSuffix())
                 .church(church)
                 .churchNumber(church.getChurchNumber())
@@ -191,8 +191,8 @@ public class TestDataUtil {
                 .build();
     }
 
-    public static MemberDTO createTestMemberDTO(ChurchEntity church) {
-        return MemberDTO.builder()
+    public static Adult_MemberDTO createTestMemberDTO(ChurchEntity church) {
+        return Adult_MemberDTO.builder()
                 .churchNumber(church.getChurchNumber())
                 .deacon(false)
                 .title("Mr.")
@@ -228,8 +228,8 @@ public class TestDataUtil {
                 .build();
     }
 
-    public static ChildEntity createTestChild(ChurchEntity church) {
-        return ChildEntity.builder()
+    public static Child_MemberEntity createTestChild(ChurchEntity church) {
+        return Child_MemberEntity.builder()
                 .membershipNumber("CHD-" + uniqueSuffix())
                 .church(church)
                 .churchNumber(church.getChurchNumber())
@@ -268,8 +268,8 @@ public class TestDataUtil {
                 .build();
     }
 
-    public static ChildDTO createTestChildDTO(ChurchEntity church) {
-        return ChildDTO.builder()
+    public static Child_MemberDTO createTestChildDTO(ChurchEntity church) {
+        return Child_MemberDTO.builder()
                 .churchNumber(church.getChurchNumber())
                 .deacon(false)
                 .title("Master")

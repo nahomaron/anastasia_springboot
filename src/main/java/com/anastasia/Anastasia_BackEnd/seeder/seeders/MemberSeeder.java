@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -36,7 +36,7 @@ public class MemberSeeder {
     public void seedMembers(List<ChurchEntity> churches) {
         if (memberRepository.count() == 0) {
             Faker faker = new Faker();
-            List<MemberEntity> members = new ArrayList<>();
+            List<Adult_MemberEntity> members = new ArrayList<>();
 
             if (churches.isEmpty()) {
                 churches = churchService.getChurches();
@@ -64,7 +64,7 @@ public class MemberSeeder {
                         .map(tenant -> tenant.getId())
                         .orElseThrow(() -> new IllegalStateException("Assigned church has no tenant"));
 
-                MemberEntity member = MemberEntity.builder()
+                Adult_MemberEntity member = Adult_MemberEntity.builder()
                         .tenantId(tenantId)
                         .churchNumber(assignedChurch.getChurchNumber())
                         .church(assignedChurch)
@@ -108,7 +108,7 @@ public class MemberSeeder {
                         .user(savedUser) // 🔁 Link to the user
                         .build();
 
-                MemberEntity savedMember = memberRepository.save(member);
+                Adult_MemberEntity savedMember = memberRepository.save(member);
                 members.add(savedMember);
 
                 user.assignMembership(savedMember);

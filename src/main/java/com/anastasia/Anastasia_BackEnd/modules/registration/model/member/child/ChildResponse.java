@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.registration.model.member;
+package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MemberResponse {
+public class ChildResponse {
 
     private String membershipNumber;
 

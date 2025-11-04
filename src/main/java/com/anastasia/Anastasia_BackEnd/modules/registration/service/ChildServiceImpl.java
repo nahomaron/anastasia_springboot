@@ -1,10 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -37,13 +37,13 @@ public class ChildServiceImpl implements ChildService{
     private final SecurityUtils securityUtils;
 
     @Override
-    public ChildEntity convertToEntity(ChildDTO childDTO) {
-        return childMapper.childDTOToEntity(childDTO);
+    public Child_MemberEntity convertToEntity(Child_MemberDTO childMemberDTO) {
+        return childMapper.childDTOToEntity(childMemberDTO);
     }
 
     @Override
-    public ChildDTO convertToDTO(ChildEntity childEntity) {
-        return childMapper.childEntityToDTO(childEntity);
+    public Child_MemberDTO convertToDTO(Child_MemberEntity childMemberEntity) {
+        return childMapper.childEntityToDTO(childMemberEntity);
     }
 
     @Caching(
@@ -53,7 +53,7 @@ public class ChildServiceImpl implements ChildService{
             }
     )
     @Override
-    public ChildResponse registerChild(ChildEntity childEntity) {
+    public ChildResponse registerChild(Child_MemberEntity childMemberEntity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)){
             throw new IllegalStateException("User not authenticated");
@@ -62,20 +62,20 @@ public class ChildServiceImpl implements ChildService{
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
 
 
-        String churchNumber = normalizeChurchNumber(childEntity.getChurchNumber());
+        String churchNumber = normalizeChurchNumber(childMemberEntity.getChurchNumber());
         if (!StringUtils.hasText(churchNumber)) {
             throw new IllegalStateException("Church number must be provided");
         }
 
-        childEntity.setChurchNumber(churchNumber);
+        childMemberEntity.setChurchNumber(churchNumber);
         ChurchEntity church = churchRepository.findByChurchNumber(churchNumber)
                 .orElseThrow(() -> new IllegalStateException("Church not found for number: " + churchNumber));
-        childEntity.setChurch(church);
+        childMemberEntity.setChurch(church);
 
-        childEntity.setMembershipNumber(generateUniqueChildMembershipNumber(6, childEntity.isDeacon()));
-        childEntity.setUser(user);
-        childEntity.setStatus(ChildStatus.PENDING.name());
-        ChildEntity membership = childRepository.save(childEntity);
+        childMemberEntity.setMembershipNumber(generateUniqueChildMembershipNumber(6, childMemberEntity.isDeacon()));
+        childMemberEntity.setUser(user);
+        childMemberEntity.setStatus(ChildStatus.PENDING.name());
+        Child_MemberEntity membership = childRepository.save(childMemberEntity);
 
         return ChildResponse.builder()
                 .name(membership.getFirstName() + " " + membership.getFatherName() + " " + membership.getGrandFatherName())
@@ -93,13 +93,13 @@ public class ChildServiceImpl implements ChildService{
 
     @Cacheable(value = "children_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<ChildEntity> findAll(Pageable pageable) {
+    public Page<Child_MemberEntity> findAll(Pageable pageable) {
         return childRepository.findAll(pageable);
     }
 
     @Cacheable(value = "children", key = "#childId")
     @Override
-    public Optional<ChildEntity> findChildById(Long childId) {
+    public Optional<Child_MemberEntity> findChildById(Long childId) {
         return childRepository.findById(childId);
     }
 
@@ -110,7 +110,7 @@ public class ChildServiceImpl implements ChildService{
                             key = "#childId")}
     )
     @Override
-    public void updateChildDetails(Long childId, ChildDTO request) {
+    public void updateChildDetails(Long childId, Child_MemberDTO request) {
         childRepository.findById(childId).ifPresent(memberEntity -> {
 
             Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
@@ -163,7 +163,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
-    public Page<ChildEntity> findAllBySpecification(Specification<ChildEntity> spec, Pageable pageable) {
+    public Page<Child_MemberEntity> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable) {
         return childRepository.findAll(spec, pageable);
     }
 

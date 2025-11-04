@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.listener;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.events.MemberBirthdayEvent;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
@@ -22,7 +22,7 @@ public class MemberEventListener {
 
     @EventListener
     public void onMemberBirthday(MemberBirthdayEvent event) {
-        MemberEntity member = event.getMember();
+        Adult_MemberEntity member = event.getMember();
 
         Map<String, Object> props = new java.util.HashMap<>();
         props.put("memberName", member.getFirstName() + " " + member.getFatherName());

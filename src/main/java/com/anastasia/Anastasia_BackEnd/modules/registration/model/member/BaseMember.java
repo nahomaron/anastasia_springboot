@@ -1,59 +1,41 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.member;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.common.Auditable;
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToOne;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-
 @EqualsAndHashCode(callSuper = true)
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @SuperBuilder
-@Entity
-@Table(name = "members", indexes = {
-        @Index(name = "idx_member_church", columnList = "church_id"),
-        @Index(name = "idx_member_tenant", columnList = "tenant_id")
-})
-//@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
-//@Filters(@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId"))
+@MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public class MemberEntity extends Auditable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "member_seq")
-    @SequenceGenerator(name = "member_seq", sequenceName = "member_id_seq", allocationSize = 1)
-    private Long id;
+public abstract class BaseMember extends Auditable {
 
     private String membershipNumber;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(nullable = false)
     private String churchNumber;
 
     @Column(nullable = false)
     private String status;
-
-    @Column(nullable = false)
-    private boolean approvedByChurch;
-
-    @Column(nullable = false)
-    private boolean approvedByPriest;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "avatar_id", referencedColumnName = "id")
-    private AvatarEntity avatar;
 
     private boolean deacon;
 
@@ -97,29 +79,19 @@ public class MemberEntity extends Auditable {
 
     private String email;
 
-    @Column(nullable = false)
     private String phone;
 
     private String whatsApp;
     private String emergencyContactNumber;
     private String contactRelation;
-    private String eritreaContact;
-
-    @Column(nullable = false)
-    private String maritalStatus;
-
-    private int numberOfChildren;
 
     private String firstLanguage;
     private String secondLanguage;
 
-    private String profession;
     private String levelOfEducation;
 
     @Column(nullable = false)
     private String fatherOfConfession;
-
-    private String spouseIdNumber;
 
     private Address address;
 
@@ -136,5 +108,5 @@ public class MemberEntity extends Auditable {
 
     @Column(name = "church_id", insertable = false, updatable = false)
     private Long churchId;
-
 }
+

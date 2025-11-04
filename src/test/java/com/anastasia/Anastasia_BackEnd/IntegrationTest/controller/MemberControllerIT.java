@@ -5,8 +5,8 @@ import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -71,7 +71,7 @@ class MemberControllerIT extends PostgresTestContainer {
 
     private String jwtToken;
     private ChurchEntity church;
-    private MemberDTO memberDTO;
+    private Adult_MemberDTO adultMemberDTO;
 
 
     @BeforeEach
@@ -119,7 +119,7 @@ class MemberControllerIT extends PostgresTestContainer {
         AuthenticationResponse response = authService.authenticate(
                 TestDataUtil.createTestAuthenticationRequest(user.getEmail()));
         jwtToken = response.getAccessToken();
-        memberDTO = TestDataUtil.createTestMemberDTO(church);
+        adultMemberDTO = TestDataUtil.createTestMemberDTO(church);
     }
 
     @Test
@@ -127,7 +127,7 @@ class MemberControllerIT extends PostgresTestContainer {
         mockMvc.perform(post("/api/v1/registrar/members/register-member")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(memberDTO)))
+                        .content(objectMapper.writeValueAsString(adultMemberDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.membershipNumber").exists());
     }
@@ -144,7 +144,7 @@ class MemberControllerIT extends PostgresTestContainer {
 
     @Test
     void testGetMember_found() throws Exception {
-        MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
+        Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(get("/api/v1/registrar/members/{id}", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
@@ -154,10 +154,10 @@ class MemberControllerIT extends PostgresTestContainer {
 
     @Test
     void testUpdateMembershipDetails() throws Exception {
-        MemberEntity member = TestDataUtil.createTestMember(church);
-        MemberEntity saved = memberRepository.save(member);
+        Adult_MemberEntity member = TestDataUtil.createTestMember(church);
+        Adult_MemberEntity saved = memberRepository.save(member);
 
-        MemberDTO updatedDTO = memberDTO;
+        Adult_MemberDTO updatedDTO = adultMemberDTO;
         updatedDTO.setFirstName("UpdatedName");
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}", saved.getId())
@@ -169,7 +169,7 @@ class MemberControllerIT extends PostgresTestContainer {
 
     @Test
     void testApproveByChurch() throws Exception {
-        MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
+        Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}/church-approve", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
@@ -179,7 +179,7 @@ class MemberControllerIT extends PostgresTestContainer {
     @Test
     @WithMockUser(roles = "PRIEST")
     void testApproveByPriest() throws Exception {
-        MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
+        Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}/priest-approve", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
@@ -188,7 +188,7 @@ class MemberControllerIT extends PostgresTestContainer {
 
     @Test
     void testDeleteMembership() throws Exception {
-        MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
+        Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(delete("/api/v1/registrar/members/{id}", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))

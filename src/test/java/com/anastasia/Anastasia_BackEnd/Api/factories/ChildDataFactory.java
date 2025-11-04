@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.factories;
 
 import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 
 import java.time.LocalDate;
@@ -15,8 +15,8 @@ public final class ChildDataFactory {
     private ChildDataFactory() {
     }
 
-    public static ChildDTO newValidChild() {
-        return ChildDTO.builder()
+    public static Child_MemberDTO newValidChild() {
+        return Child_MemberDTO.builder()
                 .churchNumber(generateChurchNumber())
                 .deacon(false)
                 .title("Child")
@@ -52,14 +52,14 @@ public final class ChildDataFactory {
                 .build();
     }
 
-    public static ChildDTO missingRequiredField() {
-        ChildDTO dto = newValidChild();
+    public static Child_MemberDTO missingRequiredField() {
+        Child_MemberDTO dto = newValidChild();
         dto.setFirstName(null);
         return dto;
     }
 
-    public static ChildDTO invalidPhoneChild() {
-        ChildDTO dto = newValidChild();
+    public static Child_MemberDTO invalidPhoneChild() {
+        Child_MemberDTO dto = newValidChild();
         dto.setPhone("12345");
         return dto;
     }

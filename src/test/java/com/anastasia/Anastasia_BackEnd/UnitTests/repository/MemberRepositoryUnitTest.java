@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.repository;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.ApplicationConfig;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.TestSupport.TestAuditorAwareConfig;
@@ -35,7 +35,7 @@ class MemberRepositoryUnitTest {
     @Autowired
     private EntityManager entityManager;
 
-    private MemberEntity member;
+    private Adult_MemberEntity member;
 
     @BeforeEach
     void setUp() {

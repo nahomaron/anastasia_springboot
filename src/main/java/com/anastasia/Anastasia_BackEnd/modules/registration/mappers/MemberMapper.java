@@ -1,54 +1,54 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MemberMapper {
 
-    public MemberDTO memberEntityToDTO(MemberEntity memberEntity) {
-        if (memberEntity == null) return null;
+    public Adult_MemberDTO memberEntityToDTO(Adult_MemberEntity adultMemberEntity) {
+        if (adultMemberEntity == null) return null;
 
-        return MemberDTO.builder()
-                .churchNumber(memberEntity.getChurchNumber())
-                .deacon(memberEntity.isDeacon())
-                .title(memberEntity.getTitle())
-                .firstName(memberEntity.getFirstName())
-                .fatherName(memberEntity.getFatherName())
-                .grandFatherName(memberEntity.getGrandFatherName())
-                .motherName(memberEntity.getMotherName())
-                .mothersFather(memberEntity.getMothersFather())
-                .firstNameT(memberEntity.getFirstNameT())
-                .fatherNameT(memberEntity.getFatherNameT())
-                .grandFatherNameT(memberEntity.getGrandFatherNameT())
-                .motherFullNameT(memberEntity.getMotherFullNameT())
-                .gender(memberEntity.getGender())
-                .birthday(memberEntity.getBirthday())
-                .nationality(memberEntity.getNationality())
-                .placeOfBirth(memberEntity.getPlaceOfBirth())
-                .email(memberEntity.getEmail())
-                .phone(memberEntity.getPhone())
-                .whatsApp(memberEntity.getWhatsApp())
-                .emergencyContactNumber(memberEntity.getEmergencyContactNumber())
-                .contactRelation(memberEntity.getContactRelation())
-                .eritreaContact(memberEntity.getEritreaContact())
-                .maritalStatus(memberEntity.getMaritalStatus())
-                .numberOfChildren(memberEntity.getNumberOfChildren())
-                .firstLanguage(memberEntity.getFirstLanguage())
-                .secondLanguage(memberEntity.getSecondLanguage())
-                .profession(memberEntity.getProfession())
-                .levelOfEducation(memberEntity.getLevelOfEducation())
-                .fatherOfConfession(memberEntity.getFatherOfConfession())
-                .spouseIdNumber(memberEntity.getSpouseIdNumber())
-                .address(memberEntity.getAddress())
+        return Adult_MemberDTO.builder()
+                .churchNumber(adultMemberEntity.getChurchNumber())
+                .deacon(adultMemberEntity.isDeacon())
+                .title(adultMemberEntity.getTitle())
+                .firstName(adultMemberEntity.getFirstName())
+                .fatherName(adultMemberEntity.getFatherName())
+                .grandFatherName(adultMemberEntity.getGrandFatherName())
+                .motherName(adultMemberEntity.getMotherName())
+                .mothersFather(adultMemberEntity.getMothersFather())
+                .firstNameT(adultMemberEntity.getFirstNameT())
+                .fatherNameT(adultMemberEntity.getFatherNameT())
+                .grandFatherNameT(adultMemberEntity.getGrandFatherNameT())
+                .motherFullNameT(adultMemberEntity.getMotherFullNameT())
+                .gender(adultMemberEntity.getGender())
+                .birthday(adultMemberEntity.getBirthday())
+                .nationality(adultMemberEntity.getNationality())
+                .placeOfBirth(adultMemberEntity.getPlaceOfBirth())
+                .email(adultMemberEntity.getEmail())
+                .phone(adultMemberEntity.getPhone())
+                .whatsApp(adultMemberEntity.getWhatsApp())
+                .emergencyContactNumber(adultMemberEntity.getEmergencyContactNumber())
+                .contactRelation(adultMemberEntity.getContactRelation())
+                .eritreaContact(adultMemberEntity.getEritreaContact())
+                .maritalStatus(adultMemberEntity.getMaritalStatus())
+                .numberOfChildren(adultMemberEntity.getNumberOfChildren())
+                .firstLanguage(adultMemberEntity.getFirstLanguage())
+                .secondLanguage(adultMemberEntity.getSecondLanguage())
+                .profession(adultMemberEntity.getProfession())
+                .levelOfEducation(adultMemberEntity.getLevelOfEducation())
+                .fatherOfConfession(adultMemberEntity.getFatherOfConfession())
+                .spouseIdNumber(adultMemberEntity.getSpouseIdNumber())
+                .address(adultMemberEntity.getAddress())
                 .build();
     }
 
-    public MemberEntity memberDTOToEntity(MemberDTO dto) {
+    public Adult_MemberEntity memberDTOToEntity(Adult_MemberDTO dto) {
         if (dto == null) return null;
 
-        return MemberEntity.builder()
+        return Adult_MemberEntity.builder()
                 .churchNumber(dto.getChurchNumber())
                 .deacon(dto.isDeacon())
                 .title(dto.getTitle())

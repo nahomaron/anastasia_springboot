@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -12,17 +12,17 @@ import java.util.Optional;
 
 @Service
 public interface MemberService {
-    MemberEntity convertToEntity(MemberDTO memberDTO);
+    Adult_MemberEntity convertToEntity(Adult_MemberDTO adultMemberDTO);
 
-    MemberResponse registerMember(MemberEntity memberEntity);
+    MemberResponse registerMember(Adult_MemberEntity adultMemberEntity);
 
-    MemberDTO convertToDTO(MemberEntity savedMember);
+    Adult_MemberDTO convertToDTO(Adult_MemberEntity savedMember);
 
-    Page<MemberEntity> findAll(Pageable pageable);
+    Page<Adult_MemberEntity> findAll(Pageable pageable);
 
-    Optional<MemberEntity> findMemberById(Long memberId);
+    Optional<Adult_MemberEntity> findMemberById(Long memberId);
 
-    void updateMembershipDetails(Long memberId, MemberDTO request);
+    void updateMembershipDetails(Long memberId, Adult_MemberDTO request);
 
     void deleteMembership(Long memberId);
 
@@ -30,5 +30,5 @@ public interface MemberService {
 
     void approveByPriest(Long memberId);
 
-    Page<MemberEntity> findAllBySpecification(Specification<MemberEntity> spec, Pageable pageable);
+    Page<Adult_MemberEntity> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable);
 }

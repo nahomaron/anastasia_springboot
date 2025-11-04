@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,19 +13,19 @@ import java.util.Optional;
 
 @Service
 public interface ChildService {
-    ChildEntity convertToEntity(@Valid ChildDTO childDTO);
-    ChildDTO convertToDTO(ChildEntity childEntity);
+    Child_MemberEntity convertToEntity(@Valid Child_MemberDTO childMemberDTO);
+    Child_MemberDTO convertToDTO(Child_MemberEntity childMemberEntity);
 
-    ChildResponse registerChild(ChildEntity childEntity);
+    ChildResponse registerChild(Child_MemberEntity childMemberEntity);
 
-    Page<ChildEntity> findAll(Pageable pageable);
+    Page<Child_MemberEntity> findAll(Pageable pageable);
 
-    Optional<ChildEntity> findChildById(Long memberId);
+    Optional<Child_MemberEntity> findChildById(Long memberId);
 
-    void updateChildDetails(Long memberId, ChildDTO request);
+    void updateChildDetails(Long memberId, Child_MemberDTO request);
 
     void deleteChildMembership(Long memberId);
 
-    Page<ChildEntity> findAllBySpecification(Specification<ChildEntity> spec, Pageable pageable);
+    Page<Child_MemberEntity> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable);
 
 }

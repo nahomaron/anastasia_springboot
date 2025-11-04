@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.common.specification;
 
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
@@ -13,20 +13,20 @@ import java.util.List;
 
 public class MemberSpecifications {
 
-    public static Specification<MemberEntity> hasMembershipNumber(Long membershipNumber){
+    public static Specification<Adult_MemberEntity> hasMembershipNumber(Long membershipNumber){
         return (root, query, cb) -> cb.equal(root.get("membershipNumber"), membershipNumber);
     }
 
-    public static Specification<MemberEntity> hasStatus(String status){
+    public static Specification<Adult_MemberEntity> hasStatus(String status){
         return (root, query, cb) -> cb.equal(root.get("status"), status);
     }
     // todo -> implement for approvedByChurch and approvedByPriest
 
-    public static Specification<MemberEntity> isDeacon(boolean deacon){
+    public static Specification<Adult_MemberEntity> isDeacon(boolean deacon){
         return (root, query, cb) -> cb.equal(root.get("deacon"), deacon);
     }
 
-    public static Specification<MemberEntity> nameContains(String name){
+    public static Specification<Adult_MemberEntity> nameContains(String name){
         return (root, query, cb) -> {
             String likePattern = "%" + name.toLowerCase() + "%";
             return cb.or(
@@ -40,7 +40,7 @@ public class MemberSpecifications {
         };
     }
 
-    public static Specification<MemberEntity> motherNameContains(String motherName){
+    public static Specification<Adult_MemberEntity> motherNameContains(String motherName){
         return (root, query, cb) -> {
             String likePattern = "%" + motherName.toLowerCase() + "%";
             return cb.or(
@@ -50,11 +50,11 @@ public class MemberSpecifications {
         };
     }
 
-    public static Specification<MemberEntity> hasGender(String gender){
+    public static Specification<Adult_MemberEntity> hasGender(String gender){
         return (root, query, cb) -> cb.equal(root.get("gender"), gender);
     }
 
-    public static Specification<MemberEntity> ageBetween(int minAge, int maxAge) {
+    public static Specification<Adult_MemberEntity> ageBetween(int minAge, int maxAge) {
         return (root, query, cb) -> {
             LocalDate today = LocalDate.now();
             LocalDate maxDate = today.minusYears(minAge); // Youngest person
@@ -64,7 +64,7 @@ public class MemberSpecifications {
         };
     }
 
-    public static Specification<MemberEntity> phoneContains(String phone){
+    public static Specification<Adult_MemberEntity> phoneContains(String phone){
         String likePattern = "%" + phone + "%";
         return (root, query, cb) -> cb.or(
                 cb.like(root.get("phone"), likePattern),
@@ -72,21 +72,21 @@ public class MemberSpecifications {
         );
     }
 
-    public static Specification<MemberEntity> hasMaritalStatus(String maritalStatus){
+    public static Specification<Adult_MemberEntity> hasMaritalStatus(String maritalStatus){
         return (root, query, cb) -> cb.equal(root.get("maritalStatus"), maritalStatus);
     }
 
-    public static Specification<MemberEntity> hasProfession(String profession){
+    public static Specification<Adult_MemberEntity> hasProfession(String profession){
         String likePattern = "%" + profession.toLowerCase() + "%";
         return (root, query, cb) -> cb.like(cb.lower(root.get("profession")), likePattern);
     }
 
-    public static Specification<MemberEntity> hasLevelOfEducation(String levelOfEducation){
+    public static Specification<Adult_MemberEntity> hasLevelOfEducation(String levelOfEducation){
         String likePattern = "%" + levelOfEducation.toLowerCase() + "%";
         return (root, query, cb) ->  cb.like(cb.lower(root.get("levelOfEducation")), likePattern);
     }
 
-    public static Specification<MemberEntity> filterByAddress(Address address) {
+    public static Specification<Adult_MemberEntity> filterByAddress(Address address) {
         return (root, query, cb) -> {
             if (address == null) {
                 return cb.and();

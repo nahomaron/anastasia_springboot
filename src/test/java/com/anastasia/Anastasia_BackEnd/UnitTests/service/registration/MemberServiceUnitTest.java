@@ -3,10 +3,10 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
@@ -49,7 +49,7 @@ public class MemberServiceUnitTest {
     private MemberServiceImpl memberService;
 
     private UserEntity user;
-    private MemberEntity member;
+    private Adult_MemberEntity member;
 
     @BeforeEach
     void setUp() {
@@ -66,7 +66,7 @@ public class MemberServiceUnitTest {
         user.setUserType(UserType.GUEST);
 
         ChurchEntity church = TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity());
-        MemberEntity member = TestDataUtil.createTestMember(church);
+        Adult_MemberEntity member = TestDataUtil.createTestMember(church);
 
         UserPrincipal principal = new UserPrincipal(user);
         Authentication auth = mock(Authentication.class);
@@ -78,7 +78,7 @@ public class MemberServiceUnitTest {
         when(churchRepository.findByChurchNumber(member.getChurchNumber())).thenReturn(Optional.of(church));
         when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("M123456");
         when(memberRepository.existsByMembershipNumber(anyString())).thenReturn(false);
-        when(memberRepository.save(any(MemberEntity.class))).thenAnswer(i -> i.getArgument(0));
+        when(memberRepository.save(any(Adult_MemberEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
@@ -94,7 +94,7 @@ public class MemberServiceUnitTest {
         verify(churchRepository, times(1)).findByChurchNumber(member.getChurchNumber());
         verify(securityUtils, times(1)).generateUniqueIDNumber(anyInt(), anyString());
         verify(memberRepository, times(1)).existsByMembershipNumber(anyString());
-        verify(memberRepository, times(1)).save(any(MemberEntity.class));
+        verify(memberRepository, times(1)).save(any(Adult_MemberEntity.class));
         verify(userRepository, times(1)).save(user); // Verify saving the updated user
         verify(securityContext, times(1)).getAuthentication(); // Verify authentication was retrieved
         verify(auth, times(1)).getPrincipal(); // Verify principal was retrieved
@@ -102,38 +102,38 @@ public class MemberServiceUnitTest {
 
     @Test
     void testConvertToEntity() {
-        MemberDTO dto = new MemberDTO();
+        Adult_MemberDTO dto = new Adult_MemberDTO();
         when(memberMapper.memberDTOToEntity(dto)).thenReturn(member);
-        MemberEntity result = memberService.convertToEntity(dto);
+        Adult_MemberEntity result = memberService.convertToEntity(dto);
         assertThat(result).isEqualTo(member);
     }
 
     @Test
     void testConvertToDTO() {
-        MemberDTO dto = new MemberDTO();
+        Adult_MemberDTO dto = new Adult_MemberDTO();
         when(memberMapper.memberEntityToDTO(member)).thenReturn(dto);
-        MemberDTO result = memberService.convertToDTO(member);
+        Adult_MemberDTO result = memberService.convertToDTO(member);
         assertThat(result).isEqualTo(dto);
     }
 
     @Test
     void testFindAll() {
-        Page<MemberEntity> page = new PageImpl<>(List.of(member));
+        Page<Adult_MemberEntity> page = new PageImpl<>(List.of(member));
         when(memberRepository.findAll(any(PageRequest.class))).thenReturn(page);
-        Page<MemberEntity> result = memberService.findAll(PageRequest.of(0, 10));
+        Page<Adult_MemberEntity> result = memberService.findAll(PageRequest.of(0, 10));
         assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
     void testFindMemberById() {
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
-        Optional<MemberEntity> result = memberService.findMemberById(1L);
+        Optional<Adult_MemberEntity> result = memberService.findMemberById(1L);
         assertThat(result).isPresent().contains(member);
     }
 
     @Test
     void testUpdateMembershipDetails() {
-        MemberDTO request = new MemberDTO();
+        Adult_MemberDTO request = new Adult_MemberDTO();
         request.setFirstName("Updated");
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
@@ -170,9 +170,9 @@ public class MemberServiceUnitTest {
 
     @Test
     void testFindAllBySpecification() {
-        Page<MemberEntity> page = new PageImpl<>(List.of(member));
+        Page<Adult_MemberEntity> page = new PageImpl<>(List.of(member));
         when(memberRepository.findAll(any(Specification.class), any(PageRequest.class))).thenReturn(page);
-        Page<MemberEntity> result = memberService.findAllBySpecification(mock(Specification.class), PageRequest.of(0, 10));
+        Page<Adult_MemberEntity> result = memberService.findAllBySpecification(mock(Specification.class), PageRequest.of(0, 10));
         assertThat(result.getContent()).hasSize(1);
     }
 }

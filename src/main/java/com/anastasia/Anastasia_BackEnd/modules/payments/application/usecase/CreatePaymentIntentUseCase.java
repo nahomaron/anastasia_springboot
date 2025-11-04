@@ -5,7 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentInte
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeClient;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +70,7 @@ public class CreatePaymentIntentUseCase {
         AtomicReference<String> resolvedUserEmail = new AtomicReference<>(userEmail);
 
         if (resolvedMemberId.get() != null) {
-            MemberEntity member = memberRepo.findByIdAndTenantId(resolvedMemberId.get(), normalizedTenantId)
+            Adult_MemberEntity member = memberRepo.findByIdAndTenantId(resolvedMemberId.get(), normalizedTenantId)
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Member does not belong to tenant: " + resolvedMemberId));
             resolvedUserId = resolvedUserId != null ? resolvedUserId : member.getUserId();

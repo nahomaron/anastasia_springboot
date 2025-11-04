@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.specification;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.common.specification.ChildSpecifications;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -23,7 +23,7 @@ class ChildSpecificationsTest {
     @Test
     void testHasMembershipNumber() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<Long> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -31,7 +31,7 @@ class ChildSpecificationsTest {
         Mockito.<Path<Long>>when(root.get("membershipNumber")).thenReturn(path);
         when(cb.equal(path, 123L)).thenReturn(predicate);
 
-        Specification<ChildEntity> spec = ChildSpecifications.hasMembershipNumber(123L);
+        Specification<Child_MemberEntity> spec = ChildSpecifications.hasMembershipNumber(123L);
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(predicate, result);
@@ -40,7 +40,7 @@ class ChildSpecificationsTest {
     @Test
     void testIsDeacon() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<Boolean> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -48,7 +48,7 @@ class ChildSpecificationsTest {
         Mockito.<Path<Boolean>>when(root.get("deacon")).thenReturn(path);
         when(cb.equal(path, true)).thenReturn(predicate);
 
-        Specification<ChildEntity> spec = ChildSpecifications.isDeacon(true);
+        Specification<Child_MemberEntity> spec = ChildSpecifications.isDeacon(true);
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(predicate, result);
@@ -57,7 +57,7 @@ class ChildSpecificationsTest {
     @Test
     void testHasStatus() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<String> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -65,7 +65,7 @@ class ChildSpecificationsTest {
         Mockito.<Path<String>>when(root.get("status")).thenReturn(path);
         when(cb.equal(path, "active")).thenReturn(predicate);
 
-        Specification<ChildEntity> spec = ChildSpecifications.hasStatus("active");
+        Specification<Child_MemberEntity> spec = ChildSpecifications.hasStatus("active");
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(predicate, result);
@@ -74,7 +74,7 @@ class ChildSpecificationsTest {
     @Test
     void testHasGender() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<String> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -82,7 +82,7 @@ class ChildSpecificationsTest {
         Mockito.<Path<String>>when(root.get("gender")).thenReturn(path);
         when(cb.equal(path, "female")).thenReturn(predicate);
 
-        Specification<ChildEntity> spec = ChildSpecifications.hasGender("female");
+        Specification<Child_MemberEntity> spec = ChildSpecifications.hasGender("female");
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(predicate, result);
@@ -91,7 +91,7 @@ class ChildSpecificationsTest {
     @Test
     void testAgeBetween() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<LocalDate> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -99,7 +99,7 @@ class ChildSpecificationsTest {
         Mockito.<Path<LocalDate>>when(root.get("birthday")).thenReturn(path);
         when(cb.between(eq(path), any(LocalDate.class), any(LocalDate.class))).thenReturn(predicate);
 
-        Specification<ChildEntity> spec = ChildSpecifications.ageBetween(10, 5);
+        Specification<Child_MemberEntity> spec = ChildSpecifications.ageBetween(10, 5);
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(predicate, result);
@@ -108,7 +108,7 @@ class ChildSpecificationsTest {
     @Test
     void testNameContains_buildsLowercaseSearchAcrossFields() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Predicate expected = mock(Predicate.class);
 
@@ -143,7 +143,7 @@ class ChildSpecificationsTest {
 
         when(cb.or(any(), any(), any(), any(), any(), any())).thenReturn(expected);
 
-        Specification<ChildEntity> specification = ChildSpecifications.nameContains("JoHn");
+        Specification<Child_MemberEntity> specification = ChildSpecifications.nameContains("JoHn");
         Predicate actual = specification.toPredicate(root, query, cb);
 
         assertEquals(expected, actual);
@@ -152,13 +152,13 @@ class ChildSpecificationsTest {
     @Test
     void filterByAddress_whenAddressNull_shouldReturnConjunction() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Predicate expected = mock(Predicate.class);
 
         when(cb.and()).thenReturn(expected);
 
-        Specification<ChildEntity> spec = ChildSpecifications.filterByAddress(null);
+        Specification<Child_MemberEntity> spec = ChildSpecifications.filterByAddress(null);
         Predicate actual = spec.toPredicate(root, query, cb);
 
         assertEquals(expected, actual);
@@ -167,7 +167,7 @@ class ChildSpecificationsTest {
     @Test
     void filterByAddress_withPartialFields_shouldAddOnlyNonBlankPredicates() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<ChildEntity> root = mock(Root.class);
+        Root<Child_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Predicate expected = mock(Predicate.class);
 
@@ -194,7 +194,7 @@ class ChildSpecificationsTest {
                 .zipcode("")
                 .build();
 
-        Specification<ChildEntity> spec = ChildSpecifications.filterByAddress(address);
+        Specification<Child_MemberEntity> spec = ChildSpecifications.filterByAddress(address);
         Predicate actual = spec.toPredicate(root, query, cb);
 
         assertEquals(expected, actual);

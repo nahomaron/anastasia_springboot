@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.notification.domain;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
@@ -40,7 +40,7 @@ class NotificationEventTest {
 
     @Test
     void buildsTargetUsingMembershipDetails() {
-        MemberEntity member = new MemberEntity();
+        Adult_MemberEntity member = new Adult_MemberEntity();
         member.setPhone("+1555123456");
         member.setWhatsApp("+1555987654");
 

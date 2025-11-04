@@ -1,49 +1,49 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ChildMapper {
 
-    public ChildDTO childEntityToDTO(ChildEntity childEntity) {
-        if (childEntity == null) return null;
+    public Child_MemberDTO childEntityToDTO(Child_MemberEntity childMemberEntity) {
+        if (childMemberEntity == null) return null;
 
-        return ChildDTO.builder()
-                .churchNumber(childEntity.getChurchNumber())
-                .deacon(childEntity.isDeacon())
-                .title(childEntity.getTitle())
-                .firstName(childEntity.getFirstName())
-                .fatherName(childEntity.getFatherName())
-                .grandFatherName(childEntity.getGrandFatherName())
-                .motherName(childEntity.getMotherName())
-                .mothersFather(childEntity.getMothersFather())
-                .firstNameT(childEntity.getFirstNameT())
-                .fatherNameT(childEntity.getFatherNameT())
-                .grandFatherNameT(childEntity.getGrandFatherNameT())
-                .motherFullNameT(childEntity.getMotherFullNameT())
-                .gender(childEntity.getGender())
-                .birthday(childEntity.getBirthday())
-                .nationality(childEntity.getNationality())
-                .placeOfBirth(childEntity.getPlaceOfBirth())
-                .email(childEntity.getEmail())
-                .phone(childEntity.getPhone())
-                .whatsApp(childEntity.getWhatsApp())
-                .emergencyContactNumber(childEntity.getEmergencyContactNumber())
-                .contactRelation(childEntity.getContactRelation())
-                .firstLanguage(childEntity.getFirstLanguage())
-                .secondLanguage(childEntity.getSecondLanguage())
-                .levelOfEducation(childEntity.getLevelOfEducation())
-                .fatherOfConfession(childEntity.getFatherOfConfession())
-                .address(childEntity.getAddress())
+        return Child_MemberDTO.builder()
+                .churchNumber(childMemberEntity.getChurchNumber())
+                .deacon(childMemberEntity.isDeacon())
+                .title(childMemberEntity.getTitle())
+                .firstName(childMemberEntity.getFirstName())
+                .fatherName(childMemberEntity.getFatherName())
+                .grandFatherName(childMemberEntity.getGrandFatherName())
+                .motherName(childMemberEntity.getMotherName())
+                .mothersFather(childMemberEntity.getMothersFather())
+                .firstNameT(childMemberEntity.getFirstNameT())
+                .fatherNameT(childMemberEntity.getFatherNameT())
+                .grandFatherNameT(childMemberEntity.getGrandFatherNameT())
+                .motherFullNameT(childMemberEntity.getMotherFullNameT())
+                .gender(childMemberEntity.getGender())
+                .birthday(childMemberEntity.getBirthday())
+                .nationality(childMemberEntity.getNationality())
+                .placeOfBirth(childMemberEntity.getPlaceOfBirth())
+                .email(childMemberEntity.getEmail())
+                .phone(childMemberEntity.getPhone())
+                .whatsApp(childMemberEntity.getWhatsApp())
+                .emergencyContactNumber(childMemberEntity.getEmergencyContactNumber())
+                .contactRelation(childMemberEntity.getContactRelation())
+                .firstLanguage(childMemberEntity.getFirstLanguage())
+                .secondLanguage(childMemberEntity.getSecondLanguage())
+                .levelOfEducation(childMemberEntity.getLevelOfEducation())
+                .fatherOfConfession(childMemberEntity.getFatherOfConfession())
+                .address(childMemberEntity.getAddress())
                 .build();
     }
 
-    public ChildEntity childDTOToEntity(ChildDTO dto) {
+    public Child_MemberEntity childDTOToEntity(Child_MemberDTO dto) {
         if (dto == null) return null;
 
-        return ChildEntity.builder()
+        return Child_MemberEntity.builder()
                 .churchNumber(dto.getChurchNumber())
                 .deacon(dto.isDeacon())
                 .title(dto.getTitle())

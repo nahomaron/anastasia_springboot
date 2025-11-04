@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.specification;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.common.specification.MemberSpecifications;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -20,7 +20,7 @@ class MemberSpecificationTest {
     @Test
     void testHasMembershipNumber() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<Long> membershipNumberPath = mock(Path.class);
         Predicate expectedPredicate = mock(Predicate.class);
@@ -29,7 +29,7 @@ class MemberSpecificationTest {
         Mockito.<Path<Long>>when(root.get("membershipNumber")).thenReturn(membershipNumberPath);
         when(cb.equal(membershipNumberPath, 123L)).thenReturn(expectedPredicate);
 
-        Specification<MemberEntity> spec = MemberSpecifications.hasMembershipNumber(123L);
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.hasMembershipNumber(123L);
         Predicate actualPredicate = spec.toPredicate(root, query, cb);
 
         assertEquals(expectedPredicate, actualPredicate);
@@ -40,7 +40,7 @@ class MemberSpecificationTest {
     @Test
     void testHasStatus() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<String> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -48,7 +48,7 @@ class MemberSpecificationTest {
         Mockito.<Path<String>>when(root.get("status")).thenReturn(path);
         when(cb.equal(path, "ACTIVE")).thenReturn(predicate);
 
-        Specification<MemberEntity> spec = MemberSpecifications.hasStatus("ACTIVE");
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.hasStatus("ACTIVE");
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(predicate, result);
@@ -57,7 +57,7 @@ class MemberSpecificationTest {
     @Test
     void testIsDeacon() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Path<Boolean> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -65,7 +65,7 @@ class MemberSpecificationTest {
         Mockito.<Path<Boolean>>when(root.get("deacon")).thenReturn(path);
         when(cb.equal(path, true)).thenReturn(predicate);
 
-        Specification<MemberEntity> spec = MemberSpecifications.isDeacon(true);
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.isDeacon(true);
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(predicate, result);
@@ -74,7 +74,7 @@ class MemberSpecificationTest {
     @Test
     void testNameContains() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
 
         // Path mocks
@@ -122,7 +122,7 @@ class MemberSpecificationTest {
 
         when(cb.or(p1, p2, p3, p4, p5, p6)).thenReturn(finalPredicate);
 
-        Specification<MemberEntity> spec = MemberSpecifications.nameContains("john");
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.nameContains("john");
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(finalPredicate, result);
@@ -134,7 +134,7 @@ class MemberSpecificationTest {
     void testAgeBetween() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
         Path<LocalDate> birthdayPath = mock(Path.class);
         Predicate expectedPredicate = mock(Predicate.class);
 
@@ -146,7 +146,7 @@ class MemberSpecificationTest {
 
         when(cb.between(birthdayPath, minDate, maxDate)).thenReturn(expectedPredicate);
 
-        Specification<MemberEntity> spec = MemberSpecifications.ageBetween(20, 50);
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.ageBetween(20, 50);
         Predicate actualPredicate = spec.toPredicate(root, query, cb);
 
         assertEquals(expectedPredicate, actualPredicate);
@@ -156,14 +156,14 @@ class MemberSpecificationTest {
     void testHasMaritalStatus() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
         Path<String> maritalStatusPath = mock(Path.class);
         Predicate expected = mock(Predicate.class);
 
         Mockito.<Path<String>>when(root.get("maritalStatus")).thenReturn(maritalStatusPath);
         when(cb.equal(maritalStatusPath, "Married")).thenReturn(expected);
 
-        Specification<MemberEntity> spec = MemberSpecifications.hasMaritalStatus("Married");
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.hasMaritalStatus("Married");
         Predicate actual = spec.toPredicate(root, query, cb);
 
         assertEquals(expected, actual);
@@ -173,7 +173,7 @@ class MemberSpecificationTest {
     void testPhoneContains_shouldSearchPhoneAndWhatsapp() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
 
         Path<String> phonePath = mock(Path.class);
         Path<String> whatsappPath = mock(Path.class);
@@ -189,7 +189,7 @@ class MemberSpecificationTest {
         when(cb.like(whatsappPath, "%1234%")).thenReturn(whatsappPredicate);
         when(cb.or(phonePredicate, whatsappPredicate)).thenReturn(combined);
 
-        Specification<MemberEntity> spec = MemberSpecifications.phoneContains("1234");
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.phoneContains("1234");
         Predicate actual = spec.toPredicate(root, query, cb);
 
         assertEquals(combined, actual);
@@ -199,7 +199,7 @@ class MemberSpecificationTest {
     void filterByAddress_shouldSkipEmptyFields() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
 
         Path<Object> addressPath = mock(Path.class);
         Path<Object> cityPath = mock(Path.class);
@@ -225,7 +225,7 @@ class MemberSpecificationTest {
                 .zipcode("1234")
                 .build();
 
-        Specification<MemberEntity> spec = MemberSpecifications.filterByAddress(address);
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.filterByAddress(address);
         Predicate actual = spec.toPredicate(root, query, cb);
 
         assertEquals(combined, actual);
@@ -235,12 +235,12 @@ class MemberSpecificationTest {
     void filterByAddress_withNullAddress_returnsConjunction() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        Root<MemberEntity> root = mock(Root.class);
+        Root<Adult_MemberEntity> root = mock(Root.class);
         Predicate expected = mock(Predicate.class);
 
         when(cb.and()).thenReturn(expected);
 
-        Specification<MemberEntity> spec = MemberSpecifications.filterByAddress(null);
+        Specification<Adult_MemberEntity> spec = MemberSpecifications.filterByAddress(null);
         Predicate actual = spec.toPredicate(root, query, cb);
 
         assertEquals(expected, actual);

@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.flows;
 
 import com.anastasia.Anastasia_BackEnd.Api.factories.MemberDataFactory;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
@@ -13,7 +13,7 @@ public final class MemberRegistrationFlow {
         var login = AuthFlowHelper.signUpAndActivateAndLogin(email, password);
         var token = login.getAccessToken();
 
-        MemberDTO member = MemberDataFactory.newValidMember();
+        Adult_MemberDTO member = MemberDataFactory.newValidMember();
 
         Response res = given()
                 .header("Authorization", "Bearer " + token)

@@ -5,8 +5,8 @@ import com.anastasia.Anastasia_BackEnd.core.notification.domain.events.MemberBir
 import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.*;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.*;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
@@ -50,13 +50,13 @@ public class MemberServiceImpl implements MemberService {
 
 
     @Override
-    public MemberEntity convertToEntity(MemberDTO memberDTO) {
-        return memberMapper.memberDTOToEntity(memberDTO);
+    public Adult_MemberEntity convertToEntity(Adult_MemberDTO adultMemberDTO) {
+        return memberMapper.memberDTOToEntity(adultMemberDTO);
     }
 
     @Override
-    public MemberDTO convertToDTO(MemberEntity memberEntity) {
-        return memberMapper.memberEntityToDTO(memberEntity);
+    public Adult_MemberDTO convertToDTO(Adult_MemberEntity adultMemberEntity) {
+        return memberMapper.memberEntityToDTO(adultMemberEntity);
     }
 
    @CacheEvict(
@@ -64,7 +64,7 @@ public class MemberServiceImpl implements MemberService {
            keyGenerator = "tenantAwareKeyGenerator",
            allEntries = true)
     @Override
-    public MemberResponse registerMember(MemberEntity memberEntity) {
+    public MemberResponse registerMember(Adult_MemberEntity adultMemberEntity) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)){
@@ -74,7 +74,7 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
 
 
-        ChurchEntity church = churchRepository.findByChurchNumber(memberEntity.getChurchNumber())
+        ChurchEntity church = churchRepository.findByChurchNumber(adultMemberEntity.getChurchNumber())
                 .orElseThrow(() -> new IllegalStateException("No valid church number provided"));
 
         // alternative
@@ -83,15 +83,15 @@ public class MemberServiceImpl implements MemberService {
 //        userReference.setId(userPrincipal.getId());  // Only setting the ID, no need to load from DB
 //        memberEntity.setUser(userReference);
 
-        memberEntity.setMembershipNumber(generateUniqueMembershipNumber(6, memberEntity.isDeacon()));
-        memberEntity.setUser(user);
-        memberEntity.setChurch(church);
+        adultMemberEntity.setMembershipNumber(generateUniqueMembershipNumber(6, adultMemberEntity.isDeacon()));
+        adultMemberEntity.setUser(user);
+        adultMemberEntity.setChurch(church);
         Optional.ofNullable(church.getTenant())
-                .ifPresent(tenant -> memberEntity.setTenantId(tenant.getId()));
-        memberEntity.setApprovedByChurch(false);
-        memberEntity.setApprovedByPriest(false);
-        memberEntity.setStatus(MemberStatus.PENDING.name());
-        MemberEntity membership = memberRepository.save(memberEntity);
+                .ifPresent(tenant -> adultMemberEntity.setTenantId(tenant.getId()));
+        adultMemberEntity.setApprovedByChurch(false);
+        adultMemberEntity.setApprovedByPriest(false);
+        adultMemberEntity.setStatus(MemberStatus.PENDING.name());
+        Adult_MemberEntity membership = memberRepository.save(adultMemberEntity);
 
         user.assignMembership(membership);
         user.assignTenant(church.getTenant());
@@ -124,13 +124,13 @@ public class MemberServiceImpl implements MemberService {
 
     @Cacheable(value = "members_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<MemberEntity> findAll(Pageable pageable) {
+    public Page<Adult_MemberEntity> findAll(Pageable pageable) {
         return memberRepository.findAll(pageable);
     }
 
     @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Optional<MemberEntity> findMemberById(Long memberId) {
+    public Optional<Adult_MemberEntity> findMemberById(Long memberId) {
         return memberRepository.findById(memberId);
     }
 
@@ -144,7 +144,7 @@ public class MemberServiceImpl implements MemberService {
                     allEntries = true)}
     )
     @Override
-    public void updateMembershipDetails(Long memberId, MemberDTO request) {
+    public void updateMembershipDetails(Long memberId, Adult_MemberDTO request) {
         memberRepository.findById(memberId).ifPresent(memberEntity -> {
 
             Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
@@ -206,7 +206,7 @@ public class MemberServiceImpl implements MemberService {
     )
     @Override
     public void approveByChurch(Long memberId) {
-        MemberEntity member = memberRepository.findById(memberId)
+        Adult_MemberEntity member = memberRepository.findById(memberId)
                 .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
 
         member.setApprovedByPriest(true);
@@ -223,7 +223,7 @@ public class MemberServiceImpl implements MemberService {
     )
     @Override
     public void approveByPriest(Long memberId) {
-        MemberEntity member = memberRepository.findById(memberId)
+        Adult_MemberEntity member = memberRepository.findById(memberId)
                 .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
         member.setApprovedByChurch(true);
 
@@ -234,7 +234,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Page<MemberEntity> findAllBySpecification(Specification<MemberEntity> spec, Pageable pageable) {
+    public Page<Adult_MemberEntity> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable) {
         return memberRepository.findAll(spec, pageable);
     }
 
@@ -254,8 +254,8 @@ public class MemberServiceImpl implements MemberService {
     }
 
     public void checkBirthdays() {
-        List<MemberEntity> birthdaysToday = memberRepository.findByBirthday(LocalDate.now());
-        for (MemberEntity member : birthdaysToday) {
+        List<Adult_MemberEntity> birthdaysToday = memberRepository.findByBirthday(LocalDate.now());
+        for (Adult_MemberEntity member : birthdaysToday) {
             publisher.publishEvent(new MemberBirthdayEvent(this, member));
         }
     }

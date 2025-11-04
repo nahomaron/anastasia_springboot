@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.users.model;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
@@ -76,7 +76,7 @@ public class UserEntity{
     private Set<Token> tokens;
 
     @OneToOne
-    private MemberEntity membership;
+    private Adult_MemberEntity membership;
 
     @Column(name = "membership_id", insertable = false, updatable = false)
     private Long membershipId;
@@ -104,7 +104,7 @@ public class UserEntity{
         this.roles = roles == null ? new HashSet<>() : new HashSet<>(roles);
     }
 
-    public void assignMembership(MemberEntity membership){
+    public void assignMembership(Adult_MemberEntity membership){
         this.setMembership(membership);
         membership.setUser(this);
     }

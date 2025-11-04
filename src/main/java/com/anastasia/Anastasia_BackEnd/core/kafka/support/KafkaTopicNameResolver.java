@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.core.kafka.support;
 
 import com.anastasia.Anastasia_BackEnd.core.kafka.util.KafkaTopicNames;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.RegistrationEventType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.RegistrationEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,13 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.service;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
@@ -135,33 +135,33 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         UserEntity user = persistUser("member+" + UUID.randomUUID() + "@example.com", ownerRole);
         authenticate(user);
 
-        MemberDTO memberDTO = TestDataUtil.createTestMemberDTO(church);
-        MemberEntity memberEntity = memberService.convertToEntity(memberDTO);
+        Adult_MemberDTO adultMemberDTO = TestDataUtil.createTestMemberDTO(church);
+        Adult_MemberEntity adultMemberEntity = memberService.convertToEntity(adultMemberDTO);
 
-        MemberResponse response = memberService.registerMember(memberEntity);
+        MemberResponse response = memberService.registerMember(adultMemberEntity);
 
         assertThat(response.getMembershipNumber()).isNotBlank();
         assertThat(memberRepository.count()).isEqualTo(1);
 
-        MemberEntity saved = memberRepository.findAll().get(0);
+        Adult_MemberEntity saved = memberRepository.findAll().get(0);
         assertThat(saved.getChurch().getChurchId()).isEqualTo(church.getChurchId());
 
         UserEntity refreshedUser = userRepository.findById(user.getUuid()).orElseThrow();
         assertThat(refreshedUser.getMembership()).isNotNull();
 
-        MemberDTO updateDto = TestDataUtil.createTestMemberDTO(church);
+        Adult_MemberDTO updateDto = TestDataUtil.createTestMemberDTO(church);
         updateDto.setFirstName("UpdatedName");
         updateDto.setFatherOfConfession("Updated Priest");
         memberService.updateMembershipDetails(saved.getId(), updateDto);
 
-        MemberEntity updated = memberRepository.findById(saved.getId()).orElseThrow();
+        Adult_MemberEntity updated = memberRepository.findById(saved.getId()).orElseThrow();
         assertThat(updated.getFirstName()).isEqualTo("UpdatedName");
         assertThat(updated.getFatherOfConfession()).isEqualTo("Updated Priest");
 
         memberService.approveByPriest(saved.getId());
         memberService.approveByChurch(saved.getId());
 
-        MemberEntity approved = memberRepository.findById(saved.getId()).orElseThrow();
+        Adult_MemberEntity approved = memberRepository.findById(saved.getId()).orElseThrow();
         assertThat(approved.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
     }
 
@@ -171,22 +171,22 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         UserEntity user = persistUser("child+" + UUID.randomUUID() + "@example.com", ownerRole);
         authenticate(user);
 
-        ChildDTO childDTO = TestDataUtil.createTestChildDTO(church);
-        ChildEntity childEntity = childService.convertToEntity(childDTO);
+        Child_MemberDTO childMemberDTO = TestDataUtil.createTestChildDTO(church);
+        Child_MemberEntity childMemberEntity = childService.convertToEntity(childMemberDTO);
 
-        ChildResponse response = childService.registerChild(childEntity);
+        ChildResponse response = childService.registerChild(childMemberEntity);
 
         assertThat(response.getMembershipNumber()).isNotBlank();
         assertThat(childRepository.count()).isEqualTo(1);
 
-        ChildEntity saved = childRepository.findAll().get(0);
+        Child_MemberEntity saved = childRepository.findAll().get(0);
         assertThat(saved.getChurch().getChurchId()).isEqualTo(church.getChurchId());
 
-        ChildDTO updateDto = TestDataUtil.createTestChildDTO(church);
+        Child_MemberDTO updateDto = TestDataUtil.createTestChildDTO(church);
         updateDto.setTitle("Young Deacon");
         childService.updateChildDetails(saved.getId(), updateDto);
 
-        ChildEntity updated = childRepository.findById(saved.getId()).orElseThrow();
+        Child_MemberEntity updated = childRepository.findById(saved.getId()).orElseThrow();
         assertThat(updated.getTitle()).isEqualTo("Young Deacon");
 
         childService.deleteChildMembership(saved.getId());

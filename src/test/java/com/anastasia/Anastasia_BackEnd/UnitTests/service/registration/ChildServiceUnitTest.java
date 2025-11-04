@@ -1,9 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -39,7 +39,7 @@ public class ChildServiceUnitTest {
     @InjectMocks
     private ChildServiceImpl childService;
 
-    private ChildEntity child;
+    private Child_MemberEntity child;
     private UserEntity user;
     private ChurchEntity church;
     private UserPrincipal principal;
@@ -48,7 +48,7 @@ public class ChildServiceUnitTest {
 
     @BeforeEach
     void setup() {
-        child = ChildEntity.builder()
+        child = Child_MemberEntity.builder()
                 .churchNumber("CH123")
                 .firstName("John")
                 .fatherName("Doe")
@@ -120,17 +120,17 @@ public class ChildServiceUnitTest {
     @Test
     void testFindAll() {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<ChildEntity> page = new PageImpl<>(List.of(child));
+        Page<Child_MemberEntity> page = new PageImpl<>(List.of(child));
         when(childRepository.findAll(pageable)).thenReturn(page);
 
-        Page<ChildEntity> result = childService.findAll(pageable);
+        Page<Child_MemberEntity> result = childService.findAll(pageable);
         assertEquals(1, result.getTotalElements());
     }
 
     @Test
     void testFindChildById() {
         when(childRepository.findById(1L)).thenReturn(Optional.of(child));
-        Optional<ChildEntity> result = childService.findChildById(1L);
+        Optional<Child_MemberEntity> result = childService.findChildById(1L);
         assertTrue(result.isPresent());
     }
 
@@ -144,13 +144,13 @@ public class ChildServiceUnitTest {
     void updateChildDetails_shouldUpdateOnlyNonNullFields() {
         // Given
         Long childId = 1L;
-        ChildEntity existing = ChildEntity.builder()
+        Child_MemberEntity existing = Child_MemberEntity.builder()
                 .churchNumber("OLD_CH")
                 .firstName("OldFirst")
                 .phone("0000")
                 .build();
 
-        ChildDTO updateRequest = ChildDTO.builder()
+        Child_MemberDTO updateRequest = Child_MemberDTO.builder()
                 .churchNumber("NEW_CH")
                 .firstName("NewFirst")
                 .phone(null) // Should stay as "0000"
@@ -162,9 +162,9 @@ public class ChildServiceUnitTest {
         childService.updateChildDetails(childId, updateRequest);
 
         // Then
-        ArgumentCaptor<ChildEntity> captor = ArgumentCaptor.forClass(ChildEntity.class);
+        ArgumentCaptor<Child_MemberEntity> captor = ArgumentCaptor.forClass(Child_MemberEntity.class);
         verify(childRepository).save(captor.capture());
-        ChildEntity updated = captor.getValue();
+        Child_MemberEntity updated = captor.getValue();
 
         assertEquals("NEW_CH", updated.getChurchNumber());
         assertEquals("NewFirst", updated.getFirstName());
@@ -175,7 +175,7 @@ public class ChildServiceUnitTest {
     void updateChildDetails_shouldNotCallSave_whenChildNotFound() {
         when(childRepository.findById(99L)).thenReturn(Optional.empty());
 
-        childService.updateChildDetails(99L, ChildDTO.builder().build());
+        childService.updateChildDetails(99L, Child_MemberDTO.builder().build());
 
         verify(childRepository, never()).save(any());
     }

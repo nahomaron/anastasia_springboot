@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.repository;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.ApplicationConfig;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
@@ -35,7 +35,7 @@ class ChildRepositoryUnitTest {
     @Autowired
     private EntityManager entityManager;
 
-    private ChildEntity child;
+    private Child_MemberEntity child;
 
     @BeforeEach
     void setUp() {

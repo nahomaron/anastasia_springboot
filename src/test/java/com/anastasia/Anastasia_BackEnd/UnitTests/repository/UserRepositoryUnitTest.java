@@ -4,7 +4,7 @@ import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.ApplicationConfig;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -62,7 +62,7 @@ public class UserRepositoryUnitTest {
         tenant.setChurch(church);
         entityManager.persist(tenant);
 
-        MemberEntity member = TestDataUtil.createTestMember(church);
+        Adult_MemberEntity member = TestDataUtil.createTestMember(church);
         entityManager.persist(member);
 
         group = TestDataUtil.createTestGroupEntity(church, tenant.getId());

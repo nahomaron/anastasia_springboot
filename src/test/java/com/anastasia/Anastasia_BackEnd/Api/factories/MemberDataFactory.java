@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.Api.factories;
 import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 
 import java.time.LocalDate;
 
@@ -12,8 +12,8 @@ public final class MemberDataFactory {
     private MemberDataFactory() {
     }
 
-    public static MemberDTO newValidMember() {
-        return MemberDTO.builder()
+    public static Adult_MemberDTO newValidMember() {
+        return Adult_MemberDTO.builder()
                 .churchNumber(generateChurchNumber())
                 .avatar(new AvatarDTO("https://example.com/avatar.jpg", "200MB"))
                 .deacon(false)
@@ -48,20 +48,20 @@ public final class MemberDataFactory {
                 .build();
     }
 
-    public static MemberDTO missingRequiredField() {
-        MemberDTO dto = newValidMember();
+    public static Adult_MemberDTO missingRequiredField() {
+        Adult_MemberDTO dto = newValidMember();
         dto.setEmail(null);
         return dto;
     }
 
-    public static MemberDTO invalidPhoneMember() {
-        MemberDTO dto = newValidMember();
+    public static Adult_MemberDTO invalidPhoneMember() {
+        Adult_MemberDTO dto = newValidMember();
         dto.setPhone("12345");
         return dto;
     }
 
-    public static MemberDTO femaleMember() {
-        MemberDTO dto = newValidMember();
+    public static Adult_MemberDTO femaleMember() {
+        Adult_MemberDTO dto = newValidMember();
         dto.setGender("Female");
         dto.setTitle("Ms.");
         return dto;

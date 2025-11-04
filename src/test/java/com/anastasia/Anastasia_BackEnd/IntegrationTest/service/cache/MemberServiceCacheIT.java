@@ -4,7 +4,7 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.service.cache;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
@@ -44,15 +44,15 @@ class MemberServiceCacheIT extends PostgresTestContainer {
     @Autowired
     private CacheManager cacheManager;
 
-    private MemberEntity savedMember;
+    private Adult_MemberEntity savedMember;
 
     @BeforeEach
     void setUp() {
         TenantEntity tenant = TestDataUtil.createTestTenantEntity();
         ChurchEntity church = TestDataUtil.createTestChurchEntity(tenant);
-        MemberEntity entity = TestDataUtil.createTestMember(church);
+        Adult_MemberEntity entity = TestDataUtil.createTestMember(church);
 
-        MemberEntity saved = memberRepository.save(entity);
+        Adult_MemberEntity saved = memberRepository.save(entity);
         savedMember = saved;
 
         Cache membersCache = cacheManager.getCache("members");
@@ -66,11 +66,11 @@ class MemberServiceCacheIT extends PostgresTestContainer {
         Long id = savedMember.getId();
 
         // 1️⃣ First call — should hit DB
-        Optional<MemberEntity> firstCall = memberService.findMemberById(id);
+        Optional<Adult_MemberEntity> firstCall = memberService.findMemberById(id);
         verify(memberRepository, times(1)).findById(id);
 
         // 2️⃣ Second call — should use cache (no new DB hit)
-        Optional<MemberEntity> secondCall = memberService.findMemberById(id);
+        Optional<Adult_MemberEntity> secondCall = memberService.findMemberById(id);
         verify(memberRepository, times(1)).findById(id); // still 1 call total
 
         assertThat(firstCall).isEqualTo(secondCall);

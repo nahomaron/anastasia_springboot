@@ -2,8 +2,8 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ public class ChildMapperUnitTest {
 
     @Test
     void testConvertToDTO_shouldMapCorrectly() {
-        ChildEntity entity = ChildEntity.builder()
+        Child_MemberEntity entity = Child_MemberEntity.builder()
                 .churchNumber("CH001")
                 .deacon(true)
                 .title("Mr.")
@@ -41,7 +41,7 @@ public class ChildMapperUnitTest {
                 .phone("123456789")
                 .build();
 
-        ChildDTO dto = childService.convertToDTO(entity);
+        Child_MemberDTO dto = childService.convertToDTO(entity);
 
         assertNotNull(dto);
         assertEquals("CH001", dto.getChurchNumber());
@@ -54,7 +54,7 @@ public class ChildMapperUnitTest {
 
     @Test
     void testConvertToEntity_shouldMapCorrectly() {
-        ChildDTO dto = ChildDTO.builder()
+        Child_MemberDTO dto = Child_MemberDTO.builder()
                 .churchNumber("CH002")
                 .deacon(false)
                 .title("Miss")
@@ -65,7 +65,7 @@ public class ChildMapperUnitTest {
                 .phone("987654321")
                 .build();
 
-        ChildEntity entity = childService.convertToEntity(dto);
+        Child_MemberEntity entity = childService.convertToEntity(dto);
 
         assertNotNull(entity);
         assertEquals("CH002", entity.getChurchNumber());

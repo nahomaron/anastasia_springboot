@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.Api.tests.child;
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.factories.ChildDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.ChildService;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -47,7 +47,7 @@ class ChildPositiveTests extends BaseApiTest {
     @Story("Advanced search returns HTTP 200")
     void advancedSearchShouldRespondWithOk() {
         RequestSpecification priestSpec = getSpecForRole("PRIEST");
-        ChildDTO payload = ChildDataFactory.newValidChild();
+        Child_MemberDTO payload = ChildDataFactory.newValidChild();
 
         Response response = childService.advancedSearch(
                 priestSpec,

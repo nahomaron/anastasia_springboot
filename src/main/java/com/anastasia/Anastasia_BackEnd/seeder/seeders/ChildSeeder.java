@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -34,7 +34,7 @@ public class ChildSeeder {
     public void seedChildren(List<ChurchEntity> churches) {
         if (childRepository.count() == 0) {
             Faker faker = new Faker();
-            List<ChildEntity> children = new ArrayList<>();
+            List<Child_MemberEntity> children = new ArrayList<>();
 
             if (churches.isEmpty()) {
                 churches = churchService.getChurches();
@@ -58,7 +58,7 @@ public class ChildSeeder {
 
                 LocalDate birthday = SeederRandomUtils.randomBirthdate(18, 60);
 
-                ChildEntity childMember = ChildEntity.builder()
+                Child_MemberEntity childMember = Child_MemberEntity.builder()
                         .churchNumber(assignedChurch.getChurchNumber())
                         .status(faker.options().option("PENDING", "APPROVED", "REJECTED", "ACTIVE", "BLOCKED"))
                         .deacon(faker.bool().bool())

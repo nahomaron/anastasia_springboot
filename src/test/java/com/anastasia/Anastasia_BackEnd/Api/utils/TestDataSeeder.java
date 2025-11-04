@@ -2,8 +2,8 @@ package com.anastasia.Anastasia_BackEnd.Api.utils;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -96,10 +96,10 @@ public class TestDataSeeder {
      * @return The created MemberEntity.
      */
     @Transactional
-    public MemberEntity createMember(String firstName) {
+    public Adult_MemberEntity createMember(String firstName) {
         ChurchEntity church = ensureChurchForSeededTenant();
 
-        MemberEntity member = TestDataUtil.createTestMember(church);
+        Adult_MemberEntity member = TestDataUtil.createTestMember(church);
         member.setFirstName(firstName);
         member.setChurchNumber(church.getChurchNumber());
 
@@ -110,7 +110,7 @@ public class TestDataSeeder {
      * Factory-style builder for MemberDTO (for RestAssured or MockMvc).
      * This uses the utility method for full population.
      */
-    public MemberDTO createMemberDTO(ChurchEntity church) {
+    public Adult_MemberDTO createMemberDTO(ChurchEntity church) {
         return TestDataUtil.createTestMemberDTO(church);
     }
 }

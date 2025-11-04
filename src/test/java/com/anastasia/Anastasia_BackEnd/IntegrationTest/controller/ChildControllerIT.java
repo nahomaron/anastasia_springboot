@@ -4,8 +4,8 @@ import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
@@ -73,7 +73,7 @@ class ChildControllerIT extends PostgresTestContainer {
 
     private String jwtToken;
     private ChurchEntity church;
-    private ChildDTO childDTO;
+    private Child_MemberDTO childMemberDTO;
 
     @BeforeEach
     void setUp() throws MessagingException {
@@ -121,7 +121,7 @@ class ChildControllerIT extends PostgresTestContainer {
         );
         jwtToken = authResponse.getAccessToken();
 
-        childDTO = TestDataUtil.createTestChildDTO(church);
+        childMemberDTO = TestDataUtil.createTestChildDTO(church);
     }
 
     @Test
@@ -129,7 +129,7 @@ class ChildControllerIT extends PostgresTestContainer {
         mockMvc.perform(post("/api/v1/registrar/children/register-child")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(childDTO)))
+                        .content(objectMapper.writeValueAsString(childMemberDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.membershipNumber").exists());
     }
@@ -146,7 +146,7 @@ class ChildControllerIT extends PostgresTestContainer {
 
     @Test
     void testGetChild_found() throws Exception {
-        ChildEntity saved = childRepository.save(TestDataUtil.createTestChild(church));
+        Child_MemberEntity saved = childRepository.save(TestDataUtil.createTestChild(church));
 
         mockMvc.perform(get("/api/v1/registrar/children/{id}", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
@@ -156,9 +156,9 @@ class ChildControllerIT extends PostgresTestContainer {
 
     @Test
     void testUpdateChildDetails() throws Exception {
-        ChildEntity saved = childRepository.save(TestDataUtil.createTestChild(church));
+        Child_MemberEntity saved = childRepository.save(TestDataUtil.createTestChild(church));
 
-        ChildDTO updatedDTO = childDTO;
+        Child_MemberDTO updatedDTO = childMemberDTO;
         updatedDTO.setFirstName("UpdatedChild");
 
         mockMvc.perform(patch("/api/v1/registrar/children/{id}", saved.getId())
@@ -170,7 +170,7 @@ class ChildControllerIT extends PostgresTestContainer {
 
     @Test
     void testDeleteChild() throws Exception {
-        ChildEntity saved = childRepository.save(TestDataUtil.createTestChild(church));
+        Child_MemberEntity saved = childRepository.save(TestDataUtil.createTestChild(church));
 
         mockMvc.perform(delete("/api/v1/registrar/children/{id}", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))

@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.domain;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.springframework.util.StringUtils;
 
@@ -31,17 +31,17 @@ public record NotificationTarget(
             );
         }
 
-        MemberEntity membership = user.getMembership();
+        Adult_MemberEntity membership = user.getMembership();
 
         return new NotificationTarget(
                 user.getUuid(),
                 user.getEmail(),
                 Optional.ofNullable(membership)
-                        .map(MemberEntity::getPhone)
+                        .map(Adult_MemberEntity::getPhone)
                         .filter(StringUtils::hasText)
                         .orElse(readString(properties, "phone")),
                 Optional.ofNullable(membership)
-                        .map(MemberEntity::getWhatsApp)
+                        .map(Adult_MemberEntity::getWhatsApp)
                         .filter(StringUtils::hasText)
                         .orElse(readString(properties, "whatsApp")),
                 user.getTenantId()

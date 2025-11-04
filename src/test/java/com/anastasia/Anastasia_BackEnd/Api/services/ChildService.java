@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.services;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.child.ChildDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -18,7 +18,7 @@ public class ChildService {
     private static final String BASE_PATH = "/registrar/children";
 
     @Step("Register child")
-    public Response registerChild(RequestSpecification spec, ChildDTO payload) {
+    public Response registerChild(RequestSpecification spec, Child_MemberDTO payload) {
         return given()
                 .spec(spec)
                 .body(payload)
@@ -29,7 +29,7 @@ public class ChildService {
                 .response();
     }
 
-    public Response registerChild(ChildDTO payload) {
+    public Response registerChild(Child_MemberDTO payload) {
         return registerChild(RequestSpecFactory.authenticatedSpec(), payload);
     }
 
@@ -65,7 +65,7 @@ public class ChildService {
     }
 
     @Step("Update child {memberId}")
-    public Response updateChild(RequestSpecification spec, Long memberId, ChildDTO payload) {
+    public Response updateChild(RequestSpecification spec, Long memberId, Child_MemberDTO payload) {
         return given()
                 .spec(spec)
                 .body(payload)
