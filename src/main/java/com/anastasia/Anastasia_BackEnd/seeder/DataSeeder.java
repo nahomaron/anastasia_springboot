@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.seeder;
 
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -28,6 +29,9 @@ public class DataSeeder {
     private final ChurchSeeder churchSeeder;
     private final PriestSeeder priestSeeder;
     private final TenantSeeder tenantSeeder;
+    private final GroupSeeder groupSeeder;
+    private final EventSeeder eventSeeder;
+    private final AccountingSeeder accountingSeeder;
 
 
 //    @PostConstruct
@@ -44,6 +48,9 @@ public class DataSeeder {
             List<ChurchEntity> savedChurches = churchSeeder.seedChurches(savedTenants);
             priestSeeder.seedPriests(savedChurches);
             memberSeeder.seedMembers(savedChurches);
+            List<GroupEntity> savedGroups = groupSeeder.seedGroups(savedChurches);
+            eventSeeder.seedEvents(savedChurches, savedGroups);
+            accountingSeeder.seedAccounting(savedTenants);
 
             logger.info("Data seeding completed successfully.");
         } catch (Exception e) {
@@ -52,5 +59,3 @@ public class DataSeeder {
     }
 
 }
-
-
