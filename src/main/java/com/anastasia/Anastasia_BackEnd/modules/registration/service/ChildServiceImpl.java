@@ -1,17 +1,20 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
-import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
-import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +37,19 @@ public class ChildServiceImpl implements ChildService{
     private final ChildRepository childRepository;
     private final ChurchRepository churchRepository;
     private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
     private final ChildMapper childMapper;
     private final SecurityUtils securityUtils;
 
     @Override
     public Child_MemberEntity convertToEntity(Child_MemberDTO childMemberDTO) {
-        return childMapper.childDTOToEntity(childMemberDTO);
+        Child_MemberEntity entity = childMapper.childDTOToEntity(childMemberDTO);
+        if (entity == null || childMemberDTO == null) {
+            return entity;
+        }
+        linkParent(entity, childMemberDTO.getFather(), true);
+        linkParent(entity, childMemberDTO.getMother(), false);
+        return entity;
     }
 
     @Override
@@ -140,6 +151,12 @@ public class ChildServiceImpl implements ChildService{
             Optional.ofNullable(request.getFatherOfConfession()).ifPresent(memberEntity::setFatherOfConfession);
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
+            if (request.getFather() != null) {
+                linkParent(memberEntity, request.getFather(), true);
+            }
+            if (request.getMother() != null) {
+                linkParent(memberEntity, request.getMother(), false);
+            }
 
             childRepository.save(memberEntity);
         });
@@ -180,6 +197,57 @@ public class ChildServiceImpl implements ChildService{
             membershipNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
         } while (childRepository.existsByMembershipNumber(membershipNumber)); // Keep generating if it already exists
         return membershipNumber;
+    }
+
+    private void linkParent(Child_MemberEntity child,
+                            ParentSummary parentSummary,
+                            boolean isFather) {
+        if (parentSummary == null) {
+            detachParent(child, isFather);
+            return;
+        }
+
+        Long parentId = parentSummary.getId();
+        if (parentId == null) {
+            detachParent(child, isFather);
+            return;
+        }
+
+        Adult_MemberEntity parent = memberRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found for id: " + parentId));
+
+        Adult_MemberEntity current = isFather ? child.getFather() : child.getMother();
+        if (current != null && current.getId().equals(parentId)) {
+            return;
+        }
+
+        detachParent(child, isFather);
+
+        Consumer<Child_MemberEntity> adder = isFather
+                ? parent.getChildrenAsFather()::add
+                : parent.getChildrenAsMother()::add;
+
+        if (isFather) {
+            child.setFather(parent);
+        } else {
+            child.setMother(parent);
+        }
+        adder.accept(child);
+    }
+
+    private void detachParent(Child_MemberEntity child, boolean isFather) {
+        Adult_MemberEntity existing = isFather ? child.getFather() : child.getMother();
+        if (existing != null) {
+            Consumer<Child_MemberEntity> remover = isFather
+                    ? existing.getChildrenAsFather()::remove
+                    : existing.getChildrenAsMother()::remove;
+            remover.accept(child);
+        }
+        if (isFather) {
+            child.setFather(null);
+        } else {
+            child.setMother(null);
+        }
     }
 
 }

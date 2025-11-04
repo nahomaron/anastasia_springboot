@@ -11,6 +11,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildServiceImpl;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import org.junit.jupiter.api.*;
@@ -33,6 +34,7 @@ public class ChildServiceUnitTest {
     @Mock private ChildRepository childRepository;
     @Mock private ChurchRepository churchRepository;
     @Mock private UserRepository userRepository;
+    @Mock private MemberRepository memberRepository;
     @Mock private ChildMapper childMapper;
     @Mock private SecurityUtils securityUtils;
 
@@ -180,4 +182,3 @@ public class ChildServiceUnitTest {
         verify(childRepository, never()).save(any());
     }
 }
-

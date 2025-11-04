@@ -1,7 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -37,6 +39,8 @@ public class ChildMapper {
                 .levelOfEducation(childMemberEntity.getLevelOfEducation())
                 .fatherOfConfession(childMemberEntity.getFatherOfConfession())
                 .address(childMemberEntity.getAddress())
+                .father(buildParentSummary(childMemberEntity.getFather()))
+                .mother(buildParentSummary(childMemberEntity.getMother()))
                 .build();
     }
 
@@ -70,6 +74,27 @@ public class ChildMapper {
                 .levelOfEducation(dto.getLevelOfEducation())
                 .fatherOfConfession(dto.getFatherOfConfession())
                 .address(dto.getAddress())
+                .build();
+    }
+
+    private ParentSummary buildParentSummary(Adult_MemberEntity parent) {
+        if (parent == null) {
+            return null;
+        }
+
+        String fullName = String.join(" ",
+                parent.getFirstName() != null ? parent.getFirstName() : "",
+                parent.getFatherName() != null ? parent.getFatherName() : "",
+                parent.getGrandFatherName() != null ? parent.getGrandFatherName() : "").trim();
+
+        if (fullName.isBlank()) {
+            fullName = null;
+        }
+
+        return ParentSummary.builder()
+                .id(parent.getId())
+                .membershipNumber(parent.getMembershipNumber())
+                .fullName(fullName)
                 .build();
     }
 }

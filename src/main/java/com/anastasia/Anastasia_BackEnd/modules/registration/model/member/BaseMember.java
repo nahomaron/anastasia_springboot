@@ -2,14 +2,10 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.model.member;
 
 import com.anastasia.Anastasia_BackEnd.modules.common.Auditable;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,6 +25,9 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseMember extends Auditable {
 
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     private String membershipNumber;
 
     @Column(nullable = false)
@@ -38,6 +37,10 @@ public abstract class BaseMember extends Auditable {
     private String status;
 
     private boolean deacon;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "avatar_id", referencedColumnName = "id")
+    private AvatarEntity avatar;
 
     private String title;
 

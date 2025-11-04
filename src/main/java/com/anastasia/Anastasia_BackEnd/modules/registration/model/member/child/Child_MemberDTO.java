@@ -2,7 +2,10 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -93,5 +96,11 @@ public class Child_MemberDTO {
 
     @Valid
     private Address address;
+
+    @Valid
+    private ParentSummary father;
+
+    @Valid
+    private ParentSummary mother;
 
 }

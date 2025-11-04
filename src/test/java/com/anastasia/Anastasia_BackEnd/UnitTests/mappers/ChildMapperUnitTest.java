@@ -23,6 +23,7 @@ public class ChildMapperUnitTest {
                 null, // childRepository not needed
                 null, // churchRepository not needed
                 null, // userRepository not needed
+                null, // memberRepository not needed
                 new ChildMapper(), // use real mapper
                 null  // securityUtils not needed
         );
@@ -86,4 +87,3 @@ public class ChildMapperUnitTest {
         assertNull(childService.convertToEntity(null));
     }
 }
-

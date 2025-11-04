@@ -1,16 +1,21 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.BaseMember;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
@@ -27,5 +32,16 @@ public class Child_MemberEntity extends BaseMember {
     @SequenceGenerator(name = "child_seq", sequenceName = "child_id_seq", allocationSize = 1)
     private Long id;
 
-    //todo - parent needs to be connected optional
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "father_id")
+    private Adult_MemberEntity father;
+
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mother_id")
+    private Adult_MemberEntity mother;
 }
+
