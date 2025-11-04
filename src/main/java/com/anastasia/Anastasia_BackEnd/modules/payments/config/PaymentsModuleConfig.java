@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.config;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentSubscriptionRepository;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentSubscriptionRepository;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

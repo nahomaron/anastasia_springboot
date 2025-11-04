@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.HandleSubscriptionWebhookUseCase;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.HandleWebhookEventUseCase;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.stripe.StripeWebhookVerifier;
+import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeWebhookVerifier;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;

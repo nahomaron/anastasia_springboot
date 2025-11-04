@@ -1,8 +1,8 @@
-package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox;
+package com.anastasia.Anastasia_BackEnd.core.outbox;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.publisher.PaymentEventPublisher;
+import com.anastasia.Anastasia_BackEnd.core.kafka.publisher.DomainEventPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 public class OutboxRelayJob {
     @PersistenceContext private EntityManager em;
-    private final PaymentEventPublisher publisher;
+    private final DomainEventPublisher publisher;
     private final ObjectMapper mapper;
 
     @Scheduled(fixedDelay = 1000L)

@@ -1,12 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.events.MemberBirthdayEvent;
+import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.*;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
@@ -29,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +44,8 @@ public class MemberServiceImpl implements MemberService {
     private final SecurityUtils securityUtils;
     private final ApplicationEventPublisher publisher;
     private final CacheManager cacheManager;
+
+    private final OutboxPublisher outboxPublisher;
 
 
 
@@ -96,8 +98,23 @@ public class MemberServiceImpl implements MemberService {
         user.setUserType(UserType.MEMBER);
         userRepository.save(user);
 
+       outboxPublisher.publish(
+               RegistrationEventType.MEMBER_REGISTERED,
+               membership.getTenantId(),
+               membership.getId().toString(),
+               new RegistrationCompletedEvent(
+                       TenantContext.getTenantId(),
+                       membership.getId(),
+                       membership.getEmail(),
+                       membership.getFirstName() + " " + membership.getFatherName(),
+                       Instant.now()
+               )
+       );
 
-        return MemberResponse.builder()
+
+
+
+       return MemberResponse.builder()
                 .name(membership.getFirstName() + " " + membership.getFatherName() + " " + membership.getGrandFatherName())
                 .membershipNumber(membership.getMembershipNumber())
                 .fatherOfConfession(membership.getFatherOfConfession())

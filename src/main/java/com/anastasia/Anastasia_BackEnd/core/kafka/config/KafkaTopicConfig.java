@@ -19,6 +19,9 @@ public class KafkaTopicConfig {
     private final KafkaTopicNameResolver topicNameResolver;
 
     @Bean
+    public NewTopic memberRegistered(){return buildTopic(topicNameResolver.memberRegistered());}
+
+    @Bean
     public NewTopic paymentsAuthorizedTopic() {
         return buildTopic(topicNameResolver.paymentsAuthorized());
     }

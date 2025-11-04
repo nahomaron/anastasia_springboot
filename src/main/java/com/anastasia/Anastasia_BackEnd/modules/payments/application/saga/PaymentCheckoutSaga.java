@@ -4,8 +4,8 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.Crea
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox.OutboxPublisher;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
+import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -84,13 +84,14 @@ public class PaymentCheckoutSaga {
         payload.put("userId", intent.getUserId() != null ? intent.getUserId().toString() : null);
         payload.put("userEmail", intent.getUserEmail());
 
+
         outboxPublisher.publish(
                 PaymentEventType.PAYMENT_INITIATED,
+                tenantId,
                 intent.getId().toString(),
-                intent.getTenantId(),
-                intent.getUserEmail(),
-                payload
+                intent
         );
+
         return intent;
     }
 }

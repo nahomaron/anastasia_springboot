@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.kafka.publisher;
+package com.anastasia.Anastasia_BackEnd.core.kafka.publisher;
 
 import com.anastasia.Anastasia_BackEnd.core.kafka.support.KafkaTopicNameResolver;
 import com.anastasia.Anastasia_BackEnd.core.kafka.util.KafkaHeaderNames;
@@ -16,25 +16,25 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PaymentEventPublisher {
+public class DomainEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final KafkaTopicNameResolver topicNameResolver;
 
-    public void publish(PaymentEventType type, UUID tenantId, String key, JsonNode payload) {
-        String topic = resolveTopic(type);
+    public void publish(Enum<?> eventType, UUID tenantId, String key, JsonNode payload) {
+        String topic = topicNameResolver.resolve(eventType);
 
         ProducerRecord<String, Object> record = new ProducerRecord<>(topic, key, payload.toString());
         byte[] tenantBytes = tenantId != null ? tenantId.toString().getBytes(StandardCharsets.UTF_8) : new byte[0];
         record.headers().add(KafkaHeaderNames.TENANT_ID, tenantBytes);
-        record.headers().add(KafkaHeaderNames.EVENT_TYPE, type.name().getBytes(StandardCharsets.UTF_8));
+        record.headers().add(KafkaHeaderNames.EVENT_TYPE, eventType.name().getBytes(StandardCharsets.UTF_8));
 
         kafkaTemplate.send(record).whenComplete((SendResult<String, Object> result, Throwable ex) -> {
             if (ex != null) {
-                log.error("Failed to publish payment event type={} key={}: {}", type, key, ex.getMessage());
+                log.error("Failed to publish payment event type={} key={}: {}", eventType, key, ex.getMessage());
             } else if (result != null && log.isDebugEnabled()) {
                 log.debug("Published payment event type={} key={} topic={} partition={} offset={}",
-                        type,
+                        eventType,
                         key,
                         result.getRecordMetadata().topic(),
                         result.getRecordMetadata().partition(),
@@ -43,14 +43,14 @@ public class PaymentEventPublisher {
         });
     }
 
-    private String resolveTopic(PaymentEventType eventType) {
-        return switch (eventType) {
-            case PAYMENT_AUTHORIZED -> topicNameResolver.paymentsAuthorized();
-            case PAYMENT_CAPTURED -> topicNameResolver.paymentsCaptured();
-            default -> {
-                log.debug("Falling back to generic payments.events topic for eventType={}", eventType);
-                yield topicNameResolver.paymentsEvents();
-            }
-        };
-    }
+//    private String resolveTopic(PaymentEventType eventType) {
+//        return switch (eventType) {
+//            case PAYMENT_AUTHORIZED -> topicNameResolver.paymentsAuthorized();
+//            case PAYMENT_CAPTURED -> topicNameResolver.paymentsCaptured();
+//            default -> {
+//                log.debug("Falling back to generic payments.events topic for eventType={}", eventType);
+//                yield topicNameResolver.paymentsEvents();
+//            }
+//        };
+//    }
 }

@@ -2,8 +2,8 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox.OutboxPublisher;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentIntentRepository;
+import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,9 +59,8 @@ public class HandleWebhookEventUseCase {
 
         outbox.publish(
                 PaymentEventType.PAYMENT_AUTHORIZED,
-                pi.getId().toString(),
                 pi.getTenantId(),
-                pi.getUserEmail(),
+                pi.getId().toString(),
                 payload
         );
     }
@@ -104,9 +103,8 @@ public class HandleWebhookEventUseCase {
 
         outbox.publish(
                 PaymentEventType.PAYMENT_CAPTURED,
-                pi.getId().toString(),
                 pi.getTenantId(),
-                pi.getUserEmail(),
+                pi.getId().toString(),
                 payload
         );
     }

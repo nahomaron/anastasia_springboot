@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox;
+package com.anastasia.Anastasia_BackEnd.core.outbox;
 
 import jakarta.persistence.*;
 import lombok.Getter; import lombok.Setter;

@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository;
+package com.anastasia.Anastasia_BackEnd.modules.payments.repository;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
 import org.springframework.data.domain.Page;

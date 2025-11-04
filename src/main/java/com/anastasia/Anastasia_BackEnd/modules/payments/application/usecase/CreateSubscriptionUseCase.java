@@ -3,9 +3,9 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentSubscription;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox.OutboxPublisher;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentSubscriptionRepository;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.stripe.StripeClient;
+import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentSubscriptionRepository;
+import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeClient;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
@@ -126,9 +126,8 @@ public class CreateSubscriptionUseCase {
 
         outboxPublisher.publish(
                 PaymentEventType.SUBSCRIPTION_INITIATED,
+                tenantId,
                 saved.getId().toString(),
-                saved.getTenantId(),
-                saved.getUserEmail(),
                 payload
         );
 

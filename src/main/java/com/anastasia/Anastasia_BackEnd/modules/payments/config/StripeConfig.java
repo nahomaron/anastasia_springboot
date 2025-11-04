@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.config;
+package com.anastasia.Anastasia_BackEnd.modules.payments.config;
 
 import com.stripe.Stripe;
 import org.springframework.beans.factory.annotation.Value;

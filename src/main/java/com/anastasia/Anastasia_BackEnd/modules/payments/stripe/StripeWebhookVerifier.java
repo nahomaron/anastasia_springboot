@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.stripe;
+package com.anastasia.Anastasia_BackEnd.modules.payments.stripe;
 
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;

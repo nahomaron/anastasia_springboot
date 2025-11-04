@@ -1,10 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
-import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentSubscription;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.SubscriptionStatus;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.outbox.OutboxPublisher;
-import com.anastasia.Anastasia_BackEnd.modules.payments.infrastructure.repository.PaymentSubscriptionRepository;
+import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -52,9 +51,8 @@ public class HandleSubscriptionWebhookUseCase {
 
         outboxPublisher.publish(
                 PaymentEventType.SUBSCRIPTION_ACTIVATED,
-                subscription.getId().toString(),
                 subscription.getTenantId(),
-                subscription.getUserEmail(),
+                subscription.getId().toString(),
                 payload
         );
     }
@@ -86,9 +84,8 @@ public class HandleSubscriptionWebhookUseCase {
 
         outboxPublisher.publish(
                 PaymentEventType.SUBSCRIPTION_CANCELED,
-                subscription.getId().toString(),
                 subscription.getTenantId(),
-                subscription.getUserEmail(),
+                subscription.getId().toString(),
                 payload
         );
     }
