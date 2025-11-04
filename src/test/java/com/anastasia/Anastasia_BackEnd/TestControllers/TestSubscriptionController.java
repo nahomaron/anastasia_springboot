@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.TestControllers;
 
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.TestSmsService;
+import com.anastasia.Anastasia_BackEnd.TestSupport.TestSmsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;

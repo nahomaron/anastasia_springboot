@@ -26,17 +26,36 @@ public class NotificationOrchestrator {
     public void process(NotificationEvent event) {
         NotificationProcessor processor = processorMap.get(event.getType());
 
+        String recipient = resolveRecipient(event);
+
         if (processor != null) {
-            log.info("Processing notification type={} for user={}",
-                    event.getType(), event.getUser().getEmail());
+            log.info("Processing notification type={} for recipient={}",
+                    event.getType(), recipient);
             processor.process(event);
         } else {
             log.warn("No processor found for event type={}, falling back to default handler",
                     event.getType());
             NotificationProcessor fallback = processorMap.get(NotificationType.NOTIFICATION);
-            if (fallback != null) fallback.process(event);
+            if (fallback != null) {
+                log.info("Delegating to fallback processor for recipient={}", recipient);
+                fallback.process(event);
+            }
         }
     }
-}
 
+    private String resolveRecipient(NotificationEvent event) {
+        if (event.getUser() != null && event.getUser().getEmail() != null) {
+            return event.getUser().getEmail();
+        }
+        if (event.getTarget() != null) {
+            if (event.getTarget().email() != null) {
+                return event.getTarget().email();
+            }
+            if (event.getTarget().phoneNumber() != null) {
+                return event.getTarget().phoneNumber();
+            }
+        }
+        return "anonymous";
+    }
+}
 

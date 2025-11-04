@@ -7,5 +7,6 @@ public enum NotificationType {
     EVENT_REMINDER,
     MEMBER_BIRTHDAY,
     PAYMENT_RECEIVED,
+    PHONE_VERIFICATION,
     NOTIFICATION
 }

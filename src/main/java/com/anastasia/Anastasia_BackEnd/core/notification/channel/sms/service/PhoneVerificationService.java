@@ -1,19 +1,22 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.OtpEntity;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
 import com.google.common.hash.Hashing;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.Map;
 
 @Service
@@ -22,8 +25,8 @@ public class PhoneVerificationService {
 
     Logger log = LoggerFactory.getLogger(PhoneVerificationService.class);
 
-    private final SmsService smsService;
     private final OtpRepository otpRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final SecureRandom random = new SecureRandom();
 
     private static final int OTP_EXPIRY_MINUTES = 5;
@@ -44,9 +47,20 @@ public class PhoneVerificationService {
                 .expiresAt(LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES))
                 .build());
 
-        smsService.sendSms(phone, SmsTemplateType.OTP,
-                Map.of("otp_code", otp, "otp_expiry_minutes", OTP_EXPIRY_MINUTES));
+        Map<String, Object> properties = Map.of(
+                "phone", phone,
+                "otp_code", otp,
+                "otp_expiry_minutes", OTP_EXPIRY_MINUTES
+        );
 
+        eventPublisher.publishEvent(
+                new NotificationEvent(
+                        this,
+                        NotificationType.PHONE_VERIFICATION,
+                        null,
+                        properties,
+                        EnumSet.of(NotificationChannelType.SMS))
+        );
     }
 
     /** Check code, delete on success. */

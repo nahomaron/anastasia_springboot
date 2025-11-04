@@ -1,31 +1,30 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.sms;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.OtpEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsTemplateType;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
 import com.google.common.hash.Hashing;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,21 +34,15 @@ class PhoneVerificationServiceUnitTest {
     private static final String PHONE = "+251900000000";
 
     @Mock
-    private SmsService smsService;
-    @Mock
     private OtpRepository otpRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private PhoneVerificationService phoneVerificationService;
 
-    @BeforeEach
-    void setUp() {
-        lenient().when(smsService.sendSms(eq(PHONE), eq(SmsTemplateType.OTP), anyMap()))
-                .thenReturn(CompletableFuture.completedFuture(null));
-    }
-
     @Test
-    void startVerification_shouldInvalidateExistingOtpAndSendNewCode() {
+    void startVerification_shouldInvalidateExistingOtpAndPublishNotification() {
         OtpEntity existing = OtpEntity.builder()
                 .id(1L)
                 .phone(PHONE)
@@ -63,23 +56,28 @@ class PhoneVerificationServiceUnitTest {
 
         verify(otpRepository).delete(existing);
 
-        ArgumentCaptor<OtpEntity> otpCaptor = ArgumentCaptor.forClass(OtpEntity.class);
-        verify(otpRepository).save(otpCaptor.capture());
+        ArgumentCaptor<OtpEntity> savedCaptor = ArgumentCaptor.forClass(OtpEntity.class);
+        verify(otpRepository).save(savedCaptor.capture());
 
-        ArgumentCaptor<Map<String, Object>> propsCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(smsService).sendSms(eq(PHONE), eq(SmsTemplateType.OTP), propsCaptor.capture());
+        ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-        Map<String, Object> props = propsCaptor.getValue();
+        NotificationEvent event = eventCaptor.getValue();
+        assertThat(event.getType()).isEqualTo(NotificationType.PHONE_VERIFICATION);
+        assertThat(event.getChannels()).isEqualTo(EnumSet.of(NotificationChannelType.SMS));
+
+        Map<String, Object> props = event.getProperties();
         assertThat(props.get("otp_code")).isNotNull();
         assertThat(props.get("otp_code").toString()).hasSize(6);
         assertThat(props.get("otp_expiry_minutes")).isEqualTo(5);
+        assertThat(props.get("phone")).isEqualTo(PHONE);
 
         String generatedOtp = props.get("otp_code").toString();
         String expectedHash = Hashing.sha256()
                 .hashString(generatedOtp, StandardCharsets.UTF_8)
                 .toString();
 
-        OtpEntity saved = otpCaptor.getValue();
+        OtpEntity saved = savedCaptor.getValue();
         assertThat(saved.getPhone()).isEqualTo(PHONE);
         assertThat(saved.getOtpHash()).isEqualTo(expectedHash);
         assertThat(saved.getExpiresAt()).isAfter(LocalDateTime.now());
@@ -93,6 +91,7 @@ class PhoneVerificationServiceUnitTest {
 
         verify(otpRepository, never()).delete(any());
         verify(otpRepository).save(any(OtpEntity.class));
+        verify(eventPublisher).publishEvent(any(NotificationEvent.class));
     }
 
     @Test

@@ -10,7 +10,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRep
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.AvatarService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.TestSmsService;
+import com.anastasia.Anastasia_BackEnd.TestSupport.TestSmsService;
 import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;

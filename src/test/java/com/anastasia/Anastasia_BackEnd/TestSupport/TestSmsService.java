@@ -1,5 +1,7 @@
-package com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service;
+package com.anastasia.Anastasia_BackEnd.TestSupport;
 
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsService;
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsTemplateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;

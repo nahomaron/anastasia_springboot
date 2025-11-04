@@ -26,7 +26,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchServic
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.PriestService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.TestSmsService;
+import com.anastasia.Anastasia_BackEnd.TestSupport.TestSmsService;
 import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
