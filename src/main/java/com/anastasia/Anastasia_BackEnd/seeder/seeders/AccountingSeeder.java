@@ -58,9 +58,7 @@ public class AccountingSeeder {
             if (processed >= 5) {
                 break; // Prevent runaway seeding in large datasets
             }
-            String tenantId = Optional.ofNullable(tenant.getId())
-                    .map(UUID::toString)
-                    .orElse(null);
+            UUID tenantId = tenant.getId();
 
             if (tenantId == null) {
                 log.debug("Skipping tenant without identifier: {}", tenant.getOwnerName());
@@ -83,7 +81,7 @@ public class AccountingSeeder {
         log.info("Accounting seeding completed for {} tenant(s).", processed);
     }
 
-    private void seedFunds(String tenantId, Faker faker) {
+    private void seedFunds(UUID tenantId, Faker faker) {
         for (String fundName : FUND_NAMES) {
             CreateFundRequest request = new CreateFundRequest();
             request.setTenantId(tenantId);
@@ -99,7 +97,7 @@ public class AccountingSeeder {
         }
     }
 
-    private void seedSampleTransactions(String tenantId, Faker faker) {
+    private void seedSampleTransactions(UUID tenantId, Faker faker) {
         Account bankAccount = requireAccount(tenantId, "1110");
         Account cashAccount = requireAccount(tenantId, "1120");
         Account titheIncome = requireAccount(tenantId, "4100");
@@ -133,7 +131,7 @@ public class AccountingSeeder {
                 "Deposit cash offerings to bank");
     }
 
-    private void recordIncome(String tenantId,
+    private void recordIncome(UUID tenantId,
                               Long assetAccountId,
                               Long incomeAccountId,
                               BigDecimal amount,
@@ -153,7 +151,7 @@ public class AccountingSeeder {
         }
     }
 
-    private void recordExpense(String tenantId,
+    private void recordExpense(UUID tenantId,
                                Long assetAccountId,
                                Long expenseAccountId,
                                BigDecimal amount,
@@ -173,7 +171,7 @@ public class AccountingSeeder {
         }
     }
 
-    private void transferFunds(String tenantId,
+    private void transferFunds(UUID tenantId,
                                Long fromAccountId,
                                Long toAccountId,
                                BigDecimal amount,
@@ -193,7 +191,7 @@ public class AccountingSeeder {
         }
     }
 
-    private Account requireAccount(String tenantId, String code) {
+    private Account requireAccount(UUID tenantId, String code) {
         return accountRepository.findByTenantIdAndCode(tenantId, code)
                 .orElseThrow(() -> new IllegalStateException(
                         "Required account with code " + code + " not found for tenant " + tenantId));

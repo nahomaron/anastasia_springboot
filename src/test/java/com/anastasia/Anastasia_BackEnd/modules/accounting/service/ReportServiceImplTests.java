@@ -35,14 +35,14 @@ class ReportServiceImplTests {
     @Autowired
     private AccountRepository accountRepository;
 
-    private String tenantId;
+    private UUID tenantId;
     private Account bankAccount;
     private Account donationIncome;
     private Account processingFees;
 
     @BeforeEach
     void init() {
-        tenantId = "tenant-" + UUID.randomUUID();
+        tenantId = UUID.randomUUID();
         chartOfAccountsService.createInitialChartOfAccounts(tenantId);
         bankAccount = accountRepository.findByTenantIdAndCode(tenantId, "1110").orElseThrow();
         donationIncome = accountRepository.findByTenantIdAndCode(tenantId, "4200").orElseThrow();

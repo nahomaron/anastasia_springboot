@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/accounting/io")
@@ -22,7 +23,7 @@ public class ImportExportController {
 
     @GetMapping("/export/quickbooks")
     public void exportToQuickBooks(
-            @RequestParam String tenantId,
+            @RequestParam UUID tenantId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             HttpServletResponse response) {
@@ -41,7 +42,7 @@ public class ImportExportController {
 
     @PostMapping("/import/quickbooks")
     public ResponseEntity<Void> importFromQuickBooks(
-            @RequestParam String tenantId,
+            @RequestParam UUID tenantId,
             @RequestParam("file") MultipartFile file) {
 
         try {

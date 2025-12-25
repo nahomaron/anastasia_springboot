@@ -7,10 +7,9 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Fund;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.AccountRepository;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.FundRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
+
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +42,7 @@ public class PaymentAccountingIntegrationService {
     private final FundRepository fundRepository;
 
     @Transactional(readOnly = true)
-    public AccountingMapping resolve(String tenantId, PaymentPurpose purpose, String fundId) {
+    public AccountingMapping resolve(UUID tenantId, PaymentPurpose purpose, String fundId) {
         Account assetAccount = resolveAccountByCodeOrFallback(tenantId, DEFAULT_ASSET_ACCOUNT_CODE, AccountType.ASSET);
         Account feeAccount = resolveAccountByCodeOrFallback(tenantId, DEFAULT_FEE_ACCOUNT_CODE, AccountType.EXPENSE);
         Account incomeAccount = resolveIncomeAccount(tenantId, purpose);
@@ -52,12 +51,12 @@ public class PaymentAccountingIntegrationService {
         return new AccountingMapping(assetAccount, incomeAccount, feeAccount, fund);
     }
 
-    private Account resolveIncomeAccount(String tenantId, PaymentPurpose purpose) {
+    private Account resolveIncomeAccount(UUID tenantId, PaymentPurpose purpose) {
         String code = PURPOSE_TO_INCOME_CODE.getOrDefault(purpose, "4990");
         return resolveAccountByCodeOrFallback(tenantId, code, AccountType.INCOME);
     }
 
-    private Account resolveAccountByCodeOrFallback(String tenantId, String code, AccountType type) {
+    private Account resolveAccountByCodeOrFallback(UUID tenantId, String code, AccountType type) {
         Optional<Account> account = accountRepository.findByTenantIdAndCode(tenantId, code);
         if (account.isPresent()) {
             return account.get();
@@ -69,7 +68,7 @@ public class PaymentAccountingIntegrationService {
                 .orElseThrow(() -> new ResourceNotFoundException("No " + type + " account configured for tenant"));
     }
 
-    private Fund resolveFund(String tenantId, String fundId) {
+    private Fund resolveFund(UUID tenantId, String fundId) {
         if (fundId == null || fundId.isBlank()) {
             return null;
         }

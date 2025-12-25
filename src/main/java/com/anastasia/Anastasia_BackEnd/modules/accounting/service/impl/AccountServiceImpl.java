@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,28 +45,28 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountDto getAccountById(Long id, String tenantId) {
+    public AccountDto getAccountById(Long id, UUID tenantId) {
         Account account = accountRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + id));
         return toDto(account);
     }
 
     @Override
-    public List<AccountDto> getAccountsByTenantId(String tenantId) {
+    public List<AccountDto> getAccountsByTenantId(UUID tenantId) {
         return accountRepository.findByTenantId(tenantId).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<AccountDto> getAccountsByTenantIdAndType(String tenantId, AccountType type) {
+    public List<AccountDto> getAccountsByTenantIdAndType(UUID tenantId, AccountType type) {
         return accountRepository.findByTenantIdAndType(tenantId, type).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public AccountDto updateAccount(Long id, String tenantId, CreateAccountRequest request) {
+    public AccountDto updateAccount(Long id, UUID tenantId, CreateAccountRequest request) {
         Account account = accountRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + id));
 
@@ -85,7 +86,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void deleteAccount(Long id, String tenantId) {
+    public void deleteAccount(Long id, UUID tenantId) {
         Account account = accountRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + id));
 

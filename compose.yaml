@@ -142,6 +142,20 @@ services:
     networks:
       - anastasia-net
 
+  localstack:
+    container_name: localstack_main
+    image: localstack/localstack
+    ports:
+      - "4566:4566"            # LocalStack Gateway
+    environment:
+      - SERVICES=s3                      # Start only S3 (or leave blank for all)
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./volume:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - anastasia-net
 
 volumes:
   postgres_data:

@@ -38,11 +38,24 @@ class SecurityConfigTest {
         assertThat(encoder.matches("secret", encoder.encode("secret"))).isTrue();
     }
 
+//    @Test
+//    void authenticationProvider_shouldUseConfiguredServices() {
+//        DaoAuthenticationProvider provider = (DaoAuthenticationProvider) securityConfig.authenticationProvider();
+//
+//        PasswordEncoder encoder = ReflectionTestUtils.invokeMethod(provider, "getPasswordEncoder");
+//        Object uds = ReflectionTestUtils.getField(provider, "userDetailsService");
+//
+//        assertThat(encoder).isInstanceOf(BCryptPasswordEncoder.class);
+//        assertThat(uds).isEqualTo(userDetailsService);
+//    }
+
     @Test
     void authenticationProvider_shouldUseConfiguredServices() {
-        DaoAuthenticationProvider provider = (DaoAuthenticationProvider) securityConfig.authenticationProvider();
+        // Pass your (mocked) userDetailsService into the method
+        DaoAuthenticationProvider provider = (DaoAuthenticationProvider) securityConfig.authenticationProvider(userDetailsService);
 
-        PasswordEncoder encoder = ReflectionTestUtils.invokeMethod(provider, "getPasswordEncoder");
+        // Using Reflection to verify internal state
+        PasswordEncoder encoder = (PasswordEncoder) ReflectionTestUtils.getField(provider, "passwordEncoder");
         Object uds = ReflectionTestUtils.getField(provider, "userDetailsService");
 
         assertThat(encoder).isInstanceOf(BCryptPasswordEncoder.class);

@@ -11,11 +11,11 @@ import java.util.UUID;
 @Repository
 public interface FundRepository extends JpaRepository<Fund, Long> {
 
-    List<Fund> findByTenantId(String tenantId);
+    List<Fund> findByTenantId(UUID tenantId);
 
-    Optional<Fund> findByIdAndTenantId(Long id, String tenantId);
+    Optional<Fund> findByIdAndTenantId(Long id, UUID tenantId);
 
     boolean existsByIdAndTenantId(Long id, UUID tenantId);
 
-    boolean existsByTenantIdAndNameIgnoreCase(String tenantId, String name);
+    boolean existsByTenantIdAndNameIgnoreCase(UUID tenantId, String name);
 }

@@ -20,4 +20,8 @@ public class CheckInQRRequestDTO {
     private double longitude;
 
     private double latitude;
+
+    private Integer geofenceRadiusMeters; // for self check-in
+
+    private Boolean allowGeoCheckIn;
 }

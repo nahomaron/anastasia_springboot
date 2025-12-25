@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.core.notification.config;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +14,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Configuration
 @ComponentScan(basePackageClasses = NotificationModuleConfig.class)
-@EntityScan(basePackageClasses = EmailTemplateEntity.class)
+@EntityScan(basePackageClasses = {EmailTemplateEntity.class, TenantEntity.class})
 @EnableJpaRepositories(basePackageClasses = NotificationRepository.class)
 public class NotificationModuleConfig {
 }

@@ -3,15 +3,15 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.dto;
 
 import com.anastasia.Anastasia_BackEnd.modules.accounting.enums.ReportPeriod;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.enums.ReportType;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 public class GenerateReportRequest {
-    @NotBlank(message = "Tenant ID is required")
-    private String tenantId;
+    @NotNull(message = "Tenant ID is required")
+    private UUID tenantId;
 
     @NotNull(message = "Report type is required")
     private ReportType reportType;

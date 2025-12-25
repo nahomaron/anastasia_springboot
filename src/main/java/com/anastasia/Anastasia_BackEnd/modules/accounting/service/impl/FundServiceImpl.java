@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +32,7 @@ public class FundServiceImpl implements FundService {
     @Override
     @Transactional
     public FundDto createFund(CreateFundRequest request) {
-        String tenantId = request.getTenantId();
+        UUID tenantId = request.getTenantId();
 
         if (fundRepository.existsByTenantIdAndNameIgnoreCase(tenantId, request.getName())) {
             throw new InvalidTransactionException("Fund with the same name already exists for tenant.");
@@ -66,7 +67,7 @@ public class FundServiceImpl implements FundService {
 
     @Override
     @Transactional(readOnly = true)
-    public FundDto getFundById(Long id, String tenantId) {
+    public FundDto getFundById(Long id, UUID tenantId) {
         Fund fund = fundRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Fund not found with id: " + id));
         return toDto(fund);
@@ -74,13 +75,13 @@ public class FundServiceImpl implements FundService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FundDto> getFundsByTenantId(String tenantId) {
+    public List<FundDto> getFundsByTenantId(UUID tenantId) {
         return fundRepository.findByTenantId(tenantId).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    private String generateFundAccountCode(String tenantId) {
+    private String generateFundAccountCode(UUID tenantId) {
         List<Account> tenantEquity = accountRepository.findByTenantIdAndType(tenantId, AccountType.EQUITY);
 
         int nextSequence = tenantEquity.stream()

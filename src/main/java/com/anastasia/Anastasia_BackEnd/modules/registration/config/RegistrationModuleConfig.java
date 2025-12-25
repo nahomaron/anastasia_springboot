@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
-@ComponentScan(basePackageClasses = RegistrationModuleConfig.class)
+@ComponentScan(basePackages = "com.anastasia.Anastasia_BackEnd.modules.registration")
 @EntityScan(basePackageClasses = Adult_MemberEntity.class)
 @EnableJpaRepositories(basePackageClasses = MemberRepository.class)
 public class RegistrationModuleConfig {

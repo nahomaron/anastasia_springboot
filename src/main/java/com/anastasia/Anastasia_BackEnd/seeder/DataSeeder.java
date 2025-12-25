@@ -5,7 +5,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.seeder.seeders.*;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ public class DataSeeder {
 
 //    @PostConstruct
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void init() {
         try {
             logger.info("starting database seeding ...");

@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Represents a single financial event (e.g., a donation, paying a bill).
@@ -29,7 +30,7 @@ import java.util.List;
 public class Transaction extends BaseEntity {
 
     @Column(nullable = false)
-    private String tenantId;
+    private UUID tenantId;
 
     @Column(nullable = false)
     private LocalDate date;

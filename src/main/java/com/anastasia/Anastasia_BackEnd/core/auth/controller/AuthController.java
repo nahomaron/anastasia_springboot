@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -42,13 +43,14 @@ public class AuthController {
      * @throws MessagingException If there's an issue sending the activation email.
      */
     @PostMapping("/sign-up")
-    public ResponseEntity<?> signUp(@Valid @RequestBody UserDTO userDTO) throws MessagingException {
+    public ResponseEntity<Map<String, String>> signUp(@Valid @RequestBody UserDTO userDTO) throws MessagingException {
         if(!userDTO.isPasswordMatch()){
-            return ResponseEntity.badRequest().body("Password do not match");
+            return ResponseEntity.badRequest().body(message("Passwords do not match"));
         }
         UserEntity userEntity = userService.convertToEntity(userDTO);
         authService.createUser(userEntity);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(message("Account created successfully. Please check your email to activate your profile."));
     }
 
     /**
@@ -73,7 +75,7 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response){
+    public ResponseEntity<Map<String, String>> refreshToken(HttpServletRequest request, HttpServletResponse response){
         String clientIP = request.getRemoteAddr();
         Bucket bucket = rateLimiterConfig.getBucket(clientIP);
 
@@ -82,7 +84,8 @@ public class AuthController {
             return ResponseEntity.ok().build();
         }else{
             System.out.println("Rate limit exceeded, returning 429");
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Too many requests, try again later");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(message("Too many requests, try again later"));
         }
     }
 
@@ -94,11 +97,11 @@ public class AuthController {
      * @throws MessagingException If there's an issue sending the activation email.
      */
     @GetMapping("/activate-account")
-    public ResponseEntity<String> confirm(@RequestParam String token){
+    public ResponseEntity<Map<String, String>> confirm(@RequestParam String token){
         long start = System.currentTimeMillis();
         authService.activateAccount(token);
         log.info("Activation took: {} ms", System.currentTimeMillis() - start);
-        return ResponseEntity.ok("Account successfully activated");
+        return ResponseEntity.ok(message("Account successfully activated"));
     }
 
     /**
@@ -109,16 +112,17 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @PostMapping("/resend-activation")
-    public ResponseEntity<String> resendActivation(@RequestParam String email) {
+    public ResponseEntity<Map<String, String>> resendActivation(@RequestParam String email) {
         try {
             authService.resendActivationEmail(email);
-            return ResponseEntity.ok("Activation email resent successfully");
+            return ResponseEntity.ok(message("Activation email resent successfully"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message(e.getMessage()));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message(e.getMessage()));
         } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send activation email");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(message("Failed to send activation email"));
         }
     }
 
@@ -131,13 +135,14 @@ public class AuthController {
      * @throws MessagingException If there's an issue sending the email.
      */
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) throws MessagingException {
+    public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody Map<String, String> request) throws MessagingException {
         String email = request.get("email");
         if (email == null || email.isEmpty()) {
-            return new ResponseEntity<>("Email is required for password reset.", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(message("Email is required for password reset."));
         }
         authService.initiatePasswordReset(email);
-        return ResponseEntity.ok("If an account exists with that email, a password reset link has been sent.");
+        return ResponseEntity.ok(message("If an account exists with that email, a password reset link has been sent."));
     }
 
     /**
@@ -148,12 +153,12 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         if(!request.isPasswordMatch()){
-            return ResponseEntity.badRequest().body("Password do not match");
+            return ResponseEntity.badRequest().body(message("Passwords do not match"));
         }
         authService.resetPassword(request.getToken(), request.getNewPassword());
-        return ResponseEntity.ok("Your password has been successfully reset. You can now log in with your new password.");
+        return ResponseEntity.ok(message("Your password has been successfully reset. You can now log in with your new password."));
     }
 
     /**
@@ -164,19 +169,15 @@ public class AuthController {
      * @return ResponseEntity indicating whether the email is registered or not.
      */
     @GetMapping("/check-email")
-    public ResponseEntity<String> checkEmail(@RequestParam String email) {
+    public ResponseEntity<Map<String, Object>> checkEmail(@RequestParam String email) {
         boolean isRegistered = authService.isEmailRegistered(email);
-        if (isRegistered) {
-            return ResponseEntity.ok("Email is already registered.");
-        } else {
-            return ResponseEntity.ok("Email is available for registration.");
-        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", isRegistered ? "Email is already registered." : "Email is available for registration.");
+        response.put("registered", isRegistered);
+        return ResponseEntity.ok(response);
     }
 
-
-
-
-
-
-
+    private Map<String, String> message(String value) {
+        return Map.of("message", value);
+    }
 }

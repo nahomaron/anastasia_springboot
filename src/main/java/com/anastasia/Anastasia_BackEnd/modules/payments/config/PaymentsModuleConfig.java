@@ -11,7 +11,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @EnableScheduling
-@ComponentScan(basePackageClasses = PaymentsModuleConfig.class)
+//@ComponentScan(basePackageClasses = PaymentsModuleConfig.class)
+@ComponentScan(basePackages = "com.anastasia.Anastasia_BackEnd.modules.payments")
 @EntityScan(basePackageClasses = PaymentIntent.class)
 @EnableJpaRepositories(basePackageClasses = {
         PaymentIntentRepository.class,

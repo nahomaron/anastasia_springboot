@@ -14,7 +14,7 @@ public interface ImportExportService {
      * @param endDate The end date for the export.
      * @param outputStream The stream to write the file content to.
      */
-    void exportToQuickBooks(String tenantId, LocalDate startDate, LocalDate endDate, OutputStream outputStream);
+    void exportToQuickBooks(java.util.UUID tenantId, LocalDate startDate, LocalDate endDate, OutputStream outputStream);
 
     /**
      * Imports data from a QuickBooks file.
@@ -22,5 +22,5 @@ public interface ImportExportService {
      * @param tenantId The tenant's ID.
      * @param inputStream The stream containing the file content.
      */
-    void importFromQuickBooks(String tenantId, InputStream inputStream);
+    void importFromQuickBooks(java.util.UUID tenantId, InputStream inputStream);
 }

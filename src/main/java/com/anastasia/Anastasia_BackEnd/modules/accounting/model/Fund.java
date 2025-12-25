@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * Represents a designated fund (e.g., "Building Fund", "Missions Fund").
@@ -26,7 +27,7 @@ import java.math.BigDecimal;
 public class Fund extends BaseEntity {
 
     @Column(nullable = false)
-    private String tenantId;
+    private UUID tenantId;
 
     @Column(nullable = false)
     private String name;

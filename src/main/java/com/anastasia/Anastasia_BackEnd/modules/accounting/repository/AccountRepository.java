@@ -11,19 +11,20 @@ import org.springframework.stereotype.Repository;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    List<Account> findByTenantId(String tenantId);
+    List<Account> findByTenantId(UUID tenantId);
 
-    List<Account> findByTenantIdAndType(String tenantId, AccountType type);
+    List<Account> findByTenantIdAndType(UUID tenantId, AccountType type);
 
-    Optional<Account> findByIdAndTenantId(Long id, String tenantId);
+    Optional<Account> findByIdAndTenantId(Long id, UUID tenantId);
 
-    Optional<Account> findByTenantIdAndCode(String tenantId, String code);
+    Optional<Account> findByTenantIdAndCode(UUID tenantId, String code);
 
-    Optional<Account> findByTenantIdAndNameIgnoreCase(String tenantId, String name);
+    Optional<Account> findByTenantIdAndNameIgnoreCase(UUID tenantId, String name);
 
     /**
      * This is a critical method for concurrent transactions.
@@ -32,5 +33,5 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Account a WHERE a.id = :id AND a.tenantId = :tenantId")
-    Optional<Account> findByIdAndTenantIdForUpdate(@Param("id") Long id, @Param("tenantId") String tenantId);
+    Optional<Account> findByIdAndTenantIdForUpdate(@Param("id") Long id, @Param("tenantId") UUID tenantId);
 }

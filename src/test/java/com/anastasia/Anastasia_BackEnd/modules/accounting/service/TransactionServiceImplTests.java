@@ -39,11 +39,11 @@ class TransactionServiceImplTests {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    private String tenantId;
+    private UUID tenantId;
 
     @BeforeEach
     void setUp() {
-        tenantId = "tenant-" + UUID.randomUUID();
+        tenantId = UUID.randomUUID();
         chartOfAccountsService.createInitialChartOfAccounts(tenantId);
     }
 

@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Currency;
 import java.math.RoundingMode;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.anastasia.Anastasia_BackEnd.modules.accounting.enums.AccountType.*;
@@ -275,7 +276,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public TransactionDto recordJournalEntry(String tenantId,
+    public TransactionDto recordJournalEntry(UUID tenantId,
                                              LocalDate date,
                                              String description,
                                              java.util.List<JournalEntryLine> lines) {
@@ -394,7 +395,7 @@ public class TransactionServiceImpl implements TransactionService {
     /**
      * Fetches an account and locks it for an update to prevent race conditions.
      */
-    private Account getAccountForUpdate(Long accountId, String tenantId) {
+    private Account getAccountForUpdate(Long accountId, UUID tenantId) {
         return accountRepository.findByIdAndTenantIdForUpdate(accountId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + accountId));
     }
@@ -519,7 +520,7 @@ public class TransactionServiceImpl implements TransactionService {
         return value.setScale(2, RoundingMode.HALF_UP);
     }
 
-    private Fund resolveFund(Long fundId, String tenantId) {
+    private Fund resolveFund(Long fundId, UUID tenantId) {
         if (fundId == null) {
             return null;
         }

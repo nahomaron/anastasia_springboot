@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -41,8 +42,8 @@ public class PaymentAccountingListener {
     private PaymentCapturedMessage mapRecord(ConsumerRecord<String, String> record) throws Exception {
         JsonNode payload = objectMapper.readTree(record.value());
 
-        String tenantId = extractTenantId(record, payload);
-        if (tenantId == null || tenantId.isBlank()) {
+        UUID tenantId = extractTenantId(record, payload);
+        if (tenantId == null) {
             throw new IllegalArgumentException("Captured payment payload missing tenantId");
         }
 
@@ -61,16 +62,24 @@ public class PaymentAccountingListener {
                 .build();
     }
 
-    private String extractTenantId(ConsumerRecord<String, String> record, JsonNode payload) {
+    private UUID extractTenantId(ConsumerRecord<String, String> record, JsonNode payload) {
         String payloadTenant = getText(payload, "tenantId");
         if (payloadTenant != null && !payloadTenant.isBlank()) {
-            return payloadTenant;
+            return parseTenantId(payloadTenant);
         }
         Header header = record.headers().lastHeader(KafkaHeaderNames.TENANT_ID);
         if (header != null) {
-            return new String(header.value(), StandardCharsets.UTF_8);
+            return parseTenantId(new String(header.value(), StandardCharsets.UTF_8));
         }
         return null;
+    }
+
+    private UUID parseTenantId(String raw) {
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Invalid tenantId supplied for accounting event: " + raw, ex);
+        }
     }
 
     private String getText(JsonNode node, String fieldName) {

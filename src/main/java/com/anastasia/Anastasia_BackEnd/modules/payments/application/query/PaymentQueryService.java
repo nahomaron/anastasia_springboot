@@ -74,7 +74,7 @@ public class PaymentQueryService {
         if (v.getFundId() != null) {
             try {
                 Long fundId = Long.valueOf(v.getFundId());
-                fundRepo.findByIdAndTenantId(fundId, tenantId.toString())
+                fundRepo.findByIdAndTenantId(fundId, tenantId)
                         .ifPresent(f -> v.setFundName(f.getName()));
             } catch (NumberFormatException ex) {
                 log.debug("Unable to parse fundId {} as Long for tenant {}", v.getFundId(), tenantId, ex);

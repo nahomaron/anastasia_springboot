@@ -2,9 +2,8 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.UUID;
 
 /**
  * A generic container for different report types.
@@ -12,7 +11,7 @@ import java.util.List;
 @Data
 @Builder
 public class ReportResponseDto {
-    private String tenantId;
+    private UUID tenantId;
     private String reportName;
     private LocalDate generatedAt;
     private LocalDate startDate;
@@ -23,4 +22,3 @@ public class ReportResponseDto {
     private IncomeStatementDto incomeStatement;
     // Add other report DTOs here (e.g., CashFlowStatementDto)
 }
-

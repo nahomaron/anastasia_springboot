@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class ChartOfAccountsServiceImpl implements ChartOfAccountsService {
      */
     @Override
     @Transactional
-    public void createInitialChartOfAccounts(String tenantId) {
+    public void createInitialChartOfAccounts(UUID tenantId) {
         log.info("Creating initial Chart of Accounts for tenantId: {}", tenantId);
 
         // 1. Assets (1000 series)
@@ -66,12 +66,12 @@ public class ChartOfAccountsServiceImpl implements ChartOfAccountsService {
         log.info("Successfully created Chart of Accounts for tenantId: {}", tenantId);
     }
 
-    private Account createAccount(String tenantId, String name, String code, AccountType type, Account parent) {
+    private Account createAccount(UUID tenantId, String name, String code, AccountType type, Account parent) {
         return accountRepository.findByTenantIdAndCode(tenantId, code)
                 .orElseGet(() -> doCreateAccount(tenantId, name, code, type, parent));
     }
 
-    private Account doCreateAccount(String tenantId, String name, String code, AccountType type, Account parent) {
+    private Account doCreateAccount(UUID tenantId, String name, String code, AccountType type, Account parent) {
         Account account = Account.builder()
                 .tenantId(tenantId)
                 .name(name)

@@ -6,10 +6,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class CreateAccountRequest {
-    @NotBlank(message = "Tenant ID is required")
-    private String tenantId;
+    @NotNull(message = "Tenant ID is required")
+    private UUID tenantId;
 
     @NotBlank(message = "Account name is required")
     private String name;

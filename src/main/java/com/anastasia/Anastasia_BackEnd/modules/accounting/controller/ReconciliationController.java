@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 // DTO for the reconciliation request body
 @Data
@@ -19,7 +20,7 @@ class ReconciliationRequest {
     @Valid
     private List<BankStatementLine> statementLines;
     private BigDecimal closingBalance;
-    private String tenantId;
+    private UUID tenantId;
     private Long accountId;
 }
 

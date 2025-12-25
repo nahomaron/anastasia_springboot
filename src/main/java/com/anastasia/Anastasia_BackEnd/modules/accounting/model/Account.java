@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Represents an account in the Chart of Accounts.
@@ -28,7 +29,7 @@ import java.util.List;
 public class Account extends BaseEntity {
 
     @Column(nullable = false)
-    private String tenantId;
+    private UUID tenantId;
 
     @Column(nullable = false)
     private String name;

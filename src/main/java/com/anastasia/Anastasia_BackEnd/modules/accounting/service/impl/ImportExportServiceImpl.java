@@ -22,6 +22,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,7 +40,7 @@ public class ImportExportServiceImpl implements ImportExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public void exportToQuickBooks(String tenantId,
+    public void exportToQuickBooks(UUID tenantId,
                                    LocalDate startDate,
                                    LocalDate endDate,
                                    OutputStream outputStream) {
@@ -54,7 +56,7 @@ public class ImportExportServiceImpl implements ImportExportService {
 
     @Override
     @Transactional
-    public void importFromQuickBooks(String tenantId, InputStream inputStream) {
+    public void importFromQuickBooks(UUID tenantId, InputStream inputStream) {
         List<JournalEntry> journalEntries;
         try {
             journalEntries = QuickBooksMapper.readJournalEntries(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
@@ -89,7 +91,7 @@ public class ImportExportServiceImpl implements ImportExportService {
         }
     }
 
-    private Account resolveAccount(String tenantId, String accountName) {
+    private Account resolveAccount(UUID tenantId, String accountName) {
         return accountRepository.findByTenantIdAndNameIgnoreCase(tenantId, accountName)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown account in QuickBooks import: " + accountName));
     }

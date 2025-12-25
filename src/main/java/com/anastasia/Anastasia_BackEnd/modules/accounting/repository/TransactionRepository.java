@@ -7,13 +7,14 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    List<Transaction> findByTenantId(String tenantId);
+    List<Transaction> findByTenantId(UUID tenantId);
 
-    List<Transaction> findByTenantIdAndDateBetween(String tenantId, LocalDate startDate, LocalDate endDate);
+    List<Transaction> findByTenantIdAndDateBetween(UUID tenantId, LocalDate startDate, LocalDate endDate);
 
-    Optional<Transaction> findByTenantIdAndExternalReferenceAndSourceSystem(String tenantId, String externalReference, String sourceSystem);
+    Optional<Transaction> findByTenantIdAndExternalReferenceAndSourceSystem(UUID tenantId, String externalReference, String sourceSystem);
 }

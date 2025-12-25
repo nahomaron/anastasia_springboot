@@ -64,7 +64,7 @@ class AuthControllerUnitTest {
         UserEntity entity = UserEntity.builder().email(userDTO.getEmail()).build();
         when(userService.convertToEntity(userDTO)).thenReturn(entity);
 
-        ResponseEntity<?> response = authController.signUp(userDTO);
+        ResponseEntity<Map<String, String>> response = authController.signUp(userDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         verify(authService).createUser(entity);
@@ -74,7 +74,7 @@ class AuthControllerUnitTest {
     void signUp_whenPasswordsMismatch_shouldReturnBadRequest() throws MessagingException {
         userDTO.setConfirmPassword("Mismatch123!");
 
-        ResponseEntity<?> response = authController.signUp(userDTO);
+        ResponseEntity<Map<String, String>> response = authController.signUp(userDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         verify(authService, org.mockito.Mockito.never()).createUser(any());
@@ -106,7 +106,7 @@ class AuthControllerUnitTest {
         when(rateLimiterConfig.getBucket("127.0.0.1")).thenReturn(bucket);
         when(bucket.tryConsume(1)).thenReturn(true);
 
-        ResponseEntity<?> response = authController.refreshToken(httpRequest, httpResponse);
+        ResponseEntity<Map<String, String>> response = authController.refreshToken(httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(authService).refreshToken(httpRequest, httpResponse);
@@ -122,19 +122,19 @@ class AuthControllerUnitTest {
         when(rateLimiterConfig.getBucket("127.0.0.1")).thenReturn(bucket);
         when(bucket.tryConsume(1)).thenReturn(false);
 
-        ResponseEntity<?> response = authController.refreshToken(httpRequest, httpResponse);
+        ResponseEntity<Map<String, String>> response = authController.refreshToken(httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
-        assertThat(response.getBody()).isEqualTo("Too many requests, try again later");
+        assertThat(response.getBody()).containsEntry("message", "Too many requests, try again later");
         verify(authService, org.mockito.Mockito.never()).refreshToken(any(), any());
     }
 
     @Test
     void confirm_shouldActivateAccount() {
-        ResponseEntity<String> response = authController.confirm("token-123");
+        ResponseEntity<Map<String, String>> response = authController.confirm("token-123");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("successfully activated");
+        assertThat(response.getBody()).containsEntry("message", "Account successfully activated");
         verify(authService).activateAccount("token-123");
     }
 
@@ -143,10 +143,10 @@ class AuthControllerUnitTest {
         doThrow(new IllegalArgumentException("Not found"))
                 .when(authService).resendActivationEmail("missing@mail.com");
 
-        ResponseEntity<String> response = authController.resendActivation("missing@mail.com");
+        ResponseEntity<Map<String, String>> response = authController.resendActivation("missing@mail.com");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).isEqualTo("Not found");
+        assertThat(response.getBody()).containsEntry("message", "Not found");
     }
 
     @Test
@@ -154,34 +154,34 @@ class AuthControllerUnitTest {
         doThrow(new IllegalStateException("Already verified"))
                 .when(authService).resendActivationEmail("user@mail.com");
 
-        ResponseEntity<String> response = authController.resendActivation("user@mail.com");
+        ResponseEntity<Map<String, String>> response = authController.resendActivation("user@mail.com");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isEqualTo("Already verified");
+        assertThat(response.getBody()).containsEntry("message", "Already verified");
     }
 
     @Test
     void resendActivation_whenMailFails_shouldReturnServerError() throws MessagingException {
         doThrow(new MessagingException("SMTP down")).when(authService).resendActivationEmail("user@mail.com");
 
-        ResponseEntity<String> response = authController.resendActivation("user@mail.com");
+        ResponseEntity<Map<String, String>> response = authController.resendActivation("user@mail.com");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-        assertThat(response.getBody()).isEqualTo("Failed to send activation email");
+        assertThat(response.getBody()).containsEntry("message", "Failed to send activation email");
     }
 
     @Test
     void forgotPassword_whenEmailMissing_shouldReturnBadRequest() throws MessagingException {
-        ResponseEntity<String> response = authController.forgotPassword(Map.of());
+        ResponseEntity<Map<String, String>> response = authController.forgotPassword(Map.of());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("Email is required");
+        assertThat(response.getBody()).containsEntry("message", "Email is required for password reset.");
         verify(authService, org.mockito.Mockito.never()).initiatePasswordReset(any());
     }
 
     @Test
     void forgotPassword_whenEmailProvided_shouldInitiateReset() throws MessagingException {
-        ResponseEntity<String> response = authController.forgotPassword(Map.of("email", "user@mail.com"));
+        ResponseEntity<Map<String, String>> response = authController.forgotPassword(Map.of("email", "user@mail.com"));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(authService).initiatePasswordReset("user@mail.com");
@@ -195,7 +195,7 @@ class AuthControllerUnitTest {
                 .confirmNewPassword("Mismatch1!")
                 .build();
 
-        ResponseEntity<String> response = authController.resetPassword(request);
+        ResponseEntity<Map<String, String>> response = authController.resetPassword(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         verify(authService, org.mockito.Mockito.never()).resetPassword(any(), any());
@@ -209,7 +209,7 @@ class AuthControllerUnitTest {
                 .confirmNewPassword("Password1!")
                 .build();
 
-        ResponseEntity<String> response = authController.resetPassword(request);
+        ResponseEntity<Map<String, String>> response = authController.resetPassword(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(authService).resetPassword("token", "Password1!");
@@ -219,17 +219,19 @@ class AuthControllerUnitTest {
     void checkEmail_whenRegistered_shouldReturnRegisteredMessage() {
         when(authService.isEmailRegistered("user@mail.com")).thenReturn(true);
 
-        ResponseEntity<String> response = authController.checkEmail("user@mail.com");
+        ResponseEntity<Map<String, Object>> response = authController.checkEmail("user@mail.com");
 
-        assertThat(response.getBody()).isEqualTo("Email is already registered.");
+        assertThat(response.getBody()).containsEntry("registered", true);
+        assertThat(response.getBody()).containsEntry("message", "Email is already registered.");
     }
 
     @Test
     void checkEmail_whenAvailable_shouldReturnAvailableMessage() {
         when(authService.isEmailRegistered("free@mail.com")).thenReturn(false);
 
-        ResponseEntity<String> response = authController.checkEmail("free@mail.com");
+        ResponseEntity<Map<String, Object>> response = authController.checkEmail("free@mail.com");
 
-        assertThat(response.getBody()).isEqualTo("Email is available for registration.");
+        assertThat(response.getBody()).containsEntry("registered", false);
+        assertThat(response.getBody()).containsEntry("message", "Email is available for registration.");
     }
 }

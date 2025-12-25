@@ -27,7 +27,7 @@ public class UserRegistrationListener {
 
         Map<String, Object> props = Map.of(
                 "username", user.getFullName(),
-                "confirmation_url", "http://localhost:3000/activate-account"
+                "confirmation_url", "http://localhost:3000/auth/activate"
         );
 
         publisher.publishEvent(
@@ -35,4 +35,3 @@ public class UserRegistrationListener {
         );
     }
 }
-

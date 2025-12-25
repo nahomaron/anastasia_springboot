@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> {
@@ -26,7 +27,7 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
               and (:endDate is null or le.transaction.date <= :endDate)
             group by le.account.id
             """)
-    List<AccountBalanceView> aggregateByAccountAndPeriod(@Param("tenantId") String tenantId,
+    List<AccountBalanceView> aggregateByAccountAndPeriod(@Param("tenantId") UUID tenantId,
                                                          @Param("accountTypes") List<AccountType> accountTypes,
                                                          @Param("startDate") LocalDate startDate,
                                                          @Param("endDate") LocalDate endDate);

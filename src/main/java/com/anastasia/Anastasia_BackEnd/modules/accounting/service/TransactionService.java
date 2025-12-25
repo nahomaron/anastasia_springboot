@@ -40,7 +40,7 @@ public interface TransactionService {
     /**
      * Records a general journal entry comprised of arbitrary debit and credit lines.
      */
-    TransactionDto recordJournalEntry(String tenantId, java.time.LocalDate date, String description, java.util.List<JournalEntryLine> lines);
+    TransactionDto recordJournalEntry(java.util.UUID tenantId, java.time.LocalDate date, String description, java.util.List<JournalEntryLine> lines);
 
     // Helper to convert entity to DTO
     TransactionDto toDto(Transaction transaction);

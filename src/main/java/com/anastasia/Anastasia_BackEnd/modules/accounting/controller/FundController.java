@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/accounting/funds")
@@ -25,12 +26,12 @@ public class FundController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FundDto>> getFunds(@RequestParam String tenantId) {
+    public ResponseEntity<List<FundDto>> getFunds(@RequestParam UUID tenantId) {
         return ResponseEntity.ok(fundService.getFundsByTenantId(tenantId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FundDto> getFundById(@PathVariable Long id, @RequestParam String tenantId) {
+    public ResponseEntity<FundDto> getFundById(@PathVariable Long id, @RequestParam UUID tenantId) {
         return ResponseEntity.ok(fundService.getFundById(id, tenantId));
     }
 

@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * We enable JPA Auditing here to automatically populate createdAt and updatedAt fields.
  */
 @Configuration
-@ComponentScan(basePackageClasses = AccountingModuleConfig.class)
+@ComponentScan(basePackages = "com.anastasia.Anastasia_BackEnd.modules.accounting")
 @EntityScan(basePackageClasses = Account.class)
 @EnableJpaRepositories(basePackageClasses = TransactionRepository.class)
 public class AccountingModuleConfig {

@@ -33,14 +33,14 @@ class ReconciliationServiceImplTests {
     @Autowired
     private AccountRepository accountRepository;
 
-    private String tenantId;
+    private UUID tenantId;
     private Account bank;
     private Account donationIncome;
     private Account expenseAccount;
 
     @BeforeEach
     void setUp() {
-        tenantId = "tenant-" + UUID.randomUUID();
+        tenantId = UUID.randomUUID();
         chartOfAccountsService.createInitialChartOfAccounts(tenantId);
         bank = accountRepository.findByTenantIdAndCode(tenantId, "1110").orElseThrow();
         donationIncome = accountRepository.findByTenantIdAndCode(tenantId, "4200").orElseThrow();

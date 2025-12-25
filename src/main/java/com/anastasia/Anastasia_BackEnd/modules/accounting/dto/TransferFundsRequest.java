@@ -6,11 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 public class TransferFundsRequest {
-    @NotBlank(message = "Tenant ID is required")
-    private String tenantId;
+    @NotNull(message = "Tenant ID is required")
+    private UUID tenantId;
 
     @NotNull(message = "Date is required")
     private LocalDate date;

@@ -311,7 +311,7 @@ public class AuthServiceImpl implements AuthService {
         var newToken = generateAndSaveActivationToken(user);
 
         // Define the activation URL for the frontend application
-        String activationUrl = "http://localhost:3000/activate-account";
+        String activationUrl = "http://localhost:3000/auth/activate";
 
         // Prepare the properties map for the email template
         Map<String, Object> templateProperties = new HashMap<>();

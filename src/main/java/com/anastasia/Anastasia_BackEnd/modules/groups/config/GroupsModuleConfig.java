@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
-@ComponentScan(basePackageClasses = GroupsModuleConfig.class)
+//@ComponentScan(basePackageClasses = GroupsModuleConfig.class)
+@ComponentScan(basePackages = "com.anastasia.Anastasia_BackEnd.modules.events")
 @EntityScan(basePackageClasses = GroupEntity.class)
 @EnableJpaRepositories(basePackageClasses = GroupRepository.class)
 public class GroupsModuleConfig {

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.repository;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.springframework.data.domain.Page;
@@ -47,7 +48,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     @Query("""
         SELECT u FROM UserEntity u
-        JOIN MemberEntity m ON u.membershipId = m.id
+        JOIN Adult_MemberEntity m ON u.membershipId = m.id
         WHERE m.church.churchId = :churchId
         AND u.membershipId IS NOT NULL
     """)
@@ -55,7 +56,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     @Query("""
         SELECT u.uuid FROM UserEntity u
-        JOIN MemberEntity m ON u.membershipId = m.id
+        JOIN Adult_MemberEntity m ON u.membershipId = m.id
         WHERE m.church.churchId = :churchId
         AND u.membershipId IS NOT NULL
     """)
@@ -64,7 +65,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     @Query("""
         SELECT new com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO(u.uuid, u.fullName, u.email)
         FROM UserEntity u
-        JOIN MemberEntity m ON u.membershipId = m.id
+        JOIN Adult_MemberEntity m ON u.membershipId = m.id
         WHERE m.church.churchId = :churchId
         AND u.membershipId IS NOT NULL
     """)

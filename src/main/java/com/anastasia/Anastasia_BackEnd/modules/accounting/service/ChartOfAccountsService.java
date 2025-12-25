@@ -11,5 +11,5 @@ public interface ChartOfAccountsService {
      *
      * @param tenantId The unique ID of the tenant.
      */
-    void createInitialChartOfAccounts(String tenantId);
+    void createInitialChartOfAccounts(java.util.UUID tenantId);
 }

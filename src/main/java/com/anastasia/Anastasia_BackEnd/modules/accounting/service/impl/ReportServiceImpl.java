@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.anastasia.Anastasia_BackEnd.modules.accounting.enums.ReportType.BALANCE_SHEET;
@@ -67,7 +68,7 @@ public class ReportServiceImpl implements ReportService {
         return responseBuilder.build();
     }
 
-    private BalanceSheetDto buildBalanceSheet(String tenantId, ReportWindow window) {
+    private BalanceSheetDto buildBalanceSheet(UUID tenantId, ReportWindow window) {
         List<Account> assetAccounts = accountRepository.findByTenantIdAndType(tenantId, AccountType.ASSET);
         List<Account> liabilityAccounts = accountRepository.findByTenantIdAndType(tenantId, AccountType.LIABILITY);
         List<Account> equityAccounts = accountRepository.findByTenantIdAndType(tenantId, AccountType.EQUITY);
@@ -106,7 +107,7 @@ public class ReportServiceImpl implements ReportService {
                 .build();
     }
 
-    private IncomeStatementDto buildIncomeStatement(String tenantId, ReportWindow window) {
+    private IncomeStatementDto buildIncomeStatement(UUID tenantId, ReportWindow window) {
         List<Account> incomeAccounts = accountRepository.findByTenantIdAndType(tenantId, AccountType.INCOME);
         List<Account> expenseAccounts = accountRepository.findByTenantIdAndType(tenantId, AccountType.EXPENSE);
 
@@ -125,7 +126,7 @@ public class ReportServiceImpl implements ReportService {
                 .build();
     }
 
-    private Map<Long, BigDecimal> aggregateByAccount(String tenantId,
+    private Map<Long, BigDecimal> aggregateByAccount(UUID tenantId,
                                                      List<Account> accounts,
                                                      LocalDate startDate,
                                                      LocalDate endDate) {

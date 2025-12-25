@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.ReconciliationResu
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 public interface ReconciliationService {
 
@@ -18,5 +19,5 @@ public interface ReconciliationService {
      * @param closingBalance The closing balance as reported by the bank.
      * @return A result object detailing the reconciliation.
      */
-    ReconciliationResult reconcileStatement(String tenantId, Long accountId, List<BankStatementLine> statementLines, BigDecimal closingBalance);
+    ReconciliationResult reconcileStatement(UUID tenantId, Long accountId, List<BankStatementLine> statementLines, BigDecimal closingBalance);
 }

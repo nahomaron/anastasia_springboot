@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
 
     @Override
     @Transactional(readOnly = true)
-    public ReconciliationResult reconcileStatement(String tenantId,
+    public ReconciliationResult reconcileStatement(UUID tenantId,
                                                    Long accountId,
                                                    List<BankStatementLine> statementLines,
                                                    BigDecimal closingBalance) {
