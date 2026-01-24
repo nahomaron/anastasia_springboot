@@ -126,7 +126,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
 
         assertThat(reloaded.getChurchName()).isEqualTo(updatedDto.getChurchName());
         assertThat(reloaded.getEmail()).isEqualTo(updatedDto.getEmail());
-        assertThat(reloaded.getFacebookPage()).isEqualTo(updatedDto.getFacebookPage());
+        assertThat(reloaded.getFacebook()).isEqualTo(updatedDto.getFacebook());
     }
 
     @Test

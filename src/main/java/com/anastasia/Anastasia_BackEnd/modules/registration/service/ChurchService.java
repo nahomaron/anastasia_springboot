@@ -16,7 +16,7 @@ public interface ChurchService {
 
     ChurchDTO convertToDTO(ChurchEntity churchEntity);
 
-    Page<ChurchEntity> findAll(Pageable pageable);
+    Page<ChurchDTO> findAll(Pageable pageable);
 
     boolean exists(Long churchId);
 

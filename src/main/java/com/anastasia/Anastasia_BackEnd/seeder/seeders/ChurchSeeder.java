@@ -36,27 +36,41 @@ public class ChurchSeeder {
                 tenants = tenantService.getTenants();
             }
 
-
-
+            String[] prefixes = {"St.", "Saint", "Holy", "Our Lady of", "Chapel of"};
+            String[] patronNames = {"Mary", "Michael", "Gabriel", "Antony", "John", "Paul", "George", "Joseph"};
+            String[] denominations = {"Orthodox", "Catholic", "Protestant", "Evangelical", "Non-denominational"};
 
             for (TenantEntity tenant: tenants) {
 
                 String churchCity = faker.address().city();
-                String[] baseNames = { "St. Mary", "St. Michael", "St. Gabriel", "St. Antony", "St. John", "St. Paul" };
-                // Pick one name randomly
-                String randomBaseName = faker.options().option(baseNames);
-                String churchName = randomBaseName + " " + churchCity;
+                String prefix = faker.options().option(prefixes);
+                String patronName = faker.options().option(patronNames);
+                String baseName = patronName + " " + churchCity;
+                String churchName = baseName;
+
+                boolean usesOurServices = faker.bool().bool();
+                String latitude = faker.address().latitude();
+                String longitude = faker.address().longitude();
 
                 ChurchEntity church = ChurchEntity.builder()
                         .tenant(tenant)
+                        .prefix(prefix)
                         .churchName(churchName)
                         .churchNumber("A" + faker.number().numberBetween(10000, 99999))
                         .email(faker.internet().emailAddress())
+                        .phone(faker.phoneNumber().phoneNumber())
                         .diocese(faker.address().state())
+                        .denomination(faker.options().option(denominations))
+                        .description(faker.lorem().paragraph())
+                        .usesOurServices(usesOurServices)
+                        .gpsLocation(latitude + "," + longitude)
+                        .instagram("https://instagram.com/" + faker.internet().username().replaceAll("[^A-Za-z0-9_.]", ""))
+                        .youtube("https://youtube.com/" + faker.internet().username().replaceAll("[^A-Za-z0-9]", ""))
+                        .facebook("https://facebook.com/" + faker.internet().username().replaceAll("[^A-Za-z0-9.]", ""))
                         .address(Address.builder()
                                 .country(faker.country().name())
                                 .province(faker.address().state())
-                                .city(faker.address().city())
+                                .city(churchCity)
                                 .street(faker.address().streetAddress())
                                 .zipcode(faker.address().zipCode())
                                 .build())

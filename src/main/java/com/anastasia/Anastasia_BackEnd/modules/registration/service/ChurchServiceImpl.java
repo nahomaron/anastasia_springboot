@@ -52,19 +52,19 @@ public class ChurchServiceImpl implements ChurchService{
     }
 
 
-    @Caching(
-            put = {@CachePut(value = "churches",
-                    key = "#churchId")
-            },
-            evict = {
-                    @CacheEvict(value = "churches_all",
-                        keyGenerator = "tenantAwareKeyGenerator",
-                        allEntries = true),
-                    @CacheEvict(value = "churches_all_list",
-                            keyGenerator = "tenantAwareKeyGenerator",
-                            allEntries = true)
-            }
-    )
+//    @Caching(
+//            put = {@CachePut(value = "churches",
+//                    key = "#churchId")
+//            },
+//            evict = {
+//                    @CacheEvict(value = "churches_all",
+//                        keyGenerator = "tenantAwareKeyGenerator",
+//                        allEntries = true),
+//                    @CacheEvict(value = "churches_all_list",
+//                            keyGenerator = "tenantAwareKeyGenerator",
+//                            allEntries = true)
+//            }
+//    )
     @Override
     public String createChurch(ChurchEntity churchEntity) {
 
@@ -89,19 +89,20 @@ public class ChurchServiceImpl implements ChurchService{
         return savedChurch.getChurchNumber();
     }
 
-    @Cacheable(value = "churches_all", keyGenerator = "tenantAwareKeyGenerator")
+//    @Cacheable(value = "churches_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<ChurchEntity> findAll(Pageable pageable) {
-        return churchRepository.findAll(pageable);
+    public Page<ChurchDTO> findAll(Pageable pageable) {
+        Page<ChurchEntity> churches = churchRepository.findAll(pageable);
+        return churches.map(churchMapper::churchEntityToDTO);
     }
 
-    @Cacheable(value = "churches", keyGenerator = "tenantAwareKeyGenerator")
+//    @Cacheable(value = "churches", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<ChurchEntity> findOne(Long churchId) {
         return churchRepository.findById(churchId);
     }
 
-    @Cacheable(value = "churches_all_list", keyGenerator = "tenantAwareKeyGenerator")
+//    @Cacheable(value = "churches_all_list", keyGenerator = "tenantAwareKeyGenerator")
     public List<ChurchEntity> getChurches(){
         return churchRepository.findAll();
     }
@@ -112,18 +113,18 @@ public class ChurchServiceImpl implements ChurchService{
         return churchRepository.existsById(churchId);
     }
 
-    @Caching(
-            evict = {
-                    @CacheEvict( value = "churches_all",
-                            keyGenerator = "tenantAwareKeyGenerator",
-                            allEntries = true),
-                    @CacheEvict(value = "churches_all_list",
-                            keyGenerator = "tenantAwareKeyGenerator",
-                            allEntries = true),
-                    @CacheEvict(value = "churches",
-                            key = "#churchId")
-            }
-    )
+//    @Caching(
+//            evict = {
+//                    @CacheEvict( value = "churches_all",
+//                            keyGenerator = "tenantAwareKeyGenerator",
+//                            allEntries = true),
+//                    @CacheEvict(value = "churches_all_list",
+//                            keyGenerator = "tenantAwareKeyGenerator",
+//                            allEntries = true),
+//                    @CacheEvict(value = "churches",
+//                            key = "#churchId")
+//            }
+//    )
     @Override
     public void updateChurch(Long churchId, ChurchEntity churchEntity) {
         ChurchEntity existingChurch = churchRepository.findById(churchId)
@@ -136,21 +137,21 @@ public class ChurchServiceImpl implements ChurchService{
 
     }
 
-    @Caching(
-            evict = {
-                    @CacheEvict(value = "churches",
-                            key = "#churchId"
-                    ),
-                    @CacheEvict(value = "churches_all",
-                            keyGenerator = "tenantAwareKeyGenerator",
-                            allEntries = true
-                    ),
-                    @CacheEvict(value = "churches_all_list",
-                            keyGenerator = "tenantAwareKeyGenerator",
-                            allEntries = true
-                    )
-            }
-    )
+//    @Caching(
+//            evict = {
+//                    @CacheEvict(value = "churches",
+//                            key = "#churchId"
+//                    ),
+//                    @CacheEvict(value = "churches_all",
+//                            keyGenerator = "tenantAwareKeyGenerator",
+//                            allEntries = true
+//                    ),
+//                    @CacheEvict(value = "churches_all_list",
+//                            keyGenerator = "tenantAwareKeyGenerator",
+//                            allEntries = true
+//                    )
+//            }
+//    )
     @Override
     public void deleteChurch(Long churchId) {
         // todo -> deletion should be executed after 30 days of request

@@ -39,21 +39,39 @@ public class ChurchEntity {
     private String prefix;
     private String profilePicture;
 
+    @Embedded
     private Address address;
 
+    @Column(nullable = false)
     private String diocese;
 
+    @Column(nullable = false)
     private String email;
+
+    private String phone;
+
+    private String denomination;
+
+    @Column(length = 1000)
+    private String description;
+
+    private boolean usesOurServices;
 
     private String gpsLocation;
 
-    private String websiteUrl;
-    private String youtubePage;
-    private String facebookPage;
+    private String instagram;
 
-    @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(name = "youtube_page")
+    private String youtube;
+
+    @Column(name = "facebook_page")
+    private String facebook;
+
+    @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<GroupEntity> groups;
 
-    @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<EventEntity> events;
 }

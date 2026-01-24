@@ -58,7 +58,7 @@ public class AuthTests extends BaseApiTest {
         Response res = authService.login(request);
 
         Assertions.assertEquals(200, res.getStatusCode());
-        Assertions.assertTrue(res.asString().contains("access_token"));
+        Assertions.assertTrue(res.asString().contains("accessToken"));
 
         SchemaValidator.validate(res);
     }

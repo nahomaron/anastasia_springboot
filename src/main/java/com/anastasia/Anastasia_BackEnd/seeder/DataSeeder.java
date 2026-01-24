@@ -12,6 +12,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -35,25 +36,22 @@ public class DataSeeder {
 
 //    @PostConstruct
     @EventListener(ApplicationReadyEvent.class)
+    @Transactional
     public void init() {
-        try {
-            logger.info("starting database seeding ...");
-            roleAndPermissionSeeder.seedPermissions();
-            roleAndPermissionSeeder.seedDefaultRoles();
+        logger.info("starting database seeding ...");
+        roleAndPermissionSeeder.seedPermissions();
+        roleAndPermissionSeeder.seedDefaultRoles();
 
-            List<UserEntity> savedUsers = userSeeder.seedUsers();
-            List<TenantEntity> savedTenants = tenantSeeder.seedTenants();
-            List<ChurchEntity> savedChurches = churchSeeder.seedChurches(savedTenants);
-            priestSeeder.seedPriests(savedChurches);
-            memberSeeder.seedMembers(savedChurches);
-            List<GroupEntity> savedGroups = groupSeeder.seedGroups(savedChurches);
-            eventSeeder.seedEvents(savedChurches, savedGroups);
-            accountingSeeder.seedAccounting(savedTenants);
+        List<UserEntity> savedUsers = userSeeder.seedUsers();
+        List<TenantEntity> savedTenants = tenantSeeder.seedTenants();
+        List<ChurchEntity> savedChurches = churchSeeder.seedChurches(savedTenants);
+        priestSeeder.seedPriests(savedChurches);
+        memberSeeder.seedMembers(savedChurches);
+        List<GroupEntity> savedGroups = groupSeeder.seedGroups(savedChurches);
+        eventSeeder.seedEvents(savedChurches, savedGroups);
+//        accountingSeeder.seedAccounting(savedTenants);
 
-            logger.info("Data seeding completed successfully.");
-        } catch (Exception e) {
-            logger.error("Error during data seeding: {}", e.getMessage(), e);
-        }
+        logger.info("Data seeding completed successfully.");
     }
 
 }

@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
@@ -48,12 +49,15 @@ class ChurchServiceUnitTest {
     @Test
     void testFindAllChurches() {
         PageRequest pageable = PageRequest.of(0, 10);
-        Page<ChurchEntity> expectedPage = new PageImpl<>(List.of(church));
-        when(churchRepository.findAll(pageable)).thenReturn(expectedPage);
+        Page<ChurchEntity> entityPage = new PageImpl<>(List.of(church));
+        ChurchDTO dto = TestDataUtil.createTestChurchDTO();
 
-        Page<ChurchEntity> result = churchService.findAll(pageable);
+        when(churchRepository.findAll(pageable)).thenReturn(entityPage);
+        when(churchMapper.churchEntityToDTO(church)).thenReturn(dto);
 
-        assertThat(result).isEqualTo(expectedPage);
+        Page<ChurchDTO> result = churchService.findAll(pageable);
+
+        assertThat(result.getContent()).containsExactly(dto);
     }
 
     @Test

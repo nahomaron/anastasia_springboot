@@ -32,11 +32,10 @@ public class ChurchController {
                 .body("\"" + churchNumber + "\"");
     }
 
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<ChurchDTO>> getChurches(Pageable pageable){
-        Page<ChurchEntity> churches = churchService.findAll(pageable);
-        return new ResponseEntity<>(churches.map(churchService::convertToDTO), HttpStatus.OK);
+        Page<ChurchDTO> churches = churchService.findAll(pageable);
+        return new ResponseEntity<>(churches, HttpStatus.OK);
     }
 
     @GetMapping("/{churchId}")

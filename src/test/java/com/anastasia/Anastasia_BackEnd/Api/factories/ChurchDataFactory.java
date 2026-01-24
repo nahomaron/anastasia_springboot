@@ -1,8 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.Api.factories;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Factory for creating {@link ChurchDTO} payloads.
@@ -17,6 +19,10 @@ public final class ChurchDataFactory {
                 .prefix("St.")
                 .churchName("St. " + DataGenerator.randomName().split(" ")[0])
                 .diocese("North America Diocese")
+                .phone("+1-555-" + ThreadLocalRandom.current().nextInt(1000, 10000))
+                .denomination("Orthodox")
+                .description("A welcoming parish community focused on outreach.")
+                .usesOurServices(true)
                 .address(Address.builder()
                         .street("456 Unity Rd")
                         .city("Fairfax")
@@ -26,9 +32,9 @@ public final class ChurchDataFactory {
                         .build())
                 .email("admin+" + System.currentTimeMillis() + "@parish.org")
                 .gpsLocation("38.8462,-77.3064")
-                .websiteUrl("https://parish.example.com")
-                .facebookPage("https://facebook.com/parish")
-                .youtubePage("https://youtube.com/@parish")
+                .instagram("https://instagram.com/parish")
+                .youtube("https://youtube.com/@parish")
+                .facebook("https://facebook.com/parish")
                 .build();
     }
 

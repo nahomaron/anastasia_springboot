@@ -2,8 +2,10 @@ package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticatedUserResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -14,6 +16,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.common.cache.CacheWarmupService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.IllegalWriteException;
@@ -31,6 +34,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -117,6 +121,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
+        AuthenticatedUserResponse authenticatedUser = buildAuthenticatedUserResponse(user);
 
         var jwtToken = jwtUtil.generateAccessToken(userPrincipal);
         var refreshToken = jwtUtil.generateRefreshToken(userPrincipal);
@@ -137,6 +142,7 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getUuid())
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
+                .user(authenticatedUser)
                 .build();
     }
 
@@ -304,6 +310,33 @@ public class AuthServiceImpl implements AuthService {
             }
         });
         tokenRepository.saveAll(validUserTokens);
+    }
+
+    private AuthenticatedUserResponse buildAuthenticatedUserResponse(UserEntity user) {
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getRoleName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Set<String> permissionKeys = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> {
+                    if (permission == null || permission.getName() == null) {
+                        return null;
+                    }
+                    return permission.getName().getName();
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return AuthenticatedUserResponse.builder()
+                .id(user.getUuid())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .tenantId(user.getTenantId())
+                .roles(roleNames)
+                .permissions(permissionKeys)
+                .build();
     }
 
     public void sendValidationEmail(UserEntity user) throws MessagingException {

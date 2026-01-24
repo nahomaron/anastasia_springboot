@@ -29,23 +29,20 @@ public class TenantFilter implements Filter {
         String tenantIdString = httpServletRequest.getHeader("X-Tenant-ID");
 
 
-        if (tenantIdString == null || tenantIdString.isEmpty()) {
+        if (tenantIdString == null || tenantIdString.isEmpty() || "null".equalsIgnoreCase(tenantIdString)) {
             // Extract tenantId from JWT if not provided in the header
             String authHeader = httpServletRequest.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 try {
                     tenantIdString = jwtUtil.extractTenantId(token);  // Extract from JWT
-                    if ("null".equals(tenantIdString)) {
-                        tenantIdString = null; // Treat "null" as an actual null
-                    }
                 } catch (Exception e) {
                     throw new ServletException("Invalid JWT token: " + e.getMessage());
                 }
             }
         }
 
-        if (tenantIdString != null && !tenantIdString.isEmpty()) {
+        if (tenantIdString != null && !tenantIdString.isEmpty() && !"null".equalsIgnoreCase(tenantIdString)) {
             try {
                 UUID tenantId = UUID.fromString(tenantIdString);
                 TenantContext.setTenantId(tenantId);
@@ -63,5 +60,6 @@ public class TenantFilter implements Filter {
             TenantContext.clear();
         }
     }
+
 
 }

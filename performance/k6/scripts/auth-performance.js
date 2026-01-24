@@ -56,7 +56,7 @@ export function setup() {
     );
     check(res, {
       'login ok (200)': (r) => r.status === 200,
-      'has access_token': (r) => (r.json('access_token') || '').length > 10,
+      'has access token': (r) => (r.json('accessToken') || '').length > 10,
     }) || fail(`Login failed: ${res.status} ${res.body}`);
   });
 
@@ -78,7 +78,7 @@ export default function (data) {
 
   const ok = check(res, {
     'login 200': (r) => r.status === 200,
-    'token present': (r) => (r.json('access_token') || '').length > 10,
+    'token present': (r) => (r.json('accessToken') || '').length > 10,
   });
 
   authErrorRate.add(!ok);

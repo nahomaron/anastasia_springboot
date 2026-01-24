@@ -73,7 +73,7 @@ public class GroupControllerIT extends PostgresTestContainer {
 
         String jsonResponse = result.getResponse().getContentAsString();
         var root = objectMapper.readTree(jsonResponse);
-        accessToken = root.get("access_token").asText();
+        accessToken = root.get("accessToken").asText();
         tenantId = jwtUtil.extractTenantId(accessToken);
         TenantContext.setTenantId(UUID.fromString(tenantId));
     }

@@ -56,7 +56,9 @@ public class JwtUtil {
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("tenantId", (userPrincipal.getTenantId() != null) ? userPrincipal.getTenantId().toString() : "null"); //  Avoid storing `null`
+        if (userPrincipal.getTenantId() != null) {
+            claims.put("tenantId", userPrincipal.getTenantId().toString());
+        }
         claims.put("roles", userPrincipal.getRoles().stream()
                 .map(role -> "ROLE_" + role.getRoleName())
                 .collect(Collectors.toList()));

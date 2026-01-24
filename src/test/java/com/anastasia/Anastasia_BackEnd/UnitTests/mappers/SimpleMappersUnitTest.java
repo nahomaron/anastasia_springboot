@@ -72,6 +72,10 @@ class SimpleMappersUnitTest {
                 .churchName("St. Mary")
                 .diocese("Addis Diocese")
                 .email("church@example.com")
+                .phone("+251900000000")
+                .denomination("Orthodox")
+                .description("Historic parish")
+                .usesOurServices(true)
                 .address(Address.builder()
                         .street("123 Main")
                         .city("Addis Ababa")
@@ -80,7 +84,9 @@ class SimpleMappersUnitTest {
                         .zipcode("12345")
                         .build())
                 .gpsLocation("9.03,38.74")
-                .youtubePage("youtube.com/stmary")
+                .instagram("instagram.com/stmary")
+                .youtube("youtube.com/stmary")
+                .facebook("facebook.com/stmary")
                 .build();
 
         ChurchDTO dto = churchMapper.churchEntityToDTO(entity);
@@ -88,10 +94,18 @@ class SimpleMappersUnitTest {
         assertThat(dto.getDiocese()).isEqualTo("Addis Diocese");
         assertThat(dto.getEmail()).isEqualTo("church@example.com");
         assertThat(dto.getAddress().getCity()).isEqualTo("Addis Ababa");
+        assertThat(dto.getPhone()).isEqualTo("+251900000000");
+        assertThat(dto.getDenomination()).isEqualTo("Orthodox");
+        assertThat(dto.isUsesOurServices()).isTrue();
+        assertThat(dto.getInstagram()).isEqualTo("instagram.com/stmary");
+        assertThat(dto.getYoutube()).isEqualTo("youtube.com/stmary");
+        assertThat(dto.getFacebook()).isEqualTo("facebook.com/stmary");
 
         ChurchEntity mappedBack = churchMapper.churchDTOToEntity(dto);
         assertThat(mappedBack.getChurchName()).isEqualTo("St. Mary");
         assertThat(mappedBack.getEmail()).isEqualTo("church@example.com");
+        assertThat(mappedBack.getPhone()).isEqualTo("+251900000000");
+        assertThat(mappedBack.getInstagram()).isEqualTo("instagram.com/stmary");
     }
 
     @Test

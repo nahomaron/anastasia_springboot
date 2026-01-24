@@ -32,10 +32,18 @@ public class ChurchDTO {
     @NotBlank(message = "Church email is required")
     private String email;
 
+    private String phone;
+
+    private String denomination;
+
+    private String description;
+
+    private boolean usesOurServices;
 
     private String gpsLocation;
-    private String websiteUrl;
-    private String youtubePage;
-    private String facebookPage;
+
+    private String instagram;
+    private String youtube;
+    private String facebook;
 
 }

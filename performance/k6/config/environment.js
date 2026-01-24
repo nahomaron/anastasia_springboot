@@ -64,14 +64,14 @@ export function provisionOwnerAccount() {
     );
     check(loginRes, {
       'owner login (env) 200': (r) => r.status === 200,
-      'owner login (env) token issued': (r) => (r.json('access_token') || '').length > 10,
+      'owner login (env) token issued': (r) => (r.json('accessToken') || '').length > 10,
     }) || fail(`Owner login failed for ${existingEmail}: ${loginRes.status} ${loginRes.body}`);
 
     return {
       email: existingEmail,
       password,
-      accessToken: loginRes.json('access_token'),
-      refreshToken: loginRes.json('refresh_token'),
+      accessToken: loginRes.json('accessToken'),
+      refreshToken: loginRes.json('refreshToken'),
     };
   }
 
@@ -127,14 +127,14 @@ export function provisionOwnerAccount() {
   );
   check(loginRes, {
     'owner login 200': (r) => r.status === 200,
-    'owner token present': (r) => (r.json('access_token') || '').length > 10,
+    'owner token present': (r) => (r.json('accessToken') || '').length > 10,
   }) || fail(`Owner login failed: ${loginRes.status} ${loginRes.body}`);
 
   return {
     email,
     phone,
     password,
-    accessToken: loginRes.json('access_token'),
-    refreshToken: loginRes.json('refresh_token'),
+    accessToken: loginRes.json('accessToken'),
+    refreshToken: loginRes.json('refreshToken'),
   };
 }

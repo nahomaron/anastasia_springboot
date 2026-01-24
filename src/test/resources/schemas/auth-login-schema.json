@@ -2,18 +2,37 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "AuthenticationResponse",
   "type": "object",
-  "required": ["user_id","access_token", "refresh_token"],
+  "required": ["userId","accessToken", "refreshToken", "user"],
   "properties": {
-    "user_id": {
-      "minLength": 10
-    },
-    "access_token": {
+    "userId": {
       "type": "string",
       "minLength": 10
     },
-    "refresh_token": {
+    "accessToken": {
       "type": "string",
       "minLength": 10
+    },
+    "refreshToken": {
+      "type": "string",
+      "minLength": 10
+    },
+    "user": {
+      "type": "object",
+      "required": ["id", "email", "fullName"],
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "fullName": { "type": "string" },
+        "tenantId": { "type": ["string", "null"] },
+        "roles": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "permissions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
     }
   },
   "additionalProperties": false
