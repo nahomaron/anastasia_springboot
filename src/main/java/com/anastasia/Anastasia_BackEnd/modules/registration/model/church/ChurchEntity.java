@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.church;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
@@ -37,7 +38,10 @@ public class ChurchEntity {
     private String churchName;
 
     private String prefix;
-    private String profilePicture;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "avatar_id", referencedColumnName = "id")
+    private AvatarEntity profilePicture;
 
     @Embedded
     private Address address;
@@ -58,6 +62,8 @@ public class ChurchEntity {
     private boolean usesOurServices;
 
     private String gpsLocation;
+
+    private String website;
 
     private String instagram;
 

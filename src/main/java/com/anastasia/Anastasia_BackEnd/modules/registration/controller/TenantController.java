@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVe
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.ResendOtpRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
@@ -42,8 +43,13 @@ public class TenantController {
         if(tenantDTO.getPassword() != null && !tenantDTO.isPasswordMatch()){
             return ResponseEntity.badRequest().body("Password do not match");
         }
-        tenantService.subscribeTenant(tenantDTO);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        TenantEntity tenant = tenantService.subscribeTenant(tenantDTO);
+        Long churchId = tenant.getChurch() != null ? tenant.getChurch().getChurchId() : null;
+        TenantSubscriptionResponse response = TenantSubscriptionResponse.builder()
+                .tenantId(tenant.getId())
+                .churchId(churchId)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     /**

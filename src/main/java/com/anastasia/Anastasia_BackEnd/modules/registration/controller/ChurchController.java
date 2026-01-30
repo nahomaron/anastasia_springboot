@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchService;
 import jakarta.validation.Valid;
@@ -33,19 +34,22 @@ public class ChurchController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ChurchDTO>> getChurches(Pageable pageable){
-        Page<ChurchDTO> churches = churchService.findAll(pageable);
+    public ResponseEntity<Page<ChurchResponse>> getChurches(
+            Pageable pageable,
+            @RequestParam(value = "q", required = false) String query
+    ){
+        Page<ChurchResponse> churches = churchService.findAll(pageable, query);
         return new ResponseEntity<>(churches, HttpStatus.OK);
     }
 
-    @GetMapping("/{churchId}")
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
-    public ResponseEntity<ChurchDTO> findChurch(@PathVariable Long churchId){
+    @GetMapping("/{churchId}/profile")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'ADMIN')")
+    public ResponseEntity<ChurchResponse> findChurch(@PathVariable Long churchId){
         Optional<ChurchEntity> foundChurch = churchService.findOne(churchId);
 
         return foundChurch.map(churchEntity -> {
-            ChurchDTO churchDTO = churchService.convertToDTO(churchEntity);
-            return new ResponseEntity<>(churchDTO, HttpStatus.OK);
+            ChurchResponse churchResponse = churchService.convertToResponse(churchEntity);
+            return new ResponseEntity<>(churchResponse, HttpStatus.OK);
         }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

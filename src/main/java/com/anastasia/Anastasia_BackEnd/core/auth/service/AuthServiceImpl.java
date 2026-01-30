@@ -329,11 +329,17 @@ public class AuthServiceImpl implements AuthService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
+        Long churchId = null;
+        if (user.getTenant() != null && user.getTenant().getChurch() != null) {
+            churchId = user.getTenant().getChurch().getChurchId();
+        }
+
         return AuthenticatedUserResponse.builder()
                 .id(user.getUuid())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .tenantId(user.getTenantId())
+                .churchId(churchId)
                 .roles(roleNames)
                 .permissions(permissionKeys)
                 .build();
@@ -344,7 +350,7 @@ public class AuthServiceImpl implements AuthService {
         var newToken = generateAndSaveActivationToken(user);
 
         // Define the activation URL for the frontend application
-        String activationUrl = "http://localhost:3000/auth/activate";
+        String activationUrl = "http://localhost:4200/auth/activate";
 
         // Prepare the properties map for the email template
         Map<String, Object> templateProperties = new HashMap<>();

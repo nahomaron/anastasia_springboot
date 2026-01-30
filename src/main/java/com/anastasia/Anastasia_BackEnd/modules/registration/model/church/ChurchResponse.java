@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.church;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -13,9 +13,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChurchDTO {
+public class ChurchResponse {
+
+    private Long churchId;
+
+    private String churchNumber;
 
     private String prefix;
+
+    private AvatarDTO profilePicture;
 
     @NotBlank(message = "Church name is required ex. St. Mary")
     private String churchName;
@@ -39,13 +45,10 @@ public class ChurchDTO {
 
     private String gpsLocation;
 
-    private String instagram;
-
     private String website;
+
+    private String instagram;
     private String youtube;
     private String facebook;
-
-    private AvatarDTO profilePicture;
-    
 
 }

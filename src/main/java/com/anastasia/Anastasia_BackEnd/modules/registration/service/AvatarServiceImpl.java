@@ -83,5 +83,4 @@ public class AvatarServiceImpl implements AvatarService{
         String tenantKey = String.valueOf(TenantContext.getTenantId());
         return tenantKey + ":" + avatarType.name() + ":" + ownerId;
     }
-
 }

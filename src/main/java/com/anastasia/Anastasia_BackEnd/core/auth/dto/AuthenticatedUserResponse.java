@@ -17,6 +17,7 @@ public class AuthenticatedUserResponse {
     private String email;
     private String fullName;
     private UUID tenantId;
+    private Long churchId;
     private Set<String> roles;
     private Set<String> permissions;
 }

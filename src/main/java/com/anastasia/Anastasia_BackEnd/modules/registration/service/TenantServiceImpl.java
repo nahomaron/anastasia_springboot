@@ -2,8 +2,13 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -11,6 +16,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
+import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +40,15 @@ import java.util.UUID;
 public class TenantServiceImpl implements TenantService {
 
     private final TenantRepository tenantRepository;
+    private final ChurchRepository churchRepository;
     private final UserRepository userRepository;
     private final TenantMapper tenantMapper;
+    private final ChurchMapper churchMapper;
     private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final PhoneVerificationService phoneVerificationService;   // NEW
+    private final SecurityUtils securityUtils;
 
     @Override
     public TenantEntity convertTenantToEntity(TenantDTO tenantDTO) {
@@ -59,7 +68,7 @@ public class TenantServiceImpl implements TenantService {
     })
     @Transactional
     @Override
-    public void subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
+    public TenantEntity subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
 
         // 1. ADD DUPLICATE PHONE NUMBER CHECK
         if (tenantRepository.existsByPhoneNumber(tenantDTO.getPhoneNumber())) {
@@ -81,8 +90,30 @@ public class TenantServiceImpl implements TenantService {
 
         TenantEntity savedTenant = tenantRepository.save(tenantEntity);
 
+        if (tenantDTO.getTenantType() == TenantType.CHURCH) {
+            if (tenantDTO.getChurch() == null) {
+                throw new IllegalArgumentException("Church details are required for church tenants.");
+            }
+
+            ChurchEntity churchEntity = churchMapper.churchDTOToEntity(tenantDTO.getChurch());
+            churchEntity.setTenant(savedTenant);
+
+            if (churchEntity.getProfilePicture() != null) {
+                churchEntity.getProfilePicture().setAvatarType(AvatarType.CHURCH);
+                churchEntity.getProfilePicture().setOwnerId(savedTenant.getId());
+            }
+
+            churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchName(), 5));
+            ChurchEntity savedChurch = churchRepository.save(churchEntity);
+            savedTenant.assignChurch(savedChurch);
+            savedTenant = tenantRepository.save(savedTenant);
+        }
+
         Role ownerRole = roleRepository.findByRoleName("OWNER")
                 .orElseThrow(() -> new RuntimeException("Owner role not found"));
+
+        Role adminRole = roleRepository.findByRoleName("ADMIN")
+                .orElseThrow(() -> new RuntimeException("Admin role not found"));
 
 
         UserEntity adminUser = UserEntity.builder()
@@ -90,14 +121,15 @@ public class TenantServiceImpl implements TenantService {
                 .email(tenantDTO.getEmail())
                 .password(tenantDTO.getPassword())
                 .tenant(savedTenant)
-                .roles(new HashSet<>(Set.of(ownerRole)))
+                .roles(new HashSet<>(Set.of(ownerRole, adminRole)))
                 .userType(UserType.TENANT)
                 .build();
 
         authService.createUser(adminUser);
 
         // Send OTP after account creation
-        phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());
+        // phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());
+        return savedTenant;
     }
 
     @Caching(evict = {
@@ -188,6 +220,28 @@ public class TenantServiceImpl implements TenantService {
         }
         );
 
+    }
+
+    private String generateUniqueChurchNumber(String churchName, int length) {
+        String baseLetter = "CH";
+
+        if (churchName != null) {
+            String trimmed = churchName.trim();
+            if (trimmed.length() >= 2) {
+                if (trimmed.startsWith("st.") && trimmed.length() >= 5) {
+                    baseLetter = trimmed.substring(3, 5).toUpperCase();
+                } else {
+                    baseLetter = trimmed.substring(0, 2).toUpperCase();
+                }
+            }
+        }
+
+        String churchNumber;
+        do {
+            churchNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
+        } while (churchRepository.existsByChurchNumber(churchNumber));
+
+        return churchNumber;
     }
 
 }

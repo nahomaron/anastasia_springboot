@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.factories;
 
 import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
@@ -21,6 +22,13 @@ public final class TenantDataFactory {
 
     /** Generates a valid tenant (church type, monthly plan) */
     public static TenantDTO newValidTenant() {
+        ChurchDTO church = ChurchDTO.builder()
+                .churchName("St. " + DataGenerator.randomName() + " Church")
+                .diocese("Addis Ababa")
+                .email("church_" + UUID.randomUUID() + "@mail.com")
+                .phone("+1408777" + (1000 + (int)(Math.random() * 8999)))
+                .build();
+
         return TenantDTO.builder()
                 .tenantType(TenantType.CHURCH)
                 .subscriptionPlan(SubscriptionPlan.MONTHLY)
@@ -29,6 +37,7 @@ public final class TenantDataFactory {
                 .phoneNumber("+1408555" + (1000 + (int)(Math.random() * 8999)))
                 .password(DEFAULT_PASSWORD)
                 .confirmPassword(DEFAULT_PASSWORD)
+                .church(church)
                 .build();
     }
 

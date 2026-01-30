@@ -2,8 +2,10 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -43,6 +45,11 @@ public class ChurchServiceImpl implements ChurchService{
             entity.setTenant(tenant);
         }
 
+        if (entity.getProfilePicture() != null && entity.getTenant() != null) {
+            entity.getProfilePicture().setAvatarType(AvatarType.CHURCH);
+            entity.getProfilePicture().setOwnerId(entity.getTenant().getId());
+        }
+
         return entity;
     }
 
@@ -51,6 +58,10 @@ public class ChurchServiceImpl implements ChurchService{
         return churchMapper.churchEntityToDTO(churchEntity);
     }
 
+    @Override
+    public ChurchResponse convertToResponse(ChurchEntity churchEntity) {
+        return churchMapper.churchEntityToResponse(churchEntity);
+    }
 
 //    @Caching(
 //            put = {@CachePut(value = "churches",
@@ -91,9 +102,14 @@ public class ChurchServiceImpl implements ChurchService{
 
 //    @Cacheable(value = "churches_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<ChurchDTO> findAll(Pageable pageable) {
-        Page<ChurchEntity> churches = churchRepository.findAll(pageable);
-        return churches.map(churchMapper::churchEntityToDTO);
+    public Page<ChurchResponse> findAll(Pageable pageable, String query) {
+        Page<ChurchEntity> churches;
+        if (query == null || query.isBlank()) {
+            churches = churchRepository.findAll(pageable);
+        } else {
+            churches = churchRepository.search(query.trim(), pageable);
+        }
+        return churches.map(churchMapper::churchEntityToResponse);
     }
 
 //    @Cacheable(value = "churches", keyGenerator = "tenantAwareKeyGenerator")

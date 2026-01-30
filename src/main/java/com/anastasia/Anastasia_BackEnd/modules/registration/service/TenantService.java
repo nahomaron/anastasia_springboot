@@ -19,7 +19,7 @@ public interface TenantService {
 
     TenantDTO convertTenantToDTO(TenantEntity tenantEntity);
 
-    void subscribeTenant(TenantDTO tenantDTO) throws MessagingException;
+    TenantEntity subscribeTenant(TenantDTO tenantDTO) throws MessagingException;
 
     Page<TenantEntity> findAll(Pageable pageable);
 

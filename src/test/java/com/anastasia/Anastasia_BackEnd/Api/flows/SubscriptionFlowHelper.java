@@ -174,6 +174,7 @@ public final class SubscriptionFlowHelper {
                 .phoneNumber(source.getPhoneNumber())
                 .password(source.getPassword())
                 .confirmPassword(source.getConfirmPassword())
+                .church(source.getChurch())
                 .build();
     }
 

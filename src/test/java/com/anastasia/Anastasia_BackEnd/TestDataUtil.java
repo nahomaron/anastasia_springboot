@@ -15,6 +15,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
@@ -174,6 +175,13 @@ public class TestDataUtil {
     }
 
     public static TenantDTO createTestTenantDTO(){
+        ChurchDTO church = ChurchDTO.builder()
+                .churchName("St. Mary Church")
+                .diocese("Addis Ababa")
+                .email(uniqueEmail("church", "example.com"))
+                .phone("+1555" + randomDigits(7))
+                .build();
+
         return TenantDTO.builder()
                 .tenantType(TenantType.CHURCH) // or PRIEST
                 .ownerName("St. Mary Church")
@@ -182,6 +190,7 @@ public class TestDataUtil {
                 .password(TEST_PASSWORD)
                 .confirmPassword(TEST_PASSWORD)
                 .email(uniqueEmail("tenant.owner", "example.com"))
+                .church(church)
                 .build();
     }
 

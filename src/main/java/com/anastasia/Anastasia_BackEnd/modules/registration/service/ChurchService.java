@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,9 @@ public interface ChurchService {
 
     ChurchDTO convertToDTO(ChurchEntity churchEntity);
 
-    Page<ChurchDTO> findAll(Pageable pageable);
+    ChurchResponse convertToResponse(ChurchEntity churchEntity);
+
+    Page<ChurchResponse> findAll(Pageable pageable, String query);
 
     boolean exists(Long churchId);
 

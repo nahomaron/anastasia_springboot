@@ -3,15 +3,19 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantServiceImpl;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
+import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,12 +39,15 @@ import static org.mockito.Mockito.*;
 public class TenantServiceUnitTest {
 
     @Mock private TenantRepository tenantRepository;
+    @Mock private ChurchRepository churchRepository;
     @Mock private UserRepository userRepository;
     @Mock private TenantMapper tenantMapper;
+    @Mock private ChurchMapper churchMapper;
     @Mock private AuthService authService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private RoleRepository roleRepository;
     @Mock private PhoneVerificationService phoneVerificationService;
+    @Mock private SecurityUtils securityUtils;
 
     @InjectMocks
     private TenantServiceImpl tenantService;
@@ -88,17 +95,19 @@ public class TenantServiceUnitTest {
 
         TenantEntity tenantEntity = TestDataUtil.createTestTenantEntity();
         when(tenantRepository.save(any(TenantEntity.class))).thenReturn(tenantEntity);
+        when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("ST12345");
+        when(churchRepository.existsByChurchNumber(anyString())).thenReturn(false);
+        ChurchEntity churchEntity = TestDataUtil.createTestChurchEntity(tenantEntity);
+        when(churchMapper.churchDTOToEntity(any())).thenReturn(churchEntity);
+        when(churchRepository.save(any(ChurchEntity.class))).thenReturn(churchEntity);
 
         Role ownerRole = TestDataUtil.createTestOwnerRole(tenantEntity);
         when(roleRepository.findByRoleName("OWNER")).thenReturn(Optional.of(ownerRole));
 
-        doNothing().when(phoneVerificationService).startVerification(anyString());
-
         tenantService.subscribeTenant(dto);
 
-        verify(tenantRepository, times(1)).save(any(TenantEntity.class));
+        verify(tenantRepository, times(2)).save(any(TenantEntity.class));
         verify(authService, times(1)).createUser(any(UserEntity.class));
-        verify(phoneVerificationService, times(1)).startVerification(eq(dto.getPhoneNumber()));
 
         // Optionally, verify no other interactions if strict mocks are desired
 //         verifyNoMoreInteractions(tenantRepository, roleRepository, authService, phoneVerificationService);
@@ -157,4 +166,3 @@ public class TenantServiceUnitTest {
         assertThrows(SecurityException.class, () -> tenantService.unsubscribeTenant(tenantId));
     }
 }
-

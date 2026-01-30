@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -50,12 +51,17 @@ class ChurchServiceUnitTest {
     void testFindAllChurches() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<ChurchEntity> entityPage = new PageImpl<>(List.of(church));
-        ChurchDTO dto = TestDataUtil.createTestChurchDTO();
+        ChurchResponse dto = ChurchResponse.builder()
+                .churchName(church.getChurchName())
+                .diocese(church.getDiocese())
+                .email(church.getEmail())
+                .phone(church.getPhone())
+                .build();
 
         when(churchRepository.findAll(pageable)).thenReturn(entityPage);
-        when(churchMapper.churchEntityToDTO(church)).thenReturn(dto);
+        when(churchMapper.churchEntityToResponse(church)).thenReturn(dto);
 
-        Page<ChurchDTO> result = churchService.findAll(pageable);
+        Page<ChurchResponse> result = churchService.findAll(pageable, null);
 
         assertThat(result.getContent()).containsExactly(dto);
     }

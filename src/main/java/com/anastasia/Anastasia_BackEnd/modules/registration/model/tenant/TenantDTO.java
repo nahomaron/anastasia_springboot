@@ -1,10 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 
 @Data
 @NoArgsConstructor
@@ -37,6 +39,9 @@ public class TenantDTO {
 
     @NotBlank(message = "Confirm Password is required")
     private String confirmPassword;
+
+    @Valid
+    private ChurchDTO church;
 
 
     public boolean isPasswordMatch() {
