@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,12 +95,16 @@ public class MemberSeeder {
                         .maritalStatus(faker.options().option("Single", "Married", "Divorced", "Widowed"))
                         .numberOfChildren(faker.number().numberBetween(0, 4))
                         .firstLanguage(faker.nation().language())
+                        .termsAccepted(true)
+                        .termsVersion("seed-v1")
+                        .termsAcceptedAt(Instant.now())
                         .address(Address.builder()
+                                .addressLine1(faker.address().streetAddress())
+                                .addressLine2(faker.address().secondaryAddress())
                                 .country(faker.country().name())
-                                .province(faker.address().state())
                                 .city(faker.address().city())
-                                .street(faker.address().streetAddress())
-                                .zipcode(faker.address().zipCode())
+                                .stateProvince(faker.address().state())
+                                .postalCode(faker.address().zipCode())
                                 .build())
                         .secondLanguage(faker.options().option("English", "Arabic", "Amharic", null))
                         .profession(faker.company().profession())

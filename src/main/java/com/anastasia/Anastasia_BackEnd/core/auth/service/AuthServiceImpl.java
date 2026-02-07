@@ -2,9 +2,10 @@ package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
-import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticatedUserResponse;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthSessionResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
@@ -47,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenRepository tokenRepository;
     private final EmailNotificationService emailNotificationService;
     private final CacheWarmupService cacheWarmupService;
+    private final RoleRepository roleRepository;
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
@@ -59,9 +61,17 @@ public class AuthServiceImpl implements AuthService {
         try {
 
             userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
-            userEntity.setUserType(UserType.GUEST);
+            if (userEntity.getUserType() == null) {
+                userEntity.setUserType(UserType.GUEST);
+            }
 
+            if (userEntity.getRoles() == null || userEntity.getRoles().isEmpty()) {
+                Role userRole = roleRepository.findByRoleName("USER")
+                        .orElseThrow(() -> new RuntimeException("User role not found"));
+                userEntity.setRoles(Set.of(userRole));
+            }
             UserEntity savedUser = userRepository.save(userEntity);
+
 
             // Only send email if save was successful and no exceptions occurred
             sendValidationEmail(savedUser);
@@ -121,7 +131,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
-        AuthenticatedUserResponse authenticatedUser = buildAuthenticatedUserResponse(user);
+        AuthSessionResponse session = buildAuthSessionResponse(user);
 
         var jwtToken = jwtUtil.generateAccessToken(userPrincipal);
         var refreshToken = jwtUtil.generateRefreshToken(userPrincipal);
@@ -139,10 +149,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return AuthenticationResponse.builder()
-                .userId(user.getUuid())
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
-                .user(authenticatedUser)
+                .session(session)
                 .build();
     }
 
@@ -312,7 +321,7 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.saveAll(validUserTokens);
     }
 
-    private AuthenticatedUserResponse buildAuthenticatedUserResponse(UserEntity user) {
+    private AuthSessionResponse buildAuthSessionResponse(UserEntity user) {
         Set<String> roleNames = user.getRoles().stream()
                 .map(Role::getRoleName)
                 .filter(Objects::nonNull)
@@ -334,14 +343,21 @@ public class AuthServiceImpl implements AuthService {
             churchId = user.getTenant().getChurch().getChurchId();
         }
 
-        return AuthenticatedUserResponse.builder()
-                .id(user.getUuid())
+        String membershipStatus = null;
+        if (user.getMembership() != null) {
+            membershipStatus = user.getMembership().getStatus();
+        }
+
+        return AuthSessionResponse.builder()
+                .userId(user.getUuid())
                 .email(user.getEmail())
-                .fullName(user.getFullName())
+                .username(user.getFullName())
                 .tenantId(user.getTenantId())
                 .churchId(churchId)
                 .roles(roleNames)
                 .permissions(permissionKeys)
+                .membershipId(user.getMembershipId())
+                .membershipStatus(membershipStatus)
                 .build();
     }
 

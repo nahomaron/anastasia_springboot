@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -54,6 +55,15 @@ public class Adult_MemberEntity extends BaseMember {
 
     @Column(nullable = false)
     private boolean approvedByPriest;
+
+    @Column(name = "terms_accepted", nullable = false)
+    private boolean termsAccepted;
+
+    @Column(name = "terms_version", nullable = false)
+    private String termsVersion;
+
+    @Column(name = "terms_accepted_at", nullable = false)
+    private Instant termsAcceptedAt;
 
     private String eritreaContact;
 

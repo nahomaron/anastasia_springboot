@@ -5,16 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class AuthenticationResponse {
 
-    private UUID userId;
     private String accessToken;
     private String refreshToken;
-    private AuthenticatedUserResponse user;
+    private AuthSessionResponse session;
 }

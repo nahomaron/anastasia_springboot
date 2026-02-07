@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.outbox;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -50,8 +51,8 @@ public class OutboxPublisher {
         entity.setAggregateId(aggregateId);
         entity.setTenantId(tenantId);
         entity.setType(eventType.name());
-        entity.setPayload(toJson(payload));
-        entity.setHeaders(toJson(buildHeaders(eventType, tenantId)));
+        entity.setPayload(toJsonNode(payload));
+        entity.setHeaders(toJsonNode(buildHeaders(eventType, tenantId)));
         entity.setCreatedAt(Instant.now());
         entity.setPublished(false);
 
@@ -68,9 +69,9 @@ public class OutboxPublisher {
         return headers;
     }
 
-    private String toJson(Object data) {
+    private JsonNode toJsonNode(Object data) {
         try {
-            return mapper.writeValueAsString(data);
+            return mapper.valueToTree(data);
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize outbox payload", e);
         }

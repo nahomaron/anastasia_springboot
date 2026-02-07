@@ -203,26 +203,26 @@ class MemberSpecificationTest {
 
         Path<Object> addressPath = mock(Path.class);
         Path<Object> cityPath = mock(Path.class);
-        Path<Object> zipcodePath = mock(Path.class);
+        Path<Object> postalCodePath = mock(Path.class);
 
         when(root.get("address")).thenReturn(addressPath);
         when(addressPath.get("city")).thenReturn(cityPath);
-        when(addressPath.get("zipcode")).thenReturn(zipcodePath);
+        when(addressPath.get("postalCode")).thenReturn(postalCodePath);
 
         Predicate cityPredicate = mock(Predicate.class);
-        Predicate zipcodePredicate = mock(Predicate.class);
+        Predicate postalCodePredicate = mock(Predicate.class);
         Predicate combined = mock(Predicate.class);
 
         when(cb.equal(cityPath, "Adama")).thenReturn(cityPredicate);
-        when(cb.equal(zipcodePath, "1234")).thenReturn(zipcodePredicate);
-        when(cb.and(cityPredicate, zipcodePredicate)).thenReturn(combined);
+        when(cb.equal(postalCodePath, "1234")).thenReturn(postalCodePredicate);
+        when(cb.and(cityPredicate, postalCodePredicate)).thenReturn(combined);
 
         Address address = Address.builder()
                 .city("Adama")
                 .country("")
-                .province(null)
-                .street("")
-                .zipcode("1234")
+                .stateProvince(null)
+                .addressLine1("")
+                .postalCode("1234")
                 .build();
 
         Specification<Adult_MemberEntity> spec = MemberSpecifications.filterByAddress(address);

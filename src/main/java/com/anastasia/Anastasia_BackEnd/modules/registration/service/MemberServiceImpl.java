@@ -179,6 +179,11 @@ public class MemberServiceImpl implements MemberService {
             Optional.ofNullable(request.getSpouseIdNumber()).ifPresent(memberEntity::setSpouseIdNumber);
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
+            Optional.ofNullable(request.getTermsVersion()).ifPresent(memberEntity::setTermsVersion);
+            Optional.ofNullable(request.getTermsAcceptedAt()).ifPresent(memberEntity::setTermsAcceptedAt);
+            if (request.isTermsAccepted()) {
+                memberEntity.setTermsAccepted(true);
+            }
 
             memberRepository.save(memberEntity);
         });

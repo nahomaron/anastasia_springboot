@@ -24,6 +24,7 @@ public final class TenantDataFactory {
     public static TenantDTO newValidTenant() {
         ChurchDTO church = ChurchDTO.builder()
                 .churchName("St. " + DataGenerator.randomName() + " Church")
+                .churchNameTigrinya("ቤተ ክርስቲያን " + DataGenerator.randomName() + " ቤተ ክርስቲያን")
                 .diocese("Addis Ababa")
                 .email("church_" + UUID.randomUUID() + "@mail.com")
                 .phone("+1408777" + (1000 + (int)(Math.random() * 8999)))

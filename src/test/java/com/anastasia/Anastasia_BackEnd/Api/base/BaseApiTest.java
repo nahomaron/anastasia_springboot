@@ -255,7 +255,9 @@ public class BaseApiTest {
                 .signUpAndActivateAndLogin(email, password);
 
         cachedAuth = loginResponse;
-        cachedUserId = loginResponse.getUserId();
+        cachedUserId = loginResponse.getSession() != null
+                ? loginResponse.getSession().getUserId()
+                : null;
         cachedAccessToken = loginResponse.getAccessToken();
         cachedRefreshToken = loginResponse.getRefreshToken();
 

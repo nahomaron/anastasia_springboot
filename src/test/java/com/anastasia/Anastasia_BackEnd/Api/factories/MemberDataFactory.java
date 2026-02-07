@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarD
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 public final class MemberDataFactory {
@@ -44,7 +45,17 @@ public final class MemberDataFactory {
                 .profession("Software Engineer")
                 .levelOfEducation("Masters")
                 .fatherOfConfession("Abba Yohannes")
-                .address(new Address("123 Church St", "Ithaca", "NY", "USA", "14850"))
+                .termsAccepted(true)
+                .termsVersion("test-v1")
+                .termsAcceptedAt(Instant.now())
+                .address(Address.builder()
+                        .addressLine1("123 Church St")
+                        .addressLine2("Suite 12")
+                        .city("Ithaca")
+                        .stateProvince("NY")
+                        .country("USA")
+                        .postalCode("14850")
+                        .build())
                 .build();
     }
 

@@ -25,6 +25,7 @@ public interface ChurchRepository extends JpaRepository<ChurchEntity, Long> {
     @Query("""
             SELECT c FROM ChurchEntity c
             WHERE LOWER(COALESCE(c.churchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+               OR LOWER(COALESCE(c.churchNameTigrinya, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                OR LOWER(COALESCE(c.churchNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                OR LOWER(COALESCE(c.diocese, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                OR LOWER(COALESCE(c.denomination, '')) LIKE LOWER(CONCAT('%', :q, '%'))

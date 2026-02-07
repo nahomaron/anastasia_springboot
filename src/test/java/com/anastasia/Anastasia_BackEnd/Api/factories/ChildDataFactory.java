@@ -43,11 +43,12 @@ public final class ChildDataFactory {
                 .levelOfEducation("Grade 3")
                 .fatherOfConfession("Abba Tekle")
                 .address(Address.builder()
-                        .street("123 Joy Ave")
+                        .addressLine1("123 Joy Ave")
+                        .addressLine2("Unit 4")
                         .city("Silver Spring")
-                        .province("MD")
+                        .stateProvince("MD")
                         .country("USA")
-                        .zipcode("20910")
+                        .postalCode("20910")
                         .build())
                 .build();
     }

@@ -150,9 +150,11 @@ services:
     environment:
       - SERVICES=s3                      # Start only S3 (or leave blank for all)
       - DEBUG=1
+      - AWS_DEFAULT_REGION=us-east-1
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "./volume:/var/lib/localstack"
+      - "./localstack/init:/etc/localstack/init/ready.d"
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
       - anastasia-net

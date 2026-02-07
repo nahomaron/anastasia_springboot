@@ -42,6 +42,9 @@ public class MemberMapper {
                 .fatherOfConfession(adultMemberEntity.getFatherOfConfession())
                 .spouseIdNumber(adultMemberEntity.getSpouseIdNumber())
                 .address(adultMemberEntity.getAddress())
+                .termsAccepted(adultMemberEntity.isTermsAccepted())
+                .termsVersion(adultMemberEntity.getTermsVersion())
+                .termsAcceptedAt(adultMemberEntity.getTermsAcceptedAt())
                 .build();
     }
 
@@ -80,6 +83,9 @@ public class MemberMapper {
                 .fatherOfConfession(dto.getFatherOfConfession())
                 .spouseIdNumber(dto.getSpouseIdNumber())
                 .address(dto.getAddress())
+                .termsAccepted(dto.isTermsAccepted())
+                .termsVersion(dto.getTermsVersion())
+                .termsAcceptedAt(dto.getTermsAcceptedAt())
                 // .status(null) // optionally set default value
                 .build();
     }

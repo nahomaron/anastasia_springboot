@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEve
 import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(name = "outbox.relay.enabled", havingValue = "true", matchIfMissing = false)
 public class OutboxRelayJob {
     @PersistenceContext private EntityManager em;
     private final DomainEventPublisher publisher;
@@ -37,7 +39,7 @@ public class OutboxRelayJob {
 
         for (var e : batch) {
             try {
-                JsonNode payload = mapper.readTree(e.getPayload());
+                JsonNode payload = e.getPayload();
                 PaymentEventType type = PaymentEventType.valueOf(e.getType());
                 publisher.publish(type, e.getTenantId(), e.getAggregateId(), payload);
                 e.setPublished(true);

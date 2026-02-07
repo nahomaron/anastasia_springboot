@@ -10,6 +10,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.net.URI;
@@ -35,7 +36,10 @@ public class S3Config {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(awsAccessKey, awsSecretKey);
         S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(credentials));
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)
+                        .build());
 
         if (StringUtils.hasText(s3Endpoint)) {
             builder = builder.endpointOverride(URI.create(s3Endpoint));
@@ -49,7 +53,10 @@ public class S3Config {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(awsAccessKey, awsSecretKey);
         S3Presigner.Builder builder = S3Presigner.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(credentials));
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)
+                        .build());
 
         if (StringUtils.hasText(s3Endpoint)) {
             builder = builder.endpointOverride(URI.create(s3Endpoint));

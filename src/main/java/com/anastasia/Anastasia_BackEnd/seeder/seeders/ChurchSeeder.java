@@ -56,6 +56,7 @@ public class ChurchSeeder {
                         .tenant(tenant)
                         .prefix(prefix)
                         .churchName(churchName)
+                        .churchNameTigrinya(churchName + "-T")
                         .churchNumber("A" + faker.number().numberBetween(10000, 99999))
                         .email(faker.internet().emailAddress())
                         .phone(faker.phoneNumber().phoneNumber())
@@ -68,11 +69,12 @@ public class ChurchSeeder {
                         .youtube("https://youtube.com/" + faker.internet().username().replaceAll("[^A-Za-z0-9]", ""))
                         .facebook("https://facebook.com/" + faker.internet().username().replaceAll("[^A-Za-z0-9.]", ""))
                         .address(Address.builder()
+                                .addressLine1(faker.address().streetAddress())
+                                .addressLine2(faker.address().secondaryAddress())
                                 .country(faker.country().name())
-                                .province(faker.address().state())
                                 .city(churchCity)
-                                .street(faker.address().streetAddress())
-                                .zipcode(faker.address().zipCode())
+                                .stateProvince(faker.address().state())
+                                .postalCode(faker.address().zipCode())
                                 .build())
                         .build();
 

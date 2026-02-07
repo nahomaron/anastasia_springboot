@@ -17,8 +17,11 @@ public class ChurchDTO {
 
     private String prefix;
 
-    @NotBlank(message = "Church name is required ex. St. Mary")
+    @NotBlank(message = "Church name is required")
     private String churchName;
+
+    @NotBlank(message = "Church name in tigrinya is required")
+    private String churchNameTigrinya;
 
     @NotBlank(message = "Diocese is required")
     private String diocese;

@@ -50,11 +50,12 @@ public class PriestSeeder {
 
 
                 Address address = Address.builder()
+                        .addressLine1(faker.address().streetAddress())
+                        .addressLine2(faker.address().secondaryAddress())
                         .city(faker.address().city())
                         .country(faker.address().country())
-                        .street(faker.address().streetAddress())
-                        .province(faker.address().state())
-                        .zipcode(faker.address().zipCode())
+                        .stateProvince(faker.address().state())
+                        .postalCode(faker.address().zipCode())
                         .build();
 
                 String password = SeederRandomUtils.generateSecurePassword(8, 12);

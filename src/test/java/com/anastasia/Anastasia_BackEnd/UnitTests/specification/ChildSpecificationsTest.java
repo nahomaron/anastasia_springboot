@@ -189,9 +189,9 @@ class ChildSpecificationsTest {
         Address address = Address.builder()
                 .city("Addis")
                 .country("Ethiopia")
-                .province("")
-                .street("")
-                .zipcode("")
+                .stateProvince("")
+                .addressLine1("")
+                .postalCode("")
                 .build();
 
         Specification<Child_MemberEntity> spec = ChildSpecifications.filterByAddress(address);

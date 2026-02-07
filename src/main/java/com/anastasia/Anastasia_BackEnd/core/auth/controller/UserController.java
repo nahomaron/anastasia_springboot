@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarD
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import jakarta.validation.Valid;
@@ -88,6 +89,12 @@ public class UserController {
         }).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'ADMIN', 'PRIEST')")
+    @GetMapping("/me/memberships")
+    public ResponseEntity<UserMembershipsResponse> getMyMemberships() {
+        return ResponseEntity.ok(userService.getCurrentUserMemberships());
     }
 
 

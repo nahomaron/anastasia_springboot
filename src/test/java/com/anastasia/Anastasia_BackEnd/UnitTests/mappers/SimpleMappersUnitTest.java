@@ -70,6 +70,7 @@ class SimpleMappersUnitTest {
     void churchMapper_shouldMapAddressAndContactDetails() {
         ChurchEntity entity = ChurchEntity.builder()
                 .churchName("St. Mary")
+                .churchNameTigrinya("ቤተ ክርስቲያን ቅዱስት ማርያም")
                 .diocese("Addis Diocese")
                 .email("church@example.com")
                 .phone("+251900000000")
@@ -77,11 +78,12 @@ class SimpleMappersUnitTest {
                 .description("Historic parish")
                 .usesOurServices(true)
                 .address(Address.builder()
-                        .street("123 Main")
+                        .addressLine1("123 Main")
+                        .addressLine2("Suite 1")
                         .city("Addis Ababa")
-                        .province("AA")
+                        .stateProvince("AA")
                         .country("Ethiopia")
-                        .zipcode("12345")
+                        .postalCode("12345")
                         .build())
                 .gpsLocation("9.03,38.74")
                 .instagram("instagram.com/stmary")
@@ -91,6 +93,7 @@ class SimpleMappersUnitTest {
 
         ChurchDTO dto = churchMapper.churchEntityToDTO(entity);
         assertThat(dto.getChurchName()).isEqualTo("St. Mary");
+        assertThat(dto.getChurchNameTigrinya()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
         assertThat(dto.getDiocese()).isEqualTo("Addis Diocese");
         assertThat(dto.getEmail()).isEqualTo("church@example.com");
         assertThat(dto.getAddress().getCity()).isEqualTo("Addis Ababa");
@@ -103,6 +106,7 @@ class SimpleMappersUnitTest {
 
         ChurchEntity mappedBack = churchMapper.churchDTOToEntity(dto);
         assertThat(mappedBack.getChurchName()).isEqualTo("St. Mary");
+        assertThat(mappedBack.getChurchNameTigrinya()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
         assertThat(mappedBack.getEmail()).isEqualTo("church@example.com");
         assertThat(mappedBack.getPhone()).isEqualTo("+251900000000");
         assertThat(mappedBack.getInstagram()).isEqualTo("instagram.com/stmary");
@@ -121,11 +125,12 @@ class SimpleMappersUnitTest {
                 .languages(Set.of("Amharic", "Geez"))
                 .levelOfEducation("Masters")
                 .address(Address.builder()
-                        .street("Church Rd")
+                        .addressLine1("Church Rd")
+                        .addressLine2("Hall A")
                         .city("Gondar")
-                        .province("Amhara")
+                        .stateProvince("Amhara")
                         .country("Ethiopia")
-                        .zipcode("98765")
+                        .postalCode("98765")
                         .build())
                 .password("Password1!")
                 .confirmPassword("Password1!")

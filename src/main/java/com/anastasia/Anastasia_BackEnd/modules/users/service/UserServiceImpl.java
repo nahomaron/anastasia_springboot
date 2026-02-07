@@ -14,6 +14,12 @@ import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.BaseMember;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.MembershipSummary;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -27,8 +33,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +52,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final AvatarRepository avatarRepository;
+    private final ChildRepository childRepository;
 
 
     @Override
@@ -236,6 +245,83 @@ public class UserServiceImpl implements UserService {
         avatar = avatarRepository.save(avatar);
         user.setProfileAvatar(avatar);
         userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public UserMembershipsResponse getCurrentUserMemberships() {
+        UUID userId = getCurrentUserId();
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        Adult_MemberEntity adultMembership = user.getMembership();
+        MembershipSummary selfMembership = null;
+        List<MembershipSummary> managedMemberships = new ArrayList<>();
+
+        if (adultMembership != null) {
+            selfMembership = toSummary(adultMembership, "SELF", true);
+
+            Long parentId = adultMembership.getId();
+            List<Child_MemberEntity> children = childRepository.findByFatherIdOrMotherId(parentId, parentId);
+            for (Child_MemberEntity child : children) {
+                boolean primaryGuardian = isPrimaryGuardian(child, parentId);
+                managedMemberships.add(toSummary(child, "CHILD", primaryGuardian));
+            }
+        }
+
+        return UserMembershipsResponse.builder()
+                .selfMembership(selfMembership)
+                .managedMemberships(managedMemberships)
+                .build();
+    }
+
+    private boolean isPrimaryGuardian(Child_MemberEntity child, Long parentId) {
+        if (child == null || parentId == null) {
+            return false;
+        }
+        if (child.getFather() != null && parentId.equals(child.getFather().getId())) {
+            return true;
+        }
+        return child.getMother() != null && parentId.equals(child.getMother().getId());
+    }
+
+    private MembershipSummary toSummary(BaseMember member, String relationshipToUser, boolean isPrimaryGuardian) {
+        if (member == null) {
+            return null;
+        }
+
+        String fullName = String.join(" ",
+                nullToEmpty(member.getFirstName()),
+                nullToEmpty(member.getFatherName()),
+                nullToEmpty(member.getGrandFatherName())
+        ).trim();
+
+        String churchName = member.getChurch() != null ? member.getChurch().getChurchName() : null;
+
+        return MembershipSummary.builder()
+                .memberId(member.getMembershipNumber())
+                .fullName(fullName.isBlank() ? null : fullName)
+                .relationshipToUser(relationshipToUser)
+                .status(mapMembershipStatus(member.getStatus()))
+                .churchName(churchName)
+                .isPrimaryGuardian(isPrimaryGuardian)
+                .build();
+    }
+
+    private String mapMembershipStatus(String status) {
+        if (status == null) {
+            return null;
+        }
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> "PENDING";
+            case "APPROVED", "ACTIVE" -> "ACTIVE";
+            case "NON_ACTIVE", "DECEASED" -> "TERMINATED";
+            default -> status.toUpperCase();
+        };
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
 }

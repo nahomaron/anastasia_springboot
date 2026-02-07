@@ -97,6 +97,7 @@ public class TenantServiceImpl implements TenantService {
 
             ChurchEntity churchEntity = churchMapper.churchDTOToEntity(tenantDTO.getChurch());
             churchEntity.setTenant(savedTenant);
+            churchEntity.setUsesOurServices(true);
 
             if (churchEntity.getProfilePicture() != null) {
                 churchEntity.getProfilePicture().setAvatarType(AvatarType.CHURCH);

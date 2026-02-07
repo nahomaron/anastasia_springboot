@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
@@ -77,17 +80,16 @@ public class Adult_MemberDTO {
     @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid phone number format")
     private String phone;
 
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid WhatsApp number format")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "Invalid WhatsApp number format")
     private String whatsApp;
 
    // @NotBlank(message = "Emergency contact number is required")
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid emergency contact number format")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "Invalid emergency contact number format")
     private String emergencyContactNumber;
 
-    @NotBlank(message = "Emergency contact relation is required")
     private String contactRelation;
 
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid Eritrea contact number format")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "Invalid Eritrea contact number format")
     private String eritreaContact;
 
     @NotBlank(message = "Marital status is required")
@@ -110,10 +112,24 @@ public class Adult_MemberDTO {
     @NotBlank(message = "Father of Confession is required")
     private String fatherOfConfession;
 
-
     private String spouseIdNumber;
 
     @Valid
     private Address address;
+
+    @JsonProperty("terms_accepted")
+    @JsonAlias("termsAccepted")
+    @AssertTrue(message = "Terms must be accepted")
+    private boolean termsAccepted;
+
+    @JsonProperty("terms_version")
+    @JsonAlias("termsVersion")
+    @NotBlank(message = "Terms version is required")
+    private String termsVersion;
+
+    @JsonProperty("terms_accepted_at")
+    @JsonAlias("termsAcceptedAt")
+    @NotNull(message = "Terms accepted timestamp is required")
+    private Instant termsAcceptedAt;
 
 }

@@ -19,6 +19,8 @@ public class ChurchResponse {
 
     private String churchNumber;
 
+    private String churchNameTigrinya;
+
     private String prefix;
 
     private AvatarDTO profilePicture;

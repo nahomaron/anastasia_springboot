@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,12 +51,16 @@ class MemberMapperUnitTest {
                 .levelOfEducation("Masters")
                 .fatherOfConfession("Father Abraham")
                 .spouseIdNumber("SP1234")
+                .termsAccepted(true)
+                .termsVersion("test-v1")
+                .termsAcceptedAt(Instant.now())
                 .address(Address.builder()
-                        .street("123 Main St")
+                        .addressLine1("123 Main St")
+                        .addressLine2("Unit 7")
                         .city("Addis")
-                        .province("AA")
+                        .stateProvince("AA")
                         .country("Ethiopia")
-                        .zipcode("12345")
+                        .postalCode("12345")
                         .build())
                 .build();
 
@@ -107,12 +112,16 @@ class MemberMapperUnitTest {
                 .levelOfEducation("Bachelors")
                 .fatherOfConfession("Father Yohannes")
                 .spouseIdNumber("SP9999")
+                .termsAccepted(true)
+                .termsVersion("test-v1")
+                .termsAcceptedAt(Instant.now())
                 .address(Address.builder()
-                        .street("456 Side Rd")
+                        .addressLine1("456 Side Rd")
+                        .addressLine2("Block C")
                         .city("Asmara")
-                        .province("Central")
+                        .stateProvince("Central")
                         .country("Eritrea")
-                        .zipcode("54321")
+                        .postalCode("54321")
                         .build())
                 .build();
 

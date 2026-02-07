@@ -37,6 +37,9 @@ public class ChurchEntity {
     @Column(nullable = false)
     private String churchName;
 
+    @Column(nullable = false)
+    private String churchNameTigrinya;
+
     private String prefix;
 
     @OneToOne(cascade = CascadeType.ALL)

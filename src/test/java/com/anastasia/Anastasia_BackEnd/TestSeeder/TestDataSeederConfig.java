@@ -62,6 +62,7 @@ public class TestDataSeederConfig {
                 .churchNumber("M1234")
                 .tenant(savedTenant)
                 .churchName("Test Church")
+                .churchNameTigrinya("ቤተ ክርስቲያን ሙከራ")
                 .diocese("Test Diocese")
                 .build();
 
@@ -97,4 +98,3 @@ public class TestDataSeederConfig {
 
 
 }
-

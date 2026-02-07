@@ -15,18 +15,20 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class Address {
 
-    @NotBlank(message = "Street is required")
-    private String street;
+    @NotBlank(message = "Address line 1 is required")
+    private String addressLine1;
+
+    private String addressLine2;
 
     @NotBlank(message = "City is required")
     private String city;
 
-    @NotBlank(message = "Province/State is required")
-    private String province;
+    @NotBlank(message = "State/Province is required")
+    private String stateProvince;
 
     @NotBlank(message = "Country is required")
     private String country;
 
     @Pattern(regexp = "^\\d{4,10}$", message = "Invalid postal code format")
-    private String zipcode;
+    private String postalCode;
 }

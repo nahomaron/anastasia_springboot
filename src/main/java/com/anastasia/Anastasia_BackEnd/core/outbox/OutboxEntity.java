@@ -1,7 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.core.outbox;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.Getter; import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -18,8 +21,12 @@ public class OutboxEntity {
     private String type;
     @Column(name = "user_email")
     private String userEmail;
-    @Column(columnDefinition="jsonb") private String payload;
-    @Column(columnDefinition="jsonb") private String headers;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private JsonNode payload;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private JsonNode headers;
     private Instant createdAt;
     private boolean published;
 }

@@ -101,14 +101,14 @@ public class MemberSpecifications {
             if (StringUtils.hasText(address.getCountry())) {
                 predicates.add(cb.equal(addressPath.get("country"), address.getCountry()));
             }
-            if (StringUtils.hasText(address.getZipcode())) {
-                predicates.add(cb.equal(addressPath.get("zipcode"), address.getZipcode()));
+            if (StringUtils.hasText(address.getPostalCode())) {
+                predicates.add(cb.equal(addressPath.get("postalCode"), address.getPostalCode()));
             }
-            if (StringUtils.hasText(address.getProvince())) {
-                predicates.add(cb.equal(addressPath.get("province"), address.getProvince()));
+            if (StringUtils.hasText(address.getStateProvince())) {
+                predicates.add(cb.equal(addressPath.get("stateProvince"), address.getStateProvince()));
             }
-            if (StringUtils.hasText(address.getStreet())) {
-                predicates.add(cb.equal(addressPath.get("street"), address.getStreet()));
+            if (StringUtils.hasText(address.getAddressLine1())) {
+                predicates.add(cb.equal(addressPath.get("addressLine1"), address.getAddressLine1()));
             }
 
             if (predicates.isEmpty()) {

@@ -48,6 +48,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body(message("Passwords do not match"));
         }
         UserEntity userEntity = userService.convertToEntity(userDTO);
+
         authService.createUser(userEntity);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(message("Account created successfully. Please check your email to activate your profile."));
