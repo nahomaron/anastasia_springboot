@@ -60,7 +60,12 @@ public class JwtUtil {
             claims.put("tenantId", userPrincipal.getTenantId().toString());
         }
         claims.put("roles", userPrincipal.getRoles().stream()
-                .map(role -> "ROLE_" + role.getRoleName())
+                .map(role -> {
+                    String roleName = role.getRoleName();
+                    return roleName != null && roleName.startsWith("ROLE_")
+                            ? roleName
+                            : "ROLE_" + roleName;
+                })
                 .collect(Collectors.toList()));
 
         return claims;

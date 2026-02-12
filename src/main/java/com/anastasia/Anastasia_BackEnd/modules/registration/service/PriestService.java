@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,6 +20,8 @@ public interface PriestService {
     Page<PriestEntity> findAllPriests(Pageable pageable);
 
     Optional<PriestEntity> findPriestById(Long priestId);
+
+    List<PriestEntity> findPriestsByChurchId(Long churchId);
 
     PriestEntity updatePriestDetails(Long priestId, PriestEntity priestEntity);
 

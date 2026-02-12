@@ -14,4 +14,5 @@ import java.util.UUID;
 public class TenantSubscriptionResponse {
     private UUID tenantId;
     private Long churchId;
+    private String churchNumber;
 }

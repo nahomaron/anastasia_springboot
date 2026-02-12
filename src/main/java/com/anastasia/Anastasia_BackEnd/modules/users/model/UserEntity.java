@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.users.model;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
@@ -62,6 +63,8 @@ public class UserEntity{
     private boolean accountLocked;
 
     private boolean verified;
+
+    private String priestNumber;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

@@ -48,6 +48,7 @@ public class TenantController {
         TenantSubscriptionResponse response = TenantSubscriptionResponse.builder()
                 .tenantId(tenant.getId())
                 .churchId(churchId)
+                .churchNumber(tenant.getChurch() != null ? tenant.getChurch().getChurchNumber(): null)
                 .build();
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

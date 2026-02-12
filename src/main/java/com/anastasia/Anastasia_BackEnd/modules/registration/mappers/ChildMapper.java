@@ -1,8 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +41,53 @@ public class ChildMapper {
                 .secondLanguage(childMemberEntity.getSecondLanguage())
                 .levelOfEducation(childMemberEntity.getLevelOfEducation())
                 .fatherOfConfession(childMemberEntity.getFatherOfConfession())
+                .priestNumber(childMemberEntity.getPriestNumber())
                 .address(childMemberEntity.getAddress())
+                .father(buildParentSummary(childMemberEntity.getFather()))
+                .mother(buildParentSummary(childMemberEntity.getMother()))
+                .build();
+    }
+
+    public Child_MemberResponse childEntityToResponse(Child_MemberEntity childMemberEntity) {
+        if (childMemberEntity == null) return null;
+
+        return Child_MemberResponse.builder()
+                .id(childMemberEntity.getId())
+                .tenantId(childMemberEntity.getTenantId())
+                .membershipNumber(childMemberEntity.getMembershipNumber())
+                .churchNumber(childMemberEntity.getChurchNumber())
+                .status(childMemberEntity.getStatus())
+                .deacon(childMemberEntity.isDeacon())
+                .avatar(mapAvatar(childMemberEntity.getAvatar()))
+                .title(childMemberEntity.getTitle())
+                .firstName(childMemberEntity.getFirstName())
+                .fatherName(childMemberEntity.getFatherName())
+                .grandFatherName(childMemberEntity.getGrandFatherName())
+                .motherName(childMemberEntity.getMotherName())
+                .mothersFather(childMemberEntity.getMothersFather())
+                .firstNameT(childMemberEntity.getFirstNameT())
+                .fatherNameT(childMemberEntity.getFatherNameT())
+                .grandFatherNameT(childMemberEntity.getGrandFatherNameT())
+                .motherFullNameT(childMemberEntity.getMotherFullNameT())
+                .gender(childMemberEntity.getGender())
+                .birthday(childMemberEntity.getBirthday())
+                .nationality(childMemberEntity.getNationality())
+                .placeOfBirth(childMemberEntity.getPlaceOfBirth())
+                .email(childMemberEntity.getEmail())
+                .phone(childMemberEntity.getPhone())
+                .whatsApp(childMemberEntity.getWhatsApp())
+                .emergencyContactNumber(childMemberEntity.getEmergencyContactNumber())
+                .contactRelation(childMemberEntity.getContactRelation())
+                .firstLanguage(childMemberEntity.getFirstLanguage())
+                .secondLanguage(childMemberEntity.getSecondLanguage())
+                .levelOfEducation(childMemberEntity.getLevelOfEducation())
+                .fatherOfConfession(childMemberEntity.getFatherOfConfession())
+                .priestNumber(childMemberEntity.getPriestNumber())
+                .address(childMemberEntity.getAddress())
+                .userId(childMemberEntity.getUserId())
+                .churchId(childMemberEntity.getChurchId())
+                .createdDate(childMemberEntity.getCreatedDate())
+                .lastModifiedDate(childMemberEntity.getLastModifiedDate())
                 .father(buildParentSummary(childMemberEntity.getFather()))
                 .mother(buildParentSummary(childMemberEntity.getMother()))
                 .build();
@@ -73,7 +122,18 @@ public class ChildMapper {
                 .secondLanguage(dto.getSecondLanguage())
                 .levelOfEducation(dto.getLevelOfEducation())
                 .fatherOfConfession(dto.getFatherOfConfession())
+                .priestNumber(dto.getPriestNumber())
                 .address(dto.getAddress())
+                .build();
+    }
+
+    private AvatarDTO mapAvatar(AvatarEntity avatar) {
+        if (avatar == null) {
+            return null;
+        }
+        return AvatarDTO.builder()
+                .imageUrl(avatar.getImageUrl())
+                .imageSize(avatar.getImageSize())
                 .build();
     }
 

@@ -1,10 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
@@ -15,6 +17,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberServiceImpl;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,12 +53,20 @@ public class MemberServiceUnitTest {
 
     private UserEntity user;
     private Adult_MemberEntity member;
+    private UUID tenantId;
 
     @BeforeEach
     void setUp() {
         SecurityContextHolder.setContext(securityContext);
+        tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
         user = TestDataUtil.createTestUserEntityA();
         member = TestDataUtil.createTestMember(TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity()));
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
@@ -118,15 +129,22 @@ public class MemberServiceUnitTest {
 
     @Test
     void testFindAll() {
+        Adult_MemberResponse response = new Adult_MemberResponse();
         Page<Adult_MemberEntity> page = new PageImpl<>(List.of(member));
-        when(memberRepository.findAll(any(PageRequest.class))).thenReturn(page);
-        Page<Adult_MemberEntity> result = memberService.findAll(PageRequest.of(0, 10));
+        when(memberRepository.findByStatusNotAndTenantId(
+                eq(MemberStatus.PENDING.name()),
+                eq(tenantId),
+                any(PageRequest.class)))
+                .thenReturn(page);
+        when(memberMapper.memberEntityToResponse(member)).thenReturn(response);
+        Page<Adult_MemberResponse> result = memberService.findAll(PageRequest.of(0, 10));
         assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
     void testFindMemberById() {
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(member));
         Optional<Adult_MemberEntity> result = memberService.findMemberById(1L);
         assertThat(result).isPresent().contains(member);
     }
@@ -135,7 +153,7 @@ public class MemberServiceUnitTest {
     void testUpdateMembershipDetails() {
         Adult_MemberDTO request = new Adult_MemberDTO();
         request.setFirstName("Updated");
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdAndTenantId(anyLong(), eq(tenantId))).thenReturn(Optional.of(member));
 
         memberService.updateMembershipDetails(1L, request);
 
@@ -152,7 +170,7 @@ public class MemberServiceUnitTest {
     void testApproveByChurch() {
         member.setApprovedByChurch(true);
         member.setApprovedByPriest(true);
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(member));
         memberService.approveByChurch(1L);
         verify(memberRepository).save(member);
         assertThat(member.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
@@ -162,7 +180,7 @@ public class MemberServiceUnitTest {
     void testApproveByPriest() {
         member.setApprovedByChurch(true);
         member.setApprovedByPriest(true);
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(member));
         memberService.approveByPriest(1L);
         verify(memberRepository).save(member);
         assertThat(member.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
@@ -176,4 +194,3 @@ public class MemberServiceUnitTest {
         assertThat(result.getContent()).hasSize(1);
     }
 }
-

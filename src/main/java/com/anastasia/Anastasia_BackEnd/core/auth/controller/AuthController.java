@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,14 +94,19 @@ public class AuthController {
      * This endpoint is called when a user clicks the activation link in their email.
      *
      * @param token The activation token sent to the user's email.
-     * @throws MessagingException If there's an issue sending the activation email.
+     * @return ResponseEntity indicating success or failure.
      */
     @GetMapping("/activate-account")
-    public ResponseEntity<Map<String, String>> confirm(@RequestParam String token){
+    public ResponseEntity<Map<String, String>> confirm(@RequestParam String token) {
         long start = System.currentTimeMillis();
-        authService.activateAccount(token);
-        log.info("Activation took: {} ms", System.currentTimeMillis() - start);
-        return ResponseEntity.ok(message("Account successfully activated"));
+        try {
+            authService.activateAccount(token);
+            log.info("Activation took: {} ms", System.currentTimeMillis() - start);
+            return ResponseEntity.ok(message("Account successfully activated"));
+        } catch (RuntimeException ex) {
+            log.warn("Activation failed: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message(ex.getMessage()));
+        }
     }
 
     /**

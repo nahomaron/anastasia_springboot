@@ -94,6 +94,8 @@ public class Child_MemberDTO {
     @NotBlank(message = "Father of Confession is required")
     private String fatherOfConfession;
 
+    private String priestNumber;
+
     @Valid
     private Address address;
 

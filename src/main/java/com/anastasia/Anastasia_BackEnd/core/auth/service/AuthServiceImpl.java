@@ -339,13 +339,20 @@ public class AuthServiceImpl implements AuthService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         Long churchId = null;
+        String churchNumber = null;
         if (user.getTenant() != null && user.getTenant().getChurch() != null) {
             churchId = user.getTenant().getChurch().getChurchId();
+            churchNumber = user.getTenant().getChurch().getChurchNumber();
         }
 
         String membershipStatus = null;
         if (user.getMembership() != null) {
             membershipStatus = user.getMembership().getStatus();
+        }
+
+        String priestNumber = null;
+        if (UserType.PRIEST.equals(user.getUserType())) {
+            priestNumber = user.getPriestNumber();
         }
 
         return AuthSessionResponse.builder()
@@ -354,10 +361,12 @@ public class AuthServiceImpl implements AuthService {
                 .username(user.getFullName())
                 .tenantId(user.getTenantId())
                 .churchId(churchId)
+                .churchNumber(churchNumber)
                 .roles(roleNames)
                 .permissions(permissionKeys)
                 .membershipId(user.getMembershipId())
                 .membershipStatus(membershipStatus)
+                .priestNumber(priestNumber)
                 .build();
     }
 
@@ -365,8 +374,11 @@ public class AuthServiceImpl implements AuthService {
         // Generate and save the activation token
         var newToken = generateAndSaveActivationToken(user);
 
-        // Define the activation URL for the frontend application
-        String activationUrl = "http://localhost:4200/auth/activate";
+        // One-click activation URL (frontend will verify using the token)
+        String activationUrl = "http://localhost:4200/auth/activate?token="
+                + java.net.URLEncoder.encode(newToken, java.nio.charset.StandardCharsets.UTF_8)
+                + "&email="
+                + java.net.URLEncoder.encode(user.getEmail(), java.nio.charset.StandardCharsets.UTF_8);
 
         // Prepare the properties map for the email template
         Map<String, Object> templateProperties = new HashMap<>();

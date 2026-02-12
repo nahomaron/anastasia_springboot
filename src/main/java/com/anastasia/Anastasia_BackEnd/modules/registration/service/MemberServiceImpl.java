@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +58,11 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Adult_MemberDTO convertToDTO(Adult_MemberEntity adultMemberEntity) {
         return memberMapper.memberEntityToDTO(adultMemberEntity);
+    }
+
+    @Override
+    public Adult_MemberResponse convertToResponse(Adult_MemberEntity adultMemberEntity) {
+        return memberMapper.memberEntityToResponse(adultMemberEntity);
     }
 
    @CacheEvict(
@@ -122,16 +128,74 @@ public class MemberServiceImpl implements MemberService {
     }
 
 
-    @Cacheable(value = "members_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<Adult_MemberEntity> findAll(Pageable pageable) {
-        return memberRepository.findAll(pageable);
+    public Page<Adult_MemberResponse> findAll(Pageable pageable) {
+        return memberRepository.findByStatusNotAndTenantId(
+                        MemberStatus.PENDING.name(),
+                        requireTenantId(),
+                        pageable)
+                .map(memberMapper::memberEntityToResponse);
+    }
+
+    @Override
+    public long countNonPending() {
+        return memberRepository.countByStatusNotAndTenantId(
+                MemberStatus.PENDING.name(),
+                requireTenantId());
+    }
+
+    @Override
+    public Page<Adult_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        return memberRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
+                .map(memberMapper::memberEntityToResponse);
+    }
+
+    @Override
+    public Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        return memberRepository.findByTenantIdAndPriestNumberAndStatus(effectiveTenantId, priestNumber, status, pageable)
+                .map(memberMapper::memberEntityToResponse);
+    }
+
+    @Override
+    public Page<Adult_MemberEntity> findPending(Pageable pageable) {
+        return memberRepository.findByStatusAndTenantId(
+                MemberStatus.PENDING.name(),
+                requireTenantId(),
+                pageable);
+    }
+
+    @Override
+    public Page<Adult_MemberResponse> findPendingByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        return memberRepository.findByTenantIdAndPriestNumberAndStatus(
+                        effectiveTenantId,
+                        priestNumber,
+                        MemberStatus.PENDING.name(),
+                        pageable)
+                .map(memberMapper::memberEntityToResponse);
+    }
+
+    @Override
+    public Page<Adult_MemberEntity> searchNonPending(Pageable pageable, String query) {
+        if (query == null || query.isBlank()) {
+            return memberRepository.findByStatusNotAndTenantId(
+                    MemberStatus.PENDING.name(),
+                    requireTenantId(),
+                    pageable);
+        }
+        return memberRepository.searchNonPending(
+                query.trim(),
+                MemberStatus.PENDING.name(),
+                requireTenantId(),
+                pageable);
     }
 
     @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<Adult_MemberEntity> findMemberById(Long memberId) {
-        return memberRepository.findById(memberId);
+        return memberRepository.findByIdAndTenantId(memberId, requireTenantId());
     }
 
     @Caching(
@@ -145,7 +209,7 @@ public class MemberServiceImpl implements MemberService {
     )
     @Override
     public void updateMembershipDetails(Long memberId, Adult_MemberDTO request) {
-        memberRepository.findById(memberId).ifPresent(memberEntity -> {
+        memberRepository.findByIdAndTenantId(memberId, requireTenantId()).ifPresent(memberEntity -> {
 
             Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
             Optional.ofNullable(request.getTitle()).ifPresent(memberEntity::setTitle);
@@ -176,6 +240,7 @@ public class MemberServiceImpl implements MemberService {
             Optional.ofNullable(request.getProfession()).ifPresent(memberEntity::setProfession);
             Optional.ofNullable(request.getLevelOfEducation()).ifPresent(memberEntity::setLevelOfEducation);
             Optional.ofNullable(request.getFatherOfConfession()).ifPresent(memberEntity::setFatherOfConfession);
+            Optional.ofNullable(request.getPriestNumber()).ifPresent(memberEntity::setPriestNumber);
             Optional.ofNullable(request.getSpouseIdNumber()).ifPresent(memberEntity::setSpouseIdNumber);
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
@@ -203,44 +268,45 @@ public class MemberServiceImpl implements MemberService {
     )
     @Override
     public void deleteMembership(Long memberId) {
-        memberRepository.deleteById(memberId);
-    }
-
-    @CachePut(value = "members",key = "#memberId"
-//            , keyGenerator = "tenantAwareKeyGenerator"
-    )
-    @Override
-    public void approveByChurch(Long memberId) {
-        Adult_MemberEntity member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
-
-        member.setApprovedByPriest(true);
-
-        if(member.isApprovedByPriest() && member.isApprovedByChurch()){
-            member.setStatus(MemberStatus.APPROVED.name());
-        }
-
-        memberRepository.save(member);
+        memberRepository.findByIdAndTenantId(memberId, requireTenantId())
+                .ifPresent(memberRepository::delete);
     }
 
     @CachePut(value = "members", key = "#memberId"
 //            , keyGenerator = "tenantAwareKeyGenerator"
     )
     @Override
-    public void approveByPriest(Long memberId) {
-        Adult_MemberEntity member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new UsernameNotFoundException("Not valid member"));
-        member.setApprovedByChurch(true);
+    public Adult_MemberResponse approveByChurch(Long memberId) {
+        Adult_MemberEntity member = memberRepository.findByIdAndTenantId(memberId, requireTenantId())
+                .orElseThrow(() -> new UsernameNotFoundException("Not valid member"));
 
-        if(member.isApprovedByPriest() && member.isApprovedByChurch()){
-            member.setStatus(MemberStatus.APPROVED.name());
-        }
-        memberRepository.save(member);
+        member.setApprovedByChurch(true);
+        updateApprovalStatus(member);
+
+        Adult_MemberEntity saved = memberRepository.save(member);
+        return convertToResponse(saved);
+    }
+
+    @CachePut(value = "members", key = "#memberId"
+//            , keyGenerator = "tenantAwareKeyGenerator"
+    )
+    @Override
+    public Adult_MemberResponse approveByPriest(Long memberId) {
+        Adult_MemberEntity member = memberRepository.findByIdAndTenantId(memberId, requireTenantId())
+                .orElseThrow(() -> new UsernameNotFoundException("Not valid member"));
+        member.setApprovedByPriest(true);
+
+        updateApprovalStatus(member);
+        Adult_MemberEntity saved = memberRepository.save(member);
+        return convertToResponse(saved);
     }
 
     @Override
     public Page<Adult_MemberEntity> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable) {
-        return memberRepository.findAll(spec, pageable);
+        Specification<Adult_MemberEntity> tenantSpec = (root, query, cb) ->
+                cb.equal(root.get("tenantId"), requireTenantId());
+        Specification<Adult_MemberEntity> combinedSpec = Specification.where(tenantSpec).and(spec);
+        return memberRepository.findAll(combinedSpec, pageable);
     }
 
     private String generateUniqueMembershipNumber(int length, boolean isDeacon) {
@@ -275,6 +341,25 @@ public class MemberServiceImpl implements MemberService {
     public void evictMemberCachesForTenant(String tenantId) {
         cacheManager.getCache("members").invalidate(); // clear all if needed
         cacheManager.getCache("members_all").invalidate();
+    }
+
+    private void updateApprovalStatus(Adult_MemberEntity member) {
+        boolean requiresPriestApproval = org.springframework.util.StringUtils.hasText(member.getPriestNumber());
+        if (!requiresPriestApproval && member.isApprovedByChurch()) {
+            member.setStatus(MemberStatus.APPROVED.name());
+            return;
+        }
+        if (requiresPriestApproval && member.isApprovedByChurch() && member.isApprovedByPriest()) {
+            member.setStatus(MemberStatus.APPROVED.name());
+        }
+    }
+
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant context is missing for member access");
+        }
+        return tenantId;
     }
 
 }

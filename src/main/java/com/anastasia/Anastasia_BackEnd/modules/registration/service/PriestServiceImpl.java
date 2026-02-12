@@ -29,6 +29,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -60,10 +61,10 @@ public class PriestServiceImpl implements PriestService{
 
 
     @Caching(
-            put = {@CachePut(value = "priests",
-                    keyGenerator = "tenantAwareKeyGenerator")
-            },
             evict = {@CacheEvict(value = "priests_all",
+                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true),
+                    @CacheEvict(value = "priests_by_church",
                     keyGenerator = "tenantAwareKeyGenerator",
                     allEntries = true)
             }
@@ -76,6 +77,8 @@ public class PriestServiceImpl implements PriestService{
 
         String sanitizedChurchNumber = sanitizeChurchNumber(priestDTO.getChurchNumber());
 
+        String priestNumber = generateUniquePriestNumber(6);
+
         Role priestRole = roleRepository.findByRoleName(RoleType.PRIEST.name())
                 .orElseThrow(() -> new RuntimeException("Priest role not found"));
 
@@ -87,6 +90,7 @@ public class PriestServiceImpl implements PriestService{
                     .password(passwordEncoder.encode(priestDTO.getPassword()))
                     .roles(new HashSet<>(Set.of(priestRole)))
                     .userType(UserType.PRIEST)
+                    .priestNumber(priestNumber)
                     .build();
 
             // Save the newly created priest user
@@ -96,6 +100,9 @@ public class PriestServiceImpl implements PriestService{
             } catch (Exception e) {
                 throw new RuntimeException("User creation failed: " + e.getMessage());
             }
+        } else {
+            priestUser.setPriestNumber(priestNumber);
+            userRepository.save(priestUser);
         }
 
 
@@ -105,7 +112,7 @@ public class PriestServiceImpl implements PriestService{
         // Start building the PriestEntity
         PriestEntity.PriestEntityBuilder priestBuilder = PriestEntity.builder()
                 .user(priestUser)
-                .priestNumber(generateUniquePriestNumber(6))
+                .priestNumber(priestNumber)
                 .churchNumber(sanitizedChurchNumber)
                 .profilePicture(priestDTO.getProfilePicture())
                 .prefixes(priestDTO.getPrefixes())
@@ -136,12 +143,20 @@ public class PriestServiceImpl implements PriestService{
             TenantEntity tenantFound = tenantRepository.findById(priestDTO.getTenantId())
                     .orElseThrow(() -> new EntityNotFoundException("Tenant with ID " + priestDTO.getTenantId() + " does not exist"));
             priestBuilder.tenant(tenantFound);
+            priestUser.assignTenant(tenantFound);
+            userRepository.save(priestUser);
         }
         // If the priest is under a church, associate with church
         else if (priestIsUnderChurch) {
             ChurchEntity churchFound = churchRepository.findByChurchNumber(sanitizedChurchNumber)
                     .orElseThrow(() -> new EntityNotFoundException("Church with number " + sanitizedChurchNumber + " not found"));
             priestBuilder.church(churchFound);
+            TenantEntity churchTenant = churchFound.getTenant();
+            if (churchTenant == null) {
+                throw new IllegalStateException("Church tenant is missing for church " + sanitizedChurchNumber);
+            }
+            priestUser.assignTenant(churchTenant);
+            userRepository.save(priestUser);
         }
 
         // Save the priest entity
@@ -160,11 +175,20 @@ public class PriestServiceImpl implements PriestService{
         return priestRepository.findById(priestId);
     }
 
+    @Cacheable(value = "priests_by_church", keyGenerator = "tenantAwareKeyGenerator")
+    @Override
+    public List<PriestEntity> findPriestsByChurchId(Long churchId) {
+        return priestRepository.findByChurch_ChurchId(churchId);
+    }
+
     @Caching(
             put = {@CachePut(value = "priests",
                     keyGenerator = "tenantAwareKeyGenerator")},
             evict = {@CacheEvict( value = "priests_all",
-                    keyGenerator = "tenantAwareKeyGenerator",  allEntries = true)}
+                    keyGenerator = "tenantAwareKeyGenerator",  allEntries = true),
+                    @CacheEvict(value = "priests_by_church",
+                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true)}
     )
     @Override
     public PriestEntity updatePriestDetails(Long priestId, PriestEntity priestEntity) {
@@ -198,6 +222,10 @@ public class PriestServiceImpl implements PriestService{
                             keyGenerator = "tenantAwareKeyGenerator"
                     ),
                     @CacheEvict(value = "priests_all",
+                            keyGenerator = "tenantAwareKeyGenerator",
+                            allEntries = true
+                    ),
+                    @CacheEvict(value = "priests_by_church",
                             keyGenerator = "tenantAwareKeyGenerator",
                             allEntries = true
                     )

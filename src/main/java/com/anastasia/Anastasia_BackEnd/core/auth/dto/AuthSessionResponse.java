@@ -18,8 +18,10 @@ public class AuthSessionResponse {
     private String username;
     private UUID tenantId;
     private Long churchId;
+    private String churchNumber;
     private Set<String> roles;
     private Set<String> permissions;
     private Long membershipId;
     private String membershipStatus;
+    private String priestNumber;
 }

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -8,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Service
@@ -55,6 +58,11 @@ public class ChildServiceImpl implements ChildService{
     @Override
     public Child_MemberDTO convertToDTO(Child_MemberEntity childMemberEntity) {
         return childMapper.childEntityToDTO(childMemberEntity);
+    }
+
+    @Override
+    public Child_MemberResponse convertToResponse(Child_MemberEntity childMemberEntity) {
+        return childMapper.childEntityToResponse(childMemberEntity);
     }
 
     @Caching(
@@ -102,16 +110,55 @@ public class ChildServiceImpl implements ChildService{
         return rawChurchNumber.replace("\"", "").trim();
     }
 
-    @Cacheable(value = "children_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<Child_MemberEntity> findAll(Pageable pageable) {
-        return childRepository.findAll(pageable);
+        return childRepository.findByStatusNotAndTenantId(
+                ChildStatus.PENDING.name(),
+                requireTenantId(),
+                pageable);
+    }
+
+    @Override
+    public long countNonPending() {
+        return childRepository.countByStatusNotAndTenantId(
+                ChildStatus.PENDING.name(),
+                requireTenantId());
+    }
+
+    @Override
+    public Page<Child_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        return childRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
+                .map(childMapper::childEntityToResponse);
+    }
+
+    @Override
+    public Page<Child_MemberEntity> findPending(Pageable pageable) {
+        return childRepository.findByStatusAndTenantId(
+                ChildStatus.PENDING.name(),
+                requireTenantId(),
+                pageable);
+    }
+
+    @Override
+    public Page<Child_MemberEntity> searchNonPending(Pageable pageable, String query) {
+        if (query == null || query.isBlank()) {
+            return childRepository.findByStatusNotAndTenantId(
+                    ChildStatus.PENDING.name(),
+                    requireTenantId(),
+                    pageable);
+        }
+        return childRepository.searchNonPending(
+                query.trim(),
+                ChildStatus.PENDING.name(),
+                requireTenantId(),
+                pageable);
     }
 
     @Cacheable(value = "children", key = "#childId")
     @Override
     public Optional<Child_MemberEntity> findChildById(Long childId) {
-        return childRepository.findById(childId);
+        return childRepository.findByIdAndTenantId(childId, requireTenantId());
     }
 
     @Caching(
@@ -122,7 +169,7 @@ public class ChildServiceImpl implements ChildService{
     )
     @Override
     public void updateChildDetails(Long childId, Child_MemberDTO request) {
-        childRepository.findById(childId).ifPresent(memberEntity -> {
+        childRepository.findByIdAndTenantId(childId, requireTenantId()).ifPresent(memberEntity -> {
 
             Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
             Optional.ofNullable(request.getTitle()).ifPresent(memberEntity::setTitle);
@@ -149,6 +196,7 @@ public class ChildServiceImpl implements ChildService{
             Optional.ofNullable(request.getSecondLanguage()).ifPresent(memberEntity::setSecondLanguage);
             Optional.ofNullable(request.getLevelOfEducation()).ifPresent(memberEntity::setLevelOfEducation);
             Optional.ofNullable(request.getFatherOfConfession()).ifPresent(memberEntity::setFatherOfConfession);
+            Optional.ofNullable(request.getPriestNumber()).ifPresent(memberEntity::setPriestNumber);
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
             if (request.getFather() != null) {
@@ -175,13 +223,17 @@ public class ChildServiceImpl implements ChildService{
     )
     @Override
     public void deleteChildMembership(Long childId) {
-        childRepository.deleteById(childId);
+        childRepository.findByIdAndTenantId(childId, requireTenantId())
+                .ifPresent(childRepository::delete);
 
     }
 
     @Override
     public Page<Child_MemberEntity> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable) {
-        return childRepository.findAll(spec, pageable);
+        Specification<Child_MemberEntity> tenantSpec = (root, query, cb) ->
+                cb.equal(root.get("tenantId"), requireTenantId());
+        Specification<Child_MemberEntity> combinedSpec = Specification.allOf(tenantSpec).and(spec);
+        return childRepository.findAll(combinedSpec, pageable);
     }
 
     private String generateUniqueChildMembershipNumber(int length, boolean isDeacon) {
@@ -248,6 +300,14 @@ public class ChildServiceImpl implements ChildService{
         } else {
             child.setMother(null);
         }
+    }
+
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant context is missing for child member access");
+        }
+        return tenantId;
     }
 
 }

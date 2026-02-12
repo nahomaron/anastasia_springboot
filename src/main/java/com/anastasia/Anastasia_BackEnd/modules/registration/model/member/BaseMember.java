@@ -96,6 +96,8 @@ public abstract class BaseMember extends Auditable {
     @Column(nullable = false)
     private String fatherOfConfession;
 
+    private String priestNumber;
+
     private Address address;
 
     @OneToOne
@@ -112,4 +114,3 @@ public abstract class BaseMember extends Auditable {
     @Column(name = "church_id", insertable = false, updatable = false)
     private Long churchId;
 }
-

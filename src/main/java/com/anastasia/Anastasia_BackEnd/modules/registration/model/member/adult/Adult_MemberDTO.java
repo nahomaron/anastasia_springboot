@@ -112,6 +112,8 @@ public class Adult_MemberDTO {
     @NotBlank(message = "Father of Confession is required")
     private String fatherOfConfession;
 
+    private String priestNumber;
+
     private String spouseIdNumber;
 
     @Valid

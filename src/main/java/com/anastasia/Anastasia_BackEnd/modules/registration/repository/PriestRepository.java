@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestE
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -11,4 +12,6 @@ public interface PriestRepository extends JpaRepository<PriestEntity, Long> {
     boolean existsByPriestNumber(String priestNumber);
 
     Optional<PriestEntity> findByPhoneNumber(String phoneNumber);
+
+    List<PriestEntity> findByChurch_ChurchId(Long churchId);
 }

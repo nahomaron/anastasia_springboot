@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildService;
 import com.anastasia.Anastasia_BackEnd.common.specification.ChildSpecifications;
 import jakarta.validation.Valid;
@@ -44,20 +45,49 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
-    public ResponseEntity<Page<Child_MemberDTO>> listOfChildren(Pageable pageable){
+    public ResponseEntity<Page<Child_MemberResponse>> listOfChildren(Pageable pageable){
         Page<Child_MemberEntity> children = childService.findAll(pageable);
         return new ResponseEntity<>(
-                children.map(childService::convertToDTO), HttpStatus.OK);
+                children.map(childService::convertToResponse), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'ADMIN') or " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
+    @GetMapping("/requests")
+    public ResponseEntity<Page<Child_MemberResponse>> listPendingChildren(Pageable pageable){
+        Page<Child_MemberEntity> children = childService.findPending(pageable);
+        return new ResponseEntity<>(
+                children.map(childService::convertToResponse), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'ADMIN') or " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
+    @GetMapping("/count")
+    public ResponseEntity<Long> countChildren() {
+        return ResponseEntity.ok(childService.countNonPending());
+    }
+
+
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+            "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
+    @GetMapping("/search")
+    public ResponseEntity<Page<Child_MemberResponse>> searchChildren(
+            Pageable pageable,
+            @RequestParam(value = "q", required = false) String query
+    ){
+        Page<Child_MemberEntity> children = childService.searchNonPending(pageable, query);
+        return new ResponseEntity<>(
+                children.map(childService::convertToResponse), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{memberId}")
-    public ResponseEntity<Child_MemberDTO> getChild(@PathVariable Long memberId){
+    public ResponseEntity<Child_MemberResponse> getChild(@PathVariable Long memberId){
         Optional<Child_MemberEntity> foundChild = childService.findChildById(memberId);
         return foundChild.map(childEntity -> {
-            Child_MemberDTO childMemberDTO = childService.convertToDTO(childEntity);
-            return new ResponseEntity<>(childMemberDTO, HttpStatus.FOUND);
+            Child_MemberResponse childMemberResponse = childService.convertToResponse(childEntity);
+            return new ResponseEntity<>(childMemberResponse, HttpStatus.FOUND);
         }).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
@@ -83,7 +113,7 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') OR " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADVANCED_SEARCH_MEMBERS')")
     @PostMapping("/advanced-search")
-    public ResponseEntity<Page<Child_MemberDTO>> searchChildren(
+    public ResponseEntity<Page<Child_MemberResponse>> searchChildren(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,asc") String[] sort,
@@ -144,7 +174,7 @@ public class ChildController {
         Page<Child_MemberEntity> members = childService.findAllBySpecification(spec, pageable);
 
         return new ResponseEntity<>(members.map(
-                childService::convertToDTO), HttpStatus.OK);
+                childService::convertToResponse), HttpStatus.OK);
     }
 
 

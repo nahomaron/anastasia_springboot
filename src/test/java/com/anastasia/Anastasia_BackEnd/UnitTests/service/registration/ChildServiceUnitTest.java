@@ -1,9 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -47,9 +49,12 @@ public class ChildServiceUnitTest {
     private UserPrincipal principal;
     private Authentication authentication;
     private SecurityContext securityContext;
+    private UUID tenantId;
 
     @BeforeEach
     void setup() {
+        tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
         child = Child_MemberEntity.builder()
                 .churchNumber("CH123")
                 .firstName("John")
@@ -72,6 +77,11 @@ public class ChildServiceUnitTest {
 //        when(authentication.getPrincipal()).thenReturn(principal);
 //        when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
@@ -123,7 +133,11 @@ public class ChildServiceUnitTest {
     void testFindAll() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Child_MemberEntity> page = new PageImpl<>(List.of(child));
-        when(childRepository.findAll(pageable)).thenReturn(page);
+        when(childRepository.findByStatusNotAndTenantId(
+                eq(ChildStatus.PENDING.name()),
+                eq(tenantId),
+                eq(pageable)))
+                .thenReturn(page);
 
         Page<Child_MemberEntity> result = childService.findAll(pageable);
         assertEquals(1, result.getTotalElements());
@@ -131,15 +145,16 @@ public class ChildServiceUnitTest {
 
     @Test
     void testFindChildById() {
-        when(childRepository.findById(1L)).thenReturn(Optional.of(child));
+        when(childRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(child));
         Optional<Child_MemberEntity> result = childService.findChildById(1L);
         assertTrue(result.isPresent());
     }
 
     @Test
     void testDeleteChildMembership() {
+        when(childRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(child));
         childService.deleteChildMembership(1L);
-        verify(childRepository).deleteById(1L);
+        verify(childRepository).delete(child);
     }
 
     @Test
@@ -158,7 +173,7 @@ public class ChildServiceUnitTest {
                 .phone(null) // Should stay as "0000"
                 .build();
 
-        when(childRepository.findById(childId)).thenReturn(Optional.of(existing));
+        when(childRepository.findByIdAndTenantId(childId, tenantId)).thenReturn(Optional.of(existing));
 
         // When
         childService.updateChildDetails(childId, updateRequest);
@@ -175,7 +190,7 @@ public class ChildServiceUnitTest {
 
     @Test
     void updateChildDetails_shouldNotCallSave_whenChildNotFound() {
-        when(childRepository.findById(99L)).thenReturn(Optional.empty());
+        when(childRepository.findByIdAndTenantId(99L, tenantId)).thenReturn(Optional.empty());
 
         childService.updateChildDetails(99L, Child_MemberDTO.builder().build());
 
