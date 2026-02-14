@@ -14,4 +14,6 @@ public interface PriestRepository extends JpaRepository<PriestEntity, Long> {
     Optional<PriestEntity> findByPhoneNumber(String phoneNumber);
 
     List<PriestEntity> findByChurch_ChurchId(Long churchId);
+
+    long countByChurch_Tenant_Id(java.util.UUID tenantId);
 }

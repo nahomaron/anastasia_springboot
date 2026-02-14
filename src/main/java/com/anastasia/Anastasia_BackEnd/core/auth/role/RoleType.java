@@ -31,6 +31,10 @@ public enum RoleType {
             Collections.emptySet(),
             "User does not have roles"
     ),
+    MEMBER(
+            Collections.emptySet(),
+            "Member access"
+    ),
 
     ADMIN(
             Set.of(

@@ -31,7 +31,7 @@ public class ChildController {
 
     private final ChildService childService;
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'MEMBER') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADD_MEMBERS')")
     @PostMapping("/register-child")
     public ResponseEntity<ChildResponse> registerChild(@Valid @RequestBody Child_MemberDTO childMemberDTO){

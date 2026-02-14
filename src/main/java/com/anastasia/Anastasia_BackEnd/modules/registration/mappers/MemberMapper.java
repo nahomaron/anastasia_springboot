@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import jakarta.persistence.Persistence;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -166,7 +167,10 @@ public class MemberMapper {
     }
 
     private Set<Long> mapChildIds(Set<Child_MemberEntity> children) {
-        if (children == null || children.isEmpty()) {
+        if (children == null || !Persistence.getPersistenceUtil().isLoaded(children)) {
+            return Collections.emptySet();
+        }
+        if (children.isEmpty()) {
             return Collections.emptySet();
         }
         return children.stream()

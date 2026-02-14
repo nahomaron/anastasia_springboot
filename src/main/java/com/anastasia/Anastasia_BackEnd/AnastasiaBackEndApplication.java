@@ -17,7 +17,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 				"com.anastasia.Anastasia_BackEnd.core",
 				"com.anastasia.Anastasia_BackEnd.common",
 				"com.anastasia.Anastasia_BackEnd.infrastructure",
-				"com.anastasia.Anastasia_BackEnd.seeder"
+				"com.anastasia.Anastasia_BackEnd.seeder",
+				"com.anastasia.Anastasia_BackEnd.modules"
 		}
 )
 //@SpringBootApplication

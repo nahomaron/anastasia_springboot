@@ -6,6 +6,8 @@ import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.*;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
@@ -41,6 +43,7 @@ public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final ChurchRepository churchRepository;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final ApplicationEventPublisher publisher;
@@ -282,6 +285,7 @@ public class MemberServiceImpl implements MemberService {
 
         member.setApprovedByChurch(true);
         updateApprovalStatus(member);
+        assignMemberRoleIfApproved(member);
 
         Adult_MemberEntity saved = memberRepository.save(member);
         return convertToResponse(saved);
@@ -297,6 +301,7 @@ public class MemberServiceImpl implements MemberService {
         member.setApprovedByPriest(true);
 
         updateApprovalStatus(member);
+        assignMemberRoleIfApproved(member);
         Adult_MemberEntity saved = memberRepository.save(member);
         return convertToResponse(saved);
     }
@@ -346,12 +351,35 @@ public class MemberServiceImpl implements MemberService {
     private void updateApprovalStatus(Adult_MemberEntity member) {
         boolean requiresPriestApproval = org.springframework.util.StringUtils.hasText(member.getPriestNumber());
         if (!requiresPriestApproval && member.isApprovedByChurch()) {
-            member.setStatus(MemberStatus.APPROVED.name());
+            member.setStatus(MemberStatus.ACTIVE.name());
             return;
         }
         if (requiresPriestApproval && member.isApprovedByChurch() && member.isApprovedByPriest()) {
-            member.setStatus(MemberStatus.APPROVED.name());
+            member.setStatus(MemberStatus.ACTIVE.name());
         }
+    }
+
+    private void assignMemberRoleIfApproved(Adult_MemberEntity member) {
+        if (!MemberStatus.ACTIVE.name().equals(member.getStatus())) {
+            return;
+        }
+        UserEntity user = member.getUser();
+        if (user == null && member.getUserId() != null) {
+            user = userRepository.findById(member.getUserId()).orElse(null);
+        }
+        if (user == null) {
+            return;
+        }
+
+        Role memberRole = roleRepository.findByRoleName("MEMBER").orElse(null);
+        if (memberRole == null) {
+            return;
+        }
+        if (user.getRoles().contains(memberRole)) {
+            return;
+        }
+        user.getRoles().add(memberRole);
+        userRepository.save(user);
     }
 
     private UUID requireTenantId() {
