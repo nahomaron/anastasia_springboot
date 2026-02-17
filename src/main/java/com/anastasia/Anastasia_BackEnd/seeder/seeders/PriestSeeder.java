@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -89,8 +91,13 @@ public class PriestSeeder {
                         .church(assignedChurch)
                         .churchNumber(assignedChurch.getChurchNumber())
                         .tenant(null)
-                        .status(faker.options().option(PriestStatus.ACTIVE, PriestStatus.APPROVED, PriestStatus.PENDING, PriestStatus.INACTIVE))
-                        .profilePicture(faker.internet().url())
+                        .status(faker.options().option(PriestStatus.ACTIVE, PriestStatus.PENDING, PriestStatus.INACTIVE))
+                        .avatar(AvatarEntity.builder()
+                                .ownerId(savedUser.getUuid())
+                                .avatarType(AvatarType.USER)
+                                .imageUrl(faker.internet().url())
+                                .imageSize("original")
+                                .build())
                         .prefixes(faker.name().prefix())
                         .firstName(faker.name().firstName())
                         .fatherName(faker.name().lastName())
@@ -103,6 +110,7 @@ public class PriestSeeder {
                         .languages(languages)
                         .levelOfEducation(faker.educator().course())
                         .address(address)
+                        .spiritualChildren(faker.number().numberBetween(0, 150))
                         .isActive(faker.bool().bool())
                         .build();
 

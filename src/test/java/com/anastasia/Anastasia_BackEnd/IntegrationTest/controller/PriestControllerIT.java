@@ -149,7 +149,7 @@ class PriestControllerIT extends PostgresTestContainer {
         assert priestEntity != null;
         mockMvc.perform(get("/api/v1/priests/{id}", priestEntity.getId())
                         .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isFound());
+                .andExpect(status().isOk());
     }
 
     @Test

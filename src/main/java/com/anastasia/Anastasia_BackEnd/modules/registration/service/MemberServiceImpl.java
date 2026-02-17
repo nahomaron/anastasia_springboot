@@ -12,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.*
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
@@ -48,6 +49,7 @@ public class MemberServiceImpl implements MemberService {
     private final SecurityUtils securityUtils;
     private final ApplicationEventPublisher publisher;
     private final CacheManager cacheManager;
+    private final PriestRepository priestRepository;
 
     private final OutboxPublisher outboxPublisher;
 
@@ -195,10 +197,11 @@ public class MemberServiceImpl implements MemberService {
                 pageable);
     }
 
-    @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator")
+    @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator", unless = "#result == null")
     @Override
-    public Optional<Adult_MemberEntity> findMemberById(Long memberId) {
-        return memberRepository.findByIdAndTenantId(memberId, requireTenantId());
+    public Optional<Adult_MemberResponse> findMemberById(Long memberId) {
+        return memberRepository.findByIdAndTenantId(memberId, requireTenantId())
+                .map(memberMapper::memberEntityToResponse);
     }
 
     @Caching(
@@ -298,10 +301,18 @@ public class MemberServiceImpl implements MemberService {
     public Adult_MemberResponse approveByPriest(Long memberId) {
         Adult_MemberEntity member = memberRepository.findByIdAndTenantId(memberId, requireTenantId())
                 .orElseThrow(() -> new UsernameNotFoundException("Not valid member"));
+        boolean wasApproved = member.isApprovedByPriest();
         member.setApprovedByPriest(true);
 
         updateApprovalStatus(member);
         assignMemberRoleIfApproved(member);
+        if (!wasApproved && member.getPriestNumber() != null) {
+            priestRepository.findByPriestNumber(member.getPriestNumber())
+                    .ifPresent(priest -> {
+                        priest.setSpiritualChildren(priest.getSpiritualChildren() + 1);
+                        priestRepository.save(priest);
+                    });
+        }
         Adult_MemberEntity saved = memberRepository.save(member);
         return convertToResponse(saved);
     }

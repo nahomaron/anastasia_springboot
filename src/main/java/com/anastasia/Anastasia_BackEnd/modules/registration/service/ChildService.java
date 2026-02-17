@@ -39,4 +39,8 @@ public interface ChildService {
 
     Page<Child_MemberEntity> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable);
 
+    Child_MemberResponse approveByChurch(Long memberId);
+
+    Child_MemberResponse approveByPriest(Long memberId);
+
 }

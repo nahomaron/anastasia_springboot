@@ -101,6 +101,21 @@ public class ChildController {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'APPROVE_MEMBERSHIP')")
+    @PatchMapping("/{memberId}/church-approve")
+    public ResponseEntity<Child_MemberResponse> approveByChurch(@PathVariable Long memberId){
+        Child_MemberResponse response = childService.approveByChurch(memberId);
+        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+    }
+
+    @PreAuthorize("hasRole('PRIEST')")
+    @PatchMapping("/{memberId}/priest-approve")
+    public ResponseEntity<Child_MemberResponse> approveByPriest(@PathVariable Long memberId){
+        Child_MemberResponse response = childService.approveByPriest(memberId);
+        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+    }
+
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'DELETE_CHILDREN')")

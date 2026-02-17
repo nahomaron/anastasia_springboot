@@ -8,6 +8,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType;
@@ -115,6 +116,10 @@ class SimpleMappersUnitTest {
     @Test
     void priestMapper_shouldHandleLanguagesAndAddress() {
         PriestDTO dto = PriestDTO.builder()
+                .avatar(AvatarDTO.builder()
+                        .imageUrl("https://example.com/priest/avatar.png")
+                        .imageSize("original")
+                        .build())
                 .firstName("Abba")
                 .fatherName("Gebre")
                 .grandFatherName("Selassie")
@@ -140,11 +145,13 @@ class SimpleMappersUnitTest {
         assertThat(entity.getFirstName()).isEqualTo("Abba");
         assertThat(entity.getLanguages()).containsExactlyInAnyOrder("Amharic", "Geez");
         assertThat(entity.getAddress().getCity()).isEqualTo("Gondar");
+        assertThat(entity.getAvatar().getImageUrl()).isEqualTo("https://example.com/priest/avatar.png");
 
         entity.setStatus(PriestStatus.ACTIVE);
         PriestDTO mappedBack = priestMapper.priestEntityToDTO(entity);
         assertThat(mappedBack.getFirstName()).isEqualTo("Abba");
         assertThat(mappedBack.getLanguages()).contains("Geez");
+        assertThat(mappedBack.getAvatar().getImageUrl()).isEqualTo("https://example.com/priest/avatar.png");
     }
 
     @Test

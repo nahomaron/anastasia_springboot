@@ -14,6 +14,8 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 
 import java.time.Duration;
 
@@ -30,6 +32,12 @@ public class RedisCacheConfig {
 
     private GenericJackson2JsonRedisSerializer redisSerializer() {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.activateDefaultTypingAsProperty(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.EVERYTHING,
+                "@class"
+        );
+        mapper.registerModule(new Jdk8Module());
         mapper.registerModule(new JavaTimeModule());
         return new GenericJackson2JsonRedisSerializer(mapper);
     }

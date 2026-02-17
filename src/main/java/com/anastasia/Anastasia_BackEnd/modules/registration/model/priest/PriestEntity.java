@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.priest;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -45,7 +46,12 @@ public class PriestEntity {
     @Column(nullable = false)
     private PriestStatus status;
 
-    private String profilePicture;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "avatar_id", referencedColumnName = "id")
+    private AvatarEntity avatar;
+
+    @Column(nullable = false)
+    private int spiritualChildren;
 
     private String prefixes; //(additional title)
 

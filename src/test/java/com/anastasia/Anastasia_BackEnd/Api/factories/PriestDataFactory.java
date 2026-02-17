@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.Api.factories;
 
 import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 
 import java.util.Set;
@@ -21,7 +22,10 @@ public final class PriestDataFactory {
         return PriestDTO.builder()
                 .churchNumber(churchNumber)
                 .tenantId(tenantId)
-                .profilePicture("https://cdn.example.com/priests/profile.png")
+                .avatar(AvatarDTO.builder()
+                        .imageUrl("https://cdn.example.com/priests/profile.png")
+                        .imageSize("original")
+                        .build())
                 .prefixes("Abba")
                 .firstName(DataGenerator.randomName().split(" ")[0])
                 .fatherName(DataGenerator.randomName().split(" ")[0])

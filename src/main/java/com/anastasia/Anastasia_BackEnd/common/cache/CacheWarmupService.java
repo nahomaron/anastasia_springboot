@@ -48,7 +48,7 @@ public class CacheWarmupService {
         String redisKey = CACHE_KEY_PREFIX + tenantId;
 
         // check if recently warmed (within 30 minutes)
-        Instant lastWarmed = (Instant) redisTemplate.opsForValue().get(redisKey);
+        Instant lastWarmed = parseLastWarmed(redisTemplate.opsForValue().get(redisKey));
         if (lastWarmed != null && lastWarmed.isAfter(Instant.now().minus(Duration.ofMinutes(30)))) {
             log.info("⚡ Cache for tenant {} already warmed at {}. Skipping.", tenantId, lastWarmed);
             return;
@@ -65,7 +65,7 @@ public class CacheWarmupService {
             log.info("✅ Cached {} members for tenant {}", page.getContent().size(), tenant.getOwnerName());
 
             // record warm-up timestamp in Redis (expires after 30 minutes)
-            redisTemplate.opsForValue().set(redisKey, Instant.now(), Duration.ofMinutes(30));
+            redisTemplate.opsForValue().set(redisKey, Instant.now().toEpochMilli(), Duration.ofMinutes(30));
 
         } catch (Exception e) {
             log.error("Error warming cache for tenant {}: {}", tenant.getOwnerName(), e.getMessage(), e);
@@ -93,5 +93,18 @@ public class CacheWarmupService {
             log.info("Cleared cache '{}'", name);
         });
         TenantContext.clear();
+    }
+
+    private Instant parseLastWarmed(Object rawValue) {
+        if (rawValue == null) {
+            return null;
+        }
+        if (rawValue instanceof Instant) {
+            return (Instant) rawValue;
+        }
+        if (rawValue instanceof Number) {
+            return Instant.ofEpochMilli(((Number) rawValue).longValue());
+        }
+        return null;
     }
 }

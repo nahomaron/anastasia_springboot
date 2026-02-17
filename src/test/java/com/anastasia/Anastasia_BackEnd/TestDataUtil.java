@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
@@ -379,7 +381,10 @@ public class TestDataUtil {
         return PriestDTO.builder()
                 .churchNumber(churchNumber) // or provide a valid church number if needed
                 .tenantId(null)     // or UUID.randomUUID() for tenant priest
-                .profilePicture("https://example.com/photo.jpg")
+                .avatar(AvatarDTO.builder()
+                        .imageUrl("https://example.com/photo.jpg")
+                        .imageSize("original")
+                        .build())
                 .prefixes("Abba")
                 .firstName("Dawit")
                 .fatherName("Tekle")
@@ -409,7 +414,10 @@ public class TestDataUtil {
         return PriestDTO.builder()
                 .churchNumber(churchNumber)
                 .tenantId(null)
-                .profilePicture("https://example.com/images/priest_b.jpg")
+                .avatar(AvatarDTO.builder()
+                        .imageUrl("https://example.com/images/priest_b.jpg")
+                        .imageSize("original")
+                        .build())
                 .prefixes("Keshi")
                 .firstName("Michael")
                 .fatherName("Abraham")
@@ -443,7 +451,12 @@ public class TestDataUtil {
                 .churchNumber(church != null ? church.getChurchNumber() : null)
                 .tenant(tenant)
                 .status(PriestStatus.ACTIVE)
-                .profilePicture("https://example.com/priest/profile.jpg")
+                .avatar(AvatarEntity.builder()
+                        .ownerId(UUID.randomUUID())
+                        .avatarType(AvatarType.USER)
+                        .imageUrl("https://example.com/priest/profile.jpg")
+                        .imageSize("original")
+                        .build())
                 .prefixes("Abba")
                 .firstName("Yohannes")
                 .fatherName("Tesfay")
@@ -463,6 +476,7 @@ public class TestDataUtil {
                         .country("Ethiopia")
                         .postalCode("1000")
                         .build())
+                .spiritualChildren(0)
                 .isActive(true)
                 .build();
     }

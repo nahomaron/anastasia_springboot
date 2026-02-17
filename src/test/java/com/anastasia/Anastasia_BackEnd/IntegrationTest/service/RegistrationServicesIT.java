@@ -10,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.M
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
@@ -221,7 +222,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
                 .churchEmail("updated-priest@church.org")
                 .build();
 
-        PriestEntity updated = priestService.updatePriestDetails(saved.getId(), patch);
+        PriestResponse updated = priestService.updatePriestDetails(saved.getId(), patch);
         assertThat(updated.getPrefixes()).isEqualTo("Abune");
         assertThat(updated.getChurchEmail()).isEqualTo("updated-priest@church.org");
 

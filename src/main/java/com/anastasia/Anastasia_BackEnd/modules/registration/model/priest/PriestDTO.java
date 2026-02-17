@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.priest;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -29,7 +30,9 @@ public class PriestDTO {
 
     private UUID tenantId;
 
-    private String profilePicture;
+    private AvatarDTO avatar;
+
+    private PriestStatus status;
 
     private String prefixes; //(additional title)
 

@@ -3,8 +3,10 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.service.cache;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
@@ -54,6 +56,7 @@ class MemberServiceCacheIT extends PostgresTestContainer {
 
         Adult_MemberEntity saved = memberRepository.save(entity);
         savedMember = saved;
+        TenantContext.setTenantId(tenant.getId());
 
         Cache membersCache = cacheManager.getCache("members");
         if (membersCache != null) {
@@ -61,17 +64,22 @@ class MemberServiceCacheIT extends PostgresTestContainer {
         }
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     void whenCalledTwice_shouldUseCacheOnSecondCall() {
         Long id = savedMember.getId();
 
         // 1️⃣ First call — should hit DB
-        Optional<Adult_MemberEntity> firstCall = memberService.findMemberById(id);
-        verify(memberRepository, times(1)).findById(id);
+        Optional<Adult_MemberResponse> firstCall = memberService.findMemberById(id);
+        verify(memberRepository, times(1)).findByIdAndTenantId(id, TenantContext.getTenantId());
 
         // 2️⃣ Second call — should use cache (no new DB hit)
-        Optional<Adult_MemberEntity> secondCall = memberService.findMemberById(id);
-        verify(memberRepository, times(1)).findById(id); // still 1 call total
+        Optional<Adult_MemberResponse> secondCall = memberService.findMemberById(id);
+        verify(memberRepository, times(1)).findByIdAndTenantId(id, TenantContext.getTenantId()); // still 1 call total
 
         assertThat(firstCall).isEqualTo(secondCall);
     }
@@ -82,7 +90,7 @@ class MemberServiceCacheIT extends PostgresTestContainer {
 
         // Cache the value
         memberService.findMemberById(id);
-        verify(memberRepository, times(1)).findById(id);
+        verify(memberRepository, times(1)).findByIdAndTenantId(id, TenantContext.getTenantId());
 
         // Evict cache
         memberService.deleteMembership(id);
@@ -93,7 +101,7 @@ class MemberServiceCacheIT extends PostgresTestContainer {
 
         // Next call should hit DB again (since cache was evicted)
         memberService.findMemberById(id);
-        verify(memberRepository, times(2)).findById(id);
+        verify(memberRepository, times(2)).findByIdAndTenantId(id, TenantContext.getTenantId());
     }
 
 

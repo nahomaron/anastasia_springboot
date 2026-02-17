@@ -9,10 +9,12 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberServiceImpl;
@@ -44,6 +46,7 @@ public class MemberServiceUnitTest {
     @Mock private MemberRepository memberRepository;
     @Mock private ChurchRepository churchRepository;
     @Mock private UserRepository userRepository;
+    @Mock private PriestRepository priestRepository;
     @Mock private MemberMapper memberMapper;
     @Mock private SecurityUtils securityUtils;
     @Mock private SecurityContext securityContext;
@@ -144,9 +147,11 @@ public class MemberServiceUnitTest {
 
     @Test
     void testFindMemberById() {
+        Adult_MemberResponse response = new Adult_MemberResponse();
         when(memberRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(member));
-        Optional<Adult_MemberEntity> result = memberService.findMemberById(1L);
-        assertThat(result).isPresent().contains(member);
+        when(memberMapper.memberEntityToResponse(member)).thenReturn(response);
+        Optional<Adult_MemberResponse> result = memberService.findMemberById(1L);
+        assertThat(result).isPresent().contains(response);
     }
 
     @Test
@@ -179,10 +184,18 @@ public class MemberServiceUnitTest {
     @Test
     void testApproveByPriest() {
         member.setApprovedByChurch(true);
-        member.setApprovedByPriest(true);
+        member.setApprovedByPriest(false);
+        member.setPriestNumber("K12345");
+        PriestEntity priest = PriestEntity.builder()
+                .priestNumber("K12345")
+                .spiritualChildren(2)
+                .build();
         when(memberRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(member));
+        when(priestRepository.findByPriestNumber("K12345")).thenReturn(Optional.of(priest));
         memberService.approveByPriest(1L);
         verify(memberRepository).save(member);
+        verify(priestRepository).save(priest);
+        assertThat(priest.getSpiritualChildren()).isEqualTo(3);
         assertThat(member.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
     }
 

@@ -1,9 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.PriestMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
@@ -58,17 +61,22 @@ public class PriestServiceImpl implements PriestService{
         return priestMapper.priestEntityToDTO(priestEntity);
     }
 
+    @Override
+    public PriestResponse convertToResponse(PriestEntity priestEntity) {
+        return priestMapper.priestEntityToResponse(priestEntity);
+    }
 
 
-    @Caching(
-            evict = {@CacheEvict(value = "priests_all",
-                    keyGenerator = "tenantAwareKeyGenerator",
-                    allEntries = true),
-                    @CacheEvict(value = "priests_by_church",
-                    keyGenerator = "tenantAwareKeyGenerator",
-                    allEntries = true)
-            }
-    )
+
+//    @Caching(
+//            evict = {@CacheEvict(value = "priests_all",
+//                    keyGenerator = "tenantAwareKeyGenerator",
+//                    allEntries = true),
+//                    @CacheEvict(value = "priests_by_church",
+//                    keyGenerator = "tenantAwareKeyGenerator",
+//                    allEntries = true)
+//            }
+//    )
     @Override
     public void registerPriest(PriestDTO priestDTO) {
 
@@ -114,7 +122,7 @@ public class PriestServiceImpl implements PriestService{
                 .user(priestUser)
                 .priestNumber(priestNumber)
                 .churchNumber(sanitizedChurchNumber)
-                .profilePicture(priestDTO.getProfilePicture())
+                .avatar(enrichAvatar(priestMapper.map(priestDTO.getAvatar()), priestUser))
                 .prefixes(priestDTO.getPrefixes())
                 .firstName(priestDTO.getFirstName())
                 .fatherName(priestDTO.getFatherName())
@@ -128,6 +136,7 @@ public class PriestServiceImpl implements PriestService{
                 .levelOfEducation(priestDTO.getLevelOfEducation())
                 .address(priestDTO.getAddress())
                 .status(PriestStatus.PENDING)
+                .spiritualChildren(0)
                 .isActive(false);
 
         boolean priestIsTenant = priestDTO.getTenantId() != null;
@@ -163,39 +172,47 @@ public class PriestServiceImpl implements PriestService{
         priestRepository.save(priestBuilder.build());
     }
 
-    @Cacheable(value = "priests_all", keyGenerator = "tenantAwareKeyGenerator")
+//    @Cacheable(value = "priests_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<PriestEntity> findAllPriests(Pageable pageable) {
-        return priestRepository.findAll(pageable);
+    public Page<PriestResponse> findAllPriests(Pageable pageable) {
+        return priestRepository.findAll(pageable)
+                .map(priestMapper::priestEntityToResponse);
     }
 
-    @Cacheable(value = "priests", keyGenerator = "tenantAwareKeyGenerator")
+//    @Cacheable(value = "priests", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Optional<PriestEntity> findPriestById(Long priestId) {
-        return priestRepository.findById(priestId);
+    public Optional<PriestResponse> findPriestById(Long priestId) {
+        return priestRepository.findById(priestId)
+                .map(priestMapper::priestEntityToResponse);
     }
 
-    @Cacheable(value = "priests_by_church", keyGenerator = "tenantAwareKeyGenerator")
+//    @Cacheable(value = "priests_by_church", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public List<PriestEntity> findPriestsByChurchId(Long churchId) {
-        return priestRepository.findByChurch_ChurchId(churchId);
+    public List<PriestResponse> findPriestsByChurchId(Long churchId) {
+        return priestRepository.findByChurch_ChurchId(churchId)
+                .stream()
+                .map(priestMapper::priestEntityToResponse)
+                .toList();
     }
 
-    @Caching(
-            put = {@CachePut(value = "priests",
-                    keyGenerator = "tenantAwareKeyGenerator")},
-            evict = {@CacheEvict( value = "priests_all",
-                    keyGenerator = "tenantAwareKeyGenerator",  allEntries = true),
-                    @CacheEvict(value = "priests_by_church",
-                    keyGenerator = "tenantAwareKeyGenerator",
-                    allEntries = true)}
-    )
+//    @Caching(
+//            put = {@CachePut(value = "priests",
+//                    keyGenerator = "tenantAwareKeyGenerator")},
+//            evict = {@CacheEvict( value = "priests_all",
+//                    keyGenerator = "tenantAwareKeyGenerator",  allEntries = true),
+//                    @CacheEvict(value = "priests_by_church",
+//                    keyGenerator = "tenantAwareKeyGenerator",
+//                    allEntries = true)}
+//    )
     @Override
-    public PriestEntity updatePriestDetails(Long priestId, PriestEntity priestEntity) {
+    public PriestResponse updatePriestDetails(Long priestId, PriestEntity priestEntity) {
 
         return priestRepository.findById(priestId).map(foundPriest -> {
             Optional.ofNullable(priestEntity.getChurch()).ifPresent(foundPriest::setChurch);
-            Optional.ofNullable(priestEntity.getProfilePicture()).ifPresent(foundPriest::setProfilePicture);
+            Optional.ofNullable(priestEntity.getAvatar())
+                    .map(avatar -> enrichAvatar(avatar, foundPriest.getUser()))
+                    .ifPresent(foundPriest::setAvatar);
+            Optional.ofNullable(priestEntity.getStatus()).ifPresent(foundPriest::setStatus);
 
             Optional.ofNullable(priestEntity.getPrefixes()).ifPresent(foundPriest::setPrefixes);
             Optional.ofNullable(priestEntity.getFirstName()).ifPresent(foundPriest::setFirstName);
@@ -212,25 +229,39 @@ public class PriestServiceImpl implements PriestService{
             Optional.ofNullable(priestEntity.getPriesthoodCardId()).ifPresent(foundPriest::setPriesthoodCardId);
             Optional.ofNullable(priestEntity.getPriesthoodCardScan()).ifPresent(foundPriest::setPriesthoodCardScan);
 
-            return priestRepository.save(foundPriest);
+            PriestEntity saved = priestRepository.save(foundPriest);
+            return priestMapper.priestEntityToResponse(saved);
         }).orElseThrow(() -> new UsernameNotFoundException("Priest not found"));
     }
 
-    @Caching(
-            evict = {
-                    @CacheEvict(value = "priests",
-                            keyGenerator = "tenantAwareKeyGenerator"
-                    ),
-                    @CacheEvict(value = "priests_all",
-                            keyGenerator = "tenantAwareKeyGenerator",
-                            allEntries = true
-                    ),
-                    @CacheEvict(value = "priests_by_church",
-                            keyGenerator = "tenantAwareKeyGenerator",
-                            allEntries = true
-                    )
-            }
-    )
+    private AvatarEntity enrichAvatar(AvatarEntity avatar, UserEntity user) {
+        if (avatar == null) {
+            return null;
+        }
+        if (avatar.getOwnerId() == null && user != null) {
+            avatar.setOwnerId(user.getUuid());
+        }
+        if (avatar.getAvatarType() == null) {
+            avatar.setAvatarType(AvatarType.USER);
+        }
+        return avatar;
+    }
+
+//    @Caching(
+//            evict = {
+//                    @CacheEvict(value = "priests",
+//                            keyGenerator = "tenantAwareKeyGenerator"
+//                    ),
+//                    @CacheEvict(value = "priests_all",
+//                            keyGenerator = "tenantAwareKeyGenerator",
+//                            allEntries = true
+//                    ),
+//                    @CacheEvict(value = "priests_by_church",
+//                            keyGenerator = "tenantAwareKeyGenerator",
+//                            allEntries = true
+//                    )
+//            }
+//    )
     @Override
     public void deletePriest(Long priestId) {
         priestRepository.deleteById(priestId);

@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.model;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
@@ -75,6 +76,7 @@ public class UserEntity{
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Token> tokens;
 

@@ -19,6 +19,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRep
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -90,6 +91,7 @@ public class ChildServiceImpl implements ChildService{
         ChurchEntity church = churchRepository.findByChurchNumber(churchNumber)
                 .orElseThrow(() -> new IllegalStateException("Church not found for number: " + churchNumber));
         childMemberEntity.setChurch(church);
+        childMemberEntity.setTenantId(church.getTenant().getId());
 
         childMemberEntity.setMembershipNumber(generateUniqueChildMembershipNumber(6, childMemberEntity.isDeacon()));
         childMemberEntity.setUser(user);
@@ -234,6 +236,36 @@ public class ChildServiceImpl implements ChildService{
                 cb.equal(root.get("tenantId"), requireTenantId());
         Specification<Child_MemberEntity> combinedSpec = Specification.allOf(tenantSpec).and(spec);
         return childRepository.findAll(combinedSpec, pageable);
+    }
+
+    @Caching(
+            put = {@CachePut(value = "children", key = "#childId")},
+            evict = {@CacheEvict(value = "children_all",
+                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true)}
+    )
+    @Override
+    public Child_MemberResponse approveByChurch(Long childId) {
+        Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, requireTenantId())
+                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        child.setStatus(ChildStatus.APPROVED.name());
+        Child_MemberEntity saved = childRepository.save(child);
+        return convertToResponse(saved);
+    }
+
+    @Caching(
+            put = {@CachePut(value = "children", key = "#childId")},
+            evict = {@CacheEvict(value = "children_all",
+                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true)}
+    )
+    @Override
+    public Child_MemberResponse approveByPriest(Long childId) {
+        Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, requireTenantId())
+                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        child.setStatus(ChildStatus.APPROVED.name());
+        Child_MemberEntity saved = childRepository.save(child);
+        return convertToResponse(saved);
     }
 
     private String generateUniqueChildMembershipNumber(int length, boolean isDeacon) {

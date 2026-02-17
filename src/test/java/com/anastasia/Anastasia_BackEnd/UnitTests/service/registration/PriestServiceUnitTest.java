@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.PriestMapper
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -124,10 +125,15 @@ public class PriestServiceUnitTest {
                 .priestNumber("K12345")
                 .build();
 
+        PriestResponse response = PriestResponse.builder()
+                .firstName("NewFirst")
+                .build();
+
         when(priestRepository.findById(1L)).thenReturn(Optional.of(found));
         when(priestRepository.save(any())).thenReturn(found);
+        when(priestMapper.priestEntityToResponse(found)).thenReturn(response);
 
-        PriestEntity result = priestService.updatePriestDetails(1L, input);
+        PriestResponse result = priestService.updatePriestDetails(1L, input);
 
         assertNotNull(result);
         verify(priestRepository).save(any());
@@ -141,7 +147,9 @@ public class PriestServiceUnitTest {
 
     @Test
     void testFindPriestById_found() {
-        when(priestRepository.findById(1L)).thenReturn(Optional.of(new PriestEntity()));
+        PriestEntity entity = new PriestEntity();
+        when(priestRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(priestMapper.priestEntityToResponse(entity)).thenReturn(PriestResponse.builder().build());
         assertTrue(priestService.findPriestById(1L).isPresent());
     }
 

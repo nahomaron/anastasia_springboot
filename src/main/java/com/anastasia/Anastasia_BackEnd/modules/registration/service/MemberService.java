@@ -36,7 +36,7 @@ public interface MemberService {
 
     Page<Adult_MemberEntity> searchNonPending(Pageable pageable, String query);
 
-    Optional<Adult_MemberEntity> findMemberById(Long memberId);
+    Optional<Adult_MemberResponse> findMemberById(Long memberId);
 
     void updateMembershipDetails(Long memberId, Adult_MemberDTO request);
 

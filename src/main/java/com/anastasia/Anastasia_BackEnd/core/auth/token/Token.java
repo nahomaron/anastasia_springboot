@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.token;
 
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,10 +41,10 @@ public class Token {
 
     private boolean revoked;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
 }
-
 

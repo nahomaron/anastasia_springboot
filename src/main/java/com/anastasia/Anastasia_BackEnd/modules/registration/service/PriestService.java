@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,16 +15,17 @@ public interface PriestService {
 
     PriestEntity convertToEntity(PriestDTO priestDTO);
     PriestDTO convertToDTO(PriestEntity registeredPriest);
+    PriestResponse convertToResponse(PriestEntity registeredPriest);
 
     void registerPriest(PriestDTO priestDTO);
 
-    Page<PriestEntity> findAllPriests(Pageable pageable);
+    Page<PriestResponse> findAllPriests(Pageable pageable);
 
-    Optional<PriestEntity> findPriestById(Long priestId);
+    Optional<PriestResponse> findPriestById(Long priestId);
 
-    List<PriestEntity> findPriestsByChurchId(Long churchId);
+    List<PriestResponse> findPriestsByChurchId(Long churchId);
 
-    PriestEntity updatePriestDetails(Long priestId, PriestEntity priestEntity);
+    PriestResponse updatePriestDetails(Long priestId, PriestEntity priestEntity);
 
     void deletePriest(Long priestId);
 }

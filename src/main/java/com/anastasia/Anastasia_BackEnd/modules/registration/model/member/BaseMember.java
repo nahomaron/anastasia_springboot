@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -100,6 +101,7 @@ public abstract class BaseMember extends Auditable {
 
     private Address address;
 
+    @JsonIgnore
     @OneToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;

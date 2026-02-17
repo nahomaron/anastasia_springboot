@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.PriestService;
@@ -42,41 +43,37 @@ public class PriestController {
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<PriestDTO>> listOfPriests(Pageable pageable){
-        Page<PriestEntity> priests = priestService.findAllPriests(pageable);
-        return new ResponseEntity<>(priests.map(priestService::convertToDTO), HttpStatus.OK);
+    public ResponseEntity<Page<PriestResponse>> listOfPriests(Pageable pageable){
+        Page<PriestResponse> priests = priestService.findAllPriests(pageable);
+        return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('USER', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/church/{churchId}")
-    public ResponseEntity<List<PriestDTO>> listPriestsByChurch(@PathVariable Long churchId) {
-        List<PriestEntity> priests = priestService.findPriestsByChurchId(churchId);
-        List<PriestDTO> dtos = priests.stream()
-                .map(priestService::convertToDTO)
-                .toList();
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+    public ResponseEntity<List<PriestResponse>> listPriestsByChurch(@PathVariable Long churchId) {
+        List<PriestResponse> priests = priestService.findPriestsByChurchId(churchId);
+        return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/{priestId}")
-    public ResponseEntity<PriestDTO> getPriest(@PathVariable Long priestId){
-        Optional<PriestEntity> foundPriest = priestService.findPriestById(priestId);
+    public ResponseEntity<PriestResponse> getPriest(@PathVariable Long priestId){
+        Optional<PriestResponse> foundPriest = priestService.findPriestById(priestId);
 
-        return foundPriest.map(priestEntity -> {
-            PriestDTO priestDTO = priestService.convertToDTO(priestEntity);
-            return new ResponseEntity<>(priestDTO, HttpStatus.FOUND);
-        }).orElse(
+        return foundPriest.map(priestResponse ->
+                new ResponseEntity<>(priestResponse, HttpStatus.OK)
+        ).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN', 'PRIEST')")
     @PatchMapping("/{priestId}")
-    public ResponseEntity<PriestDTO> updatePriestDetails(@PathVariable Long priestId,
+    public ResponseEntity<PriestResponse> updatePriestDetails(@PathVariable Long priestId,
                                                          @RequestBody PriestDTO priestDTO){
         PriestEntity priestEntity = priestService.convertToEntity(priestDTO);
-        PriestEntity updatedPriest = priestService.updatePriestDetails(priestId, priestEntity);
-        return new ResponseEntity<>(priestService.convertToDTO(updatedPriest), HttpStatus.ACCEPTED);
+        PriestResponse updatedPriest = priestService.updatePriestDetails(priestId, priestEntity);
+        return new ResponseEntity<>(updatedPriest, HttpStatus.ACCEPTED);
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")

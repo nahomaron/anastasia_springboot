@@ -75,11 +75,10 @@ public class MemberController {
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{memberId}")
     public ResponseEntity<Adult_MemberResponse> getMember(@PathVariable Long memberId){
-        Optional<Adult_MemberEntity> foundMember = memberService.findMemberById(memberId);
-        return foundMember.map(memberEntity -> {
-            Adult_MemberResponse adultMemberResponse = memberService.convertToResponse(memberEntity);
-            return new ResponseEntity<>(adultMemberResponse, HttpStatus.FOUND);
-        }).orElse(
+        Optional<Adult_MemberResponse> foundMember = memberService.findMemberById(memberId);
+        return foundMember.map(memberResponse ->
+                new ResponseEntity<>(memberResponse, HttpStatus.OK)
+        ).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
     }
