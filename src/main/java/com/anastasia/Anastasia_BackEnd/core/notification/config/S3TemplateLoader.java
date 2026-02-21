@@ -24,7 +24,7 @@ public class S3TemplateLoader {
     private final boolean enabled;
 
     public S3TemplateLoader(S3Client s3Client,
-                            @Value("${aws.s3.bucket}") String bucketName,
+                            @Value("${aws.s3.bucket:}") String bucketName,
                             @Value("${aws.s3.templates.enabled:true}") boolean enabled) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;

@@ -19,8 +19,8 @@ import java.util.UUID;
  */
 @Component
 public class StripeClient {
-    @Value("${stripe.success-url}") private String successUrlTemplate;
-    @Value("${stripe.cancel-url}")  private String cancelUrlTemplate;
+    @Value("${stripe.success-url:}") private String successUrlTemplate;
+    @Value("${stripe.cancel-url:}")  private String cancelUrlTemplate;
 
     public Session createCheckoutSession(String paymentId,
                                          UUID tenantId,

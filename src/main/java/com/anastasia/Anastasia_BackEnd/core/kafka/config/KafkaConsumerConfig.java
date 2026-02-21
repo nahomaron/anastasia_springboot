@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.core.kafka.config;
 
 import com.anastasia.Anastasia_BackEnd.core.kafka.support.KafkaInfrastructureProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,7 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
  */
 @Configuration
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = true)
 public class KafkaConsumerConfig {
 
     private final KafkaInfrastructureProperties infrastructureProperties;

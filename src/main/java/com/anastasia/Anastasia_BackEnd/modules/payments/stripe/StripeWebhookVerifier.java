@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class StripeWebhookVerifier {
-    @Value("${stripe.webhook-secret}") private String webhookSecret;
+    @Value("${stripe.webhook-secret:}") private String webhookSecret;
 
     public Event verify(String payload, String sigHeader) throws SignatureVerificationException {
         return Webhook.constructEvent(payload, sigHeader, webhookSecret);

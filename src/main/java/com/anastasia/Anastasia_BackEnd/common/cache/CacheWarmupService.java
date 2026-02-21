@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRep
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,7 +27,7 @@ public class CacheWarmupService {
     private final TenantRepository tenantRepository;
     private final MemberService memberService;
     private final CacheManager cacheManager;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider;
     private static final Object LOCK = new Object();
     private static final Set<UUID> WARMED_TENANTS = new HashSet<>();
     private static final String CACHE_KEY_PREFIX = "cache:warmup:tenant:";
@@ -46,9 +47,12 @@ public class CacheWarmupService {
         }
 
         String redisKey = CACHE_KEY_PREFIX + tenantId;
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
 
         // check if recently warmed (within 30 minutes)
-        Instant lastWarmed = parseLastWarmed(redisTemplate.opsForValue().get(redisKey));
+        Instant lastWarmed = redisTemplate == null
+                ? null
+                : parseLastWarmed(redisTemplate.opsForValue().get(redisKey));
         if (lastWarmed != null && lastWarmed.isAfter(Instant.now().minus(Duration.ofMinutes(30)))) {
             log.info("⚡ Cache for tenant {} already warmed at {}. Skipping.", tenantId, lastWarmed);
             return;
@@ -65,7 +69,9 @@ public class CacheWarmupService {
             log.info("✅ Cached {} members for tenant {}", page.getContent().size(), tenant.getOwnerName());
 
             // record warm-up timestamp in Redis (expires after 30 minutes)
-            redisTemplate.opsForValue().set(redisKey, Instant.now().toEpochMilli(), Duration.ofMinutes(30));
+            if (redisTemplate != null) {
+                redisTemplate.opsForValue().set(redisKey, Instant.now().toEpochMilli(), Duration.ofMinutes(30));
+            }
 
         } catch (Exception e) {
             log.error("Error warming cache for tenant {}: {}", tenant.getOwnerName(), e.getMessage(), e);

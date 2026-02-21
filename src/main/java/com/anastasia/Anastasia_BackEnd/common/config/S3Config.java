@@ -16,19 +16,19 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import java.net.URI;
 
 @Configuration
-@Profile({"dev", "prod"})
+@Profile({"dev", "prod", "test", "test-server"})
 public class S3Config {
 
-    @Value("${aws.accessKeyId}")
+    @Value("${aws.accessKeyId:test}")
     private String awsAccessKey;
 
-    @Value("${aws.secretKey}")
+    @Value("${aws.secretKey:test}")
     private String awsSecretKey;
 
-    @Value("${aws.region}")
+    @Value("${aws.region:us-east-1}")
     private String region;
 
-    @Value("${aws.s3.endpoint:}")
+    @Value("${aws.s3.endpoint:http://localhost:4566}")
     private String s3Endpoint;
 
     @Bean
