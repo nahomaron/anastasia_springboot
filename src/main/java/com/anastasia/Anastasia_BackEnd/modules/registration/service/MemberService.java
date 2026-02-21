@@ -30,11 +30,11 @@ public interface MemberService {
 
     Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable);
 
-    Page<Adult_MemberEntity> findPending(Pageable pageable);
+    Page<Adult_MemberResponse> findPending(Pageable pageable);
 
     Page<Adult_MemberResponse> findPendingByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
-    Page<Adult_MemberEntity> searchNonPending(Pageable pageable, String query);
+    Page<Adult_MemberResponse> searchNonPending(Pageable pageable, String query);
 
     Optional<Adult_MemberResponse> findMemberById(Long memberId);
 
@@ -46,5 +46,5 @@ public interface MemberService {
 
     Adult_MemberResponse approveByPriest(Long memberId);
 
-    Page<Adult_MemberEntity> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable);
+    Page<Adult_MemberResponse> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable);
 }

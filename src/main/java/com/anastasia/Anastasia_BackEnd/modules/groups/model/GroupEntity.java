@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.groups.model;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.Auditable;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.persistence.*;
@@ -8,6 +9,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,7 +24,8 @@ import java.util.UUID;
 @Table(name = "groups")
 @FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
 @Filters(@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId"))
-public class GroupEntity {
+@EntityListeners(AuditingEntityListener.class)
+public class GroupEntity extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

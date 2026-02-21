@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
-import com.anastasia.Anastasia_BackEnd.modules.groups.model.*;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.GroupMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
@@ -101,8 +101,10 @@ class GroupServiceUnitTest {
         when(userRepository.findAllByUuidIn(Set.of(userId))).thenReturn(List.of(user));
         when(userRepository.findAllByUuidIn(Set.of(managerId))).thenReturn(List.of(manager));
         when(groupRepository.save(any(GroupEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(groupMapper.groupEntityToResponse(any(GroupEntity.class)))
+                .thenReturn(GroupResponse.builder().groupId(1L).groupName("New Group").build());
 
-        SimpleGroupEntity result = groupService.createGroup(groupDTO);
+        GroupResponse result = groupService.createGroup(groupDTO);
 
         assertThat(result.getGroupName()).isEqualTo("New Group");
         verify(groupRepository).save(argThat(saved ->

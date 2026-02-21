@@ -12,12 +12,12 @@ import com.anastasia.Anastasia_BackEnd.modules.groups.dto.AddManagersResponse;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.AddUsersToGroupRequest;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.BatchInviteRequest;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupManagerRequest;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupUserCandidateDTO;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.RemoveManagersResponse;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.RemoveUsersFromGroupRequest;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.RemoveUsersFromGroupResponse;
-import com.anastasia.Anastasia_BackEnd.modules.groups.model.SimpleGroupEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
@@ -92,7 +92,7 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
         groupDTO.setManagers(new HashSet<>(Set.of(managerUser.getUuid())));
         groupDTO.setUsers(new HashSet<>(Set.of(memberUser.getUuid())));
 
-        SimpleGroupEntity simpleGroup = groupService.createGroup(groupDTO);
+        GroupResponse simpleGroup = groupService.createGroup(groupDTO);
         assertThat(simpleGroup.getGroupId()).isNotNull();
 
         var savedGroup = groupRepository.findById(simpleGroup.getGroupId())

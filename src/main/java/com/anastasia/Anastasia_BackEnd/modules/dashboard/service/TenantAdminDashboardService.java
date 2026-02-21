@@ -17,6 +17,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepo
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +38,7 @@ public class TenantAdminDashboardService {
     private final MemberRepository memberRepository;
     private final ChildRepository childRepository;
     private final PriestRepository priestRepository;
-    private final PaymentIntentRepository paymentIntentRepository;
+    private final ObjectProvider<PaymentIntentRepository> paymentIntentRepositoryProvider;
 
     public TenantAdminDashboardResponse getSummary() {
         UUID tenantId = requireTenantId();
@@ -65,6 +66,14 @@ public class TenantAdminDashboardService {
     }
 
     private MonthlyOffering buildMonthlyOffering(UUID tenantId) {
+        PaymentIntentRepository paymentIntentRepository = paymentIntentRepositoryProvider.getIfAvailable();
+        if (paymentIntentRepository == null) {
+            return MonthlyOffering.builder()
+                    .amount(0.0)
+                    .currency("USD")
+                    .build();
+        }
+
         ZonedDateTime nowUtc = ZonedDateTime.now(ZoneOffset.UTC);
         ZonedDateTime startOfMonth = nowUtc.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneOffset.UTC);
         Instant start = startOfMonth.toInstant();
@@ -97,6 +106,10 @@ public class TenantAdminDashboardService {
     }
 
     private List<TenantPaymentItem> buildRecentPayments(UUID tenantId) {
+        PaymentIntentRepository paymentIntentRepository = paymentIntentRepositoryProvider.getIfAvailable();
+        if (paymentIntentRepository == null) {
+            return List.of();
+        }
         var page = PageRequest.of(0, RECENT_LIMIT);
         return paymentIntentRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, page)
                 .map(this::toPaymentItem)

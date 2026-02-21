@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -112,6 +113,13 @@ public class MemberSeeder {
                         .fatherOfConfession("Abune " + faker.name().firstName())
                         .user(savedUser) // 🔁 Link to the user
                         .build();
+
+                UUID auditUserId = savedUser.getUuid();
+                member.setCreatedBy(auditUserId);
+                member.setLastModifiedBy(auditUserId);
+                LocalDateTime now = LocalDateTime.now();
+                member.setCreatedDate(now);
+                member.setLastModifiedDate(now);
 
                 Adult_MemberEntity savedMember = memberRepository.save(member);
                 members.add(savedMember);

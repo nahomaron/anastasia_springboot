@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
@@ -19,8 +20,8 @@ public class GroupMapper {
 
     private final UserService userService;
 
-    // Convert GroupEntity to GroupDTO
-    public GroupDTO groupEntityToDTO(GroupEntity groupEntity) {
+    // Convert GroupEntity to GroupResponse
+    public GroupResponse groupEntityToResponse(GroupEntity groupEntity) {
         if (groupEntity == null) {
             return null;
         }
@@ -47,8 +48,9 @@ public class GroupMapper {
             }
         }
 
-        // Construct and return the GroupDTO
-        return GroupDTO.builder()
+        // Construct and return the GroupResponse
+        return GroupResponse.builder()
+                .groupId(groupEntity.getGroupId())
                 .churchId(churchId)
                 .groupName(groupEntity.getGroupName())
                 .description(groupEntity.getDescription())
@@ -56,6 +58,10 @@ public class GroupMapper {
                 .visibility(groupEntity.getVisibility())
                 .managers(managers)
                 .users(users)
+                .createdBy(groupEntity.getCreatedBy())
+                .lastModifiedBy(groupEntity.getLastModifiedBy())
+                .createdDate(groupEntity.getCreatedDate())
+                .lastModifiedDate(groupEntity.getLastModifiedDate())
                 .build();
     }
 
@@ -74,7 +80,7 @@ public class GroupMapper {
         if (groupDTO.getUsers() != null) {
             for (UUID userId : groupDTO.getUsers()) {
                 UserEntity user = new UserEntity(); // Replace with actual lookup logic if needed
-                user = userService.findOne(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+                user = userService.findEntity(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
                 users.add(user);
             }
         }
@@ -83,7 +89,7 @@ public class GroupMapper {
         if (groupDTO.getManagers() != null) {
             for (UUID managerId : groupDTO.getManagers()) {
                 UserEntity manager = new UserEntity(); // Replace with actual lookup logic if needed
-                manager = userService.findOne(managerId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+                manager = userService.findEntity(managerId).orElseThrow(() -> new EntityNotFoundException("User not found"));
                 managers.add(manager);
             }
         }

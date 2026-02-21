@@ -17,8 +17,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Profile("!test") // disable in test profile
 @Component
@@ -58,7 +61,13 @@ public class ChildSeeder {
 
                 LocalDate birthday = SeederRandomUtils.randomBirthdate(18, 60);
 
+                UUID tenantId = Optional.ofNullable(assignedChurch.getTenant())
+                        .map(tenant -> tenant.getId())
+                        .orElseThrow(() -> new IllegalStateException("Assigned church has no tenant"));
+
                 Child_MemberEntity childMember = Child_MemberEntity.builder()
+                        .tenantId(tenantId)
+                        .church(assignedChurch)
                         .churchNumber(assignedChurch.getChurchNumber())
                         .status(faker.options().option("PENDING", "APPROVED", "REJECTED", "ACTIVE", "BLOCKED"))
                         .deacon(faker.bool().bool())
@@ -94,6 +103,13 @@ public class ChildSeeder {
                         .fatherOfConfession("Abune " + faker.name().firstName())
                         .user(savedUser) // 🔁 Link to the user
                         .build();
+
+                UUID auditUserId = savedUser.getUuid();
+                childMember.setCreatedBy(auditUserId);
+                childMember.setLastModifiedBy(auditUserId);
+                LocalDateTime now = LocalDateTime.now();
+                childMember.setCreatedDate(now);
+                childMember.setLastModifiedDate(now);
 
                 children.add(childMember);
             }

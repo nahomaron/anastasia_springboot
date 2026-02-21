@@ -124,6 +124,16 @@ public class EventSeeder {
                         .repetition(randomRepetition())
                         .build();
 
+                UUID auditUserId = invitedUsers.stream()
+                        .findFirst()
+                        .orElseGet(() -> churchUsers.get(0))
+                        .getUuid();
+                event.setCreatedBy(auditUserId);
+                event.setLastModifiedBy(auditUserId);
+                LocalDateTime now = LocalDateTime.now();
+                event.setCreatedDate(now);
+                event.setLastModifiedDate(now);
+
                 Set<UserEntity> potentialManagers = invitedUsers.isEmpty()
                         ? selectUsers(churchUsers, 2)
                         : invitedUsers;

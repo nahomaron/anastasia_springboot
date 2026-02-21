@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -56,9 +57,26 @@ public class EventEntity extends Auditable {
 
     private String image;
 
+    @Enumerated(EnumType.STRING)
+    private EventType type;
+
+    private Integer capacity;
+
+    private Boolean requiresRegistration;
+
+    private Boolean allowWaitlist;
+
+    private Boolean allowGeoCheckIn;
+
     private Double latitude;
 
     private Double longitude;
+
+    private Integer geofenceRadiusMeters;
+
+    private LocalDateTime checkInOpensAt;
+
+    private LocalDateTime checkInClosesAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

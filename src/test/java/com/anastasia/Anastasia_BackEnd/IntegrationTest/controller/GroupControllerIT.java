@@ -7,7 +7,7 @@ import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.AddUsersToGroupRequest;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
-import com.anastasia.Anastasia_BackEnd.modules.groups.model.SimpleGroupEntity;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
@@ -123,7 +123,7 @@ public class GroupControllerIT extends PostgresTestContainer {
     @Test
     public void testThatGetGroupReturns200OkWhenGroupExists() throws Exception {
         GroupDTO groupDTO = getValidGroupDTO();
-        SimpleGroupEntity created = groupService.createGroup(groupDTO);
+        GroupResponse created = groupService.createGroup(groupDTO);
 
         mockMvc.perform(get("/api/v1/groups/" + created.getGroupId())
                         .header("Authorization", "Bearer " + accessToken)
@@ -143,7 +143,7 @@ public class GroupControllerIT extends PostgresTestContainer {
     @Test
     public void testThatUpdateGroupReturns202AcceptedOnSuccess() throws Exception {
         GroupDTO groupDTO = getValidGroupDTO();
-        SimpleGroupEntity created = groupService.createGroup(groupDTO);
+        GroupResponse created = groupService.createGroup(groupDTO);
         groupDTO.setDescription("Updated description");
 
         mockMvc.perform(put("/api/v1/groups/" + created.getGroupId())
@@ -168,7 +168,7 @@ public class GroupControllerIT extends PostgresTestContainer {
     @Test
     public void testThatDeleteGroupReturns204NoContentOnSuccess() throws Exception {
         GroupDTO groupDTO = getValidGroupDTO();
-        SimpleGroupEntity created = groupService.createGroup(groupDTO);
+        GroupResponse created = groupService.createGroup(groupDTO);
 
         mockMvc.perform(delete("/api/v1/groups/" + created.getGroupId())
                         .header("Authorization", "Bearer " + accessToken)
@@ -179,7 +179,7 @@ public class GroupControllerIT extends PostgresTestContainer {
     @Test
     public void testThatAddUsersToGroupReturns200Ok() throws Exception {
         GroupDTO groupDTO = getValidGroupDTO();
-        SimpleGroupEntity created = groupService.createGroup(groupDTO);
+        GroupResponse created = groupService.createGroup(groupDTO);
 
         AddUsersToGroupRequest request = AddUsersToGroupRequest.builder()
                 .userIds(Set.of(adminUser.getUuid()))
@@ -197,7 +197,7 @@ public class GroupControllerIT extends PostgresTestContainer {
     @Test
     public void testThatListGroupMembersReturns200Ok() throws Exception {
         GroupDTO groupDTO = getValidGroupDTO();
-        SimpleGroupEntity created = groupService.createGroup(groupDTO);
+        GroupResponse created = groupService.createGroup(groupDTO);
 
         AddUsersToGroupRequest request = AddUsersToGroupRequest.builder()
                 .userIds(Set.of(adminUser.getUuid()))

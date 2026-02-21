@@ -10,6 +10,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
@@ -69,31 +71,27 @@ public class UserServiceImpl implements UserService {
 
     @Cacheable(value = "users_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<UserEntity> findAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    public Page<UserResponseIDs> findAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable).map(this::toIdResponse);
     }
 
     @Cacheable(value = "users", key = "#userId")
     @Override
-    public Optional<UserEntity> findOne(UUID userId) {
+    public Optional<SimpleUserDTO> findOne(UUID userId) {
+        return userRepository.findById(userId).map(this::toSimpleUserDTO);
+    }
+
+    @Override
+    public Optional<UserEntity> findEntity(UUID userId) {
         return userRepository.findById(userId);
     }
 
-
-    @Caching(
-            put = {
-                    @CachePut(value = "users",
-                            key = "#result.uuid" // Use the ID of the returned (saved) entity
-//                            keyGenerator = "tenantAwareKeyGenerator"
-                            )
-            },
-            evict = {
-                    @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
-                    @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
-            }
-    )
+    @Caching(evict = {
+            @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
+            @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
+    })
     @Override
-    public UserEntity updateUserDetails(UserEntity userEntity, Principal connectedUser) {
+    public SimpleUserDTO updateUserDetails(UserEntity userEntity, Principal connectedUser) {
 //        var currentUser = (UserEntity) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
         if (!(connectedUser instanceof Authentication)){
@@ -112,7 +110,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(userPrincipal.getUserUuid()).map(existingUser -> {
             Optional.ofNullable(userEntity.getFullName()).ifPresent(existingUser::setFullName);
             Optional.ofNullable(userEntity.getEmail()).ifPresent(existingUser::setEmail);
-            return userRepository.save(existingUser);
+            return toSimpleUserDTO(userRepository.save(existingUser));
         }).orElseThrow(() -> new RuntimeException("User doesn't exist"));
     }
 
@@ -196,8 +194,25 @@ public class UserServiceImpl implements UserService {
 
     @Cacheable(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public List<UserEntity> findAll() {
-        return userRepository.findAll();
+    public List<UserResponseIDs> findAll() {
+        return userRepository.findAll().stream().map(this::toIdResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<SimpleUserDTO> searchUsers(String query, Set<String> roles) {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID is not set in the context");
+        }
+        String q = query == null ? "" : query.trim();
+        if (q.isBlank()) {
+            return List.of();
+        }
+        if (roles == null || roles.isEmpty()) {
+            return userRepository.searchByTenantId(tenantId, q);
+        }
+        return userRepository.searchByTenantIdAndRoles(tenantId, q, roles);
     }
 
     @Caching(
@@ -322,6 +337,20 @@ public class UserServiceImpl implements UserService {
 
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    private UserResponseIDs toIdResponse(UserEntity user) {
+        return UserResponseIDs.builder()
+                .uuid(user.getUuid())
+                .build();
+    }
+
+    private SimpleUserDTO toSimpleUserDTO(UserEntity user) {
+        return SimpleUserDTO.builder()
+                .uuid(user.getUuid())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .build();
     }
 
 }

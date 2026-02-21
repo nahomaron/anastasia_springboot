@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.time.LocalDateTime;
 
 @Profile("!test")
 @Component
@@ -90,6 +91,20 @@ public class GroupSeeder {
                         .visibility(faker.options().option("PUBLIC", "PRIVATE"))
                         .build();
 
+                UUID auditUserId = managers.stream()
+                        .findFirst()
+                        .or(() -> members.stream().findFirst())
+                        .map(UserEntity::getUuid)
+                        .orElse(null);
+
+                if (auditUserId != null) {
+                    group.setCreatedBy(auditUserId);
+                    group.setLastModifiedBy(auditUserId);
+                }
+                LocalDateTime now = LocalDateTime.now();
+                group.setCreatedDate(now);
+                group.setLastModifiedDate(now);
+
                 // Assign managers
                 for (UserEntity manager : managers) {
                     group.getManagers().add(manager);
@@ -129,4 +144,3 @@ public class GroupSeeder {
         return selection;
     }
 }
-

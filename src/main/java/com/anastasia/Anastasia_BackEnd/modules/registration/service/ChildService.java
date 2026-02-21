@@ -21,23 +21,23 @@ public interface ChildService {
 
     ChildResponse registerChild(Child_MemberEntity childMemberEntity);
 
-    Page<Child_MemberEntity> findAll(Pageable pageable);
+    Page<Child_MemberResponse> findAll(Pageable pageable);
 
     long countNonPending();
 
     Page<Child_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
-    Page<Child_MemberEntity> findPending(Pageable pageable);
+    Page<Child_MemberResponse> findPending(Pageable pageable);
 
-    Page<Child_MemberEntity> searchNonPending(Pageable pageable, String query);
+    Page<Child_MemberResponse> searchNonPending(Pageable pageable, String query);
 
-    Optional<Child_MemberEntity> findChildById(Long memberId);
+    Optional<Child_MemberResponse> findChildById(Long memberId);
 
     void updateChildDetails(Long memberId, Child_MemberDTO request);
 
     void deleteChildMembership(Long memberId);
 
-    Page<Child_MemberEntity> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable);
+    Page<Child_MemberResponse> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable);
 
     Child_MemberResponse approveByChurch(Long memberId);
 

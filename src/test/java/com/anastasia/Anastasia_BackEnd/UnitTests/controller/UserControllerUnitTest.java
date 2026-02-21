@@ -4,8 +4,10 @@ import com.anastasia.Anastasia_BackEnd.core.auth.controller.UserController;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,13 +26,11 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -84,8 +84,8 @@ class UserControllerUnitTest {
 
     @Test
     void listOfUsers_shouldReturnUserIds() {
-        Page<UserEntity> page = new PageImpl<>(List.of(userEntity));
-        when(userService.findAllUsers(any(Pageable.class))).thenReturn(page);
+        Page<UserResponseIDs> userPage = new PageImpl<>(List.of(UserResponseIDs.builder().uuid(userId).build()));
+        when(userService.findAllUsers(any(Pageable.class))).thenReturn(userPage);
 
         ResponseEntity<List<UUID>> response = userController.listOfUsers(Pageable.unpaged());
 
@@ -95,20 +95,24 @@ class UserControllerUnitTest {
 
     @Test
     void getUser_whenUserExists_shouldReturnDto() {
-        when(userService.findOne(userId)).thenReturn(Optional.of(userEntity));
-        when(userService.convertToDTO(userEntity)).thenReturn(userDTO);
+        SimpleUserDTO expected = SimpleUserDTO.builder()
+                .uuid(userId)
+                .fullName(userEntity.getFullName())
+                .email(userEntity.getEmail())
+                .build();
+        when(userService.findOne(userId)).thenReturn(java.util.Optional.of(expected));
 
-        ResponseEntity<UserDTO> response = userController.getUser(userId);
+        ResponseEntity<SimpleUserDTO> response = userController.getUser(userId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(userDTO);
+        assertThat(response.getBody()).isEqualTo(expected);
     }
 
     @Test
     void getUser_whenUserMissing_shouldReturnNotFound() {
-        when(userService.findOne(userId)).thenReturn(Optional.empty());
+        when(userService.findOne(userId)).thenReturn(java.util.Optional.empty());
 
-        ResponseEntity<UserDTO> response = userController.getUser(userId);
+        ResponseEntity<SimpleUserDTO> response = userController.getUser(userId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
@@ -118,16 +122,15 @@ class UserControllerUnitTest {
         Principal principal = () -> "principal";
         when(userService.convertToEntity(userDTO)).thenReturn(userEntity);
 
-        UserEntity updated = UserEntity.builder()
+        SimpleUserDTO updated = SimpleUserDTO.builder()
                 .uuid(userId)
                 .fullName("Updated Name")
                 .email("updated@example.com")
                 .build();
 
         when(userService.updateUserDetails(userEntity, principal)).thenReturn(updated);
-        when(userService.convertToDTO(updated)).thenReturn(userDTO);
 
-        ResponseEntity<UserDTO> response = userController.updateUserDetails(userDTO, principal);
+        ResponseEntity<SimpleUserDTO> response = userController.updateUserDetails(userDTO, principal);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         verify(userService).updateUserDetails(userEntity, principal);

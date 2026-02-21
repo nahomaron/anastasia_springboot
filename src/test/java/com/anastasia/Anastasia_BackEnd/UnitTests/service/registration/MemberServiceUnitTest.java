@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
+import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
@@ -25,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -47,9 +51,13 @@ public class MemberServiceUnitTest {
     @Mock private ChurchRepository churchRepository;
     @Mock private UserRepository userRepository;
     @Mock private PriestRepository priestRepository;
+    @Mock private RoleRepository roleRepository;
     @Mock private MemberMapper memberMapper;
     @Mock private SecurityUtils securityUtils;
     @Mock private SecurityContext securityContext;
+    @Mock private ApplicationEventPublisher publisher;
+    @Mock private CacheManager cacheManager;
+    @Mock private OutboxPublisher outboxPublisher;
 
     @InjectMocks
     private MemberServiceImpl memberService;
@@ -92,7 +100,11 @@ public class MemberServiceUnitTest {
         when(churchRepository.findByChurchNumber(member.getChurchNumber())).thenReturn(Optional.of(church));
         when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("M123456");
         when(memberRepository.existsByMembershipNumber(anyString())).thenReturn(false);
-        when(memberRepository.save(any(Adult_MemberEntity.class))).thenAnswer(i -> i.getArgument(0));
+        when(memberRepository.save(any(Adult_MemberEntity.class))).thenAnswer(i -> {
+            Adult_MemberEntity saved = i.getArgument(0);
+            saved.setId(1L);
+            return saved;
+        });
         when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
@@ -167,8 +179,9 @@ public class MemberServiceUnitTest {
 
     @Test
     void testDeleteMembership() {
+        when(memberRepository.findByIdAndTenantId(5L, tenantId)).thenReturn(Optional.of(member));
         memberService.deleteMembership(5L);
-        verify(memberRepository).deleteById(5L);
+        verify(memberRepository).delete(member);
     }
 
     @Test
@@ -178,7 +191,7 @@ public class MemberServiceUnitTest {
         when(memberRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(member));
         memberService.approveByChurch(1L);
         verify(memberRepository).save(member);
-        assertThat(member.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE.name());
     }
 
     @Test
@@ -196,14 +209,16 @@ public class MemberServiceUnitTest {
         verify(memberRepository).save(member);
         verify(priestRepository).save(priest);
         assertThat(priest.getSpiritualChildren()).isEqualTo(3);
-        assertThat(member.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE.name());
     }
 
     @Test
     void testFindAllBySpecification() {
         Page<Adult_MemberEntity> page = new PageImpl<>(List.of(member));
+        Adult_MemberResponse response = new Adult_MemberResponse();
         when(memberRepository.findAll(any(Specification.class), any(PageRequest.class))).thenReturn(page);
-        Page<Adult_MemberEntity> result = memberService.findAllBySpecification(mock(Specification.class), PageRequest.of(0, 10));
+        when(memberMapper.memberEntityToResponse(member)).thenReturn(response);
+        Page<Adult_MemberResponse> result = memberService.findAllBySpecification(mock(Specification.class), PageRequest.of(0, 10));
         assertThat(result.getContent()).hasSize(1);
     }
 }

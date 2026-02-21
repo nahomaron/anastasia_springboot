@@ -52,18 +52,12 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public GroupDTO convertToDTO(GroupEntity groupEntity) {
-        return groupMapper.groupEntityToDTO(groupEntity);
+    public GroupResponse convertToResponse(GroupEntity groupEntity) {
+        return groupMapper.groupEntityToResponse(groupEntity);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "groups_all", allEntries = true),
-            @CacheEvict(value = "groups", allEntries = true),
-            @CacheEvict(value = "group_managers", allEntries = true),
-            @CacheEvict(value = "group_user_status", allEntries = true)
-    })
     @Override
-    public SimpleGroupEntity createGroup(GroupDTO groupDTO) {
+    public GroupResponse createGroup(GroupDTO groupDTO) {
         UUID tenantId = requireTenantId();
 
         if (groupRepository.existsByGroupNameAndTenantId(groupDTO.getGroupName(), tenantId)) {
@@ -87,20 +81,23 @@ public class GroupServiceImpl implements GroupService {
 
         GroupEntity savedGroup = groupRepository.save(groupEntity);
 
-        return SimpleGroupEntity.builder()
-                .groupId(savedGroup.getGroupId())
-                .groupName(savedGroup.getGroupName())
-                .description(savedGroup.getDescription())
-                .build();
+        return groupMapper.groupEntityToResponse(savedGroup);
     }
 
-    @Cacheable(value = "groups_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<GroupEntity> findAll(Pageable pageable) {
-        return groupRepository.findAll(pageable);
+    public Page<GroupResponse> findAll(Pageable pageable) {
+        UUID tenantId = requireTenantId();
+        return groupRepository.findAllByTenantId(tenantId, pageable)
+                .map(groupMapper::groupEntityToResponse);
     }
 
-    @Cacheable(value = "groups", key = "#root.target.groupCacheKey(#groupId)")
+    @Override
+    public Page<GroupResponse> findAllByCreatedBy(UUID createdBy, Pageable pageable) {
+        UUID tenantId = requireTenantId();
+        return groupRepository.findAllByCreatedByAndTenantId(createdBy, tenantId, pageable)
+                .map(groupMapper::groupEntityToResponse);
+    }
+
     @Override
     public Optional<GroupEntity> findOne(Long groupId) {
         try {
@@ -120,14 +117,8 @@ public class GroupServiceImpl implements GroupService {
         }
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "groups", key = "#root.target.groupCacheKey(#groupId)"),
-            @CacheEvict(value = "groups_all", allEntries = true),
-            @CacheEvict(value = "group_managers", key = "#root.target.groupManagersCacheKey(#groupId)"),
-            @CacheEvict(value = "group_user_status", key = "#root.target.groupUserStatusCacheKey(#groupId)")
-    })
     @Override
-    public void updateGroup(Long groupId, GroupDTO request) {
+    public GroupResponse updateGroup(Long groupId, GroupDTO request) {
         GroupEntity group = loadGroupForTenant(groupId);
         UUID tenantId = group.getTenantId();
 
@@ -154,25 +145,16 @@ public class GroupServiceImpl implements GroupService {
             users.forEach(group::addUser);
         }
 
-        groupRepository.save(group);
+        GroupEntity savedGroup = groupRepository.save(group);
+        return groupMapper.groupEntityToResponse(savedGroup);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "groups", key = "#root.target.groupCacheKey(#groupId)"),
-            @CacheEvict(value = "groups_all", allEntries = true),
-            @CacheEvict(value = "group_managers", key = "#root.target.groupManagersCacheKey(#groupId)"),
-            @CacheEvict(value = "group_user_status", key = "#root.target.groupUserStatusCacheKey(#groupId)")
-    })
     @Override
     public void delete(Long groupId) {
         GroupEntity group = loadGroupForTenant(groupId);
         groupRepository.delete(group);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "groups", key = "#root.target.groupCacheKey(#groupId)"),
-            @CacheEvict(value = "group_user_status", key = "#root.target.groupUserStatusCacheKey(#groupId)")
-    })
     @Transactional
     @Override
     public AddUsersToGroupResponse addUsersToGroup(Long groupId, AddUsersToGroupRequest request) {
@@ -233,10 +215,6 @@ public class GroupServiceImpl implements GroupService {
                 .build();
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "groups", key = "#root.target.groupCacheKey(#groupId)"),
-            @CacheEvict(value = "group_user_status", key = "#root.target.groupUserStatusCacheKey(#groupId)")
-    })
     @Override
     public RemoveUsersFromGroupResponse removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request) {
         if (request == null || request.getUserIds() == null || request.getUserIds().isEmpty()) {
@@ -292,10 +270,6 @@ public class GroupServiceImpl implements GroupService {
                 .build();
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "groups", key = "#root.target.groupCacheKey(#groupId)"),
-            @CacheEvict(value = "group_managers", key = "#root.target.groupManagersCacheKey(#groupId)")
-    })
     @Override
     public AddManagersResponse addManagersToGroup(Long groupId, GroupManagerRequest request) {
         if (request == null || request.getManagerIds() == null || request.getManagerIds().isEmpty()) {
@@ -355,10 +329,6 @@ public class GroupServiceImpl implements GroupService {
                 .build();
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "groups", key = "#root.target.groupCacheKey(#groupId)"),
-            @CacheEvict(value = "group_managers", key = "#root.target.groupManagersCacheKey(#groupId)")
-    })
     @Override
     public RemoveManagersResponse removeManagersFromGroup(Long groupId, GroupManagerRequest request) {
         if (request == null || request.getManagerIds() == null || request.getManagerIds().isEmpty()) {
@@ -418,7 +388,7 @@ public class GroupServiceImpl implements GroupService {
         return userRepository.findUsersByGroupId(groupId, pageable);
     }
 
-    @Cacheable(value = "group_managers", key = "#root.target.groupManagersCacheKey(#groupId)")
+//    @Cacheable(value = "group_managers", key = "#root.target.groupManagersCacheKey(#groupId)")
     @Override
     public List<SimpleUserDTO> getGroupManagers(Long groupId) {
         GroupEntity group = loadGroupForTenant(groupId);
@@ -431,7 +401,7 @@ public class GroupServiceImpl implements GroupService {
                 .toList();
     }
 
-    @Cacheable(value = "group_user_status", key = "#root.target.groupUserStatusCacheKey(#groupId)")
+//    @Cacheable(value = "group_user_status", key = "#root.target.groupUserStatusCacheKey(#groupId)")
     @Override
     public List<GroupUserCandidateDTO> getGroupUserStatus(Long groupId) {
         GroupEntity group = loadGroupForTenant(groupId);
@@ -460,10 +430,6 @@ public class GroupServiceImpl implements GroupService {
      * @param request The batch invite request containing email addresses.
      * @return A response summarizing the invitation results.
      */
-    @Caching(evict = {
-            @CacheEvict(value = "groups", key = "#root.target.groupCacheKey(#groupId)"),
-            @CacheEvict(value = "group_user_status", key = "#root.target.groupUserStatusCacheKey(#groupId)")
-    })
     @Override
     @Transactional
     public BatchInviteResponse batchInviteUsersToGroup(Long groupId, BatchInviteRequest request) {

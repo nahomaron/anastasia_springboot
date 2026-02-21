@@ -164,11 +164,12 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Page<Adult_MemberEntity> findPending(Pageable pageable) {
+    public Page<Adult_MemberResponse> findPending(Pageable pageable) {
         return memberRepository.findByStatusAndTenantId(
                 MemberStatus.PENDING.name(),
                 requireTenantId(),
-                pageable);
+                pageable)
+                .map(memberMapper::memberEntityToResponse);
     }
 
     @Override
@@ -183,18 +184,20 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Page<Adult_MemberEntity> searchNonPending(Pageable pageable, String query) {
+    public Page<Adult_MemberResponse> searchNonPending(Pageable pageable, String query) {
         if (query == null || query.isBlank()) {
             return memberRepository.findByStatusNotAndTenantId(
                     MemberStatus.PENDING.name(),
                     requireTenantId(),
-                    pageable);
+                    pageable)
+                    .map(memberMapper::memberEntityToResponse);
         }
         return memberRepository.searchNonPending(
                 query.trim(),
                 MemberStatus.PENDING.name(),
                 requireTenantId(),
-                pageable);
+                pageable)
+                .map(memberMapper::memberEntityToResponse);
     }
 
     @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator", unless = "#result == null")
@@ -318,11 +321,12 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Page<Adult_MemberEntity> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable) {
+    public Page<Adult_MemberResponse> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable) {
         Specification<Adult_MemberEntity> tenantSpec = (root, query, cb) ->
                 cb.equal(root.get("tenantId"), requireTenantId());
         Specification<Adult_MemberEntity> combinedSpec = Specification.where(tenantSpec).and(spec);
-        return memberRepository.findAll(combinedSpec, pageable);
+        return memberRepository.findAll(combinedSpec, pageable)
+                .map(memberMapper::memberEntityToResponse);
     }
 
     private String generateUniqueMembershipNumber(int length, boolean isDeacon) {

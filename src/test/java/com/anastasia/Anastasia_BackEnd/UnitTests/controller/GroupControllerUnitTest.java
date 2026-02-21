@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.groups.GroupController;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
-import com.anastasia.Anastasia_BackEnd.modules.groups.model.*;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
@@ -49,6 +49,7 @@ class GroupControllerUnitTest {
 
     private GroupDTO groupDTO;
     private GroupEntity groupEntity;
+    private GroupResponse groupResponse;
 
     @BeforeEach
     void setUp() {
@@ -62,14 +63,20 @@ class GroupControllerUnitTest {
                 .groupName("Choir")
                 .visibility("PUBLIC")
                 .build();
+
+        groupResponse = GroupResponse.builder()
+                .groupId(5L)
+                .groupName("Choir")
+                .visibility("PUBLIC")
+                .build();
     }
 
     @Test
     void createGroup_shouldReturnCreated() {
-        SimpleGroupEntity expected = SimpleGroupEntity.builder().groupId(10L).groupName("Choir").build();
+        GroupResponse expected = GroupResponse.builder().groupId(10L).groupName("Choir").build();
         when(groupService.createGroup(groupDTO)).thenReturn(expected);
 
-        ResponseEntity<SimpleGroupEntity> response = groupController.createGroup(groupDTO);
+        ResponseEntity<GroupResponse> response = groupController.createGroup(groupDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isEqualTo(expected);
@@ -78,18 +85,17 @@ class GroupControllerUnitTest {
 
     @Test
     void listOfGroups_shouldReturnPagedModel() {
-        Page<GroupEntity> groupPage = new PageImpl<>(List.of(groupEntity));
+        Page<GroupResponse> groupPage = new PageImpl<>(List.of(groupResponse));
         when(groupService.findAll(Pageable.unpaged())).thenReturn(groupPage);
-        when(groupService.convertToDTO(groupEntity)).thenReturn(groupDTO);
 
         @SuppressWarnings("unchecked")
-        PagedResourcesAssembler<GroupDTO> assembler = mock(PagedResourcesAssembler.class);
-        PagedModel<EntityModel<GroupDTO>> pagedModel = PagedModel.of(
-                singletonList(EntityModel.of(groupDTO)),
+        PagedResourcesAssembler<GroupResponse> assembler = mock(PagedResourcesAssembler.class);
+        PagedModel<EntityModel<GroupResponse>> pagedModel = PagedModel.of(
+                singletonList(EntityModel.of(groupResponse)),
                 new PagedModel.PageMetadata(groupPage.getSize(), groupPage.getNumber(), groupPage.getTotalElements()));
         when(assembler.toModel(any(Page.class))).thenReturn(pagedModel);
 
-        ResponseEntity<PagedModel<EntityModel<GroupDTO>>> response = groupController.listOfGroups(Pageable.unpaged(), assembler);
+        ResponseEntity<PagedModel<EntityModel<GroupResponse>>> response = groupController.listOfGroups(Pageable.unpaged(), assembler, null);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(pagedModel);
     }
@@ -97,19 +103,19 @@ class GroupControllerUnitTest {
     @Test
     void getGroup_whenFound_shouldReturnDto() {
         when(groupService.findOne(5L)).thenReturn(Optional.of(groupEntity));
-        when(groupService.convertToDTO(groupEntity)).thenReturn(groupDTO);
+        when(groupService.convertToResponse(groupEntity)).thenReturn(groupResponse);
 
-        ResponseEntity<GroupDTO> response = groupController.getGroup(5L);
+        ResponseEntity<GroupResponse> response = groupController.getGroup(5L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
-        assertThat(response.getBody()).isEqualTo(groupDTO);
+        assertThat(response.getBody()).isEqualTo(groupResponse);
     }
 
     @Test
     void getGroup_whenMissing_shouldReturnNotFound() {
         when(groupService.findOne(9L)).thenReturn(Optional.empty());
 
-        ResponseEntity<GroupDTO> response = groupController.getGroup(9L);
+        ResponseEntity<GroupResponse> response = groupController.getGroup(9L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
@@ -118,7 +124,9 @@ class GroupControllerUnitTest {
     void updateGroup_whenExists_shouldReturnAccepted() {
         when(groupService.exists(5L)).thenReturn(true);
 
-        ResponseEntity<GroupEntity> response = groupController.updateGroup(5L, groupDTO);
+        when(groupService.updateGroup(5L, groupDTO)).thenReturn(groupResponse);
+
+        ResponseEntity<GroupResponse> response = groupController.updateGroup(5L, groupDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         verify(groupService).updateGroup(5L, groupDTO);
@@ -128,7 +136,7 @@ class GroupControllerUnitTest {
     void updateGroup_whenMissing_shouldReturnNotFound() {
         when(groupService.exists(7L)).thenReturn(false);
 
-        ResponseEntity<GroupEntity> response = groupController.updateGroup(7L, groupDTO);
+        ResponseEntity<GroupResponse> response = groupController.updateGroup(7L, groupDTO);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
@@ -189,7 +197,7 @@ class GroupControllerUnitTest {
     void getGroupMember_whenUserFound_shouldReturnUser() {
         UUID userId = UUID.randomUUID();
         UserEntity user = UserEntity.builder().uuid(userId).fullName("Jane").email("jane@example.com").build();
-        when(userService.findOne(userId)).thenReturn(Optional.of(user));
+        when(userService.findEntity(userId)).thenReturn(Optional.of(user));
 
         ResponseEntity<SimpleUserDTO> response = groupController.getGroupMember(userId);
 
@@ -200,7 +208,7 @@ class GroupControllerUnitTest {
     @Test
     void getGroupMember_whenMissing_shouldReturnNotFound() {
         UUID userId = UUID.randomUUID();
-        when(userService.findOne(userId)).thenReturn(Optional.empty());
+        when(userService.findEntity(userId)).thenReturn(Optional.empty());
 
         ResponseEntity<SimpleUserDTO> response = groupController.getGroupMember(userId);
 

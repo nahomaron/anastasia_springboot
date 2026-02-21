@@ -54,9 +54,7 @@ public class MemberController {
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/requests")
     public ResponseEntity<Page<Adult_MemberResponse>> listPendingMembers(Pageable pageable){
-        Page<Adult_MemberEntity> members = memberService.findPending(pageable);
-        return new ResponseEntity<>(
-                members.map(memberService::convertToResponse), HttpStatus.OK);
+        return new ResponseEntity<>(memberService.findPending(pageable), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN') " +
@@ -66,9 +64,7 @@ public class MemberController {
             Pageable pageable,
             @RequestParam(value = "q", required = false) String query
     ){
-        Page<Adult_MemberEntity> members = memberService.searchNonPending(pageable, query);
-        return new ResponseEntity<>(
-                members.map(memberService::convertToResponse), HttpStatus.OK);
+        return new ResponseEntity<>(memberService.searchNonPending(pageable, query), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN') " +
@@ -218,10 +214,7 @@ public class MemberController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Page<Adult_MemberEntity> members = memberService.findAllBySpecification(spec, pageable);
-
-        return new ResponseEntity<>(members.map(
-                memberService::convertToResponse), HttpStatus.OK);
+        return new ResponseEntity<>(memberService.findAllBySpecification(spec, pageable), HttpStatus.OK);
     }
 
 

@@ -19,6 +19,8 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
@@ -38,22 +40,34 @@ public class GroupController {
 
     // Creating the group
     @PostMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST', 'MEMBER') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS')")
-    public ResponseEntity<SimpleGroupEntity> createGroup(@RequestBody GroupDTO groupDTO){
-        SimpleGroupEntity simpleGroupEntity = groupService.createGroup(groupDTO);
-        return new ResponseEntity<>(simpleGroupEntity, HttpStatus.CREATED);
+    public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupDTO groupDTO){
+        GroupResponse groupResponse = groupService.createGroup(groupDTO);
+        return new ResponseEntity<>(groupResponse, HttpStatus.CREATED);
     }
 
     // Get list of Groups
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
-    public ResponseEntity<PagedModel<EntityModel<GroupDTO>>> listOfGroups(Pageable pageable, PagedResourcesAssembler<GroupDTO> assembler){
-        Page<GroupEntity> groups = groupService.findAll(pageable);
-        Page<GroupDTO> groupDTOS = groups.map(groupService::convertToDTO);
-
-        PagedModel<EntityModel<GroupDTO>> model = assembler.toModel(groupDTOS);
+    public ResponseEntity<PagedModel<EntityModel<GroupResponse>>> listOfGroups(
+            Pageable pageable,
+            PagedResourcesAssembler<GroupResponse> assembler,
+            @RequestParam(value = "createdBy", required = false) String createdBy
+    ){
+        Page<GroupResponse> groupResponses;
+        if (createdBy != null && !createdBy.isBlank()) {
+            UUID creatorId = "me".equalsIgnoreCase(createdBy) ? resolveCurrentUserId() : UUID.fromString(createdBy);
+            if (creatorId == null) {
+                groupResponses = Page.empty(pageable);
+            } else {
+                groupResponses = groupService.findAllByCreatedBy(creatorId, pageable);
+            }
+        } else {
+            groupResponses = groupService.findAll(pageable);
+        }
+        PagedModel<EntityModel<GroupResponse>> model = assembler.toModel(groupResponses);
         return new ResponseEntity<>(model, HttpStatus.OK);
     }
 
@@ -61,11 +75,11 @@ public class GroupController {
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     @GetMapping("/{groupId}")
-    public ResponseEntity<GroupDTO> getGroup(@PathVariable Long groupId){
+    public ResponseEntity<GroupResponse> getGroup(@PathVariable Long groupId){
         Optional<GroupEntity> foundGroup = groupService.findOne(groupId);
         return foundGroup.map(groupEntity -> {
-            GroupDTO groupDTO = groupService.convertToDTO(groupEntity);
-            return new ResponseEntity<>(groupDTO, HttpStatus.FOUND);
+            GroupResponse groupResponse = groupService.convertToResponse(groupEntity);
+            return new ResponseEntity<>(groupResponse, HttpStatus.FOUND);
         }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
@@ -73,15 +87,15 @@ public class GroupController {
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'EDIT_GROUPS')")
     @PutMapping("/{groupId}")
-    public ResponseEntity<GroupEntity> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDTO){
+    public ResponseEntity<GroupResponse> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDTO){
         boolean groupExists = groupService.exists(groupId);
 
         if(!groupExists){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        groupService.updateGroup(groupId, groupDTO);
+        GroupResponse response = groupService.updateGroup(groupId, groupDTO);
 
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 
     // Get list of church members as candidates for group
@@ -140,7 +154,7 @@ public class GroupController {
     @GetMapping("/group/members/{userId}")
     public ResponseEntity<SimpleUserDTO> getGroupMember(@PathVariable UUID userId) {
         // Fetch user logic here
-        Optional<UserEntity> userEntity = userService.findOne(userId);
+        Optional<UserEntity> userEntity = userService.findEntity(userId);
         return userEntity.map(foundUser -> {
             SimpleUserDTO user = SimpleUserDTO.builder()
                     .uuid(foundUser.getUuid())
@@ -170,6 +184,20 @@ public class GroupController {
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId){
         groupService.delete(groupId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    private UUID resolveCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal userPrincipal) {
+            return userPrincipal.getUserUuid();
+        }
+
+        return null;
     }
 
 

@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Set;
 
@@ -19,6 +20,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class EventDTO {
+
+    private Long eventId;
 
     private ChurchEntity church;
 
@@ -39,6 +42,26 @@ public class EventDTO {
     private LocalTime endTime;
 
     private String image;
+
+    private EventType type;
+
+    private Integer capacity;
+
+    private Boolean requiresRegistration;
+
+    private Boolean allowWaitlist;
+
+    private Boolean allowGeoCheckIn;
+
+    private Double latitude;
+
+    private Double longitude;
+
+    private Integer geofenceRadiusMeters;
+
+    private LocalDateTime checkInOpensAt;
+
+    private LocalDateTime checkInClosesAt;
 
     private Set<GroupEntity> invitedGroups;
 

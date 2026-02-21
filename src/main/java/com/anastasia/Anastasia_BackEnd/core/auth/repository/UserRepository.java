@@ -38,6 +38,36 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     // Find users by a list of UUIDs
     List<UserEntity> findAllByUuidIn(Set<UUID> uuids);
 
+    @Query("""
+        SELECT new com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO(u.uuid, u.fullName, u.email)
+        FROM UserEntity u
+        WHERE u.tenantId = :tenantId
+          AND (
+            LOWER(COALESCE(u.fullName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+            OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+          )
+        ORDER BY u.fullName
+    """)
+    List<SimpleUserDTO> searchByTenantId(@Param("tenantId") UUID tenantId, @Param("q") String query);
+
+    @Query("""
+        SELECT DISTINCT new com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO(u.uuid, u.fullName, u.email)
+        FROM UserEntity u
+        JOIN u.roles r
+        WHERE u.tenantId = :tenantId
+          AND r.roleName IN :roles
+          AND (
+            LOWER(COALESCE(u.fullName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+            OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+          )
+        ORDER BY u.fullName
+    """)
+    List<SimpleUserDTO> searchByTenantIdAndRoles(
+            @Param("tenantId") UUID tenantId,
+            @Param("q") String query,
+            @Param("roles") Set<String> roles
+    );
+
     // --- Church-based queries (optimized) ---
 
     @Query("""

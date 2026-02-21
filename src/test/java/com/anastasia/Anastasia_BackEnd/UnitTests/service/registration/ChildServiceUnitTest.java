@@ -4,9 +4,11 @@ import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
@@ -70,6 +72,7 @@ public class ChildServiceUnitTest {
                 .build();
 
         church = new ChurchEntity();
+        church.setTenant(TenantEntity.builder().id(tenantId).build());
         principal = new UserPrincipal(user);
         authentication = mock(Authentication.class);
         securityContext = mock(SecurityContext.class);
@@ -133,20 +136,24 @@ public class ChildServiceUnitTest {
     void testFindAll() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Child_MemberEntity> page = new PageImpl<>(List.of(child));
+        Child_MemberResponse response = Child_MemberResponse.builder().id(1L).build();
         when(childRepository.findByStatusNotAndTenantId(
                 eq(ChildStatus.PENDING.name()),
                 eq(tenantId),
                 eq(pageable)))
                 .thenReturn(page);
+        when(childMapper.childEntityToResponse(child)).thenReturn(response);
 
-        Page<Child_MemberEntity> result = childService.findAll(pageable);
+        Page<Child_MemberResponse> result = childService.findAll(pageable);
         assertEquals(1, result.getTotalElements());
     }
 
     @Test
     void testFindChildById() {
+        Child_MemberResponse response = Child_MemberResponse.builder().id(1L).build();
         when(childRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(child));
-        Optional<Child_MemberEntity> result = childService.findChildById(1L);
+        when(childMapper.childEntityToResponse(child)).thenReturn(response);
+        Optional<Child_MemberResponse> result = childService.findChildById(1L);
         assertTrue(result.isPresent());
     }
 

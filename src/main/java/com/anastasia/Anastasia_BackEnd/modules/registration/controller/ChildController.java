@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,18 +45,14 @@ public class ChildController {
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
     public ResponseEntity<Page<Child_MemberResponse>> listOfChildren(Pageable pageable){
-        Page<Child_MemberEntity> children = childService.findAll(pageable);
-        return new ResponseEntity<>(
-                children.map(childService::convertToResponse), HttpStatus.OK);
+        return new ResponseEntity<>(childService.findAll(pageable), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'ADMIN') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/requests")
     public ResponseEntity<Page<Child_MemberResponse>> listPendingChildren(Pageable pageable){
-        Page<Child_MemberEntity> children = childService.findPending(pageable);
-        return new ResponseEntity<>(
-                children.map(childService::convertToResponse), HttpStatus.OK);
+        return new ResponseEntity<>(childService.findPending(pageable), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'ADMIN') or " +
@@ -75,20 +70,16 @@ public class ChildController {
             Pageable pageable,
             @RequestParam(value = "q", required = false) String query
     ){
-        Page<Child_MemberEntity> children = childService.searchNonPending(pageable, query);
-        return new ResponseEntity<>(
-                children.map(childService::convertToResponse), HttpStatus.OK);
+        return new ResponseEntity<>(childService.searchNonPending(pageable, query), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{memberId}")
     public ResponseEntity<Child_MemberResponse> getChild(@PathVariable Long memberId){
-        Optional<Child_MemberEntity> foundChild = childService.findChildById(memberId);
-        return foundChild.map(childEntity -> {
-            Child_MemberResponse childMemberResponse = childService.convertToResponse(childEntity);
-            return new ResponseEntity<>(childMemberResponse, HttpStatus.FOUND);
-        }).orElse(
+        return childService.findChildById(memberId).map(childMemberResponse ->
+                new ResponseEntity<>(childMemberResponse, HttpStatus.FOUND)
+        ).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
     }
@@ -186,10 +177,7 @@ public class ChildController {
 
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-        Page<Child_MemberEntity> members = childService.findAllBySpecification(spec, pageable);
-
-        return new ResponseEntity<>(members.map(
-                childService::convertToResponse), HttpStatus.OK);
+        return new ResponseEntity<>(childService.findAllBySpecification(spec, pageable), HttpStatus.OK);
     }
 
 

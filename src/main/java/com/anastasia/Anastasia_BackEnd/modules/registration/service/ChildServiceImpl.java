@@ -113,11 +113,12 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
-    public Page<Child_MemberEntity> findAll(Pageable pageable) {
+    public Page<Child_MemberResponse> findAll(Pageable pageable) {
         return childRepository.findByStatusNotAndTenantId(
                 ChildStatus.PENDING.name(),
                 requireTenantId(),
-                pageable);
+                pageable)
+                .map(childMapper::childEntityToResponse);
     }
 
     @Override
@@ -135,32 +136,36 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
-    public Page<Child_MemberEntity> findPending(Pageable pageable) {
+    public Page<Child_MemberResponse> findPending(Pageable pageable) {
         return childRepository.findByStatusAndTenantId(
                 ChildStatus.PENDING.name(),
                 requireTenantId(),
-                pageable);
+                pageable)
+                .map(childMapper::childEntityToResponse);
     }
 
     @Override
-    public Page<Child_MemberEntity> searchNonPending(Pageable pageable, String query) {
+    public Page<Child_MemberResponse> searchNonPending(Pageable pageable, String query) {
         if (query == null || query.isBlank()) {
             return childRepository.findByStatusNotAndTenantId(
                     ChildStatus.PENDING.name(),
                     requireTenantId(),
-                    pageable);
+                    pageable)
+                    .map(childMapper::childEntityToResponse);
         }
         return childRepository.searchNonPending(
                 query.trim(),
                 ChildStatus.PENDING.name(),
                 requireTenantId(),
-                pageable);
+                pageable)
+                .map(childMapper::childEntityToResponse);
     }
 
     @Cacheable(value = "children", key = "#childId")
     @Override
-    public Optional<Child_MemberEntity> findChildById(Long childId) {
-        return childRepository.findByIdAndTenantId(childId, requireTenantId());
+    public Optional<Child_MemberResponse> findChildById(Long childId) {
+        return childRepository.findByIdAndTenantId(childId, requireTenantId())
+                .map(childMapper::childEntityToResponse);
     }
 
     @Caching(
@@ -231,11 +236,12 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
-    public Page<Child_MemberEntity> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable) {
+    public Page<Child_MemberResponse> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable) {
         Specification<Child_MemberEntity> tenantSpec = (root, query, cb) ->
                 cb.equal(root.get("tenantId"), requireTenantId());
         Specification<Child_MemberEntity> combinedSpec = Specification.allOf(tenantSpec).and(spec);
-        return childRepository.findAll(combinedSpec, pageable);
+        return childRepository.findAll(combinedSpec, pageable)
+                .map(childMapper::childEntityToResponse);
     }
 
     @Caching(

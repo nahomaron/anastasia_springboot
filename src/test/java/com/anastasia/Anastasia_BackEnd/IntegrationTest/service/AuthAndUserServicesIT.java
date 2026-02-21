@@ -12,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
@@ -190,14 +191,17 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
                 .email("updated+" + UUID.randomUUID() + "@example.com")
                 .build();
 
-        UserEntity updatedDetails = userService.updateUserDetails(updatePayload, authentication);
-        assertThat(updatedDetails.getFullName()).isEqualTo("Updated Auth User");
-        assertThat(updatedDetails.getEmail()).isEqualTo(updatePayload.getEmail());
+        SimpleUserDTO updatedDetails = userService.updateUserDetails(updatePayload, authentication);
+        assertThat(updatedDetails.fullName()).isEqualTo("Updated Auth User");
+        assertThat(updatedDetails.email()).isEqualTo(updatePayload.getEmail());
 
-        UserPrincipal principalAfterUpdate = new UserPrincipal(updatedDetails);
+        UserEntity updatedUserEntity = userRepository.findById(updatedDetails.uuid())
+                .orElseThrow(() -> new AssertionError("Updated user not found"));
+
+        UserPrincipal principalAfterUpdate = new UserPrincipal(updatedUserEntity);
         Authentication updatedAuth = new UsernamePasswordAuthenticationToken(
                 principalAfterUpdate,
-                updatedDetails.getPassword(),
+                updatedUserEntity.getPassword(),
                 principalAfterUpdate.getAuthorities()
         );
 
@@ -210,17 +214,17 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
 
         AuthenticationResponse afterChange = authService.authenticate(
                 AuthenticationRequest.builder()
-                        .email(updatedDetails.getEmail())
+                        .email(updatedDetails.email())
                         .password("FinalPassw0rd!")
                         .build()
         );
         assertThat(afterChange.getAccessToken()).isNotBlank();
 
         // Avatar update uses SecurityContext
-        authenticate(updatedDetails);
+        authenticate(updatedUserEntity);
         userService.updateProfileAvatar(new AvatarDTO("https://cdn.example.com/avatar.png", "21KB"));
 
-        var storedAvatar = avatarRepository.findByOwnerId(updatedDetails.getUuid())
+        var storedAvatar = avatarRepository.findByOwnerId(updatedDetails.uuid())
                 .orElseThrow(() -> new AssertionError("Avatar not persisted"));
         assertThat(storedAvatar.getImageUrl()).isEqualTo("https://cdn.example.com/avatar.png");
         assertThat(storedAvatar.getAvatarType()).isEqualTo(AvatarType.USER);

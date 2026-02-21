@@ -10,21 +10,24 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public interface GroupService {
     GroupEntity convertToEntity(GroupDTO groupDTO);
-    GroupDTO convertToDTO(GroupEntity groupEntity);
+    GroupResponse convertToResponse(GroupEntity groupEntity);
 
-    SimpleGroupEntity createGroup(GroupDTO groupDTO);
+    GroupResponse createGroup(GroupDTO groupDTO);
 
-    Page<GroupEntity> findAll(Pageable pageable);
+    Page<GroupResponse> findAll(Pageable pageable);
+
+    Page<GroupResponse> findAllByCreatedBy(UUID createdBy, Pageable pageable);
 
     Optional<GroupEntity> findOne(Long groupId);
 
     boolean exists(Long groupId);
 
-    void updateGroup(Long groupId, GroupDTO groupDTO);
+    GroupResponse updateGroup(Long groupId, GroupDTO groupDTO);
 
     void delete(Long groupId);
 

@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.GroupMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
+import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
@@ -53,7 +54,7 @@ class GroupMapperUnitTest {
     }
 
     @Test
-    void groupEntityToDTO_shouldMapAllFields() {
+    void groupEntityToResponse_shouldMapAllFields() {
         ChurchEntity church = ChurchEntity.builder()
                 .churchId(10L)
                 .churchNumber("CH100")
@@ -72,7 +73,7 @@ class GroupMapperUnitTest {
                 .users(Set.of(member))
                 .build();
 
-        GroupDTO dto = groupMapper.groupEntityToDTO(entity);
+        GroupResponse dto = groupMapper.groupEntityToResponse(entity);
 
         assertThat(dto.getChurchId()).isEqualTo(church.getChurchId().toString());
         assertThat(dto.getGroupName()).isEqualTo("Youth Group");
@@ -84,16 +85,16 @@ class GroupMapperUnitTest {
     }
 
     @Test
-    void groupEntityToDTO_withNullEntity_returnsNull() {
-        assertThat(groupMapper.groupEntityToDTO(null)).isNull();
+    void groupEntityToResponse_withNullEntity_returnsNull() {
+        assertThat(groupMapper.groupEntityToResponse(null)).isNull();
     }
 
     @Test
     void groupDTOToEntity_shouldResolveUsersAndManagers() {
         UUID managerId = manager.getUuid();
         UUID memberId = member.getUuid();
-        when(userService.findOne(eq(managerId))).thenReturn(Optional.of(manager));
-        when(userService.findOne(eq(memberId))).thenReturn(Optional.of(member));
+        when(userService.findEntity(eq(managerId))).thenReturn(Optional.of(manager));
+        when(userService.findEntity(eq(memberId))).thenReturn(Optional.of(member));
 
         GroupDTO dto = GroupDTO.builder()
                 .churchId("15")
@@ -120,7 +121,7 @@ class GroupMapperUnitTest {
     @Test
     void groupDTOToEntity_whenUserMissing_throws() {
         UUID missingId = UUID.randomUUID();
-        when(userService.findOne(eq(missingId))).thenReturn(Optional.empty());
+        when(userService.findEntity(eq(missingId))).thenReturn(Optional.empty());
 
         GroupDTO dto = GroupDTO.builder()
                 .churchId("15")

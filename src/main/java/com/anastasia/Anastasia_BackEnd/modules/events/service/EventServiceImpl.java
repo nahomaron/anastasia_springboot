@@ -47,7 +47,7 @@ public class EventServiceImpl implements EventService{
         return eventManagerMapper.eventManagerEntityToDTO(eventManagerEntity);
     }
 
-    @Cacheable(value = "events_visible", key = "#root.target.visibleEventsCacheKey(#userId)")
+//    @Cacheable(value = "events_visible", key = "#root.target.visibleEventsCacheKey(#userId)")
     @Override
     public List<EventDTO> getVisibleEventsForUser(UUID userId) {
         if (userId == null) {
@@ -64,10 +64,10 @@ public class EventServiceImpl implements EventService{
                 .toList();
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)"),
-            @CacheEvict(value = "events_visible", allEntries = true)
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)"),
+//            @CacheEvict(value = "events_visible", allEntries = true)
+//    })
     @Override
     public void assignManagerToEvent(Long eventId, UUID userId, String role) {
 
@@ -86,10 +86,10 @@ public class EventServiceImpl implements EventService{
         eventRepository.save(event);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)"),
-            @CacheEvict(value = "events_visible", allEntries = true)
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)"),
+//            @CacheEvict(value = "events_visible", allEntries = true)
+//    })
     @Override
     public void removeManager(Long eventId, UUID managerId) {
         EventEntity event = eventRepository.findById(eventId)
@@ -113,7 +113,7 @@ public class EventServiceImpl implements EventService{
         eventRepository.save(event);
     }
 
-    @Cacheable(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
+//    @Cacheable(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
     @Override
     public List<EventManagerEntity> getManagers(Long eventId) {
         return eventRepository.findAllManagersByEventId(eventId);
@@ -141,10 +141,10 @@ public class EventServiceImpl implements EventService{
         return eventRepository.save(event);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "events_visible", allEntries = true),
-            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "events_visible", allEntries = true),
+//            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
+//    })
     @Override
     public EventEntity updateEvent(Long eventId, EventEntity event) {
         if(!eventRepository.existsById(eventId)){
@@ -154,10 +154,10 @@ public class EventServiceImpl implements EventService{
         return eventRepository.save(event);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "events_visible", allEntries = true),
-            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "events_visible", allEntries = true),
+//            @CacheEvict(value = "event_managers", key = "#root.target.eventManagersCacheKey(#eventId)")
+//    })
     @Override
     public void deleteEvent(Long eventId) {
         if(!eventRepository.existsById(eventId)){

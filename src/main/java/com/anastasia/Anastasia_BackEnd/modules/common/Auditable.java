@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.modules.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,15 +28,37 @@ public abstract class Auditable {
     private LocalDateTime createdDate;
 
     @LastModifiedDate
-    @Column(insertable = false)
+    @Column(nullable = false)
     private LocalDateTime lastModifiedDate;
 
-//    @CreatedBy
-//    @Column(nullable = false, updatable = false)
-//    private UUID createdBy;
-//
-//    @LastModifiedBy
-//    @Column(insertable = false)
-//    private UUID lastModifiedBy;
+    @CreatedBy
+    @Column(nullable = false, updatable = false)
+    private UUID createdBy;
 
+    @LastModifiedBy
+    @Column(nullable = false)
+    private UUID lastModifiedBy;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdDate == null) {
+            createdDate = LocalDateTime.now();
+        }
+        if (lastModifiedDate == null) {
+            lastModifiedDate = createdDate;
+        }
+        if (lastModifiedBy == null) {
+            lastModifiedBy = createdBy;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        if (lastModifiedDate == null) {
+            lastModifiedDate = LocalDateTime.now();
+        }
+        if (lastModifiedBy == null) {
+            lastModifiedBy = createdBy;
+        }
+    }
 }

@@ -5,6 +5,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarD
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
@@ -22,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -65,9 +67,9 @@ public class UserController {
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping("/")
     public ResponseEntity<List<UUID>> listOfUsers(Pageable pageable){
-        Page<UserEntity> users = userService.findAllUsers(pageable);
+        Page<UserResponseIDs> users = userService.findAllUsers(pageable);
         List<UUID> userIdsList = users.stream()
-                .map(UserEntity::getUuid)
+                .map(UserResponseIDs::getUuid)
                 .toList();
 
         return new ResponseEntity<>(userIdsList, HttpStatus.OK);
@@ -81,12 +83,8 @@ public class UserController {
      */
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'USER')")
     @GetMapping("/{userid}")
-    public ResponseEntity<UserDTO> getUser(@PathVariable UUID userId){
-        Optional<UserEntity> foundUser = userService.findOne(userId);
-        return foundUser.map(userEntity -> {
-            UserDTO userDTO = userService.convertToDTO(userEntity);
-            return ResponseEntity.ok(userDTO);
-        }).orElse(
+    public ResponseEntity<SimpleUserDTO> getUser(@PathVariable UUID userId){
+        return userService.findOne(userId).map(ResponseEntity::ok).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
     }
@@ -95,6 +93,15 @@ public class UserController {
     @GetMapping("/me/memberships")
     public ResponseEntity<UserMembershipsResponse> getMyMemberships() {
         return ResponseEntity.ok(userService.getCurrentUserMemberships());
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT')")
+    @GetMapping("/search")
+    public ResponseEntity<List<SimpleUserDTO>> searchUsers(
+            @RequestParam("q") String query,
+            @RequestParam(value = "roles", required = false) Set<String> roles
+    ) {
+        return ResponseEntity.ok(userService.searchUsers(query, roles));
     }
 
 
@@ -107,10 +114,9 @@ public class UserController {
      * @return ResponseEntity containing the updated UserDTO of the connected user.
      */
     @PatchMapping("/update-user-details")
-    public ResponseEntity<UserDTO> updateUserDetails(@Valid @RequestBody UserDTO userDTO, Principal connectedUser){
+    public ResponseEntity<SimpleUserDTO> updateUserDetails(@Valid @RequestBody UserDTO userDTO, Principal connectedUser){
         UserEntity user = userService.convertToEntity(userDTO);
-        UserEntity updatedUser = userService.updateUserDetails(user, connectedUser);
-        return new ResponseEntity<>(userService.convertToDTO(updatedUser), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(userService.updateUserDetails(user, connectedUser), HttpStatus.ACCEPTED);
     }
 
     @PutMapping("/avatar")

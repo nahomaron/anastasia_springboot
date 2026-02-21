@@ -8,6 +8,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
@@ -82,14 +84,14 @@ public class UserServiceUnitTest {
         Page<UserEntity> page = new PageImpl<>(users);
         when(userRepository.findAll(any(Pageable.class))).thenReturn(page);
 
-        Page<UserEntity> result = userService.findAllUsers(Pageable.unpaged());
+        Page<UserResponseIDs> result = userService.findAllUsers(Pageable.unpaged());
         assertEquals(1, result.getTotalElements());
     }
 
     @Test
     void testFindOne_found() {
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
-        Optional<UserEntity> result = userService.findOne(testUserId);
+        Optional<SimpleUserDTO> result = userService.findOne(testUserId);
         assertTrue(result.isPresent());
     }
 
@@ -99,8 +101,8 @@ public class UserServiceUnitTest {
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any())).thenReturn(testUser);
 
-        UserEntity result = userService.updateUserDetails(updatedInfo, mockAuthentication);
-        assertEquals(testUser.getEmail(), result.getEmail());
+        SimpleUserDTO result = userService.updateUserDetails(updatedInfo, mockAuthentication);
+        assertEquals(testUser.getEmail(), result.email());
     }
 
     @Test
@@ -179,7 +181,7 @@ public class UserServiceUnitTest {
     @Test
     void testFindAll() {
         when(userRepository.findAll()).thenReturn(List.of(testUser));
-        List<UserEntity> result = userService.findAll();
+        List<UserResponseIDs> result = userService.findAll();
         assertEquals(1, result.size());
     }
 
