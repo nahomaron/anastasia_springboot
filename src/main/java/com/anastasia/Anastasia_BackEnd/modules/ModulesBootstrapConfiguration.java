@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.config.NotificationModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.config.AccountingModuleConfig;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.config.AppointmentsModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.events.config.EventsModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.groups.config.GroupsModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.payments.config.PaymentsModuleConfig;
@@ -17,6 +18,7 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @Import({
         AccountingModuleConfig.class,
+        AppointmentsModuleConfig.class,
         EventsModuleConfig.class,
         GroupsModuleConfig.class,
         PaymentsModuleConfig.class,
