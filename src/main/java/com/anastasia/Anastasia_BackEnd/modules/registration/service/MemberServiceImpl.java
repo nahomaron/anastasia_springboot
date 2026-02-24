@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -185,18 +186,35 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public Page<Adult_MemberResponse> searchNonPending(Pageable pageable, String query) {
-        if (query == null || query.isBlank()) {
-            return memberRepository.findByStatusNotAndTenantId(
-                    MemberStatus.PENDING.name(),
-                    requireTenantId(),
-                    pageable)
-                    .map(memberMapper::memberEntityToResponse);
-        }
-        return memberRepository.searchNonPending(
-                query.trim(),
-                MemberStatus.PENDING.name(),
-                requireTenantId(),
-                pageable)
+        UUID tenantId = requireTenantId();
+        Long churchId = resolveCurrentChurchId();
+        String search = query == null ? null : query.trim();
+
+        Specification<Adult_MemberEntity> scopeSpec = (root, cq, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("tenantId"), tenantId));
+            predicates.add(cb.notEqual(root.get("status"), MemberStatus.PENDING.name()));
+            if (churchId != null) {
+                predicates.add(cb.equal(root.get("churchId"), churchId));
+            }
+            if (search != null && !search.isBlank()) {
+                String like = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("fatherName"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherName"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("firstNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("fatherNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("membershipNumber"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("email"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("profession"), "")), like)
+                ));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return memberRepository.findAll(scopeSpec, pageable)
                 .map(memberMapper::memberEntityToResponse);
     }
 
@@ -356,6 +374,24 @@ public class MemberServiceImpl implements MemberService {
             allEntries = true)
     public void clearAllCache() {
         System.out.println("Clearing members_all cache...");
+    }
+
+    private Long resolveCurrentChurchId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            return null;
+        }
+        return userRepository.findById(principal.getUserUuid())
+                .map(user -> {
+                    if (user.getMembership() != null && user.getMembership().getChurchId() != null) {
+                        return user.getMembership().getChurchId();
+                    }
+                    if (user.getTenant() != null && user.getTenant().getChurch() != null) {
+                        return user.getTenant().getChurch().getChurchId();
+                    }
+                    return null;
+                })
+                .orElse(null);
     }
 
     public void evictMemberCachesForTenant(String tenantId) {
