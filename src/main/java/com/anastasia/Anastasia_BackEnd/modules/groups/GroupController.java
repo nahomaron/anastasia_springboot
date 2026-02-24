@@ -49,7 +49,7 @@ public class GroupController {
 
     // Get list of Groups
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     public ResponseEntity<PagedModel<EntityModel<GroupResponse>>> listOfGroups(
             Pageable pageable,
