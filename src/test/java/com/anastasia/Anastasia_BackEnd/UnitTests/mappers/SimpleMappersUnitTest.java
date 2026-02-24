@@ -207,7 +207,6 @@ class SimpleMappersUnitTest {
 
         EventManagerEntity entity = eventManagerMapper.eventManagerDTOToEntity(dto);
         assertThat(entity.getRole()).isEqualTo("ORGANIZER");
-        assertThat(entity.getAssignedAt()).isEqualTo(dto.getAssignedAt());
 
         EventManagerDTO mappedBack = eventManagerMapper.eventManagerEntityToDTO(entity);
         assertThat(mappedBack.getRole()).isEqualTo("ORGANIZER");

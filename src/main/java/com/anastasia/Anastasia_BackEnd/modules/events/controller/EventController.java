@@ -4,10 +4,12 @@ import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventManagerEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.*;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.report.EventReport;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.requests.AssignEventManagerRequest;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.requests.EventManagerDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.events.service.EventAttendanceService;
+import com.anastasia.Anastasia_BackEnd.modules.events.service.EventReportService;
 import com.anastasia.Anastasia_BackEnd.modules.events.service.EventService;
 import com.anastasia.Anastasia_BackEnd.modules.events.service.QrCheckInService;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +30,10 @@ public class EventController {
 
     private final EventService eventService;
     private final EventAttendanceService attendanceService;
+    private final EventReportService eventReportService;
     private final QrCheckInService qrCheckInService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENTS')")
     @GetMapping("/visible")
     public ResponseEntity<List<EventDTO>> getVisibleEventsForCurrentUser() {
@@ -39,16 +42,25 @@ public class EventController {
         return ResponseEntity.ok(events);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST', 'MEMBER') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENTS')")
+    @GetMapping("/{eventId}")
+    public ResponseEntity<EventDTO> getEventById(@PathVariable Long eventId) {
+        UUID userId = resolveCurrentUserId();
+        EventDTO event = eventService.getEventByIdForUser(userId, eventId);
+        return ResponseEntity.ok(event);
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS')")
     @PostMapping
     public ResponseEntity<?> createEvent(@RequestBody EventDTO eventDTO){
         EventEntity event = eventService.convertToEntity(eventDTO);
         EventEntity savedEvent = eventService.createEvent(event);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(eventService.convertToDTO(savedEvent), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS')")
     @PutMapping("/{eventId}/update")
     public ResponseEntity<?> updateEvent(@PathVariable Long eventId, @RequestBody EventDTO eventDTO){
@@ -66,7 +78,7 @@ public class EventController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS')")
     @DeleteMapping("/{eventId}/managers/{managerId}")
     public ResponseEntity<?> removeManager(@PathVariable Long eventId, @PathVariable UUID managerId) {
@@ -74,7 +86,7 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS')")
     @GetMapping("/{eventId}/managers")
     public ResponseEntity<List<EventManagerDTO>> listManagers(@PathVariable Long eventId) {
@@ -85,7 +97,7 @@ public class EventController {
                 .toList(), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS')")
     @DeleteMapping("/{eventId}")
     public ResponseEntity<?> deleteEvent(@PathVariable Long eventId){
@@ -93,7 +105,7 @@ public class EventController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENTS')")
     @PostMapping("/event/check-in")
     public ResponseEntity<EventAttendance> checkIn(@RequestBody CheckInRequestDTO requestDTO){
@@ -101,7 +113,7 @@ public class EventController {
         return new ResponseEntity<>(attendance, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENTS')")
     @PostMapping("/event/check-in/qr-code")
     public ResponseEntity<EventAttendance> checkInWithQR(@RequestBody CheckInQRRequestDTO requestDTO){
@@ -110,7 +122,7 @@ public class EventController {
     }
 
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'MARK_ATTENDANCE')")
     @PostMapping("/mark-absent")
     public ResponseEntity<EventAttendance> markAbsent(@RequestBody MarkAbsentRequestDTO request) {
@@ -118,15 +130,23 @@ public class EventController {
         return new ResponseEntity<>(attendance, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'MARK_ATTENDANCE')")
+    @PostMapping("/attendance/status")
+    public ResponseEntity<EventAttendance> updateAttendanceStatus(@RequestBody UpdateAttendanceStatusRequestDTO request) {
+        EventAttendance attendance = attendanceService.updateAttendanceStatus(request);
+        return new ResponseEntity<>(attendance, HttpStatus.OK);
+    }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-event/{eventId}")
     public ResponseEntity<List<EventAttendance>> getAttendanceByEvent(@PathVariable Long eventId) {
         return ResponseEntity.ok(attendanceService.getAttendanceByEvent(eventId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN','PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-event/{eventId}/status/{status}")
     public ResponseEntity<List<EventAttendance>> getByEventAndStatus(@PathVariable Long eventId,
@@ -134,14 +154,21 @@ public class EventController {
         return ResponseEntity.ok(attendanceService.getAttendanceByEventAndStatus(eventId, status));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN', 'PRIEST') " +
+            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
+    @GetMapping("/{eventId}/report")
+    public ResponseEntity<EventReport> getEventReport(@PathVariable Long eventId) {
+        return ResponseEntity.ok(eventReportService.generateEventReport(eventId));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-user/{userId}")
     public ResponseEntity<List<EventAttendance>> getByUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(attendanceService.getAttendanceByUser(userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN', 'PRIEST') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-user/{userId}/status/{status}")
     public ResponseEntity<List<EventAttendance>> getByUserAndStatus(@PathVariable UUID userId,

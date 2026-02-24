@@ -90,14 +90,16 @@ class EventServiceImplUnitTest {
     void getVisibleEventsForUser_returnsMappedDtosFromRepository() {
         EventEntity visibleEvent = EventEntity.builder().eventId(99L).build();
         EventDTO visibleDto = EventDTO.builder().title("Visible").build();
+        user.setEmail("member@example.com");
 
-        when(eventRepository.findVisibleForUser(tenantId, userId)).thenReturn(List.of(visibleEvent));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(eventRepository.findVisibleForUser(tenantId, userId, user.getEmail())).thenReturn(List.of(visibleEvent));
         when(eventMapper.eventEntityToDTO(visibleEvent)).thenReturn(visibleDto);
 
         List<EventDTO> actual = eventService.getVisibleEventsForUser(userId);
 
         assertThat(actual).containsExactly(visibleDto);
-        verify(eventRepository).findVisibleForUser(tenantId, userId);
+        verify(eventRepository).findVisibleForUser(tenantId, userId, user.getEmail());
         verify(eventMapper).eventEntityToDTO(visibleEvent);
     }
 
@@ -118,7 +120,6 @@ class EventServiceImplUnitTest {
         assertThat(manager.getUser()).isEqualTo(user);
         assertThat(manager.getEvent()).isEqualTo(event);
         assertThat(manager.getRole()).isEqualTo("ORGANIZER");
-        assertThat(manager.getAssignedAt()).isNotNull();
     }
 
     @Test
@@ -180,7 +181,6 @@ class EventServiceImplUnitTest {
         assertThat(result.getEventManagers()).hasSize(1);
         EventManagerEntity assignedManager = result.getEventManagers().iterator().next();
         assertThat(assignedManager.getEvent()).isEqualTo(event);
-        assertThat(assignedManager.getAssignedAt()).isNotNull();
         assertThat(result.getTenantId()).isEqualTo(tenantId);
     }
 

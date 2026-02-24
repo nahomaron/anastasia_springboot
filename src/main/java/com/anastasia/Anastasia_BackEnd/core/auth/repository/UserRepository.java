@@ -20,6 +20,13 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     // Basic lookups
     Optional<UserEntity> findByEmail(String email);
+    @Query("""
+        SELECT u
+        FROM UserEntity u
+        WHERE u.tenantId = :tenantId
+          AND LOWER(u.email) = LOWER(:email)
+    """)
+    Optional<UserEntity> findByTenantIdAndEmailIgnoreCase(@Param("tenantId") UUID tenantId, @Param("email") String email);
     Optional<UserEntity> findByGoogleId(String googleId);
     boolean existsByEmail(String email);
 

@@ -58,7 +58,7 @@ public class EventReportService {
         int checkedInCount = (int) attendance.stream().filter(attendance1 -> attendance1.getStatus() == AttendanceStatus.CHECKED_IN).count();
         int absentCount = invitedCount - checkedInCount;
 
-        double attendanceRate = (double) checkedInCount / invitedCount * 100;
+        double attendanceRate = invitedCount > 0 ? (double) checkedInCount / invitedCount : 0d;
 
         return new EventReport.EventSummary(
                 event.getTitle(),
@@ -103,7 +103,7 @@ public class EventReportService {
                     int totalAttended = (int) userAttendance.stream().filter(att -> att.getStatus() == AttendanceStatus.CHECKED_IN).count();
                     int totalMissed = totalInvited - totalAttended;
 
-                    double attendanceRate = (double) totalAttended / totalInvited * 100;
+                    double attendanceRate = totalInvited > 0 ? (double) totalAttended / totalInvited : 0d;
 
                     List<EventReport.UserAttendanceReport.AttendanceStatusBreakdown> statusBreakdown = generateUserStatusBreakdown(userAttendance);
 

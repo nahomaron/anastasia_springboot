@@ -31,7 +31,7 @@ public class EventManagerEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    private LocalDateTime assignedAt;
+//    private LocalDateTime assignedAt;
 
     private String role; // optional: "ORGANIZER", "COORDINATOR", etc.
 

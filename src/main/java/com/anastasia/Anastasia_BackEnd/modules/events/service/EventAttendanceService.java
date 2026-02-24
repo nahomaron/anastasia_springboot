@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.Attendanc
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendance;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MarkAbsentRequestDTO;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.UpdateAttendanceStatusRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventAttendanceRepository;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
@@ -91,5 +92,29 @@ public class EventAttendanceService {
 
     public List<EventAttendance> getAttendanceByUserAndStatus(UUID userId, AttendanceStatus status) {
         return attendanceRepository.findByUserUuidAndStatus(userId, status);
+    }
+
+    public EventAttendance updateAttendanceStatus(UpdateAttendanceStatusRequestDTO request) {
+        EventEntity event = eventRepository.findById(request.getEventId())
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        UserEntity user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        EventAttendance attendance = attendanceRepository
+                .findByUserUuidAndEventId(user.getUuid(), event.getEventId())
+                .orElseGet(() -> EventAttendance.builder()
+                        .event(event)
+                        .user(user)
+                        .build());
+
+        attendance.setStatus(request.getStatus());
+        attendance.setCheckInMethod(request.getCheckInMethod());
+        attendance.setCheckedInBy(request.getUpdatedBy());
+        if (request.getStatus() == AttendanceStatus.CHECKED_IN || request.getStatus() == AttendanceStatus.LATE) {
+            attendance.setCheckInTime(LocalDateTime.now());
+        }
+
+        return attendanceRepository.save(attendance);
     }
 }

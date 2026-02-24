@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -22,6 +23,7 @@ import java.util.Set;
 public class EventDTO {
 
     private Long eventId;
+    private UUID createdBy;
 
     private ChurchEntity church;
 
@@ -30,16 +32,18 @@ public class EventDTO {
 
     private String description;
 
-    @NotNull(message = "Date is required")
     private LocalDate date;
 
     @NotBlank(message = "Location is required")
     private String location;
 
-    @NotNull(message = "Start time is required")
     private LocalTime startTime;
 
     private LocalTime endTime;
+
+    private LocalDateTime startAt;
+
+    private LocalDateTime endAt;
 
     private String image;
 
@@ -66,6 +70,8 @@ public class EventDTO {
     private Set<GroupEntity> invitedGroups;
 
     private Set<UserEntity> invitedUsers;
+
+    private Set<String> invitedEmails;
 
     @NotNull(message = "Who can see it, is required")
     private EventVisibilityType visibility;

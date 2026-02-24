@@ -33,6 +33,7 @@ public interface EventService {
 
     List<EventDTO> getVisibleEventsForUser(UUID userId);
 
+    EventDTO getEventByIdForUser(UUID userId, Long eventId);
+
     void deleteEvent(Long eventId);
 }
-

@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
@@ -155,7 +154,6 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
                 .event(event)
                 .user(user)
                 .role(role)
-                .assignedAt(LocalDateTime.now())
                 .build();
         entityManager.persist(manager);
         entityManager.flush();

@@ -44,16 +44,21 @@ public class EventEntity extends Auditable {
 
     private String title;
 
-    @Lob
     private String description;
 
     private LocalDate date;
 
     private String location;
 
+    private String gpsLocation;
+
     private LocalTime startTime;
 
     private LocalTime endTime;
+
+    private LocalDateTime startAt;
+
+    private LocalDateTime endAt;
 
     private String image;
 
@@ -94,6 +99,12 @@ public class EventEntity extends Auditable {
     )
     private Set<UserEntity> invitedUsers;
 
+    @Builder.Default
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "event_invited_emails", joinColumns = @JoinColumn(name = "event_id"))
+    @Column(name = "email", nullable = false)
+    private Set<String> invitedEmails = new HashSet<>();
+
     @Enumerated(EnumType.STRING)
     private EventVisibilityType visibility;
 
@@ -108,6 +119,12 @@ public class EventEntity extends Auditable {
 
     @Transient
     public Duration getDuration() {
+        if (startAt != null && endAt != null) {
+            return Duration.between(startAt, endAt);
+        }
+        if (startTime == null || endTime == null) {
+            return Duration.ZERO;
+        }
         return Duration.between(startTime, endTime);
     }
 

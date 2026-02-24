@@ -24,7 +24,7 @@ public class QrCheckInService {
     private final EventAttendanceRepository attendanceRepository;
     private final AttendanceTimeValidator attendanceTimeValidator;
 
-    private static final double MAX_DISTANCE_METERS = 100; // 100 meters radius
+    private static final double DEFAULT_MAX_DISTANCE_METERS = 100; // fallback radius
 
     public EventAttendance checkInWithQR(CheckInQRRequestDTO request) {
         EventEntity event = eventRepository.findById(request.getEventId())
@@ -41,17 +41,24 @@ public class QrCheckInService {
             throw new IllegalStateException("User already checked in");
         }
 
-        if (event.getLatitude() == null || event.getLongitude() == null) {
-            throw new IllegalStateException("Event location not set");
-        }
+        boolean geoEnabled = Boolean.TRUE.equals(event.getAllowGeoCheckIn());
+        if (geoEnabled) {
+            if (event.getLatitude() == null || event.getLongitude() == null) {
+                throw new IllegalStateException("Event location not set");
+            }
 
-        double distance = calculateDistance(
-                event.getLatitude(), event.getLongitude(),
-                request.getLatitude(), request.getLongitude()
-        );
+            double distance = calculateDistance(
+                    event.getLatitude(), event.getLongitude(),
+                    request.getLatitude(), request.getLongitude()
+            );
 
-        if (distance > MAX_DISTANCE_METERS) {
-            throw new IllegalStateException("You are not within the check-in area");
+            double radius = event.getGeofenceRadiusMeters() != null
+                    ? event.getGeofenceRadiusMeters()
+                    : DEFAULT_MAX_DISTANCE_METERS;
+
+            if (distance > radius) {
+                throw new IllegalStateException("You are not within the check-in area");
+            }
         }
 
         if(!attendanceTimeValidator.isCheckInAllowed(event)){

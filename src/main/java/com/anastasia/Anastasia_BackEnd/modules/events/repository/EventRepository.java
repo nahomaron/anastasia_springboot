@@ -20,14 +20,19 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
         left join e.invitedGroups g
         left join g.users gu with gu.uuid = :userId
         left join e.invitedUsers iu with iu.uuid = :userId
+        left join e.invitedEmails ie with lower(ie) = lower(:userEmail)
         left join e.eventManagers em
         left join em.user mu with mu.uuid = :userId
         where e.tenantId = :tenantId and (
+            e.createdBy = :userId
+            or
             e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.ALL
             or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.GROUPS and gu.uuid is not null)
-            or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.INVITEES and iu.uuid is not null)
+            or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.INVITEES and (iu.uuid is not null or ie is not null))
             or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.MANAGERS and mu.uuid is not null)
         )
     """)
-    List<EventEntity> findVisibleForUser(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId);
+    List<EventEntity> findVisibleForUser(@Param("tenantId") UUID tenantId,
+                                         @Param("userId") UUID userId,
+                                         @Param("userEmail") String userEmail);
 }

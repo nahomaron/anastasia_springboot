@@ -205,7 +205,6 @@ public class EventSeeder {
             EventManagerEntity manager = EventManagerEntity.builder()
                     .event(event)
                     .user(managerUser)
-                    .assignedAt(LocalDateTime.now().minusDays(ThreadLocalRandom.current().nextInt(1, 30)))
                     .role(faker.options().option("ORGANIZER", "COORDINATOR", "HOST"))
                     .build();
             managers.add(manager);
