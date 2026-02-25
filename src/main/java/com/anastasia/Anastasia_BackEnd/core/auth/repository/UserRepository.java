@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, UUID> {
+public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
 
     // Basic lookups
     Optional<UserEntity> findByEmail(String email);
@@ -110,6 +111,10 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
 
     List<UserEntity> findAllByEmailIn(Set<String> groupEmail);
+
+    List<UserEntity> findByTenantId(UUID tenantId);
+
+    long countByRoles_Id(Long roleId);
 
     @Query("SELECT u FROM UserEntity u WHERE u.tenant.id = :tenantId AND u.userType = 'TENANT'")
     Optional<UserEntity> findTenantAdmin(UUID tenantId);

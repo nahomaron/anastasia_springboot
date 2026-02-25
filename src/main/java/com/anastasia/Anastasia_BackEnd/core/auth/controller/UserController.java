@@ -7,6 +7,11 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipActionRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
@@ -102,6 +107,33 @@ public class UserController {
             @RequestParam(value = "roles", required = false) Set<String> roles
     ) {
         return ResponseEntity.ok(userService.searchUsers(query, roles));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @GetMapping("/tenant-access")
+    public ResponseEntity<TenantUsersPageResponse> listTenantUsers(
+            @RequestParam(value = "q", required = false) String query,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "100") int size
+    ) {
+        return ResponseEntity.ok(userService.listTenantUsers(query, status, role, page, size));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PostMapping("/tenant-access/invitations")
+    public ResponseEntity<TenantInviteResponse> inviteTenantUser(@Valid @RequestBody TenantInviteRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.inviteUserToTenant(request.getEmail()));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PatchMapping("/tenant-access/{userId}/membership")
+    public ResponseEntity<TenantUserRowResponse> applyMembershipAction(
+            @PathVariable UUID userId,
+            @Valid @RequestBody TenantMembershipActionRequest request
+    ) {
+        return ResponseEntity.ok(userService.applyMembershipAction(userId, request.getAction()));
     }
 
 

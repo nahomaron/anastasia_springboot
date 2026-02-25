@@ -3,6 +3,10 @@ package com.anastasia.Anastasia_BackEnd.modules.users.service;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
@@ -47,4 +51,10 @@ public interface UserService {
     UserMembershipsResponse getCurrentUserMemberships();
 
     List<SimpleUserDTO> searchUsers(String query, Set<String> roles);
+
+    TenantUsersPageResponse listTenantUsers(String query, String status, String role, int page, int size);
+
+    TenantInviteResponse inviteUserToTenant(String email);
+
+    TenantUserRowResponse applyMembershipAction(UUID userId, TenantMembershipAction action);
 }

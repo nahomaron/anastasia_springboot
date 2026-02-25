@@ -1,7 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.UsersMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
@@ -12,6 +17,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
@@ -21,6 +27,12 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MembershipSummary;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersMetricsResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +42,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,7 +54,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -55,6 +74,9 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final AvatarRepository avatarRepository;
     private final ChildRepository childRepository;
+    private final TenantRepository tenantRepository;
+    private final AuthService authService;
+    private final EmailNotificationService emailNotificationService;
 
 
     @Override
@@ -215,6 +237,119 @@ public class UserServiceImpl implements UserService {
         return userRepository.searchByTenantIdAndRoles(tenantId, q, roles);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public TenantUsersPageResponse listTenantUsers(String query, String status, String role, int page, int size) {
+        UUID tenantId = requireTenantId();
+        int safeSize = Math.min(Math.max(size, 1), 200);
+        int safePage = Math.max(page, 0);
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "fullName"));
+
+        Specification<UserEntity> spec = byTenant(tenantId)
+                .and(searchByQuery(query))
+                .and(filterByStatus(status))
+                .and(filterByRole(role));
+
+        Page<UserEntity> userPage = userRepository.findAll(spec, pageable);
+        List<TenantUserRowResponse> items = userPage.getContent().stream()
+                .map(this::toTenantUserRow)
+                .toList();
+
+        TenantUsersMetricsResponse metrics = computeTenantMetrics(tenantId);
+        List<String> roles = userRepository.findByTenantId(tenantId).stream()
+                .flatMap(user -> user.getRoles().stream())
+                .map(Role::getRoleName)
+                .filter(name -> name != null && !name.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new))
+                .stream()
+                .sorted()
+                .toList();
+
+        return TenantUsersPageResponse.builder()
+                .items(items)
+                .page(userPage.getNumber())
+                .size(userPage.getSize())
+                .totalPages(userPage.getTotalPages())
+                .totalElements(userPage.getTotalElements())
+                .sizeOptions(List.of(20, 50, 100, 200))
+                .roles(roles)
+                .metrics(metrics)
+                .build();
+    }
+
+    @Transactional
+    @Override
+    public TenantInviteResponse inviteUserToTenant(String email) {
+        UUID tenantId = requireTenantId();
+        String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        if (normalizedEmail.isBlank()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        Optional<UserEntity> existingInTenant = userRepository.findByTenantIdAndEmailIgnoreCase(tenantId, normalizedEmail);
+        if (existingInTenant.isPresent()) {
+            UserEntity user = existingInTenant.get();
+            if (!user.isVerified()) {
+                try {
+                    authService.resendActivationEmail(user.getEmail());
+                } catch (Exception e) {
+                    throw new IllegalStateException("Failed to resend activation email");
+                }
+            } else {
+                sendTenantInviteEmail(normalizedEmail);
+            }
+            return TenantInviteResponse.builder()
+                    .email(normalizedEmail)
+                    .existingUser(true)
+                    .message("Invitation email sent.")
+                    .build();
+        }
+
+        // Prevent leaking or hijacking users from other tenants by email.
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            throw new IllegalArgumentException("Email is already associated with another tenant.");
+        }
+
+        sendTenantInviteEmail(normalizedEmail);
+        return TenantInviteResponse.builder()
+                .email(normalizedEmail)
+                .existingUser(false)
+                .message("Invitation email sent.")
+                .build();
+    }
+
+    @Transactional
+    @Override
+    public TenantUserRowResponse applyMembershipAction(UUID userId, TenantMembershipAction action) {
+        UUID tenantId = requireTenantId();
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (!tenantId.equals(user.getTenantId())) {
+            throw new EntityNotFoundException("User not found in current tenant");
+        }
+
+        if (isProtectedTenantAccount(user)) {
+            throw new IllegalArgumentException("Protected tenant account cannot be modified by membership actions.");
+        }
+
+        switch (action) {
+            case APPROVE, RESTORE -> {
+                if (user.getMembership() != null) {
+                    user.getMembership().setStatus(MemberStatus.ACTIVE.name());
+                }
+            }
+            case DENY, SUSPEND -> {
+                if (user.getMembership() != null) {
+                    user.getMembership().setStatus(MemberStatus.NON_ACTIVE.name());
+                }
+            }
+        }
+
+        UserEntity saved = userRepository.save(user);
+        return toTenantUserRow(saved);
+    }
+
     @Caching(
             evict = {
                     @CacheEvict(value = "users", key = "#userId"
@@ -343,6 +478,198 @@ public class UserServiceImpl implements UserService {
         return UserResponseIDs.builder()
                 .uuid(user.getUuid())
                 .build();
+    }
+
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID is not set in the context");
+        }
+        return tenantId;
+    }
+
+    private Specification<UserEntity> byTenant(UUID tenantId) {
+        return (root, query, cb) -> cb.equal(root.get("tenantId"), tenantId);
+    }
+
+    private Specification<UserEntity> searchByQuery(String queryText) {
+        return (root, query, cb) -> {
+            String q = queryText == null ? "" : queryText.trim().toLowerCase(Locale.ROOT);
+            if (q.isBlank()) {
+                return cb.conjunction();
+            }
+
+            var membershipJoin = root.join("membership", jakarta.persistence.criteria.JoinType.LEFT);
+            String pattern = "%" + q + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.get("fullName")), pattern),
+                    cb.like(cb.lower(root.get("email")), pattern),
+                    cb.like(cb.lower(cb.coalesce(membershipJoin.get("membershipNumber"), "")), pattern)
+            );
+        };
+    }
+
+    private Specification<UserEntity> filterByStatus(String status) {
+        return (root, query, cb) -> {
+            if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status)) {
+                return cb.conjunction();
+            }
+            String normalized = status.trim().toUpperCase(Locale.ROOT);
+            var membershipJoin = root.join("membership", jakarta.persistence.criteria.JoinType.LEFT);
+            return switch (normalized) {
+                case "ACTIVE" -> cb.and(
+                        cb.isFalse(root.get("accountLocked")),
+                        membershipJoin.get("status").in(MemberStatus.ACTIVE.name(), MemberStatus.APPROVED.name())
+                );
+                case "INVITED" -> cb.or(
+                        cb.isNull(root.get("membershipId")),
+                        cb.equal(membershipJoin.get("status"), MemberStatus.PENDING.name())
+                );
+                case "DISABLED" -> membershipJoin.get("status").in(MemberStatus.NON_ACTIVE.name(), MemberStatus.DECEASED.name());
+                case "LOCKED" -> cb.isTrue(root.get("accountLocked"));
+                default -> cb.conjunction();
+            };
+        };
+    }
+
+    private Specification<UserEntity> filterByRole(String role) {
+        return (root, query, cb) -> {
+            if (role == null || role.isBlank() || "ALL".equalsIgnoreCase(role)) {
+                return cb.conjunction();
+            }
+            query.distinct(true);
+            var rolesJoin = root.join("roles", jakarta.persistence.criteria.JoinType.LEFT);
+            return cb.equal(rolesJoin.get("roleName"), role);
+        };
+    }
+
+    private TenantUsersMetricsResponse computeTenantMetrics(UUID tenantId) {
+        List<UserEntity> users = userRepository.findByTenantId(tenantId);
+        Map<TenantUserStatus, Long> counters = new HashMap<>();
+        counters.put(TenantUserStatus.ACTIVE, 0L);
+        counters.put(TenantUserStatus.INVITED, 0L);
+        counters.put(TenantUserStatus.DISABLED, 0L);
+        counters.put(TenantUserStatus.LOCKED, 0L);
+
+        for (UserEntity user : users) {
+            TenantUserStatus status = resolveTenantUserStatus(user);
+            counters.put(status, counters.get(status) + 1L);
+        }
+
+        return TenantUsersMetricsResponse.builder()
+                .total(users.size())
+                .active(counters.get(TenantUserStatus.ACTIVE))
+                .invited(counters.get(TenantUserStatus.INVITED))
+                .disabled(counters.get(TenantUserStatus.DISABLED))
+                .locked(counters.get(TenantUserStatus.LOCKED))
+                .build();
+    }
+
+    private TenantUserRowResponse toTenantUserRow(UserEntity user) {
+        List<String> roles = user.getRoles().stream()
+                .map(Role::getRoleName)
+                .filter(name -> name != null && !name.isBlank())
+                .sorted()
+                .toList();
+
+        List<String> groups = user.getGroups().stream()
+                .map(group -> group.getGroupName())
+                .filter(name -> name != null && !name.isBlank())
+                .sorted()
+                .toList();
+
+        String membershipId = user.getMembership() != null ? user.getMembership().getMembershipNumber() : null;
+
+        return TenantUserRowResponse.builder()
+                .id(user.getUuid())
+                .tenantId(user.getTenantId())
+                .username(user.getFullName())
+                .email(user.getEmail())
+                .roles(roles)
+                .groups(groups)
+                .membershipId(membershipId)
+                .status(resolveTenantUserStatus(user))
+                .createdAt(user.getCreatedDate())
+                .protectedAccount(isProtectedTenantAccount(user))
+                .protectedReason(protectedAccountReason(user))
+                .build();
+    }
+
+    private TenantUserStatus resolveTenantUserStatus(UserEntity user) {
+        if (user.isAccountLocked()) {
+            return TenantUserStatus.LOCKED;
+        }
+
+        if (user.getMembership() == null || user.getMembership().getStatus() == null) {
+            return TenantUserStatus.INVITED;
+        }
+
+        String memberStatus = user.getMembership().getStatus().toUpperCase(Locale.ROOT);
+        return switch (memberStatus) {
+            case "PENDING" -> TenantUserStatus.INVITED;
+            case "NON_ACTIVE", "DECEASED" -> TenantUserStatus.DISABLED;
+            case "APPROVED", "ACTIVE" -> TenantUserStatus.ACTIVE;
+            default -> TenantUserStatus.ACTIVE;
+        };
+    }
+
+    private void sendTenantInviteEmail(String email) {
+        UUID tenantId = requireTenantId();
+        String ownerName = tenantRepository.findById(tenantId)
+                .map(t -> t.getOwnerName())
+                .orElse("your church");
+
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("username", "Member");
+        properties.put("message_content",
+                "You are invited to join " + ownerName + " on Anastasia. Complete your account registration at /auth/register.");
+
+        emailNotificationService.sendEmail(
+                email,
+                "Anastasia membership invitation",
+                EmailTemplateName.NOTIFICATION,
+                properties
+        );
+    }
+
+    private boolean isProtectedTenantAccount(UserEntity user) {
+        if (user == null) {
+            return false;
+        }
+
+        if (UserType.TENANT.equals(user.getUserType())) {
+            return true;
+        }
+
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getRoleName)
+                .filter(name -> name != null && !name.isBlank())
+                .collect(Collectors.toSet());
+
+        return roleNames.contains("OWNER") || roleNames.contains("ADMIN");
+    }
+
+    private String protectedAccountReason(UserEntity user) {
+        if (!isProtectedTenantAccount(user)) {
+            return null;
+        }
+
+        if (UserType.TENANT.equals(user.getUserType())) {
+            return "Tenant governance account";
+        }
+
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getRoleName)
+                .filter(name -> name != null && !name.isBlank())
+                .collect(Collectors.toSet());
+
+        if (roleNames.contains("OWNER") && roleNames.contains("ADMIN")) {
+            return "Owner/Admin governance role";
+        }
+        if (roleNames.contains("OWNER")) {
+            return "Owner governance role";
+        }
+        return "Admin governance role";
     }
 
     private SimpleUserDTO toSimpleUserDTO(UserEntity user) {

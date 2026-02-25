@@ -1,7 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.permission;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Arrays;
 
 @Getter
 @RequiredArgsConstructor
@@ -109,4 +113,22 @@ public enum PermissionType {
 
     private final String name;
     private final String description;
+
+    @JsonValue
+    public String toJson() {
+        return this.name;
+    }
+
+    @JsonCreator
+    public static PermissionType fromJson(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Invalid permission value");
+        }
+
+        String candidate = value.trim();
+        return Arrays.stream(values())
+                .filter(p -> p.getName().equalsIgnoreCase(candidate) || p.name().equalsIgnoreCase(candidate))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown permission: " + value));
+    }
 }

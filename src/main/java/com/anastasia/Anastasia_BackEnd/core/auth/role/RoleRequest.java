@@ -22,6 +22,7 @@ public class RoleRequest {
 
     private String description;
 
-    private Set<PermissionType> permissions;
+    @Builder.Default
+    private Set<PermissionType> permissions = Set.of();
 
 }
