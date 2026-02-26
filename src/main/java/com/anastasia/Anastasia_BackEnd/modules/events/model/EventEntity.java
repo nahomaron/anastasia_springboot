@@ -44,12 +44,15 @@ public class EventEntity extends Auditable {
 
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private LocalDate date;
 
+    @Column(length = 512)
     private String location;
 
+    @Column(length = 2048)
     private String gpsLocation;
 
     private LocalTime startTime;
@@ -60,6 +63,7 @@ public class EventEntity extends Auditable {
 
     private LocalDateTime endAt;
 
+    @Column(length = 2048)
     private String image;
 
     @Enumerated(EnumType.STRING)
