@@ -22,6 +22,12 @@ public enum BusinessErrorCodes {
     DUPLICATE_REQUEST(306, CONFLICT, "The provided data or name already in use"),
     RESOURCE_NOT_FOUND(307, NOT_FOUND, "The requested resource with %s '%s' was not found"),
     INVALID_REQUEST(308, BAD_REQUEST, "The request is invalid or malformed"),
+    ACCESS_DENIED(309, FORBIDDEN, "You do not have permission to access this resource"),
+    AUTHENTICATION_FAILED(310, UNAUTHORIZED, "Authentication failed"),
+    BUSINESS_RULE_VIOLATION(311, BAD_REQUEST, "Business rule violation"),
+    STATE_CONFLICT(312, CONFLICT, "Resource state conflict"),
+    DATA_ACCESS_ERROR(313, INTERNAL_SERVER_ERROR, "A data access error occurred"),
+    UNSUPPORTED_OPERATION(314, NOT_IMPLEMENTED, "Operation is not supported"),
     
     ;
 
