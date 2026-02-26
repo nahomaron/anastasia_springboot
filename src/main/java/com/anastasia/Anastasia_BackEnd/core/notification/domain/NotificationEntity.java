@@ -8,12 +8,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "notifications")
+@Table(
+        name = "notifications",
+        indexes = {
+                @Index(name = "idx_notification_user_tenant_created", columnList = "recipientUserId,tenant_id,createdAt"),
+                @Index(name = "idx_notification_user_tenant_read", columnList = "recipientUserId,tenant_id,readAt"),
+                @Index(name = "idx_notification_idempotency_channel", columnList = "idempotencyKey,channel")
+        }
+)
 public class NotificationEntity {
 
     @Id
@@ -32,19 +40,34 @@ public class NotificationEntity {
 
     private boolean sent = false;
     private LocalDateTime sentAt;
+    private LocalDateTime readAt;
+    private boolean archived = false;
 
     @Enumerated(EnumType.STRING)
     private NotificationType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 24)
+    private NotificationDeliveryStatus deliveryStatus = NotificationDeliveryStatus.PENDING;
+
+    private UUID recipientUserId;
 
     private String providerMessageId;
 
     @Column(length = 512)
     private String errorMessage;
+    @Column(length = 128)
+    private String errorCode;
+    @Column(length = 160)
+    private String idempotencyKey;
+    private Integer retryCount = 0;
+    private LocalDateTime nextRetryAt;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     @ManyToOne
+    @JoinColumn(name = "tenant_id")
     private TenantEntity tenant; // ✅ Multi-tenant linkage
 
     @PrePersist

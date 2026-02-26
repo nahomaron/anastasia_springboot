@@ -1,10 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.channel;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationDeliveryStatus;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationIdempotencyService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import jakarta.mail.internet.MimeMessage;
@@ -36,17 +38,20 @@ public class EmailNotificationService {
     private final JavaMailSender mailSender;
     private final TemplateService templateService;
     private final NotificationRepository notificationRepository;
+    private final NotificationIdempotencyService idempotencyService;
     private final boolean emailSendingEnabled;
     private final String defaultSenderEmail;
 
     public EmailNotificationService(JavaMailSender mailSender,
                                     TemplateService templateService,
                                     NotificationRepository notificationRepository,
+                                    NotificationIdempotencyService idempotencyService,
                                     @Value("${notification.email.enabled:${email.sending.enabled:true}}") boolean emailSendingEnabled,
                                     @Value("${spring.mail.from:info@anastasia.com}") String defaultSenderEmail) {
         this.mailSender = mailSender;
         this.templateService = templateService;
         this.notificationRepository = notificationRepository;
+        this.idempotencyService = idempotencyService;
         this.emailSendingEnabled = emailSendingEnabled;
         this.defaultSenderEmail = defaultSenderEmail;
     }
@@ -88,6 +93,11 @@ public class EmailNotificationService {
                            EmailTemplateName template,
                            Map<String, Object> variables,
                            NotificationEvent eventContext) {
+        String idempotencyKey = idempotencyService.computeKey(eventContext, NotificationChannelType.EMAIL, to);
+        if (idempotencyKey != null && notificationRepository.existsByIdempotencyKeyAndChannel(idempotencyKey, NotificationChannelType.EMAIL)) {
+            log.debug("Skipping duplicate email notification for key={}", idempotencyKey);
+            return;
+        }
 
         if (!emailSendingEnabled) {
             log.debug("Email sending disabled, skipping to={}", to);
@@ -108,11 +118,11 @@ public class EmailNotificationService {
 
             mailSender.send(mimeMessage);
             log.info("✅ Email sent to {} using template '{}'", to, template.getName());
-            persistNotification(to, subject, html, template, eventContext, true, null);
+            persistNotification(to, subject, html, template, eventContext, true, null, idempotencyKey);
 
         } catch (Exception e) {
             log.error("Error sending email to {}: {}", to, e.getMessage(), e);
-            persistNotification(to, subject, null, template, eventContext, false, e.getMessage());
+            persistNotification(to, subject, null, template, eventContext, false, e.getMessage(), idempotencyKey);
         }
     }
 
@@ -122,7 +132,8 @@ public class EmailNotificationService {
                                      EmailTemplateName template,
                                      NotificationEvent context,
                                      boolean success,
-                                     String error) {
+                                     String error,
+                                     String idempotencyKey) {
         NotificationEntity entity = new NotificationEntity();
         entity.setRecipientEmail(recipient);
         entity.setTitle(subject);
@@ -131,9 +142,15 @@ public class EmailNotificationService {
         entity.setType(context != null ? context.getType() : NotificationType.NOTIFICATION);
         entity.setSent(success);
         entity.setSentAt(success ? LocalDateTime.now() : null);
+        entity.setDeliveryStatus(success ? NotificationDeliveryStatus.SENT : NotificationDeliveryStatus.FAILED);
         entity.setErrorMessage(success ? null : error);
+        entity.setErrorCode(success ? null : "EMAIL_DELIVERY_FAILED");
+        entity.setIdempotencyKey(idempotencyKey);
+        entity.setRetryCount(success ? 0 : 1);
+        entity.setNextRetryAt(success ? null : LocalDateTime.now().plusMinutes(5));
         if (context != null) {
             entity.setTenant(context.getUser() != null ? context.getUser().getTenant() : null);
+            entity.setRecipientUserId(context.getUser() != null ? context.getUser().getUuid() : null);
         }
         notificationRepository.save(entity);
     }

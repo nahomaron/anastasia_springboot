@@ -1,11 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.channel;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationDeliveryStatus;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsTemplateType;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationIdempotencyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,13 +28,16 @@ public class SmsNotificationService {
 
     private final ObjectProvider<SmsService> smsServiceProvider;
     private final NotificationRepository notificationRepository;
+    private final NotificationIdempotencyService idempotencyService;
     private final boolean smsEnabled;
 
     public SmsNotificationService(ObjectProvider<SmsService> smsServiceProvider,
                                   NotificationRepository notificationRepository,
+                                  NotificationIdempotencyService idempotencyService,
                                   @Value("${notification.sms.enabled:true}") boolean smsEnabled) {
         this.smsServiceProvider = smsServiceProvider;
         this.notificationRepository = notificationRepository;
+        this.idempotencyService = idempotencyService;
         this.smsEnabled = smsEnabled;
     }
 
@@ -69,6 +74,11 @@ public class SmsNotificationService {
         String renderedBody = templateType == SmsTemplateType.CUSTOM
                 ? payload.getOrDefault("message_content", "").toString()
                 : templateType.format(payload);
+        String idempotencyKey = idempotencyService.computeKey(event, NotificationChannelType.SMS, phoneNumber);
+        if (idempotencyKey != null && notificationRepository.existsByIdempotencyKeyAndChannel(idempotencyKey, NotificationChannelType.SMS)) {
+            log.debug("Skipping duplicate sms notification for key={}", idempotencyKey);
+            return;
+        }
 
         SmsService smsService = smsServiceProvider.getIfAvailable();
         if (smsService == null) {
@@ -87,7 +97,13 @@ public class SmsNotificationService {
             entity.setTenant(event.getUser() != null ? event.getUser().getTenant() : null);
             entity.setSent(throwable == null);
             entity.setSentAt(throwable == null ? LocalDateTime.now() : null);
+            entity.setDeliveryStatus(throwable == null ? NotificationDeliveryStatus.SENT : NotificationDeliveryStatus.FAILED);
             entity.setErrorMessage(throwable == null ? null : throwable.getMessage());
+            entity.setErrorCode(throwable == null ? null : "SMS_DELIVERY_FAILED");
+            entity.setRecipientUserId(event.getUser() != null ? event.getUser().getUuid() : null);
+            entity.setIdempotencyKey(idempotencyKey);
+            entity.setRetryCount(throwable == null ? 0 : 1);
+            entity.setNextRetryAt(throwable == null ? null : LocalDateTime.now().plusMinutes(5));
 
             notificationRepository.save(entity);
 
