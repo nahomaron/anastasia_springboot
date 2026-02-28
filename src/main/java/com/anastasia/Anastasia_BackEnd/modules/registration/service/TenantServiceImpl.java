@@ -6,9 +6,16 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantUserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantUserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -49,6 +56,7 @@ public class TenantServiceImpl implements TenantService {
     private final RoleRepository roleRepository;
     private final PhoneVerificationService phoneVerificationService;   // NEW
     private final SecurityUtils securityUtils;
+    private final TenantUserRepository tenantUserRepository;
 
     @Override
     public TenantEntity convertTenantToEntity(TenantDTO tenantDTO) {
@@ -85,8 +93,14 @@ public class TenantServiceImpl implements TenantService {
                 .tenantType(tenantDTO.getTenantType())
                 .ownerName(tenantDTO.getOwnerName())
                 .phoneNumber(tenantDTO.getPhoneNumber())
-                .subscriptionPlan(tenantDTO.getSubscriptionPlan())
                 .build();
+
+        TenantSubscriptionEntity subscription = TenantSubscriptionEntity.builder()
+                .plan(tenantDTO.getSubscriptionPlan())
+                .status(SubscriptionStatus.TRIALING)
+                .provider(BillingProvider.MANUAL)
+                .build();
+        tenantEntity.assignSubscription(subscription);
 
         TenantEntity savedTenant = tenantRepository.save(tenantEntity);
 
@@ -127,6 +141,21 @@ public class TenantServiceImpl implements TenantService {
                 .build();
 
         authService.createUser(adminUser);
+
+        UUID adminUserId = Optional.ofNullable(adminUser.getUuid())
+                .orElseGet(() -> userRepository.findByEmail(adminUser.getEmail()).map(UserEntity::getUuid).orElse(null));
+        if (adminUserId != null) {
+            TenantUserEntity ownerMembership = TenantUserEntity.builder()
+                    .tenant(savedTenant)
+                    .userId(adminUserId)
+                    .role(TenantRole.PRIMARY_ADMIN)
+                    .status(MembershipStatus.ACTIVE)
+                    .isBillingContact(true)
+                    .createdByUserId(adminUserId)
+                    .updatedByUserId(adminUserId)
+                    .build();
+            tenantUserRepository.save(ownerMembership);
+        }
 
         // Send OTP after account creation
         // phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());

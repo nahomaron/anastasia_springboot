@@ -1,7 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +39,14 @@ public class TenantSeeder {
                         .ownerName(faker.name().name())
                         .phoneNumber(faker.phoneNumber().phoneNumberInternational())
                         .tenantType(faker.options().option(TenantType.CHURCH))
-                        .subscriptionPlan(faker.options().option(SubscriptionPlan.BASIC, SubscriptionPlan.FREE, SubscriptionPlan.ENTERPRISE))
                         .build();
+                tenant.assignSubscription(
+                        TenantSubscriptionEntity.builder()
+                                .plan(faker.options().option(SubscriptionPlan.BASIC, SubscriptionPlan.FREE, SubscriptionPlan.ENTERPRISE))
+                                .status(SubscriptionStatus.ACTIVE)
+                                .provider(BillingProvider.MANUAL)
+                                .build()
+                );
                 tenants.add(tenant);
 
             }

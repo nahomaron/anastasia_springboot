@@ -4,6 +4,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -37,19 +39,42 @@ public class TenantEntity {
     @Column(nullable = false)
     private boolean isActiveTenant = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SubscriptionPlan subscriptionPlan; // Subscription Type
-
-    private boolean isPaymentConfirmed; // True if payment is confirmed
-
     @OneToOne(mappedBy = "tenant", cascade = CascadeType.ALL)
     private ChurchEntity church;
+
+    @OneToOne(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private TenantSubscriptionEntity subscription;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TenantUserEntity> tenantUsers = new HashSet<>();
 
     public void assignChurch(ChurchEntity church) {
         this.setChurch(church);
         church.setTenant(this);
     }
 
-}
+    public void assignSubscription(TenantSubscriptionEntity subscription) {
+        this.subscription = subscription;
+        if (subscription != null) {
+            subscription.setTenant(this);
+        }
+    }
 
+    public void addTenantUser(TenantUserEntity tenantUser) {
+        if (tenantUser == null) {
+            return;
+        }
+        tenantUsers.add(tenantUser);
+        tenantUser.setTenant(this);
+    }
+
+    public void removeTenantUser(TenantUserEntity tenantUser) {
+        if (tenantUser == null) {
+            return;
+        }
+        tenantUsers.remove(tenantUser);
+        tenantUser.setTenant(null);
+    }
+
+}
