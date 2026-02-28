@@ -3,8 +3,11 @@ package com.anastasia.Anastasia_BackEnd.TestSeeder;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
@@ -46,10 +49,15 @@ public class TestDataSeederConfig {
                 .tenantType(TenantType.CHURCH)
                 .ownerName("Test Church")
                 .phoneNumber("123456789")
-                .subscriptionPlan(SubscriptionPlan.BASIC)
                 .isActiveTenant(true)
-                .isPaymentConfirmed(true)
                 .build();
+        tenant.assignSubscription(
+                TenantSubscriptionEntity.builder()
+                        .plan(SubscriptionPlan.BASIC)
+                        .status(SubscriptionStatus.ACTIVE)
+                        .provider(BillingProvider.MANUAL)
+                        .build()
+        );
 
         TenantEntity savedTenant = tenantRepository.save(tenant);
 

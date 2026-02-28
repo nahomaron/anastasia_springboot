@@ -20,9 +20,12 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -173,14 +176,20 @@ public class TestDataUtil {
     }
 
     public static TenantEntity createTestTenantEntity() {
-        return TenantEntity.builder()
+        TenantEntity tenant = TenantEntity.builder()
                 .tenantType(TenantType.CHURCH) // or PRIEST
                 .ownerName("St. Mary Church")
                 .phoneNumber("+1555000111")
-                .subscriptionPlan(SubscriptionPlan.PREMIUM) // or BASIC, PRO, etc.
                 .isActiveTenant(true)
-                .isPaymentConfirmed(true)
                 .build();
+        tenant.assignSubscription(
+                TenantSubscriptionEntity.builder()
+                        .plan(SubscriptionPlan.PREMIUM)
+                        .status(SubscriptionStatus.ACTIVE)
+                        .provider(BillingProvider.MANUAL)
+                        .build()
+        );
+        return tenant;
     }
 
     public static TenantDTO createTestTenantDTO(){

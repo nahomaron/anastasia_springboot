@@ -18,9 +18,12 @@ import com.anastasia.Anastasia_BackEnd.modules.events.model.EventManagerEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -59,12 +62,19 @@ class SimpleMappersUnitTest {
         assertThat(entity.getOwnerName()).isEqualTo("St. Anastasia");
         assertThat(entity.getPhoneNumber()).isEqualTo("+251900000000");
         assertThat(entity.getTenantType()).isEqualTo(TenantType.CHURCH);
-        assertThat(entity.getSubscriptionPlan()).isEqualTo(SubscriptionPlan.PREMIUM);
+        entity.assignSubscription(
+                TenantSubscriptionEntity.builder()
+                        .plan(SubscriptionPlan.PREMIUM)
+                        .status(SubscriptionStatus.ACTIVE)
+                        .provider(BillingProvider.MANUAL)
+                        .build()
+        );
 
         TenantDTO mappedBack = tenantMapper.tenantEntityToDTO(entity);
         assertThat(mappedBack.getOwnerName()).isEqualTo("St. Anastasia");
         assertThat(mappedBack.getPhoneNumber()).isEqualTo("+251900000000");
         assertThat(mappedBack.getTenantType()).isEqualTo(TenantType.CHURCH);
+        assertThat(mappedBack.getSubscriptionPlan()).isEqualTo(SubscriptionPlan.PREMIUM);
     }
 
     @Test

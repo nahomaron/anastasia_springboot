@@ -4,8 +4,11 @@ import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
@@ -36,8 +39,14 @@ class JwtUtilTest {
                 .tenantType(TenantType.CHURCH)
                 .ownerName("Owner")
                 .phoneNumber("+251900000000")
-                .subscriptionPlan(SubscriptionPlan.BASIC)
                 .build();
+        tenant.assignSubscription(
+                TenantSubscriptionEntity.builder()
+                        .plan(SubscriptionPlan.BASIC)
+                        .status(SubscriptionStatus.ACTIVE)
+                        .provider(BillingProvider.MANUAL)
+                        .build()
+        );
 
         Role role = Role.builder()
                 .roleName("ADMIN")
