@@ -52,5 +52,6 @@ public class ChurchResponse {
     private String instagram;
     private String youtube;
     private String facebook;
+    private boolean churchProfileComplete;
 
 }

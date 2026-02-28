@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.net.URI;
 import java.util.List;
 
 
@@ -76,6 +77,9 @@ public class ChurchEntity {
     @Column(name = "facebook_page")
     private String facebook;
 
+    @Column(name = "is_church_profile_complete", nullable = false)
+    private boolean churchProfileComplete;
+
     @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<GroupEntity> groups;
@@ -83,4 +87,45 @@ public class ChurchEntity {
     @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<EventEntity> events;
+
+    @PrePersist
+    @PreUpdate
+    void syncProfileCompleteness() {
+        this.churchProfileComplete = isComplete();
+    }
+
+    public boolean isComplete() {
+        return hasText(churchName)
+                && hasText(churchNameTigrinya)
+                && hasText(diocese)
+                && hasText(email)
+                && hasText(phone)
+                && hasText(description)
+                && isHttpUrl(gpsLocation)
+                && profilePicture != null
+                && hasText(profilePicture.getImageUrl())
+                && address != null
+                && hasText(address.getAddressLine1())
+                && hasText(address.getCity())
+                && hasText(address.getCountry());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private boolean isHttpUrl(String value) {
+        if (!hasText(value)) {
+            return false;
+        }
+        try {
+            URI uri = URI.create(value.trim());
+            String scheme = uri.getScheme();
+            String host = uri.getHost();
+            return ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    && hasText(host);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
 }

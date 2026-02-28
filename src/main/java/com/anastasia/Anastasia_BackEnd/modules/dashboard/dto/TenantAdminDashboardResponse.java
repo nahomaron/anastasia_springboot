@@ -15,4 +15,5 @@ public class TenantAdminDashboardResponse {
     private TenantAdminStats stats;
     private List<MemberOverviewItem> recentMembers;
     private List<TenantPaymentItem> recentPayments;
+    private boolean churchProfileComplete;
 }

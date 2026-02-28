@@ -60,7 +60,9 @@ public class ChurchServiceImpl implements ChurchService{
 
     @Override
     public ChurchResponse convertToResponse(ChurchEntity churchEntity) {
-        return churchMapper.churchEntityToResponse(churchEntity);
+        ChurchResponse response = churchMapper.churchEntityToResponse(churchEntity);
+        response.setChurchProfileComplete(churchEntity.isComplete());
+        return response;
     }
 
 //    @Caching(
@@ -109,7 +111,7 @@ public class ChurchServiceImpl implements ChurchService{
         } else {
             churches = churchRepository.search(query.trim(), pageable);
         }
-        return churches.map(churchMapper::churchEntityToResponse);
+        return churches.map(this::convertToResponse);
     }
 
 //    @Cacheable(value = "churches", keyGenerator = "tenantAwareKeyGenerator")

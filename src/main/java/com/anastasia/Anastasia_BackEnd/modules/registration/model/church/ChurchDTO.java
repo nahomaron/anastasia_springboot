@@ -47,6 +47,7 @@ public class ChurchDTO {
     private String website;
     private String youtube;
     private String facebook;
+    private boolean churchProfileComplete;
 
     private AvatarDTO profilePicture;
     

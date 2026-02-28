@@ -13,6 +13,7 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntent
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
@@ -38,6 +39,7 @@ public class TenantAdminDashboardService {
     private final MemberRepository memberRepository;
     private final ChildRepository childRepository;
     private final PriestRepository priestRepository;
+    private final ChurchRepository churchRepository;
     private final ObjectProvider<PaymentIntentRepository> paymentIntentRepositoryProvider;
 
     public TenantAdminDashboardResponse getSummary() {
@@ -50,6 +52,9 @@ public class TenantAdminDashboardService {
         MonthlyOffering offering = buildMonthlyOffering(tenantId);
         List<MemberOverviewItem> recentMembers = buildRecentMembers(tenantId);
         List<TenantPaymentItem> recentPayments = buildRecentPayments(tenantId);
+        boolean churchProfileComplete = churchRepository.findByTenantId(tenantId)
+                .map(church -> church.isComplete())
+                .orElse(false);
 
         TenantAdminStats stats = TenantAdminStats.builder()
                 .activeMembers(adultCount + childCount)
@@ -62,6 +67,7 @@ public class TenantAdminDashboardService {
                 .stats(stats)
                 .recentMembers(recentMembers)
                 .recentPayments(recentPayments)
+                .churchProfileComplete(churchProfileComplete)
                 .build();
     }
 
