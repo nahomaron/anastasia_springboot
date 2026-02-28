@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.events.MemberBirthdayEvent;
 import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
@@ -53,6 +54,7 @@ public class MemberServiceImpl implements MemberService {
     private final PriestRepository priestRepository;
 
     private final OutboxPublisher outboxPublisher;
+    private final TenantAdminNotificationService tenantAdminNotificationService;
 
 
 
@@ -123,6 +125,7 @@ public class MemberServiceImpl implements MemberService {
                )
        );
 
+        tenantAdminNotificationService.notifyMemberRegistrationSubmitted(membership, user.getUuid());
 
 
 

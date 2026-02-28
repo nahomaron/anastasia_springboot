@@ -86,6 +86,10 @@ public class InAppNotificationService {
             case ACCOUNT_ACTIVATION -> "Welcome " + event.getUser().getFullName() + "!";
             case PASSWORD_RESET -> "Your password reset request was processed.";
             case MEMBER_BIRTHDAY -> "Happy Birthday 🎉" + event.getUser().getFullName() + "!";
+            case MEMBER_REGISTRATION_SUBMITTED ->
+                    "New member registration submitted: " + event.getProperties().getOrDefault("memberName", "Unknown member");
+            case CHILD_REGISTRATION_SUBMITTED ->
+                    "New child registration submitted: " + event.getProperties().getOrDefault("childName", "Unknown child");
             default -> "You have a new notification.";
         };
     }

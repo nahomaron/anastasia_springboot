@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
@@ -44,6 +45,7 @@ public class ChildServiceImpl implements ChildService{
     private final MemberRepository memberRepository;
     private final ChildMapper childMapper;
     private final SecurityUtils securityUtils;
+    private final TenantAdminNotificationService tenantAdminNotificationService;
 
     @Override
     public Child_MemberEntity convertToEntity(Child_MemberDTO childMemberDTO) {
@@ -97,6 +99,7 @@ public class ChildServiceImpl implements ChildService{
         childMemberEntity.setUser(user);
         childMemberEntity.setStatus(ChildStatus.PENDING.name());
         Child_MemberEntity membership = childRepository.save(childMemberEntity);
+        tenantAdminNotificationService.notifyChildRegistrationSubmitted(membership, user.getUuid());
 
         return ChildResponse.builder()
                 .name(membership.getFirstName() + " " + membership.getFatherName() + " " + membership.getGrandFatherName())
