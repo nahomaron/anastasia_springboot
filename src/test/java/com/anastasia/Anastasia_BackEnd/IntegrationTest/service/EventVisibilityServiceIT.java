@@ -45,6 +45,7 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
 
     private UserEntity visibleUser;
     private UserEntity outsiderUser;
+    private UserEntity managerOnlyUser;
     private GroupEntity visibleGroup;
     private GroupEntity outsiderGroup;
 
@@ -55,8 +56,11 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
         Role ownerRole = fetchRole(RoleType.OWNER);
         visibleUser = persistUser("visible+" + UUID.randomUUID() + "@it.com", ownerRole);
         outsiderUser = persistUser("outsider+" + UUID.randomUUID() + "@it.com", ownerRole);
+        managerOnlyUser = persistUser("manager-only+" + UUID.randomUUID() + "@it.com", ownerRole);
 
         visibleGroup = createGroupWithMember("Visible Group", visibleUser);
+        visibleGroup.getManagers().add(managerOnlyUser);
+        visibleGroup = groupRepository.saveAndFlush(visibleGroup);
         outsiderGroup = createGroupWithMember("Outsider Group", outsiderUser);
     }
 
@@ -136,6 +140,12 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
                         "Other Managers"
                 )
                 .doesNotContain("Group Access", "Direct Invite", "Manager Access");
+
+        List<EventDTO> visibleForGroupManager = eventService.getVisibleEventsForUser(managerOnlyUser.getUuid());
+        assertThat(visibleForGroupManager)
+                .extracting(EventDTO::getTitle)
+                .contains("All Audience", "Group Access")
+                .doesNotContain("Other Group Only");
     }
 
     private GroupEntity createGroupWithMember(String groupName, UserEntity member) {

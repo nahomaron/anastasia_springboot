@@ -19,6 +19,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
         from EventEntity e
         left join e.invitedGroups g
         left join g.users gu with gu.uuid = :userId
+        left join g.managers gm with gm.uuid = :userId
         left join e.invitedUsers iu with iu.uuid = :userId
         left join e.invitedEmails ie with lower(ie) = lower(:userEmail)
         left join e.eventManagers em
@@ -28,6 +29,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             or
             e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.ALL
             or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.GROUPS and gu.uuid is not null)
+            or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.GROUPS and gm.uuid is not null)
             or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.INVITEES and (iu.uuid is not null or ie is not null))
             or (e.visibility = com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType.MANAGERS and mu.uuid is not null)
         )

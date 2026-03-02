@@ -22,6 +22,11 @@ public interface PaymentIntentRepository extends JpaRepository<PaymentIntent, UU
 
     Optional<PaymentIntent> findTopByTenantIdAndStatusOrderByCapturedAtDesc(UUID tenantId,
                                                                             com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentStatus status);
+    Optional<PaymentIntent> findTopByTenantIdAndUserIdAndStatusOrderByCapturedAtDesc(
+            UUID tenantId,
+            UUID userId,
+            com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentStatus status
+    );
 
     @Query("""
     SELECT COALESCE(SUM(COALESCE(p.capturedGrossAmountMinor, p.amount.amount)), 0)
@@ -32,6 +37,22 @@ public interface PaymentIntentRepository extends JpaRepository<PaymentIntent, UU
       AND p.capturedAt < :end
     """)
     long sumCapturedAmountByTenantAndCapturedAtBetween(UUID tenantId, java.time.Instant start, java.time.Instant end);
+
+    @Query("""
+    SELECT COALESCE(SUM(COALESCE(p.capturedGrossAmountMinor, p.amount.amount)), 0)
+    FROM PaymentIntent p
+    WHERE p.tenantId = :tenantId
+      AND p.userId = :userId
+      AND p.status = com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentStatus.CAPTURED
+      AND p.capturedAt >= :start
+      AND p.capturedAt < :end
+    """)
+    long sumCapturedAmountByTenantAndUserAndCapturedAtBetween(
+            UUID tenantId,
+            UUID userId,
+            java.time.Instant start,
+            java.time.Instant end
+    );
 
     @Query("""
     SELECT new map(p.fundId as fundId, SUM(p.amount.amount) as total)

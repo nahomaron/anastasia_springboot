@@ -30,6 +30,8 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
     Page<Adult_MemberEntity> findByStatusAndTenantId(String status, UUID tenantId, Pageable pageable);
 
     long countByStatusNotAndTenantId(String status, UUID tenantId);
+    long countByTenantIdAndStatusIn(UUID tenantId, List<String> statuses);
+    long countByTenantIdAndPriestNumberAndStatusNot(UUID tenantId, String priestNumber, String status);
 
     Page<Adult_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
