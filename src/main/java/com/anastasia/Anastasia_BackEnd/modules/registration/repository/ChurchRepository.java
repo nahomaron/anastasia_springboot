@@ -24,15 +24,21 @@ public interface ChurchRepository extends JpaRepository<ChurchEntity, Long> {
 
     @Query("""
             SELECT c FROM ChurchEntity c
-            WHERE LOWER(COALESCE(c.churchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(COALESCE(c.churchNameTigrinya, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(COALESCE(c.churchNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(COALESCE(c.diocese, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(COALESCE(c.denomination, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(COALESCE(c.address.city, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(COALESCE(c.address.country, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+            WHERE (:usesOurServices IS NULL OR c.usesOurServices = :usesOurServices)
+              AND (
+                   :q IS NULL
+                   OR LOWER(COALESCE(c.churchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.churchNameTigrinya, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.churchNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.diocese, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.denomination, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.address.city, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.address.country, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+              )
             """)
-    Page<ChurchEntity> search(@Param("q") String query, Pageable pageable);
+    Page<ChurchEntity> search(@Param("q") String query, @Param("usesOurServices") Boolean usesOurServices, Pageable pageable);
+
+    Optional<ChurchEntity> findByChurchNumberAndUsesOurServicesTrue(String churchNumber);
 
 
     boolean existsByChurchNumber(String churchNumber);

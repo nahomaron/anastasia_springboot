@@ -104,20 +104,25 @@ public class ChurchServiceImpl implements ChurchService{
 
 //    @Cacheable(value = "churches_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<ChurchResponse> findAll(Pageable pageable, String query) {
-        Page<ChurchEntity> churches;
-        if (query == null || query.isBlank()) {
-            churches = churchRepository.findAll(pageable);
-        } else {
-            churches = churchRepository.search(query.trim(), pageable);
-        }
-        return churches.map(this::convertToResponse);
+    public Page<ChurchResponse> findAll(Pageable pageable, String query, Boolean usesOurServices) {
+        String normalizedQuery = (query == null || query.isBlank()) ? null : query.trim();
+        return churchRepository.search(normalizedQuery, usesOurServices, pageable).map(this::convertToResponse);
     }
 
 //    @Cacheable(value = "churches", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<ChurchEntity> findOne(Long churchId) {
         return churchRepository.findById(churchId);
+    }
+
+    @Override
+    public Optional<ChurchEntity> findOneByChurchNumber(String churchNumber) {
+        return churchRepository.findByChurchNumber(churchNumber);
+    }
+
+    @Override
+    public Optional<ChurchEntity> findOneByChurchNumberUsingOurServices(String churchNumber) {
+        return churchRepository.findByChurchNumberAndUsesOurServicesTrue(churchNumber);
     }
 
 //    @Cacheable(value = "churches_all_list", keyGenerator = "tenantAwareKeyGenerator")

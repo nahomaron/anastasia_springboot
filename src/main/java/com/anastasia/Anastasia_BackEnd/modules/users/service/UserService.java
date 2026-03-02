@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarD
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
@@ -57,4 +58,10 @@ public interface UserService {
     TenantInviteResponse inviteUserToTenant(String email);
 
     TenantUserRowResponse applyMembershipAction(UUID userId, TenantMembershipAction action);
+
+    MemberTransferResponse createMemberTransferRequest(UUID userId, UUID targetTenantId, String reason);
+
+    MemberTransferResponse approveMemberTransferRequest(UUID transferRequestId, String decisionNote);
+
+    MemberTransferResponse rejectMemberTransferRequest(UUID transferRequestId, String decisionNote);
 }

@@ -46,4 +46,6 @@ public interface TenantUserRepository extends JpaRepository<TenantUserEntity, UU
     Optional<TenantUserEntity> findByTenant_IdAndUserId(UUID tenantId, UUID userId);
 
     List<TenantUserEntity> findByTenant_IdOrderByCreatedAtAsc(UUID tenantId);
+
+    List<TenantUserEntity> findByUserIdAndStatusAndTenant_IdNot(UUID userId, MembershipStatus status, UUID tenantId);
 }

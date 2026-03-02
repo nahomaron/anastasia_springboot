@@ -29,6 +29,6 @@ public class Address {
     @NotBlank(message = "Country is required")
     private String country;
 
-    @Pattern(regexp = "^\\d{4,10}$", message = "Invalid postal code format")
+    @Pattern(regexp = "^$|^\\d{4,10}$", message = "Invalid postal code format")
     private String postalCode;
 }

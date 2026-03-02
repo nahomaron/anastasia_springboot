@@ -4,9 +4,12 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import com.anastasia.Anastasia_BackEnd.common.specification.MemberSpecifications;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/registrar/members")
+@RequiresTenantFeature(TenantFeature.MEMBER_MANAGEMENT)
 public class MemberController {
 
     private final MemberService memberService;
@@ -45,8 +49,8 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping
-    public ResponseEntity<Page<Adult_MemberResponse>> listOfMembers(Pageable pageable){
-        Page<Adult_MemberResponse> members = memberService.findAll(pageable);
+    public ResponseEntity<Page<Adult_MemberSummaryResponse>> listOfMembers(Pageable pageable){
+        Page<Adult_MemberSummaryResponse> members = memberService.findAllSummary(pageable);
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
@@ -60,11 +64,11 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/search")
-    public ResponseEntity<Page<Adult_MemberResponse>> searchMembers(
+    public ResponseEntity<Page<Adult_MemberSummaryResponse>> searchMembers(
             Pageable pageable,
             @RequestParam(value = "q", required = false) String query
     ){
-        return new ResponseEntity<>(memberService.searchNonPending(pageable, query), HttpStatus.OK);
+        return new ResponseEntity<>(memberService.searchNonPendingSummary(pageable, query), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN') " +

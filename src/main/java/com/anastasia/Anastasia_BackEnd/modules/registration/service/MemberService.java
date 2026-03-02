@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,18 +24,22 @@ public interface MemberService {
     Adult_MemberResponse convertToResponse(Adult_MemberEntity adultMemberEntity);
 
     Page<Adult_MemberResponse> findAll(Pageable pageable);
+    Page<Adult_MemberSummaryResponse> findAllSummary(Pageable pageable);
 
     long countNonPending();
 
     Page<Adult_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
+    Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable);
 
     Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable);
+    Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberAndStatusSummary(UUID tenantId, String priestNumber, String status, Pageable pageable);
 
     Page<Adult_MemberResponse> findPending(Pageable pageable);
 
     Page<Adult_MemberResponse> findPendingByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
     Page<Adult_MemberResponse> searchNonPending(Pageable pageable, String query);
+    Page<Adult_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query);
 
     Optional<Adult_MemberResponse> findMemberById(Long memberId);
 

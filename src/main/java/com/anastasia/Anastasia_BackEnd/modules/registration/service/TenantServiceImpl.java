@@ -35,6 +35,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -77,6 +78,11 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     @Override
     public TenantEntity subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
+
+        TenantEntity existingTenantForRetry = findExistingTenantForRetry(tenantDTO);
+        if (existingTenantForRetry != null) {
+            return existingTenantForRetry;
+        }
 
         // 1. ADD DUPLICATE PHONE NUMBER CHECK
         if (tenantRepository.existsByPhoneNumber(tenantDTO.getPhoneNumber())) {
@@ -158,8 +164,37 @@ public class TenantServiceImpl implements TenantService {
         }
 
         // Send OTP after account creation
-        // phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());
+        phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());
         return savedTenant;
+    }
+
+    /**
+     * Treat duplicate submissions with the same email + phone + tenant as idempotent retries.
+     * This lets the client safely retry onboarding requests after network timeouts.
+     */
+    private TenantEntity findExistingTenantForRetry(TenantDTO tenantDTO) {
+        if (!StringUtils.hasText(tenantDTO.getEmail()) || !StringUtils.hasText(tenantDTO.getPhoneNumber())) {
+            return null;
+        }
+
+        Optional<UserEntity> existingUser = userRepository.findByEmail(tenantDTO.getEmail());
+        Optional<TenantEntity> existingTenantByPhone = tenantRepository.findByPhoneNumber(tenantDTO.getPhoneNumber());
+
+        if (existingUser.isEmpty() || existingTenantByPhone.isEmpty()) {
+            return null;
+        }
+
+        UserEntity user = existingUser.get();
+        TenantEntity tenant = existingTenantByPhone.get();
+        if (user.getTenant() == null || user.getTenant().getId() == null) {
+            return null;
+        }
+
+        boolean sameTenant = user.getTenant().getId().equals(tenant.getId());
+        boolean sameTenantType = tenantDTO.getTenantType() == null || tenantDTO.getTenantType().equals(tenant.getTenantType());
+        boolean sameOwner = !StringUtils.hasText(tenantDTO.getOwnerName()) || tenantDTO.getOwnerName().equalsIgnoreCase(tenant.getOwnerName());
+
+        return (sameTenant && sameTenantType && sameOwner) ? tenant : null;
     }
 
     @Caching(evict = {

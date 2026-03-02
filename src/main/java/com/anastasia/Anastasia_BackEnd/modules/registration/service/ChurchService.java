@@ -19,7 +19,7 @@ public interface ChurchService {
 
     ChurchResponse convertToResponse(ChurchEntity churchEntity);
 
-    Page<ChurchResponse> findAll(Pageable pageable, String query);
+    Page<ChurchResponse> findAll(Pageable pageable, String query, Boolean usesOurServices);
 
     boolean exists(Long churchId);
 
@@ -28,4 +28,8 @@ public interface ChurchService {
     void deleteChurch(Long churchId);
 
     Optional<ChurchEntity> findOne(Long churchId);
+
+    Optional<ChurchEntity> findOneByChurchNumber(String churchNumber);
+
+    Optional<ChurchEntity> findOneByChurchNumberUsingOurServices(String churchNumber);
 }

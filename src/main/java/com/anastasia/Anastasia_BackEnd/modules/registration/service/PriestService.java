@@ -24,6 +24,7 @@ public interface PriestService {
     Optional<PriestResponse> findPriestById(Long priestId);
 
     List<PriestResponse> findPriestsByChurchId(Long churchId);
+    List<PriestResponse> findActivePriestsByChurchId(Long churchId);
 
     PriestResponse updatePriestDetails(Long priestId, PriestEntity priestEntity);
 

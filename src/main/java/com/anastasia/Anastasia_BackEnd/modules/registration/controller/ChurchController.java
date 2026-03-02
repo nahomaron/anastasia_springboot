@@ -36,10 +36,24 @@ public class ChurchController {
     @GetMapping
     public ResponseEntity<Page<ChurchResponse>> getChurches(
             Pageable pageable,
-            @RequestParam(value = "q", required = false) String query
+            @RequestParam(value = "q", required = false) String query,
+            @RequestParam(value = "usesOurServices", required = false) Boolean usesOurServices
     ){
-        Page<ChurchResponse> churches = churchService.findAll(pageable, query);
+        Page<ChurchResponse> churches = churchService.findAll(pageable, query, usesOurServices);
         return new ResponseEntity<>(churches, HttpStatus.OK);
+    }
+
+    @GetMapping("/by-number/{churchNumber}")
+    public ResponseEntity<ChurchResponse> findByChurchNumber(
+            @PathVariable String churchNumber,
+            @RequestParam(value = "usesOurServicesOnly", required = false, defaultValue = "false") boolean usesOurServicesOnly
+    ) {
+        Optional<ChurchEntity> foundChurch = usesOurServicesOnly
+                ? churchService.findOneByChurchNumberUsingOurServices(churchNumber)
+                : churchService.findOneByChurchNumber(churchNumber);
+
+        return foundChurch.map(church -> ResponseEntity.ok(churchService.convertToResponse(church)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{churchId}/profile")

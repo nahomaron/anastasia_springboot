@@ -58,6 +58,7 @@ public class SecurityConfig {
             "/api-docs/**",
             "/api/swagger-ui/**",
             "/webjars/**",
+            "/api/v1/membership-cards/verify/**",
             "/ws/**",
             "/ws-sockjs/**"
     };

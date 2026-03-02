@@ -64,9 +64,15 @@ public class TenantUserServiceImpl implements TenantUserService {
     public TenantUserEntity activateMembership(UUID tenantId, UUID userId, UUID actorUserId) {
         TenantUserEntity entity = requireTenantUser(tenantId, userId);
         ensurePrimaryOwnerConstraint(tenantId, entity.getRole(), entity);
+        ensureNoOtherActiveMembership(userId, tenantId);
         entity.setStatus(MembershipStatus.ACTIVE);
         entity.setUpdatedByUserId(actorUserId);
-        return tenantUserRepository.save(entity);
+        TenantUserEntity saved = tenantUserRepository.save(entity);
+
+        UserEntity user = requireUser(userId);
+        user.assignTenant(saved.getTenant());
+        userRepository.save(user);
+        return saved;
     }
 
     @Override
@@ -142,6 +148,14 @@ public class TenantUserServiceImpl implements TenantUserService {
 
         if (!currentIsAlreadyPrimaryOwner && existingPrimaryOwners > 0) {
             throw new IllegalStateException("Tenant already has a PRIMARY_OWNER");
+        }
+    }
+
+    private void ensureNoOtherActiveMembership(UUID userId, UUID tenantId) {
+        List<TenantUserEntity> otherActiveMemberships =
+                tenantUserRepository.findByUserIdAndStatusAndTenant_IdNot(userId, MembershipStatus.ACTIVE, tenantId);
+        if (!otherActiveMemberships.isEmpty()) {
+            throw new IllegalStateException("User already has an active membership in another tenant");
         }
     }
 }

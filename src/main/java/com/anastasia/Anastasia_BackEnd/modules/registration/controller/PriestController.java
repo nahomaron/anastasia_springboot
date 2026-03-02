@@ -2,7 +2,9 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
@@ -55,6 +57,13 @@ public class PriestController {
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
+    @GetMapping("/church/{churchId}/active")
+    public ResponseEntity<List<PriestResponse>> listActivePriestsByChurch(@PathVariable Long churchId) {
+        List<PriestResponse> priests = priestService.findActivePriestsByChurchId(churchId);
+        return new ResponseEntity<>(priests, HttpStatus.OK);
+    }
+
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/{priestId}")
     public ResponseEntity<PriestResponse> getPriest(@PathVariable Long priestId){
@@ -86,16 +95,16 @@ public class PriestController {
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{priestNumber}/members")
-    public ResponseEntity<Page<Adult_MemberResponse>> listMembersByPriest(
+    public ResponseEntity<Page<Adult_MemberSummaryResponse>> listMembersByPriest(
             @PathVariable String priestNumber,
             @RequestParam(required = false) UUID tenantId,
             @RequestParam(required = false) String status,
             Pageable pageable
     ) {
         UUID effectiveTenantId = resolveTenantId(tenantId);
-        Page<Adult_MemberResponse> members = status == null || status.isBlank()
-                ? memberService.findByTenantAndPriestNumber(effectiveTenantId, priestNumber, pageable)
-                : memberService.findByTenantAndPriestNumberAndStatus(effectiveTenantId, priestNumber, status, pageable);
+        Page<Adult_MemberSummaryResponse> members = status == null || status.isBlank()
+                ? memberService.findByTenantAndPriestNumberSummary(effectiveTenantId, priestNumber, pageable)
+                : memberService.findByTenantAndPriestNumberAndStatusSummary(effectiveTenantId, priestNumber, status, pageable);
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
@@ -119,13 +128,13 @@ public class PriestController {
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{priestNumber}/children")
-    public ResponseEntity<Page<Child_MemberResponse>> listChildrenByPriest(
+    public ResponseEntity<Page<Child_MemberSummaryResponse>> listChildrenByPriest(
             @PathVariable String priestNumber,
             @RequestParam(required = false) UUID tenantId,
             Pageable pageable
     ) {
         UUID effectiveTenantId = resolveTenantId(tenantId);
-        Page<Child_MemberResponse> children = childService.findByTenantAndPriestNumber(
+        Page<Child_MemberSummaryResponse> children = childService.findByTenantAndPriestNumberSummary(
                 effectiveTenantId,
                 priestNumber,
                 pageable

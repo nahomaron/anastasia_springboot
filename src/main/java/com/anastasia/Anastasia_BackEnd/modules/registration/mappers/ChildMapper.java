@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
 import org.springframework.stereotype.Component;
 
@@ -90,6 +91,22 @@ public class ChildMapper {
                 .lastModifiedDate(childMemberEntity.getLastModifiedDate())
                 .father(buildParentSummary(childMemberEntity.getFather()))
                 .mother(buildParentSummary(childMemberEntity.getMother()))
+                .build();
+    }
+
+    public Child_MemberSummaryResponse childEntityToSummaryResponse(Child_MemberEntity childMemberEntity) {
+        if (childMemberEntity == null) return null;
+
+        return Child_MemberSummaryResponse.builder()
+                .id(childMemberEntity.getId())
+                .membershipNumber(childMemberEntity.getMembershipNumber())
+                .status(childMemberEntity.getStatus())
+                .firstName(childMemberEntity.getFirstName())
+                .fatherName(childMemberEntity.getFatherName())
+                .grandFatherName(childMemberEntity.getGrandFatherName())
+                .email(childMemberEntity.getEmail())
+                .phone(childMemberEntity.getPhone())
+                .createdDate(childMemberEntity.getCreatedDate())
                 .build();
     }
 

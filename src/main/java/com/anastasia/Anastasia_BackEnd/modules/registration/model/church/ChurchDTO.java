@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.model.church;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +31,7 @@ public class ChurchDTO {
     private Address address;
 
     @NotBlank(message = "Church email is required")
+    @Email(message = "Invalid church email format")
     private String email;
 
     private String phone;

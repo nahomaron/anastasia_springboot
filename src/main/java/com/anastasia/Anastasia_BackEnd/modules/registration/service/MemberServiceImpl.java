@@ -16,6 +16,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRep
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.ActiveMemberLimitPolicy;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.card.MembershipCardService;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
@@ -52,6 +54,8 @@ public class MemberServiceImpl implements MemberService {
     private final ApplicationEventPublisher publisher;
     private final CacheManager cacheManager;
     private final PriestRepository priestRepository;
+    private final ActiveMemberLimitPolicy activeMemberLimitPolicy;
+    private final MembershipCardService membershipCardService;
 
     private final OutboxPublisher outboxPublisher;
     private final TenantAdminNotificationService tenantAdminNotificationService;
@@ -147,6 +151,15 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    public Page<Adult_MemberSummaryResponse> findAllSummary(Pageable pageable) {
+        return memberRepository.findByStatusNotAndTenantId(
+                        MemberStatus.PENDING.name(),
+                        requireTenantId(),
+                        pageable)
+                .map(memberMapper::memberEntityToSummaryResponse);
+    }
+
+    @Override
     public long countNonPending() {
         return memberRepository.countByStatusNotAndTenantId(
                 MemberStatus.PENDING.name(),
@@ -161,10 +174,24 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        return memberRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
+                .map(memberMapper::memberEntityToSummaryResponse);
+    }
+
+    @Override
     public Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return memberRepository.findByTenantIdAndPriestNumberAndStatus(effectiveTenantId, priestNumber, status, pageable)
                 .map(memberMapper::memberEntityToResponse);
+    }
+
+    @Override
+    public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberAndStatusSummary(UUID tenantId, String priestNumber, String status, Pageable pageable) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        return memberRepository.findByTenantIdAndPriestNumberAndStatus(effectiveTenantId, priestNumber, status, pageable)
+                .map(memberMapper::memberEntityToSummaryResponse);
     }
 
     @Override
@@ -219,6 +246,40 @@ public class MemberServiceImpl implements MemberService {
 
         return memberRepository.findAll(scopeSpec, pageable)
                 .map(memberMapper::memberEntityToResponse);
+    }
+
+    @Override
+    public Page<Adult_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query) {
+        UUID tenantId = requireTenantId();
+        Long churchId = resolveCurrentChurchId();
+        String search = query == null ? null : query.trim();
+
+        Specification<Adult_MemberEntity> scopeSpec = (root, cq, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("tenantId"), tenantId));
+            predicates.add(cb.notEqual(root.get("status"), MemberStatus.PENDING.name()));
+            if (churchId != null) {
+                predicates.add(cb.equal(root.get("churchId"), churchId));
+            }
+            if (search != null && !search.isBlank()) {
+                String like = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("fatherName"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherName"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("firstNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("fatherNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("membershipNumber"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("email"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("profession"), "")), like)
+                ));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return memberRepository.findAll(scopeSpec, pageable)
+                .map(memberMapper::memberEntityToSummaryResponse);
     }
 
     @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator", unless = "#result == null")
@@ -307,14 +368,24 @@ public class MemberServiceImpl implements MemberService {
     )
     @Override
     public Adult_MemberResponse approveByChurch(Long memberId) {
-        Adult_MemberEntity member = memberRepository.findByIdAndTenantId(memberId, requireTenantId())
+        UUID tenantId = requireTenantId();
+        Adult_MemberEntity member = memberRepository.findByIdAndTenantId(memberId, tenantId)
                 .orElseThrow(() -> new UsernameNotFoundException("Not valid member"));
 
+        String previousStatus = member.getStatus();
+        boolean wasActive = MemberStatus.ACTIVE.name().equals(member.getStatus());
         member.setApprovedByChurch(true);
         updateApprovalStatus(member);
+        if (!wasActive && MemberStatus.ACTIVE.name().equals(member.getStatus())) {
+            activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
+        }
         assignMemberRoleIfApproved(member);
 
         Adult_MemberEntity saved = memberRepository.save(member);
+        if (!MemberStatus.ACTIVE.name().equals(previousStatus)
+                && MemberStatus.ACTIVE.name().equals(saved.getStatus())) {
+            membershipCardService.issueOrRefreshForApprovedMember(saved);
+        }
         return convertToResponse(saved);
     }
 
@@ -323,12 +394,18 @@ public class MemberServiceImpl implements MemberService {
     )
     @Override
     public Adult_MemberResponse approveByPriest(Long memberId) {
-        Adult_MemberEntity member = memberRepository.findByIdAndTenantId(memberId, requireTenantId())
+        UUID tenantId = requireTenantId();
+        Adult_MemberEntity member = memberRepository.findByIdAndTenantId(memberId, tenantId)
                 .orElseThrow(() -> new UsernameNotFoundException("Not valid member"));
+        String previousStatus = member.getStatus();
         boolean wasApproved = member.isApprovedByPriest();
+        boolean wasActive = MemberStatus.ACTIVE.name().equals(member.getStatus());
         member.setApprovedByPriest(true);
 
         updateApprovalStatus(member);
+        if (!wasActive && MemberStatus.ACTIVE.name().equals(member.getStatus())) {
+            activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
+        }
         assignMemberRoleIfApproved(member);
         if (!wasApproved && member.getPriestNumber() != null) {
             priestRepository.findByPriestNumber(member.getPriestNumber())
@@ -338,6 +415,10 @@ public class MemberServiceImpl implements MemberService {
                     });
         }
         Adult_MemberEntity saved = memberRepository.save(member);
+        if (!MemberStatus.ACTIVE.name().equals(previousStatus)
+                && MemberStatus.ACTIVE.name().equals(saved.getStatus())) {
+            membershipCardService.issueOrRefreshForApprovedMember(saved);
+        }
         return convertToResponse(saved);
     }
 

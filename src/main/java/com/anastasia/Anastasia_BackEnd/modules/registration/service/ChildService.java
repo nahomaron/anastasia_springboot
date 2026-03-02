@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -22,14 +23,17 @@ public interface ChildService {
     ChildResponse registerChild(Child_MemberEntity childMemberEntity);
 
     Page<Child_MemberResponse> findAll(Pageable pageable);
+    Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable);
 
     long countNonPending();
 
     Page<Child_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
+    Page<Child_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable);
 
     Page<Child_MemberResponse> findPending(Pageable pageable);
 
     Page<Child_MemberResponse> searchNonPending(Pageable pageable, String query);
+    Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query);
 
     Optional<Child_MemberResponse> findChildById(Long memberId);
 

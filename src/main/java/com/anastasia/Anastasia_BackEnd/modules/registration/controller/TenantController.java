@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.ResendOtpRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionResponse;
@@ -16,10 +17,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -92,6 +96,38 @@ public class TenantController {
         return ResponseEntity.ok("OTP has been resent successfully.");
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/verify-phone/current")
+    public ResponseEntity<?> verifyCurrentTenantPhone(@RequestBody PhoneVerificationRequest request) {
+        String tenantPhone = resolveCurrentTenantPhoneNumber();
+        boolean verified = tenantService.verifyTenantPhone(tenantPhone, request.getOtp());
+
+        return verified
+                ? ResponseEntity.ok("Phone verified successfully.")
+                : ResponseEntity.badRequest().body("Invalid or expired OTP.");
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/resend-phone-otp/current")
+    public ResponseEntity<?> resendCurrentTenantPhoneOtp() {
+        String tenantPhone = resolveCurrentTenantPhoneNumber();
+        if (!rateLimiterService.isAllowed(tenantPhone)) {
+            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+        }
+        phoneVerificationService.resendOtp(tenantPhone);
+        return ResponseEntity.ok("OTP has been resent successfully.");
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/current/verification-status")
+    public ResponseEntity<Map<String, Object>> getCurrentTenantVerificationStatus() {
+        TenantEntity tenant = resolveCurrentTenant();
+        return ResponseEntity.ok(Map.of(
+                "tenantId", tenant.getId(),
+                "phoneVerified", tenant.isPhoneVerified()
+        ));
+    }
+
 
     /**
      * Retrieves a paginated list of all tenants.
@@ -156,6 +192,30 @@ public class TenantController {
         }
         tenantService.updateTenant(tenantId, tenantDTO);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private String resolveCurrentTenantPhoneNumber() {
+        TenantEntity tenant = resolveCurrentTenant();
+        if (tenant.getPhoneNumber() == null || tenant.getPhoneNumber().isBlank()) {
+            throw new IllegalStateException("Tenant phone number is not available.");
+        }
+        return tenant.getPhoneNumber();
+    }
+
+    private TenantEntity resolveCurrentTenant() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            throw new SecurityException("Authenticated user context not found.");
+        }
+
+        UUID tenantId = principal.getTenantId();
+        if (tenantId == null) {
+            throw new SecurityException("No tenant linked to authenticated user.");
+        }
+
+        TenantEntity tenant = tenantService.findTenantById(tenantId)
+                .orElseThrow(() -> new SecurityException("Tenant not found."));
+        return tenant;
     }
 
 }

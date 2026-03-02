@@ -9,6 +9,9 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferCreateRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferDecisionRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipActionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
@@ -134,6 +137,40 @@ public class UserController {
             @Valid @RequestBody TenantMembershipActionRequest request
     ) {
         return ResponseEntity.ok(userService.applyMembershipAction(userId, request.getAction()));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PostMapping("/tenant-access/{userId}/transfer-requests")
+    public ResponseEntity<MemberTransferResponse> requestMemberTransfer(
+            @PathVariable UUID userId,
+            @Valid @RequestBody MemberTransferCreateRequest request
+    ) {
+        MemberTransferResponse response = userService.createMemberTransferRequest(
+                userId,
+                request.getTargetTenantId(),
+                request.getReason()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/approve")
+    public ResponseEntity<MemberTransferResponse> approveMemberTransfer(
+            @PathVariable UUID transferRequestId,
+            @RequestBody(required = false) MemberTransferDecisionRequest request
+    ) {
+        String note = request != null ? request.getNote() : null;
+        return ResponseEntity.ok(userService.approveMemberTransferRequest(transferRequestId, note));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/reject")
+    public ResponseEntity<MemberTransferResponse> rejectMemberTransfer(
+            @PathVariable UUID transferRequestId,
+            @RequestBody(required = false) MemberTransferDecisionRequest request
+    ) {
+        String note = request != null ? request.getNote() : null;
+        return ResponseEntity.ok(userService.rejectMemberTransferRequest(transferRequestId, note));
     }
 
 

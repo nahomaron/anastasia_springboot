@@ -58,10 +58,10 @@ class ChurchServiceUnitTest {
                 .phone(church.getPhone())
                 .build();
 
-        when(churchRepository.findAll(pageable)).thenReturn(entityPage);
+        when(churchRepository.search(null, null, pageable)).thenReturn(entityPage);
         when(churchMapper.churchEntityToResponse(church)).thenReturn(dto);
 
-        Page<ChurchResponse> result = churchService.findAll(pageable, null);
+        Page<ChurchResponse> result = churchService.findAll(pageable, null, null);
 
         assertThat(result.getContent()).containsExactly(dto);
     }

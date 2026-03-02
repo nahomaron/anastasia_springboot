@@ -5,8 +5,11 @@ import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MemberTransferRequestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberTransferService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.card.MembershipCardService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
@@ -27,6 +30,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MembershipSummary;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
@@ -75,6 +79,8 @@ public class UserServiceImpl implements UserService {
     private final AvatarRepository avatarRepository;
     private final ChildRepository childRepository;
     private final TenantRepository tenantRepository;
+    private final MemberTransferService memberTransferService;
+    private final MembershipCardService membershipCardService;
     private final AuthService authService;
     private final EmailNotificationService emailNotificationService;
 
@@ -342,12 +348,59 @@ public class UserServiceImpl implements UserService {
             case DENY, SUSPEND -> {
                 if (user.getMembership() != null) {
                     user.getMembership().setStatus(MemberStatus.NON_ACTIVE.name());
+                    membershipCardService.revokeCardByMembershipNumber(
+                            tenantId,
+                            user.getMembership().getMembershipNumber(),
+                            "Membership status changed to " + action.name());
                 }
             }
         }
 
         UserEntity saved = userRepository.save(user);
         return toTenantUserRow(saved);
+    }
+
+    @Transactional
+    @Override
+    public MemberTransferResponse createMemberTransferRequest(UUID userId, UUID targetTenantId, String reason) {
+        UUID actorTenantId = requireTenantId();
+        UUID actorUserId = getCurrentUserId();
+        MemberTransferRequestEntity request = memberTransferService.createTransferRequest(
+                actorTenantId,
+                userId,
+                targetTenantId,
+                actorUserId,
+                reason
+        );
+        return toMemberTransferResponse(request);
+    }
+
+    @Transactional
+    @Override
+    public MemberTransferResponse approveMemberTransferRequest(UUID transferRequestId, String decisionNote) {
+        UUID actorTenantId = requireTenantId();
+        UUID actorUserId = getCurrentUserId();
+        MemberTransferRequestEntity request = memberTransferService.approveTransferRequest(
+                actorTenantId,
+                transferRequestId,
+                actorUserId,
+                decisionNote
+        );
+        return toMemberTransferResponse(request);
+    }
+
+    @Transactional
+    @Override
+    public MemberTransferResponse rejectMemberTransferRequest(UUID transferRequestId, String decisionNote) {
+        UUID actorTenantId = requireTenantId();
+        UUID actorUserId = getCurrentUserId();
+        MemberTransferRequestEntity request = memberTransferService.rejectTransferRequest(
+                actorTenantId,
+                transferRequestId,
+                actorUserId,
+                decisionNote
+        );
+        return toMemberTransferResponse(request);
     }
 
     @Caching(
@@ -677,6 +730,23 @@ public class UserServiceImpl implements UserService {
                 .uuid(user.getUuid())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
+                .build();
+    }
+
+    private MemberTransferResponse toMemberTransferResponse(MemberTransferRequestEntity request) {
+        return MemberTransferResponse.builder()
+                .id(request.getId())
+                .userId(request.getUserId())
+                .fromTenantId(request.getFromTenant().getId())
+                .toTenantId(request.getToTenant().getId())
+                .status(request.getStatus())
+                .reason(request.getReason())
+                .decisionNote(request.getDecisionNote())
+                .requestedByUserId(request.getRequestedByUserId())
+                .decidedByUserId(request.getDecidedByUserId())
+                .requestedAt(request.getRequestedAt())
+                .decidedAt(request.getDecidedAt())
+                .executedAt(request.getExecutedAt())
                 .build();
     }
 

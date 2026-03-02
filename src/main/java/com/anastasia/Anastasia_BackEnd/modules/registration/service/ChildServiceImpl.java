@@ -11,12 +11,14 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.ActiveMemberLimitPolicy;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -46,6 +48,7 @@ public class ChildServiceImpl implements ChildService{
     private final ChildMapper childMapper;
     private final SecurityUtils securityUtils;
     private final TenantAdminNotificationService tenantAdminNotificationService;
+    private final ActiveMemberLimitPolicy activeMemberLimitPolicy;
 
     @Override
     public Child_MemberEntity convertToEntity(Child_MemberDTO childMemberDTO) {
@@ -125,6 +128,15 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    public Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable) {
+        return childRepository.findByStatusNotAndTenantId(
+                ChildStatus.PENDING.name(),
+                requireTenantId(),
+                pageable)
+                .map(childMapper::childEntityToSummaryResponse);
+    }
+
+    @Override
     public long countNonPending() {
         return childRepository.countByStatusNotAndTenantId(
                 ChildStatus.PENDING.name(),
@@ -136,6 +148,13 @@ public class ChildServiceImpl implements ChildService{
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return childRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
                 .map(childMapper::childEntityToResponse);
+    }
+
+    @Override
+    public Page<Child_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        return childRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
+                .map(childMapper::childEntityToSummaryResponse);
     }
 
     @Override
@@ -162,6 +181,23 @@ public class ChildServiceImpl implements ChildService{
                 requireTenantId(),
                 pageable)
                 .map(childMapper::childEntityToResponse);
+    }
+
+    @Override
+    public Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query) {
+        if (query == null || query.isBlank()) {
+            return childRepository.findByStatusNotAndTenantId(
+                    ChildStatus.PENDING.name(),
+                    requireTenantId(),
+                    pageable)
+                    .map(childMapper::childEntityToSummaryResponse);
+        }
+        return childRepository.searchNonPending(
+                query.trim(),
+                ChildStatus.PENDING.name(),
+                requireTenantId(),
+                pageable)
+                .map(childMapper::childEntityToSummaryResponse);
     }
 
     @Cacheable(value = "children", key = "#childId")
@@ -255,8 +291,12 @@ public class ChildServiceImpl implements ChildService{
     )
     @Override
     public Child_MemberResponse approveByChurch(Long childId) {
-        Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, requireTenantId())
+        UUID tenantId = requireTenantId();
+        Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        if (!ChildStatus.APPROVED.name().equals(child.getStatus()) && !ChildStatus.ACTIVE.name().equals(child.getStatus())) {
+            activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
+        }
         child.setStatus(ChildStatus.APPROVED.name());
         Child_MemberEntity saved = childRepository.save(child);
         return convertToResponse(saved);
@@ -270,8 +310,12 @@ public class ChildServiceImpl implements ChildService{
     )
     @Override
     public Child_MemberResponse approveByPriest(Long childId) {
-        Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, requireTenantId())
+        UUID tenantId = requireTenantId();
+        Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        if (!ChildStatus.APPROVED.name().equals(child.getStatus()) && !ChildStatus.ACTIVE.name().equals(child.getStatus())) {
+            activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
+        }
         child.setStatus(ChildStatus.APPROVED.name());
         Child_MemberEntity saved = childRepository.save(child);
         return convertToResponse(saved);

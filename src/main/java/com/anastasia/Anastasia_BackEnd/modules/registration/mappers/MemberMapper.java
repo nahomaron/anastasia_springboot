@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import jakarta.persistence.Persistence;
 import org.springframework.stereotype.Component;
@@ -110,6 +111,22 @@ public class MemberMapper {
                 .spouseIdNumber(adultMemberEntity.getSpouseIdNumber())
                 .childrenAsFatherIds(mapChildIds(adultMemberEntity.getChildrenAsFather()))
                 .childrenAsMotherIds(mapChildIds(adultMemberEntity.getChildrenAsMother()))
+                .build();
+    }
+
+    public Adult_MemberSummaryResponse memberEntityToSummaryResponse(Adult_MemberEntity adultMemberEntity) {
+        if (adultMemberEntity == null) return null;
+
+        return Adult_MemberSummaryResponse.builder()
+                .id(adultMemberEntity.getId())
+                .membershipNumber(adultMemberEntity.getMembershipNumber())
+                .status(adultMemberEntity.getStatus())
+                .firstName(adultMemberEntity.getFirstName())
+                .fatherName(adultMemberEntity.getFatherName())
+                .grandFatherName(adultMemberEntity.getGrandFatherName())
+                .email(adultMemberEntity.getEmail())
+                .phone(adultMemberEntity.getPhone())
+                .createdDate(adultMemberEntity.getCreatedDate())
                 .build();
     }
 

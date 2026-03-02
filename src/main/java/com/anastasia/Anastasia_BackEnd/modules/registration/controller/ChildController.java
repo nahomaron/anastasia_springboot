@@ -6,7 +6,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberSummaryResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import com.anastasia.Anastasia_BackEnd.common.specification.ChildSpecifications;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/registrar/children")
+@RequiresTenantFeature(TenantFeature.MEMBER_MANAGEMENT)
 public class ChildController {
 
     private final ChildService childService;
@@ -44,8 +48,8 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
-    public ResponseEntity<Page<Child_MemberResponse>> listOfChildren(Pageable pageable){
-        return new ResponseEntity<>(childService.findAll(pageable), HttpStatus.OK);
+    public ResponseEntity<Page<Child_MemberSummaryResponse>> listOfChildren(Pageable pageable){
+        return new ResponseEntity<>(childService.findAllSummary(pageable), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'ADMIN') or " +
@@ -66,11 +70,11 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/search")
-    public ResponseEntity<Page<Child_MemberResponse>> searchChildren(
+    public ResponseEntity<Page<Child_MemberSummaryResponse>> searchChildren(
             Pageable pageable,
             @RequestParam(value = "q", required = false) String query
     ){
-        return new ResponseEntity<>(childService.searchNonPending(pageable, query), HttpStatus.OK);
+        return new ResponseEntity<>(childService.searchNonPendingSummary(pageable, query), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +

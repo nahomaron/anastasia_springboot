@@ -195,6 +195,14 @@ public class PriestServiceImpl implements PriestService{
                 .toList();
     }
 
+    @Override
+    public List<PriestResponse> findActivePriestsByChurchId(Long churchId) {
+        return priestRepository.findByChurch_ChurchIdAndStatus(churchId, PriestStatus.ACTIVE)
+                .stream()
+                .map(priestMapper::priestEntityToResponse)
+                .toList();
+    }
+
 //    @Caching(
 //            put = {@CachePut(value = "priests",
 //                    keyGenerator = "tenantAwareKeyGenerator")},

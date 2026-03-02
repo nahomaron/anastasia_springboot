@@ -102,12 +102,15 @@ public class TenantServiceUnitTest {
         when(churchRepository.save(any(ChurchEntity.class))).thenReturn(churchEntity);
 
         Role ownerRole = TestDataUtil.createTestOwnerRole(tenantEntity);
+        Role adminRole = Role.builder().roleName("ADMIN").build();
         when(roleRepository.findByRoleName("OWNER")).thenReturn(Optional.of(ownerRole));
+        when(roleRepository.findByRoleName("ADMIN")).thenReturn(Optional.of(adminRole));
 
         tenantService.subscribeTenant(dto);
 
         verify(tenantRepository, times(2)).save(any(TenantEntity.class));
         verify(authService, times(1)).createUser(any(UserEntity.class));
+        verify(phoneVerificationService, times(1)).startVerification(dto.getPhoneNumber());
 
         // Optionally, verify no other interactions if strict mocks are desired
 //         verifyNoMoreInteractions(tenantRepository, roleRepository, authService, phoneVerificationService);
@@ -116,8 +119,6 @@ public class TenantServiceUnitTest {
     @Test
     void subscribeTenant_shouldThrowWhenRoleNotFound() {
         TenantDTO dto = TestDataUtil.createTestTenantDTO();
-        when(roleRepository.findByRoleName("OWNER")).thenReturn(Optional.empty());
-
         assertThrows(RuntimeException.class, () -> tenantService.subscribeTenant(dto));
     }
 
