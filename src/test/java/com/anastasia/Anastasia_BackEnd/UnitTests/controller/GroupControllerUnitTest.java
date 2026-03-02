@@ -95,7 +95,7 @@ class GroupControllerUnitTest {
                 new PagedModel.PageMetadata(groupPage.getSize(), groupPage.getNumber(), groupPage.getTotalElements()));
         when(assembler.toModel(any(Page.class))).thenReturn(pagedModel);
 
-        ResponseEntity<PagedModel<EntityModel<GroupResponse>>> response = groupController.listOfGroups(Pageable.unpaged(), assembler, null);
+        ResponseEntity<PagedModel<EntityModel<GroupResponse>>> response = groupController.listOfGroups(Pageable.unpaged(), assembler, null, null);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(pagedModel);
     }
@@ -105,7 +105,7 @@ class GroupControllerUnitTest {
         when(groupService.findOne(5L)).thenReturn(Optional.of(groupEntity));
         when(groupService.convertToResponse(groupEntity)).thenReturn(groupResponse);
 
-        ResponseEntity<GroupResponse> response = groupController.getGroup(5L);
+        ResponseEntity<GroupResponse> response = groupController.getGroup(5L, null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         assertThat(response.getBody()).isEqualTo(groupResponse);
@@ -115,7 +115,7 @@ class GroupControllerUnitTest {
     void getGroup_whenMissing_shouldReturnNotFound() {
         when(groupService.findOne(9L)).thenReturn(Optional.empty());
 
-        ResponseEntity<GroupResponse> response = groupController.getGroup(9L);
+        ResponseEntity<GroupResponse> response = groupController.getGroup(9L, null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }

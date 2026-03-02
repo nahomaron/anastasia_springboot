@@ -3,6 +3,8 @@ package com.anastasia.Anastasia_BackEnd.modules.groups;
 import com.anastasia.Anastasia_BackEnd.modules.common.PagedResponse;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.*;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.groups.service.GroupService;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -33,6 +35,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups")
+@RequiresTenantFeature(TenantFeature.GROUPS)
 public class GroupController {
 
     private final GroupService groupService;
@@ -49,34 +52,51 @@ public class GroupController {
 
     // Get list of Groups
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST', 'MEMBER') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     public ResponseEntity<PagedModel<EntityModel<GroupResponse>>> listOfGroups(
             Pageable pageable,
             PagedResourcesAssembler<GroupResponse> assembler,
+            Authentication authentication,
             @RequestParam(value = "createdBy", required = false) String createdBy
     ){
         Page<GroupResponse> groupResponses;
-        if (createdBy != null && !createdBy.isBlank()) {
-            UUID creatorId = "me".equalsIgnoreCase(createdBy) ? resolveCurrentUserId() : UUID.fromString(createdBy);
-            if (creatorId == null) {
+        boolean privileged = hasAnyRole(authentication, "OWNER", "ADMIN");
+        if (!privileged && authentication != null) {
+            UUID currentUserId = resolveCurrentUserId();
+            if (currentUserId == null) {
                 groupResponses = Page.empty(pageable);
             } else {
-                groupResponses = groupService.findAllByCreatedBy(creatorId, pageable);
+                groupResponses = groupService.findVisibleForUser(currentUserId, pageable);
             }
         } else {
-            groupResponses = groupService.findAll(pageable);
+            if (createdBy != null && !createdBy.isBlank()) {
+                UUID creatorId = "me".equalsIgnoreCase(createdBy) ? resolveCurrentUserId() : UUID.fromString(createdBy);
+                if (creatorId == null) {
+                    groupResponses = Page.empty(pageable);
+                } else {
+                    groupResponses = groupService.findAllByCreatedBy(creatorId, pageable);
+                }
+            } else {
+                groupResponses = groupService.findAll(pageable);
+            }
         }
         PagedModel<EntityModel<GroupResponse>> model = assembler.toModel(groupResponses);
         return new ResponseEntity<>(model, HttpStatus.OK);
     }
 
     // Get specific group by ID
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST', 'MEMBER') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     @GetMapping("/{groupId}")
-    public ResponseEntity<GroupResponse> getGroup(@PathVariable Long groupId){
-        Optional<GroupEntity> foundGroup = groupService.findOne(groupId);
+    public ResponseEntity<GroupResponse> getGroup(@PathVariable Long groupId, Authentication authentication){
+        boolean privileged = hasAnyRole(authentication, "OWNER", "ADMIN");
+        Optional<GroupEntity> foundGroup;
+        if (!privileged && authentication != null) {
+            foundGroup = groupService.findOneVisibleForUser(groupId, resolveCurrentUserId());
+        } else {
+            foundGroup = groupService.findOne(groupId);
+        }
         return foundGroup.map(groupEntity -> {
             GroupResponse groupResponse = groupService.convertToResponse(groupEntity);
             return new ResponseEntity<>(groupResponse, HttpStatus.FOUND);
@@ -198,6 +218,21 @@ public class GroupController {
         }
 
         return null;
+    }
+
+    private boolean hasAnyRole(Authentication authentication, String... roles) {
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        for (String role : roles) {
+            String expected = "ROLE_" + role;
+            boolean found = authentication.getAuthorities().stream()
+                    .anyMatch(a -> expected.equals(a.getAuthority()));
+            if (found) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

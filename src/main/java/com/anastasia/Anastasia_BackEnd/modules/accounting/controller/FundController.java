@@ -3,6 +3,8 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.controller;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.CreateFundRequest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.FundDto;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.FundService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/accounting/funds")
 @RequiredArgsConstructor
+@RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
 public class FundController {
 
     private final FundService fundService;

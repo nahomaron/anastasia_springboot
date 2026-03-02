@@ -3,12 +3,12 @@ package com.anastasia.Anastasia_BackEnd.seeder;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.seeder.seeders.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -32,17 +32,25 @@ public class DataSeeder {
     private final GroupSeeder groupSeeder;
     private final EventSeeder eventSeeder;
     private final AccountingSeeder accountingSeeder;
+    @Value("${app.seeding.enabled:false}")
+    private boolean dataSeedingEnabled;
 
 
 //    @PostConstruct
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void init() {
-        logger.info("starting database seeding ...");
+        logger.info("starting permissions/roles seeding ...");
         roleAndPermissionSeeder.seedPermissions();
         roleAndPermissionSeeder.seedDefaultRoles();
 
-        List<UserEntity> savedUsers = userSeeder.seedUsers();
+        if (!dataSeedingEnabled) {
+            logger.info("Sample/domain data seeding is disabled (app.seeding.enabled=false).");
+            return;
+        }
+
+        logger.info("starting sample/domain data seeding ...");
+        userSeeder.seedUsers();
         List<TenantEntity> savedTenants = tenantSeeder.seedTenants();
         List<ChurchEntity> savedChurches = churchSeeder.seedChurches(savedTenants);
         priestSeeder.seedPriests(savedChurches);

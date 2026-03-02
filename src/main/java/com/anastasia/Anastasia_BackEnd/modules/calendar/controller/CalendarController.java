@@ -5,6 +5,8 @@ import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarEntryRequest
 import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarOccurrenceResponse;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.OccurrenceOverrideRequest;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.service.CalendarEntryService;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.service.CalendarOccurrenceService;
 import jakarta.validation.Valid;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/calendar")
+@RequiresTenantFeature(TenantFeature.CALENDAR)
 public class CalendarController {
 
     private final CalendarOccurrenceService occurrenceService;

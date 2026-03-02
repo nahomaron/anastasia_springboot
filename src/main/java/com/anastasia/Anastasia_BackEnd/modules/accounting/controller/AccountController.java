@@ -5,6 +5,8 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.CreateAccountReque
 import com.anastasia.Anastasia_BackEnd.modules.accounting.enums.AccountType;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.AccountService;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.ChartOfAccountsService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/accounting/accounts")
 @RequiredArgsConstructor
+@RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
 public class AccountController {
 
     private final AccountService accountService;

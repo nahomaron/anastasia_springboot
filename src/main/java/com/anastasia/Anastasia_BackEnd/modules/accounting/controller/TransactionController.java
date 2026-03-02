@@ -6,6 +6,8 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.RecordIncomeReques
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransactionDto;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransferFundsRequest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.TransactionService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/accounting/transactions")
 @RequiredArgsConstructor
+@RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
 public class TransactionController {
 
     private final TransactionService transactionService;

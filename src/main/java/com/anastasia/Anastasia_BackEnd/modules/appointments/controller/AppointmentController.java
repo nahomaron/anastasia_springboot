@@ -10,6 +10,8 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentStatu
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatus;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentType;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.service.AppointmentService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,6 +36,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/appointments")
+@RequiresTenantFeature(TenantFeature.APPOINTMENTS)
 public class AppointmentController {
 
     private final AppointmentService appointmentService;

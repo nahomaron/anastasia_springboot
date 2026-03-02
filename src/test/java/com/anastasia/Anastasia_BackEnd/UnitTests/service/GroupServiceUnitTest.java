@@ -301,6 +301,31 @@ class GroupServiceUnitTest {
                 .isInstanceOf(EntityNotFoundException.class);
     }
 
+    @Test
+    void findVisibleForUser_delegatesToTenantScopedRepositoryQuery() {
+        UUID userId = UUID.randomUUID();
+        when(groupRepository.findVisibleForUser(eq(tenantId), eq(userId), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(existingGroup)));
+        when(groupMapper.groupEntityToResponse(existingGroup))
+                .thenReturn(GroupResponse.builder().groupId(existingGroup.getGroupId()).build());
+
+        Page<GroupResponse> result = groupService.findVisibleForUser(userId, Pageable.unpaged());
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(groupRepository).findVisibleForUser(eq(tenantId), eq(userId), any(Pageable.class));
+    }
+
+    @Test
+    void findOneVisibleForUser_returnsEmptyWhenRepositoryFindsNone() {
+        UUID userId = UUID.randomUUID();
+        when(groupRepository.findVisibleByIdForUser(tenantId, existingGroup.getGroupId(), userId))
+                .thenReturn(Optional.empty());
+
+        Optional<GroupEntity> result = groupService.findOneVisibleForUser(existingGroup.getGroupId(), userId);
+
+        assertThat(result).isEmpty();
+    }
+
     private UserEntity userEntity(UUID userId, UUID tenantId) {
         return UserEntity.builder()
                 .uuid(userId)

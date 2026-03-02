@@ -99,12 +99,31 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    public Page<GroupResponse> findVisibleForUser(UUID userId, Pageable pageable) {
+        UUID tenantId = requireTenantId();
+        if (userId == null) {
+            return Page.empty(pageable);
+        }
+        return groupRepository.findVisibleForUser(tenantId, userId, pageable)
+                .map(groupMapper::groupEntityToResponse);
+    }
+
+    @Override
     public Optional<GroupEntity> findOne(Long groupId) {
         try {
             return Optional.of(loadGroupForTenant(groupId));
         } catch (EntityNotFoundException ex) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Optional<GroupEntity> findOneVisibleForUser(Long groupId, UUID userId) {
+        UUID tenantId = requireTenantId();
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return groupRepository.findVisibleByIdForUser(tenantId, groupId, userId);
     }
 
     @Override

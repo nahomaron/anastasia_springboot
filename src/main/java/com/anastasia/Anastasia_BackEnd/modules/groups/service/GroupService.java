@@ -23,7 +23,11 @@ public interface GroupService {
 
     Page<GroupResponse> findAllByCreatedBy(UUID createdBy, Pageable pageable);
 
+    Page<GroupResponse> findVisibleForUser(UUID userId, Pageable pageable);
+
     Optional<GroupEntity> findOne(Long groupId);
+
+    Optional<GroupEntity> findOneVisibleForUser(Long groupId, UUID userId);
 
     boolean exists(Long groupId);
 

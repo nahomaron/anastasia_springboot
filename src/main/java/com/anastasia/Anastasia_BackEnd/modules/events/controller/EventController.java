@@ -12,6 +12,8 @@ import com.anastasia.Anastasia_BackEnd.modules.events.service.EventAttendanceSer
 import com.anastasia.Anastasia_BackEnd.modules.events.service.EventReportService;
 import com.anastasia.Anastasia_BackEnd.modules.events.service.EventService;
 import com.anastasia.Anastasia_BackEnd.modules.events.service.QrCheckInService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/events")
+@RequiresTenantFeature(TenantFeature.EVENTS)
 public class EventController {
 
     private final EventService eventService;
@@ -33,7 +36,7 @@ public class EventController {
     private final EventReportService eventReportService;
     private final QrCheckInService qrCheckInService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST', 'MEMBER') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENTS')")
     @GetMapping("/visible")
     public ResponseEntity<List<EventDTO>> getVisibleEventsForCurrentUser() {

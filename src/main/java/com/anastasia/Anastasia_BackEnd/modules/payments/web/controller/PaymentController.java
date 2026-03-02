@@ -6,6 +6,8 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.CreateIntentRequ
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.CreateSubscriptionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.PaymentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.SubscriptionResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementResolverService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class PaymentController {
 
     private final PaymentCheckoutSaga checkoutSaga;
     private final CreateSubscriptionUseCase createSubscription;
+    private final EntitlementResolverService entitlementResolverService;
 
     @PostMapping("/intents")
     public ResponseEntity<PaymentResponse> create(
@@ -32,6 +35,7 @@ public class PaymentController {
             @Valid @RequestBody CreateIntentRequest req) {
 
         UUID tenantUuid = parseTenantId(tenantId);
+        ensureStewardshipEnabled(tenantUuid);
         var pi = checkoutSaga.startCheckout(
                 tenantUuid,
                 req.getPurpose(),
@@ -57,6 +61,7 @@ public class PaymentController {
             @Valid @RequestBody CreateSubscriptionRequest req) {
 
         UUID tenantUuid = parseTenantId(tenantId);
+        ensureStewardshipEnabled(tenantUuid);
         var subscription = createSubscription.execute(
                 tenantUuid,
                 req.getPurpose(),
@@ -80,6 +85,12 @@ public class PaymentController {
             return UUID.fromString(headerValue);
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid tenant id");
+        }
+    }
+
+    private void ensureStewardshipEnabled(UUID tenantId) {
+        if (!entitlementResolverService.hasFeature(tenantId, TenantFeature.STEWARDSHIP_GIVING)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Stewardship/giving is not enabled for this tenant plan");
         }
     }
 }
