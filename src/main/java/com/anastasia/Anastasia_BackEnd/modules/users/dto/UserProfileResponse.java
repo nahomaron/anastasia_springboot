@@ -18,6 +18,7 @@ public class UserProfileResponse {
     String phoneNumber;
     boolean phoneVerified;
     String recoveryEmail;
+    boolean recoveryEmailVerified;
     String profileImageUrl;
     boolean twoFactorEnabled;
 }

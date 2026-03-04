@@ -33,7 +33,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepo
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MembershipSummary;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
@@ -91,6 +93,7 @@ public class UserServiceImpl implements UserService {
     private final AuthService authService;
     private final EmailNotificationService emailNotificationService;
     private final UserProfileRepository userProfileRepository;
+    private final UserRecoveryEmailVerificationService recoveryEmailVerificationService;
 
 
     @Override
@@ -158,7 +161,17 @@ public class UserServiceImpl implements UserService {
             profile.setLocation(trimToNull(request.getLocation()));
         }
         if (request.getProfileImageUrl() != null) {
-            profile.setProfileImageUrl(trimToNull(request.getProfileImageUrl()));
+            String imageUrl = trimToNull(request.getProfileImageUrl());
+            profile.setProfileImageUrl(imageUrl);
+            if (imageUrl != null) {
+                AvatarEntity avatar = AvatarEntity.builder()
+                        .imageUrl(imageUrl)
+                        .avatarType(AvatarType.USER)
+                        .ownerId(user.getUuid())
+                        .build();
+                avatar = avatarRepository.save(avatar);
+                user.setProfileAvatar(avatar);
+            }
         }
         if (request.getPhoneNumber() != null) {
             String normalizedPhone = trimToNull(PhoneNumberUtils.normalize(request.getPhoneNumber()));
@@ -191,6 +204,53 @@ public class UserServiceImpl implements UserService {
         }
 
         profile.setRecoveryEmail(recoveryEmail);
+        profile.setRecoveryEmailVerified(false);
+        profile.setRecoveryEmailVerifiedAt(null);
+        userProfileRepository.save(profile);
+        return toUserProfileResponse(user, profile);
+    }
+
+    @Transactional
+    @Override
+    public void sendRecoveryEmailVerificationCode() {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+        if (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank()) {
+            throw new IllegalStateException("Set a recovery email before requesting verification.");
+        }
+        recoveryEmailVerificationService.sendCode(profile.getRecoveryEmail());
+    }
+
+    @Transactional
+    @Override
+    public boolean verifyRecoveryEmailCode(VerifyRecoveryEmailCodeRequest request) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+        if (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank()) {
+            throw new IllegalStateException("Set a recovery email before verifying it.");
+        }
+
+        boolean verified = recoveryEmailVerificationService.verifyCode(profile.getRecoveryEmail(), request.getCode());
+        if (verified) {
+            profile.setRecoveryEmailVerified(true);
+            profile.setRecoveryEmailVerifiedAt(java.time.LocalDateTime.now());
+            userProfileRepository.save(profile);
+        }
+        return verified;
+    }
+
+    @Transactional
+    @Override
+    public UserProfileResponse updateCurrentUserTwoFactor(UpdateTwoFactorRequest request) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+
+        if (request.isEnabled()
+                && (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank() || !profile.isRecoveryEmailVerified())) {
+            throw new IllegalStateException("Verify a recovery email before enabling two-factor authentication.");
+        }
+
+        profile.setTwoFactorEnabled(request.isEnabled());
         userProfileRepository.save(profile);
         return toUserProfileResponse(user, profile);
     }
@@ -859,7 +919,10 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(profile.getPhoneNumber())
                 .phoneVerified(profile.isPhoneVerified())
                 .recoveryEmail(profile.getRecoveryEmail())
-                .profileImageUrl(profile.getProfileImageUrl())
+                .recoveryEmailVerified(profile.isRecoveryEmailVerified())
+                .profileImageUrl(profile.getProfileImageUrl() != null
+                        ? profile.getProfileImageUrl()
+                        : (user.getProfileAvatar() != null ? user.getProfileAvatar().getImageUrl() : null))
                 .twoFactorEnabled(profile.isTwoFactorEnabled())
                 .build();
     }

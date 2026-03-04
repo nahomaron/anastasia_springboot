@@ -9,7 +9,9 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
@@ -45,6 +47,12 @@ public interface UserService {
     UserProfileResponse updateCurrentUserProfile(@Valid UpdateUserProfileRequest request);
 
     UserProfileResponse updateCurrentUserRecoveryEmail(@Valid UpdateRecoveryEmailRequest request);
+
+    void sendRecoveryEmailVerificationCode();
+
+    boolean verifyRecoveryEmailCode(@Valid VerifyRecoveryEmailCodeRequest request);
+
+    UserProfileResponse updateCurrentUserTwoFactor(@Valid UpdateTwoFactorRequest request);
 
     SimpleUserDTO updateUserDetails(UserEntity user, Principal connectedUser);
 

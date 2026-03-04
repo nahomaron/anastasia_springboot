@@ -48,6 +48,13 @@ public class UserProfileEntity {
     @Column(name = "recovery_email", length = 255)
     private String recoveryEmail;
 
+    @Builder.Default
+    @Column(name = "recovery_email_verified", nullable = false)
+    private boolean recoveryEmailVerified = false;
+
+    @Column(name = "recovery_email_verified_at")
+    private LocalDateTime recoveryEmailVerifiedAt;
+
     @Column(name = "profile_image_url", length = 1024)
     private String profileImageUrl;
 

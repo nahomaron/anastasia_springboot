@@ -13,7 +13,9 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferCreateReq
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferDecisionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipActionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
@@ -124,6 +126,31 @@ public class UserController {
             @Valid @RequestBody UpdateRecoveryEmailRequest request
     ) {
         return ResponseEntity.ok(userService.updateCurrentUserRecoveryEmail(request));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/security/recovery-email/send-code")
+    public ResponseEntity<Map<String, String>> sendRecoveryEmailVerificationCode() {
+        userService.sendRecoveryEmailVerificationCode();
+        return ResponseEntity.ok(Map.of("message", "Recovery email verification code sent."));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/security/recovery-email/verify-code")
+    public ResponseEntity<Map<String, Object>> verifyRecoveryEmailCode(
+            @Valid @RequestBody VerifyRecoveryEmailCodeRequest request
+    ) {
+        boolean verified = userService.verifyRecoveryEmailCode(request);
+        return ResponseEntity.ok(Map.of(
+                "verified", verified,
+                "message", verified ? "Recovery email verified successfully." : "Invalid verification code."
+        ));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/me/security/two-factor")
+    public ResponseEntity<UserProfileResponse> updateTwoFactor(@Valid @RequestBody UpdateTwoFactorRequest request) {
+        return ResponseEntity.ok(userService.updateCurrentUserTwoFactor(request));
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT')")
