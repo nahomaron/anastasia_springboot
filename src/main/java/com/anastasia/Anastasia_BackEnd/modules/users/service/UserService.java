@@ -10,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TotpSetupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserPreferencesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
@@ -19,6 +20,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.BackupCodesResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserPreferencesResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
@@ -57,6 +59,10 @@ public interface UserService {
     boolean verifyRecoveryEmailCode(@Valid VerifyRecoveryEmailCodeRequest request);
 
     UserProfileResponse updateCurrentUserTwoFactor(@Valid UpdateTwoFactorRequest request);
+
+    UserPreferencesResponse getCurrentUserPreferences();
+
+    UserPreferencesResponse updateCurrentUserPreferences(@Valid UpdateUserPreferencesRequest request);
 
     TotpSetupResponse initiateTotpSetup();
 

@@ -15,8 +15,10 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.BackupCodesResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TotpSetupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserPreferencesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserPreferencesResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyTotpSetupRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipActionRequest;
@@ -123,6 +125,20 @@ public class UserController {
     @PatchMapping("/me/profile")
     public ResponseEntity<UserProfileResponse> updateMyProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
         return ResponseEntity.ok(userService.updateCurrentUserProfile(request));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/preferences")
+    public ResponseEntity<UserPreferencesResponse> getMyPreferences() {
+        return ResponseEntity.ok(userService.getCurrentUserPreferences());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/me/preferences")
+    public ResponseEntity<UserPreferencesResponse> updateMyPreferences(
+            @Valid @RequestBody UpdateUserPreferencesRequest request
+    ) {
+        return ResponseEntity.ok(userService.updateCurrentUserPreferences(request));
     }
 
     @PreAuthorize("isAuthenticated()")

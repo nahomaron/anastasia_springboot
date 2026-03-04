@@ -37,8 +37,10 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.MembershipSummary;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.BackupCodesResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserPreferencesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserPreferencesResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyTotpSetupRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TotpSetupResponse;
@@ -51,8 +53,10 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserPreferencesEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserTwoFactorBackupCodeEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserPreferencesRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
@@ -106,6 +110,7 @@ public class UserServiceImpl implements UserService {
     private final AuthService authService;
     private final EmailNotificationService emailNotificationService;
     private final UserProfileRepository userProfileRepository;
+    private final UserPreferencesRepository userPreferencesRepository;
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final UserRecoveryEmailVerificationService recoveryEmailVerificationService;
     private final TokenRepository tokenRepository;
@@ -276,6 +281,82 @@ public class UserServiceImpl implements UserService {
         userProfileRepository.save(profile);
         backupCodeRepository.deleteByUserId(user.getUuid());
         return toUserProfileResponse(user, profile);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public UserPreferencesResponse getCurrentUserPreferences() {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserPreferencesEntity preferences = getOrCreatePreferences(user);
+        return toUserPreferencesResponse(preferences);
+    }
+
+    @Transactional
+    @Override
+    public UserPreferencesResponse updateCurrentUserPreferences(UpdateUserPreferencesRequest request) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserPreferencesEntity preferences = getOrCreatePreferences(user);
+
+        if (request.getThemeMode() != null) {
+            String theme = request.getThemeMode().trim().toUpperCase(Locale.ROOT);
+            if (!Set.of("SYSTEM", "LIGHT", "DARK").contains(theme)) {
+                throw new IllegalArgumentException("Theme mode must be SYSTEM, LIGHT, or DARK.");
+            }
+            preferences.setThemeMode(theme);
+        }
+        if (request.getLanguage() != null) {
+            preferences.setLanguage(defaultIfBlank(request.getLanguage(), "en"));
+        }
+        if (request.getLocale() != null) {
+            preferences.setLocale(defaultIfBlank(request.getLocale(), "en-US"));
+        }
+        if (request.getTimezone() != null) {
+            preferences.setTimezone(trimToNull(request.getTimezone()));
+        }
+        if (request.getCountryCode() != null) {
+            String country = trimToNull(request.getCountryCode());
+            preferences.setCountryCode(country == null ? null : country.toUpperCase(Locale.ROOT));
+        }
+        if (request.getCity() != null) {
+            preferences.setCity(trimToNull(request.getCity()));
+        }
+        if (request.getDateFormat() != null) {
+            preferences.setDateFormat(defaultIfBlank(request.getDateFormat(), "MMM d, yyyy"));
+        }
+        if (request.getFirstDayOfWeek() != null) {
+            String firstDay = request.getFirstDayOfWeek().trim().toUpperCase(Locale.ROOT);
+            if (!Set.of("SUNDAY", "MONDAY").contains(firstDay)) {
+                throw new IllegalArgumentException("First day of week must be SUNDAY or MONDAY.");
+            }
+            preferences.setFirstDayOfWeek(firstDay);
+        }
+        if (request.getReducedMotion() != null) {
+            preferences.setReducedMotion(request.getReducedMotion());
+        }
+        if (request.getCompactUi() != null) {
+            preferences.setCompactUi(request.getCompactUi());
+        }
+        if (request.getEmailNotifications() != null) {
+            preferences.setEmailNotifications(request.getEmailNotifications());
+        }
+        if (request.getPushNotifications() != null) {
+            preferences.setPushNotifications(request.getPushNotifications());
+        }
+        if (request.getMarketingNotifications() != null) {
+            preferences.setMarketingNotifications(request.getMarketingNotifications());
+        }
+        if (request.getSharePresence() != null) {
+            preferences.setSharePresence(request.getSharePresence());
+        }
+        if (request.getAnalyticsOptIn() != null) {
+            preferences.setAnalyticsOptIn(request.getAnalyticsOptIn());
+        }
+        if (request.getAutoDetectLocation() != null) {
+            preferences.setAutoDetectLocation(request.getAutoDetectLocation());
+        }
+
+        userPreferencesRepository.save(preferences);
+        return toUserPreferencesResponse(preferences);
     }
 
     @Transactional
@@ -1032,6 +1113,26 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    private UserPreferencesEntity getOrCreatePreferences(UserEntity user) {
+        return userPreferencesRepository.findById(user.getUuid()).orElseGet(() ->
+                userPreferencesRepository.save(UserPreferencesEntity.builder()
+                        .userId(user.getUuid())
+                        .user(user)
+                        .themeMode("SYSTEM")
+                        .language("en")
+                        .locale("en-US")
+                        .dateFormat("MMM d, yyyy")
+                        .firstDayOfWeek("SUNDAY")
+                        .emailNotifications(true)
+                        .pushNotifications(true)
+                        .marketingNotifications(false)
+                        .sharePresence(true)
+                        .analyticsOptIn(true)
+                        .autoDetectLocation(true)
+                        .build())
+        );
+    }
+
     private UserProfileResponse toUserProfileResponse(UserEntity user, UserProfileEntity profile) {
         long backupCodesRemaining = backupCodeRepository.countUnusedByUserId(user.getUuid());
         return UserProfileResponse.builder()
@@ -1051,6 +1152,28 @@ public class UserServiceImpl implements UserService {
                 .twoFactorEnabled(profile.isTwoFactorEnabled())
                 .totpConfigured(profile.getTotpSecretBase32() != null && !profile.getTotpSecretBase32().isBlank())
                 .backupCodesRemaining(backupCodesRemaining)
+                .build();
+    }
+
+    private UserPreferencesResponse toUserPreferencesResponse(UserPreferencesEntity preferences) {
+        return UserPreferencesResponse.builder()
+                .userId(preferences.getUserId())
+                .themeMode(preferences.getThemeMode())
+                .language(preferences.getLanguage())
+                .locale(preferences.getLocale())
+                .timezone(preferences.getTimezone())
+                .countryCode(preferences.getCountryCode())
+                .city(preferences.getCity())
+                .dateFormat(preferences.getDateFormat())
+                .firstDayOfWeek(preferences.getFirstDayOfWeek())
+                .reducedMotion(preferences.isReducedMotion())
+                .compactUi(preferences.isCompactUi())
+                .emailNotifications(preferences.isEmailNotifications())
+                .pushNotifications(preferences.isPushNotifications())
+                .marketingNotifications(preferences.isMarketingNotifications())
+                .sharePresence(preferences.isSharePresence())
+                .analyticsOptIn(preferences.isAnalyticsOptIn())
+                .autoDetectLocation(preferences.isAutoDetectLocation())
                 .build();
     }
 
@@ -1089,6 +1212,11 @@ public class UserServiceImpl implements UserService {
         }
         String trimmed = value.trim();
         return trimmed.isBlank() ? null : trimmed;
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        String trimmed = trimToNull(value);
+        return trimmed == null ? fallback : trimmed;
     }
 
 }
