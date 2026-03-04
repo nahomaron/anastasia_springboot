@@ -62,6 +62,15 @@ public class UserProfileEntity {
     @Column(name = "two_factor_enabled", nullable = false)
     private boolean twoFactorEnabled = false;
 
+    @Column(name = "totp_secret_base32", length = 128)
+    private String totpSecretBase32;
+
+    @Column(name = "totp_setup_at")
+    private LocalDateTime totpSetupAt;
+
+    @Column(name = "totp_enabled_at")
+    private LocalDateTime totpEnabledAt;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

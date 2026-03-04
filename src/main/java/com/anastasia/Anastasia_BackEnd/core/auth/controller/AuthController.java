@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.common.config.RateLimiterConfig;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ResetPasswordRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.VerifyLoginTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
@@ -64,6 +65,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody AuthenticationRequest request) throws MessagingException {
         return ResponseEntity.ok(authService.authenticate(request));
+    }
+
+    @PostMapping("/login/2fa/verify")
+    public ResponseEntity<AuthenticationResponse> verifyTwoFactorLogin(
+            @Valid @RequestBody VerifyLoginTwoFactorRequest request
+    ) {
+        return ResponseEntity.ok(authService.verifyLoginTwoFactor(request));
     }
 
     /**

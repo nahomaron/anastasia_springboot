@@ -5,6 +5,9 @@ import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.Invalid
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthSessionResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.VerifyLoginTwoFactorRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.model.LoginTwoFactorChallengeEntity;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.LoginTwoFactorChallengeRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
@@ -19,6 +22,11 @@ import com.anastasia.Anastasia_BackEnd.common.cache.CacheWarmupService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserTwoFactorBackupCodeEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
@@ -33,6 +41,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,6 +58,12 @@ public class AuthServiceImpl implements AuthService {
     private final EmailNotificationService emailNotificationService;
     private final CacheWarmupService cacheWarmupService;
     private final RoleRepository roleRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final UserTwoFactorBackupCodeRepository backupCodeRepository;
+    private final LoginTwoFactorChallengeRepository loginTwoFactorChallengeRepository;
+
+    private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
+    private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
@@ -130,6 +145,44 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Login: Account is not verified. Please find the token sent to you for verification!");
         }
 
+        if (isTwoFactorRequired(user)) {
+            return createTwoFactorChallenge(user);
+        }
+
+        return issueSessionForUser(user.getUuid());
+    }
+
+    @Override
+    public AuthenticationResponse verifyLoginTwoFactor(VerifyLoginTwoFactorRequest request) {
+        String challengeToken = request.getChallengeToken().trim();
+        LoginTwoFactorChallengeEntity challenge = loginTwoFactorChallengeRepository.findByChallengeToken(challengeToken)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid two-factor challenge."));
+
+        if (challenge.getConsumedAt() != null) {
+            throw new IllegalArgumentException("Two-factor challenge already used.");
+        }
+        if (challenge.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Two-factor challenge expired. Please login again.");
+        }
+        if (challenge.getAttemptCount() >= LOGIN_2FA_MAX_ATTEMPTS) {
+            throw new IllegalStateException("Too many invalid two-factor attempts. Please login again.");
+        }
+
+        UserEntity user = challenge.getUser();
+        UserProfileEntity profile = userProfileRepository.findById(user.getUuid())
+                .orElseThrow(() -> new IllegalStateException("Two-factor profile is missing."));
+
+        String input = request.getCode() == null ? "" : request.getCode().trim();
+        boolean valid = verifyTwoFactorInput(profile, user, input);
+
+        challenge.setAttemptCount(challenge.getAttemptCount() + 1);
+        if (!valid) {
+            loginTwoFactorChallengeRepository.save(challenge);
+            throw new IllegalArgumentException("Invalid verification code.");
+        }
+
+        challenge.setConsumedAt(LocalDateTime.now());
+        loginTwoFactorChallengeRepository.save(challenge);
         return issueSessionForUser(user.getUuid());
     }
 
@@ -308,10 +361,18 @@ public class AuthServiceImpl implements AuthService {
 
     // method to build and save refresh token into the database
     public void saveUserToken(String theToken, UserEntity user, TokenType tokenType){
+        Instant expiry = null;
+        try {
+            expiry = jwtUtil.extractExpiration(theToken).toInstant();
+        } catch (Exception ignored) {
+        }
+
         var token = Token.builder()
                 .token(theToken)
                 .user(user)
                 .tokenType(tokenType)
+                .createdAt(LocalDateTime.now())
+                .expiryDate(expiry)
                 .expired(false)
                 .revoked(false)
                 .build();
@@ -381,6 +442,65 @@ public class AuthServiceImpl implements AuthService {
                 .membershipStatus(membershipStatus)
                 .priestNumber(priestNumber)
                 .build();
+    }
+
+    private boolean isTwoFactorRequired(UserEntity user) {
+        Optional<UserProfileEntity> maybeProfile = userProfileRepository.findById(user.getUuid());
+        if (maybeProfile.isEmpty()) {
+            return false;
+        }
+        UserProfileEntity profile = maybeProfile.get();
+        return profile.isTwoFactorEnabled()
+                && profile.getTotpSecretBase32() != null
+                && !profile.getTotpSecretBase32().isBlank();
+    }
+
+    private AuthenticationResponse createTwoFactorChallenge(UserEntity user) {
+        loginTwoFactorChallengeRepository.deleteByUserId(user.getUuid());
+        loginTwoFactorChallengeRepository.deleteExpiredOrConsumed(LocalDateTime.now());
+
+        String challengeToken = UUID.randomUUID().toString() + UUID.randomUUID().toString().replace("-", "");
+        LoginTwoFactorChallengeEntity challenge = LoginTwoFactorChallengeEntity.builder()
+                .challengeToken(challengeToken)
+                .user(user)
+                .attemptCount(0)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(LOGIN_2FA_CHALLENGE_MINUTES))
+                .build();
+        loginTwoFactorChallengeRepository.save(challenge);
+
+        return AuthenticationResponse.builder()
+                .challengeRequired(true)
+                .challengeToken(challengeToken)
+                .challengeType("TOTP_OR_BACKUP_CODE")
+                .message("Two-factor verification required.")
+                .build();
+    }
+
+    private boolean verifyTwoFactorInput(UserProfileEntity profile, UserEntity user, String input) {
+        String secret = profile.getTotpSecretBase32();
+        if (secret != null && input.matches("\\d{6}")) {
+            boolean validTotp = TotpUtils.verifyTotpCode(secret, input, Instant.now(), 1);
+            if (validTotp) {
+                return true;
+            }
+        }
+
+        String normalizedBackupInput = input.toUpperCase(Locale.ROOT).replace(" ", "");
+        if (normalizedBackupInput.length() == 8 && !normalizedBackupInput.contains("-")) {
+            normalizedBackupInput = normalizedBackupInput.substring(0, 4) + "-" + normalizedBackupInput.substring(4);
+        }
+
+        List<UserTwoFactorBackupCodeEntity> activeBackupCodes = backupCodeRepository.findActiveByUserId(user.getUuid());
+
+        for (UserTwoFactorBackupCodeEntity backupCode : activeBackupCodes) {
+            if (passwordEncoder.matches(normalizedBackupInput, backupCode.getCodeHash())) {
+                backupCode.setUsedAt(LocalDateTime.now());
+                backupCodeRepository.save(backupCode);
+                return true;
+            }
+        }
+        return false;
     }
 
     public void sendValidationEmail(UserEntity user) throws MessagingException {

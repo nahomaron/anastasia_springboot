@@ -21,4 +21,6 @@ public class UserProfileResponse {
     boolean recoveryEmailVerified;
     String profileImageUrl;
     boolean twoFactorEnabled;
+    boolean totpConfigured;
+    long backupCodesRemaining;
 }

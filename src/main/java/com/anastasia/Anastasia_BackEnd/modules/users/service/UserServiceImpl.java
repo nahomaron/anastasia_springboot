@@ -2,6 +2,9 @@ package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
@@ -32,20 +35,27 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MembershipSummary;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.BackupCodesResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyTotpSetupRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TotpSetupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersMetricsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserStatus;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserTwoFactorBackupCodeEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -65,7 +75,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
+import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -93,7 +106,14 @@ public class UserServiceImpl implements UserService {
     private final AuthService authService;
     private final EmailNotificationService emailNotificationService;
     private final UserProfileRepository userProfileRepository;
+    private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final UserRecoveryEmailVerificationService recoveryEmailVerificationService;
+    private final TokenRepository tokenRepository;
+
+    private static final String BACKUP_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final int BACKUP_CODES_COUNT = 10;
+    private static final int BACKUP_CODE_LENGTH = 8;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 
     @Override
@@ -245,14 +265,118 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getCurrentAuthenticatedUser();
         UserProfileEntity profile = getOrCreateProfile(user);
 
-        if (request.isEnabled()
-                && (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank() || !profile.isRecoveryEmailVerified())) {
-            throw new IllegalStateException("Verify a recovery email before enabling two-factor authentication.");
+        if (request.isEnabled()) {
+            throw new IllegalStateException("Use TOTP setup flow to enable two-factor authentication.");
         }
 
-        profile.setTwoFactorEnabled(request.isEnabled());
+        profile.setTwoFactorEnabled(false);
+        profile.setTotpEnabledAt(null);
+        profile.setTotpSecretBase32(null);
+        profile.setTotpSetupAt(null);
         userProfileRepository.save(profile);
+        backupCodeRepository.deleteByUserId(user.getUuid());
         return toUserProfileResponse(user, profile);
+    }
+
+    @Transactional
+    @Override
+    public TotpSetupResponse initiateTotpSetup() {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+
+        if (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank() || !profile.isRecoveryEmailVerified()) {
+            throw new IllegalStateException("Verify a recovery email before starting two-factor setup.");
+        }
+
+        String secret = TotpUtils.generateSecretBase32();
+        profile.setTotpSecretBase32(secret);
+        profile.setTotpSetupAt(LocalDateTime.now());
+        profile.setTwoFactorEnabled(false);
+        profile.setTotpEnabledAt(null);
+        userProfileRepository.save(profile);
+
+        return TotpSetupResponse.builder()
+                .secret(secret)
+                .otpauthUri(TotpUtils.buildOtpauthUri("Anastasia", user.getEmail(), secret))
+                .build();
+    }
+
+    @Transactional
+    @Override
+    public BackupCodesResponse verifyTotpSetup(VerifyTotpSetupRequest request) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+
+        String secret = trimToNull(profile.getTotpSecretBase32());
+        if (secret == null) {
+            throw new IllegalStateException("Start TOTP setup before verifying.");
+        }
+
+        boolean valid = TotpUtils.verifyTotpCode(secret, request.getCode(), java.time.Instant.now(), 1);
+        if (!valid) {
+            throw new IllegalArgumentException("Invalid TOTP code.");
+        }
+
+        profile.setTwoFactorEnabled(true);
+        profile.setTotpEnabledAt(LocalDateTime.now());
+        userProfileRepository.save(profile);
+
+        return generateAndStoreBackupCodes(user);
+    }
+
+    @Transactional
+    @Override
+    public BackupCodesResponse regenerateBackupCodes() {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+        if (!profile.isTwoFactorEnabled() || trimToNull(profile.getTotpSecretBase32()) == null) {
+            throw new IllegalStateException("Enable TOTP before generating backup codes.");
+        }
+        return generateAndStoreBackupCodes(user);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserSessionResponse> listCurrentUserSessions(String currentBearerToken) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        List<Token> tokens = tokenRepository.findByUserUuidAndTokenTypeOrderByIdDesc(user.getUuid(), TokenType.BEARER);
+        return tokens.stream()
+                .map(token -> UserSessionResponse.builder()
+                        .sessionId(token.getId())
+                        .tokenType(token.getTokenType().name())
+                        .createdAt(token.getCreatedAt())
+                        .expiresAt(token.getExpiryDate() == null ? null : LocalDateTime.ofInstant(token.getExpiryDate(), ZoneId.systemDefault()))
+                        .revoked(token.isRevoked())
+                        .expired(token.isExpired())
+                        .current(currentBearerToken != null && currentBearerToken.equals(token.getToken()))
+                        .build())
+                .toList();
+    }
+
+    @Transactional
+    @Override
+    public void revokeCurrentUserSession(Integer sessionId) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        Token token = tokenRepository.findByIdAndUserUuid(sessionId, user.getUuid())
+                .orElseThrow(() -> new EntityNotFoundException("Session not found"));
+        token.setRevoked(true);
+        token.setExpired(true);
+        tokenRepository.save(token);
+    }
+
+    @Transactional
+    @Override
+    public void revokeOtherCurrentUserSessions(String currentBearerToken) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        List<Token> tokens = tokenRepository.findByUserUuidAndTokenTypeOrderByIdDesc(user.getUuid(), TokenType.BEARER);
+        for (Token token : tokens) {
+            if (currentBearerToken != null && currentBearerToken.equals(token.getToken())) {
+                continue;
+            }
+            token.setRevoked(true);
+            token.setExpired(true);
+        }
+        tokenRepository.saveAll(tokens);
     }
 
     @Caching(evict = {
@@ -909,6 +1033,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserProfileResponse toUserProfileResponse(UserEntity user, UserProfileEntity profile) {
+        long backupCodesRemaining = backupCodeRepository.countUnusedByUserId(user.getUuid());
         return UserProfileResponse.builder()
                 .userId(user.getUuid())
                 .fullName(user.getFullName())
@@ -924,7 +1049,38 @@ public class UserServiceImpl implements UserService {
                         ? profile.getProfileImageUrl()
                         : (user.getProfileAvatar() != null ? user.getProfileAvatar().getImageUrl() : null))
                 .twoFactorEnabled(profile.isTwoFactorEnabled())
+                .totpConfigured(profile.getTotpSecretBase32() != null && !profile.getTotpSecretBase32().isBlank())
+                .backupCodesRemaining(backupCodesRemaining)
                 .build();
+    }
+
+    private BackupCodesResponse generateAndStoreBackupCodes(UserEntity user) {
+        backupCodeRepository.deleteByUserId(user.getUuid());
+
+        List<String> codes = new ArrayList<>();
+        List<UserTwoFactorBackupCodeEntity> codeEntities = new ArrayList<>();
+        for (int i = 0; i < BACKUP_CODES_COUNT; i++) {
+            String code = generateBackupCode();
+            codes.add(code);
+            codeEntities.add(UserTwoFactorBackupCodeEntity.builder()
+                    .user(user)
+                    .codeHash(passwordEncoder.encode(code))
+                    .createdAt(LocalDateTime.now())
+                    .build());
+        }
+
+        backupCodeRepository.saveAll(codeEntities);
+        return BackupCodesResponse.builder().codes(codes).build();
+    }
+
+    private String generateBackupCode() {
+        StringBuilder raw = new StringBuilder(BACKUP_CODE_LENGTH);
+        for (int i = 0; i < BACKUP_CODE_LENGTH; i++) {
+            int idx = SECURE_RANDOM.nextInt(BACKUP_CODE_ALPHABET.length());
+            raw.append(BACKUP_CODE_ALPHABET.charAt(idx));
+        }
+        String compact = raw.toString();
+        return compact.substring(0, 4) + "-" + compact.substring(4);
     }
 
     private String trimToNull(String value) {

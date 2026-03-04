@@ -14,4 +14,8 @@ public class AuthenticationResponse {
     private String accessToken;
     private String refreshToken;
     private AuthSessionResponse session;
+    private boolean challengeRequired;
+    private String challengeToken;
+    private String challengeType;
+    private String message;
 }

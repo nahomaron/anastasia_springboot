@@ -12,13 +12,17 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferCreateRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferDecisionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.BackupCodesResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TotpSetupResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyTotpSetupRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipActionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
@@ -32,6 +36,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -153,6 +158,46 @@ public class UserController {
         return ResponseEntity.ok(userService.updateCurrentUserTwoFactor(request));
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/security/two-factor/totp/setup")
+    public ResponseEntity<TotpSetupResponse> initiateTotpSetup() {
+        return ResponseEntity.ok(userService.initiateTotpSetup());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/security/two-factor/totp/verify-setup")
+    public ResponseEntity<BackupCodesResponse> verifyTotpSetup(
+            @Valid @RequestBody VerifyTotpSetupRequest request
+    ) {
+        return ResponseEntity.ok(userService.verifyTotpSetup(request));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/security/two-factor/backup-codes/regenerate")
+    public ResponseEntity<BackupCodesResponse> regenerateBackupCodes() {
+        return ResponseEntity.ok(userService.regenerateBackupCodes());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/security/sessions")
+    public ResponseEntity<List<UserSessionResponse>> listMySessions(HttpServletRequest request) {
+        return ResponseEntity.ok(userService.listCurrentUserSessions(extractBearerToken(request)));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/me/security/sessions/{sessionId}")
+    public ResponseEntity<Map<String, String>> revokeSession(@PathVariable Integer sessionId) {
+        userService.revokeCurrentUserSession(sessionId);
+        return ResponseEntity.ok(Map.of("message", "Session revoked."));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/me/security/sessions/others")
+    public ResponseEntity<Map<String, String>> revokeOtherSessions(HttpServletRequest request) {
+        userService.revokeOtherCurrentUserSessions(extractBearerToken(request));
+        return ResponseEntity.ok(Map.of("message", "Other sessions revoked."));
+    }
+
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT')")
     @GetMapping("/search")
     public ResponseEntity<List<SimpleUserDTO>> searchUsers(
@@ -258,6 +303,14 @@ public class UserController {
     public ResponseEntity<?> assignRolesToUser(@PathVariable UUID userId, @RequestBody AssignRolesRequest request){
         userService.assignRolesToUser(userId, request);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private String extractBearerToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        return authHeader.substring(7);
     }
 
     /**

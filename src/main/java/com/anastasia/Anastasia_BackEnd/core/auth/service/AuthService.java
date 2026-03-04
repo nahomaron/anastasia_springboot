@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.VerifyLoginTwoFactorRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +20,8 @@ public interface AuthService {
     void createUser(UserEntity userEntity) throws MessagingException;
 
     AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException;
+
+    AuthenticationResponse verifyLoginTwoFactor(VerifyLoginTwoFactorRequest request);
 
     AuthenticationResponse issueSessionForUser(UUID userId);
 

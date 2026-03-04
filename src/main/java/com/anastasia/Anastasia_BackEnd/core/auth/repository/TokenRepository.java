@@ -47,5 +47,18 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
 
     Token findByUserUuid(UUID uuid);
 
+    @Query("""
+        SELECT t FROM Token t
+        WHERE t.user.uuid = :userId AND t.tokenType = :tokenType
+        ORDER BY t.id DESC
+    """)
+    List<Token> findByUserUuidAndTokenTypeOrderByIdDesc(@Param("userId") UUID userId, @Param("tokenType") TokenType tokenType);
+
+    @Query("""
+        SELECT t FROM Token t
+        WHERE t.id = :tokenId AND t.user.uuid = :userId
+    """)
+    Optional<Token> findByIdAndUserUuid(@Param("tokenId") Integer tokenId, @Param("userId") UUID userId);
+
 
 }
