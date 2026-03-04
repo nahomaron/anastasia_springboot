@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
@@ -31,6 +32,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MembershipSummary;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
@@ -38,6 +41,9 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersMetricsRespo
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -57,6 +63,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -83,6 +90,7 @@ public class UserServiceImpl implements UserService {
     private final MembershipCardService membershipCardService;
     private final AuthService authService;
     private final EmailNotificationService emailNotificationService;
+    private final UserProfileRepository userProfileRepository;
 
 
     @Override
@@ -112,6 +120,79 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<UserEntity> findEntity(UUID userId) {
         return userRepository.findById(userId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public UserProfileResponse getCurrentUserProfile() {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+        return toUserProfileResponse(user, profile);
+    }
+
+    @Transactional
+    @Override
+    public UserProfileResponse updateCurrentUserProfile(UpdateUserProfileRequest request) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+
+        if (request.getFullName() != null) {
+            String fullName = request.getFullName().trim();
+            if (fullName.isBlank()) {
+                throw new IllegalArgumentException("Full name cannot be empty");
+            }
+            user.setFullName(fullName);
+        }
+
+        if (request.getDateOfBirth() != null) {
+            if (request.getDateOfBirth().isAfter(LocalDate.now())) {
+                throw new IllegalArgumentException("Date of birth must be in the past");
+            }
+            profile.setDateOfBirth(request.getDateOfBirth());
+        }
+
+        if (request.getGender() != null) {
+            profile.setGender(trimToNull(request.getGender()));
+        }
+        if (request.getLocation() != null) {
+            profile.setLocation(trimToNull(request.getLocation()));
+        }
+        if (request.getProfileImageUrl() != null) {
+            profile.setProfileImageUrl(trimToNull(request.getProfileImageUrl()));
+        }
+        if (request.getPhoneNumber() != null) {
+            String normalizedPhone = trimToNull(PhoneNumberUtils.normalize(request.getPhoneNumber()));
+            if (normalizedPhone != null && !normalizedPhone.equals(profile.getPhoneNumber())) {
+                profile.setPhoneVerified(false);
+            }
+            profile.setPhoneNumber(normalizedPhone);
+        }
+
+        userRepository.save(user);
+        userProfileRepository.save(profile);
+        return toUserProfileResponse(user, profile);
+    }
+
+    @Transactional
+    @Override
+    public UserProfileResponse updateCurrentUserRecoveryEmail(UpdateRecoveryEmailRequest request) {
+        UserEntity user = getCurrentAuthenticatedUser();
+        UserProfileEntity profile = getOrCreateProfile(user);
+
+        String recoveryEmail = request.getRecoveryEmail() == null
+                ? null
+                : request.getRecoveryEmail().trim().toLowerCase(Locale.ROOT);
+
+        if (recoveryEmail == null || recoveryEmail.isBlank()) {
+            throw new IllegalArgumentException("Recovery email is required");
+        }
+        if (recoveryEmail.equalsIgnoreCase(user.getEmail())) {
+            throw new IllegalArgumentException("Recovery email must be different from login email");
+        }
+
+        profile.setRecoveryEmail(recoveryEmail);
+        userProfileRepository.save(profile);
+        return toUserProfileResponse(user, profile);
     }
 
     @Caching(evict = {
@@ -748,6 +829,47 @@ public class UserServiceImpl implements UserService {
                 .decidedAt(request.getDecidedAt())
                 .executedAt(request.getExecutedAt())
                 .build();
+    }
+
+    private UserEntity getCurrentAuthenticatedUser() {
+        UUID userId = getCurrentUserId();
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found"));
+    }
+
+    private UserProfileEntity getOrCreateProfile(UserEntity user) {
+        return userProfileRepository.findById(user.getUuid()).orElseGet(() ->
+                userProfileRepository.save(UserProfileEntity.builder()
+                        .userId(user.getUuid())
+                        .user(user)
+                        .phoneVerified(false)
+                        .twoFactorEnabled(false)
+                        .build())
+        );
+    }
+
+    private UserProfileResponse toUserProfileResponse(UserEntity user, UserProfileEntity profile) {
+        return UserProfileResponse.builder()
+                .userId(user.getUuid())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .dateOfBirth(profile.getDateOfBirth())
+                .gender(profile.getGender())
+                .location(profile.getLocation())
+                .phoneNumber(profile.getPhoneNumber())
+                .phoneVerified(profile.isPhoneVerified())
+                .recoveryEmail(profile.getRecoveryEmail())
+                .profileImageUrl(profile.getProfileImageUrl())
+                .twoFactorEnabled(profile.isTwoFactorEnabled())
+                .build();
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isBlank() ? null : trimmed;
     }
 
 }

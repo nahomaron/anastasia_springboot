@@ -12,10 +12,13 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferCreateRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferDecisionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipActionRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import jakarta.validation.Valid;
@@ -101,6 +104,26 @@ public class UserController {
     @GetMapping("/me/memberships")
     public ResponseEntity<UserMembershipsResponse> getMyMemberships() {
         return ResponseEntity.ok(userService.getCurrentUserMemberships());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/profile")
+    public ResponseEntity<UserProfileResponse> getMyProfile() {
+        return ResponseEntity.ok(userService.getCurrentUserProfile());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/me/profile")
+    public ResponseEntity<UserProfileResponse> updateMyProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
+        return ResponseEntity.ok(userService.updateCurrentUserProfile(request));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/me/security/recovery-email")
+    public ResponseEntity<UserProfileResponse> updateRecoveryEmail(
+            @Valid @RequestBody UpdateRecoveryEmailRequest request
+    ) {
+        return ResponseEntity.ok(userService.updateCurrentUserRecoveryEmail(request));
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT')")
@@ -218,9 +241,9 @@ public class UserController {
      * @param connectedUser The Principal representing the currently authenticated user.
      * @return ResponseEntity indicating the success of the password change operation.
      */
-    @PreAuthorize("@hashRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     @PatchMapping("/change-password")
-    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, Principal connectedUser){
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request, Principal connectedUser){
         userService.changePassword(request, connectedUser);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }

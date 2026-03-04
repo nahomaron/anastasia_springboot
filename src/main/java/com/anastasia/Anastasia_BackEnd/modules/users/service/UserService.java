@@ -8,11 +8,14 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.MemberTransferResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateRecoveryEmailRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateUserProfileRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +39,12 @@ public interface UserService {
     Optional<SimpleUserDTO> findOne(UUID userId);
 
     Optional<UserEntity> findEntity(UUID userId);
+
+    UserProfileResponse getCurrentUserProfile();
+
+    UserProfileResponse updateCurrentUserProfile(@Valid UpdateUserProfileRequest request);
+
+    UserProfileResponse updateCurrentUserRecoveryEmail(@Valid UpdateRecoveryEmailRequest request);
 
     SimpleUserDTO updateUserDetails(UserEntity user, Principal connectedUser);
 
