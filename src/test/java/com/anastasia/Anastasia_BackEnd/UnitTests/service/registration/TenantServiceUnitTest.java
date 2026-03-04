@@ -124,10 +124,13 @@ public class TenantServiceUnitTest {
 
     @Test
     void findAll_shouldReturnPageOfTenants() {
-        Page<TenantEntity> page = new PageImpl<>(List.of(TestDataUtil.createTestTenantEntity()));
+        TenantEntity entity = TestDataUtil.createTestTenantEntity();
+        TenantDTO dto = TestDataUtil.createTestTenantDTO();
+        Page<TenantEntity> page = new PageImpl<>(List.of(entity));
         when(tenantRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        when(tenantMapper.tenantEntityToDTO(entity)).thenReturn(dto);
 
-        Page<TenantEntity> result = tenantService.findAll(PageRequest.of(0, 10));
+        Page<TenantDTO> result = tenantService.findAll(PageRequest.of(0, 10));
         assertThat(result.getContent()).hasSize(1);
     }
 
@@ -139,12 +142,12 @@ public class TenantServiceUnitTest {
     }
 
     @Test
-    void findTenantById_shouldReturnTenant() {
+    void findTenantEntityById_shouldReturnTenant() {
         UUID tenantId = UUID.randomUUID();
         TenantEntity entity = TestDataUtil.createTestTenantEntity();
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(entity));
 
-        Optional<TenantEntity> found = tenantService.findTenantById(tenantId);
+        Optional<TenantEntity> found = tenantService.findTenantEntityById(tenantId);
         assertThat(found).isPresent();
     }
 

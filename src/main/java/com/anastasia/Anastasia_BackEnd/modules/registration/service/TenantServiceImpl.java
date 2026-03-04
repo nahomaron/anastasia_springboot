@@ -232,25 +232,34 @@ public class TenantServiceImpl implements TenantService {
 
     @Cacheable(value = "tenants_page", keyGenerator = "tenantAwareKeyGenerator")
     @Override
-    public Page<TenantEntity> findAll(Pageable pageable) {
-        return tenantRepository.findAll(pageable);
+    public Page<TenantDTO> findAll(Pageable pageable) {
+        return tenantRepository.findAll(pageable).map(this::convertTenantToDTO);
     }
 
-    @Cacheable(value = "tenants_all")
     public List<TenantEntity> getTenants(){
         return tenantRepository.findAll();
     }
 
+    @Override
+    public Optional<TenantEntity> findTenantEntityById(UUID tenantId) {
+        return tenantRepository.findById(tenantId);
+    }
+
     @Cacheable(value = "tenants", key = "#tenantId")
     @Override
-    public Optional<TenantEntity> findTenantById(UUID tenantId) {
-        return tenantRepository.findById(tenantId);
+    public Optional<TenantDTO> findTenantDtoById(UUID tenantId) {
+        return tenantRepository.findById(tenantId).map(this::convertTenantToDTO);
+    }
+
+    @Override
+    public Optional<TenantEntity> findTenantEntityByPhoneNumber(String phone) {
+        return tenantRepository.findByPhoneNumber(phone);
     }
 
     @Cacheable(value = "tenants_by_phone", key = "#phone")
     @Override
-    public Optional<TenantEntity> findTenantByPhoneNumber(String phone) {
-        return tenantRepository.findByPhoneNumber(phone);
+    public Optional<TenantDTO> findTenantDtoByPhoneNumber(String phone) {
+        return tenantRepository.findByPhoneNumber(phone).map(this::convertTenantToDTO);
     }
 
     @Caching(evict = {

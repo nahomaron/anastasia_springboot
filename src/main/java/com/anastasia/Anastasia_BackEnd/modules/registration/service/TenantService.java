@@ -21,11 +21,15 @@ public interface TenantService {
 
     TenantEntity subscribeTenant(TenantDTO tenantDTO) throws MessagingException;
 
-    Page<TenantEntity> findAll(Pageable pageable);
+    Page<TenantDTO> findAll(Pageable pageable);
 
-    Optional<TenantEntity> findTenantById(UUID tenantId);
+    Optional<TenantEntity> findTenantEntityById(UUID tenantId);
 
-    Optional<TenantEntity> findTenantByPhoneNumber(String phone);
+    Optional<TenantDTO> findTenantDtoById(UUID tenantId);
+
+    Optional<TenantEntity> findTenantEntityByPhoneNumber(String phone);
+
+    Optional<TenantDTO> findTenantDtoByPhoneNumber(String phone);
 
     void unsubscribeTenant(UUID tenantId);
 

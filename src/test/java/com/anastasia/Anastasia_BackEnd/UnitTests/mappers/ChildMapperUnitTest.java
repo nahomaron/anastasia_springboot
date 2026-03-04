@@ -26,7 +26,8 @@ public class ChildMapperUnitTest {
                 null, // memberRepository not needed
                 new ChildMapper(), // use real mapper
                 null,  // securityUtils not needed
-                null   // tenantAdminNotificationService not needed
+                null,  // tenantAdminNotificationService not needed
+                null   // activeMemberLimitPolicy not needed
         );
     }
 

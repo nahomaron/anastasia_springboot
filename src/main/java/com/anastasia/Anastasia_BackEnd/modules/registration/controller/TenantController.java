@@ -66,10 +66,12 @@ public class TenantController {
      */
     @PostMapping("/verify-phone")
     public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request) {
-        // enable rate limiting for phone verification
-//        if (!rateLimiterService.isAllowed(request.getPhone())) {
-//            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
-//        }
+        if (request.getPhone() == null || request.getPhone().isBlank()) {
+            return ResponseEntity.badRequest().body("Phone number is required.");
+        }
+        if (!rateLimiterService.isAllowed(request.getPhone())) {
+            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+        }
         boolean verified = tenantService.verifyTenantPhone(request.getPhone(), request.getOtp());
 
         return verified
@@ -139,8 +141,7 @@ public class TenantController {
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<TenantDTO>> listOfTenants(Pageable pageable){
-        Page<TenantEntity> tenants = tenantService.findAll(pageable);
-        return new ResponseEntity<>(tenants.map(tenantService::convertTenantToDTO), HttpStatus.OK);
+        return new ResponseEntity<>(tenantService.findAll(pageable), HttpStatus.OK);
     }
 
 
@@ -152,11 +153,10 @@ public class TenantController {
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     @GetMapping("/{tenantId}")
     public ResponseEntity<TenantDTO> getTenant(@PathVariable UUID tenantId){
-        Optional<TenantEntity> foundTenant = tenantService.findTenantById(tenantId);
-        return foundTenant.map(tenantEntity -> {
-            TenantDTO tenantDTO = tenantService.convertTenantToDTO(tenantEntity);
-            return new ResponseEntity<>(tenantDTO, HttpStatus.FOUND);
-        }).orElse(
+        Optional<TenantDTO> foundTenant = tenantService.findTenantDtoById(tenantId);
+        return foundTenant.map(tenantDTO ->
+                new ResponseEntity<>(tenantDTO, HttpStatus.FOUND)
+        ).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
     }
@@ -213,7 +213,7 @@ public class TenantController {
             throw new SecurityException("No tenant linked to authenticated user.");
         }
 
-        TenantEntity tenant = tenantService.findTenantById(tenantId)
+        TenantEntity tenant = tenantService.findTenantEntityById(tenantId)
                 .orElseThrow(() -> new SecurityException("Tenant not found."));
         return tenant;
     }
