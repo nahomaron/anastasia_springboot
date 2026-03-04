@@ -20,6 +20,8 @@ public interface AuthService {
 
     AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException;
 
+    AuthenticationResponse issueSessionForUser(UUID userId);
+
     void refreshToken(HttpServletRequest request, HttpServletResponse response);
 
     boolean exists(UUID userId);

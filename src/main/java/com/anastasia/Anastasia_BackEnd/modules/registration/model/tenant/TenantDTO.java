@@ -40,6 +40,10 @@ public class TenantDTO {
     @NotBlank(message = "Confirm Password is required")
     private String confirmPassword;
 
+    private Boolean termsAccepted;
+
+    private String termsVersion;
+
     @Valid
     private ChurchDTO church;
 

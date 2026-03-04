@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -45,6 +46,7 @@ public class TenantSubscriptionEntity {
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id", nullable = false, unique = true)
+    @JsonIgnore
     private TenantEntity tenant;
 
     @Enumerated(EnumType.STRING)
@@ -67,6 +69,10 @@ public class TenantSubscriptionEntity {
     @Column(name = "current_period_end_at")
     private LocalDateTime currentPeriodEndAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_interval", nullable = false, length = 16)
+    private BillingInterval billingInterval;
+
     @Builder.Default
     @Column(name = "cancel_at_period_end", nullable = false)
     private boolean cancelAtPeriodEnd = false;
@@ -84,8 +90,27 @@ public class TenantSubscriptionEntity {
     @Column(name = "provider_subscription_id")
     private String providerSubscriptionId;
 
+    @Column(name = "stripe_price_id")
+    private String stripePriceId;
+
+    @Column(name = "last_stripe_event_id")
+    private String lastStripeEventId;
+
+    @Column(name = "last_stripe_event_at")
+    private LocalDateTime lastStripeEventAt;
+
     @Column(name = "last_payment_at")
     private LocalDateTime lastPaymentAt;
+
+    @Column(name = "grace_period_ends_at")
+    private LocalDateTime gracePeriodEndsAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pending_plan", length = 32)
+    private SubscriptionPlan pendingPlan;
+
+    @Column(name = "pending_plan_effective_at")
+    private LocalDateTime pendingPlanEffectiveAt;
 
     @Column(name = "payment_method_last4", length = 4)
     private String paymentMethodLast4;
@@ -112,6 +137,9 @@ public class TenantSubscriptionEntity {
         }
         if (this.provider == null) {
             this.provider = BillingProvider.MANUAL;
+        }
+        if (this.billingInterval == null) {
+            this.billingInterval = BillingInterval.MONTHLY;
         }
         if (this.plan == null) {
             this.plan = SubscriptionPlan.FREE;

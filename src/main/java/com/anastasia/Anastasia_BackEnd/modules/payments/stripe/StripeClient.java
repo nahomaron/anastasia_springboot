@@ -1,10 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.stripe;
 
 import com.stripe.exception.StripeException;
+import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.checkout.SessionCreateParams;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -18,7 +21,10 @@ import java.util.UUID;
  * Returns the created Stripe Session object.
  */
 @Component
+@RequiredArgsConstructor
 public class StripeClient {
+    private final Environment environment;
+
     @Value("${stripe.success-url:}") private String successUrlTemplate;
     @Value("${stripe.cancel-url:}")  private String cancelUrlTemplate;
 
@@ -62,9 +68,7 @@ public class StripeClient {
                 .setPaymentIntentData(paymentIntentData)
                 .build();
 
-        var options = RequestOptions.builder()
-                .setIdempotencyKey("checkout:" + tenant + ":" + idempotencyKey)
-                .build();
+        var options = buildRequestOptions("checkout:" + tenant + ":" + idempotencyKey);
 
         return Session.create(params, options);
     }
@@ -114,10 +118,101 @@ public class StripeClient {
                 .setSubscriptionData(subscriptionData)
                 .build();
 
-        var options = RequestOptions.builder()
-                .setIdempotencyKey("subscription:" + tenant + ":" + idempotencyKey)
-                .build();
+        var options = buildRequestOptions("subscription:" + tenant + ":" + idempotencyKey);
 
         return Session.create(params, options);
+    }
+
+    public Session createOnboardingSubscriptionCheckoutSession(String onboardingSessionId,
+                                                               String ownerEmail,
+                                                               String priceId,
+                                                               String purposeLabel,
+                                                               String idempotencyKey) throws StripeException {
+
+        String successUrl = successUrlTemplate.replace("{PAYMENT_ID}", onboardingSessionId);
+        String cancelUrl = cancelUrlTemplate.replace("{PAYMENT_ID}", onboardingSessionId);
+
+        var subscriptionData = SessionCreateParams.SubscriptionData.builder()
+                .putMetadata("onboardingSessionId", onboardingSessionId)
+                .putMetadata("billingContext", "TENANT_ONBOARDING")
+                .putMetadata("purpose", purposeLabel)
+                .build();
+
+        SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
+                .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                .setClientReferenceId(onboardingSessionId)
+                .setSuccessUrl(successUrl)
+                .setCancelUrl(cancelUrl)
+                .putMetadata("onboardingSessionId", onboardingSessionId)
+                .putMetadata("billingContext", "TENANT_ONBOARDING")
+                .addLineItem(SessionCreateParams.LineItem.builder()
+                        .setQuantity(1L)
+                        .setPrice(priceId)
+                        .build())
+                .setSubscriptionData(subscriptionData);
+
+        if (ownerEmail != null && !ownerEmail.isBlank()) {
+            paramsBuilder.setCustomerEmail(ownerEmail.trim());
+        }
+
+        var params = paramsBuilder.build();
+
+        var options = buildRequestOptions(
+                "onboarding-subscription:" + onboardingSessionId + ":" + idempotencyKey
+        );
+
+        return Session.create(params, options);
+    }
+
+    public Session retrieveCheckoutSession(String checkoutSessionId) throws StripeException {
+        return Session.retrieve(checkoutSessionId, buildReadRequestOptions());
+    }
+
+    public Subscription retrieveSubscription(String subscriptionId) throws StripeException {
+        return Subscription.retrieve(subscriptionId, buildReadRequestOptions());
+    }
+
+    private RequestOptions buildRequestOptions(String idempotencyKey) {
+        String apiKey = resolveApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "Stripe API key missing: configure stripe.api-key/stripe.secret-key or STRIPE_API_KEY"
+            );
+        }
+        if (!apiKey.startsWith("sk_")) {
+            throw new IllegalStateException("Invalid Stripe API key format for backend; expected key starting with 'sk_'.");
+        }
+
+        return RequestOptions.builder()
+                .setApiKey(apiKey)
+                .setIdempotencyKey(idempotencyKey)
+                .build();
+    }
+
+    private RequestOptions buildReadRequestOptions() {
+        String apiKey = resolveApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "Stripe API key missing: configure stripe.api-key/stripe.secret-key or STRIPE_API_KEY"
+            );
+        }
+        if (!apiKey.startsWith("sk_")) {
+            throw new IllegalStateException("Invalid Stripe API key format for backend; expected key starting with 'sk_'.");
+        }
+        return RequestOptions.builder()
+                .setApiKey(apiKey)
+                .build();
+    }
+
+    private String resolveApiKey() {
+        String apiKey = environment.getProperty("stripe.api-key");
+        if (apiKey != null && !apiKey.isBlank()) {
+            return apiKey.trim();
+        }
+        String secretKey = environment.getProperty("stripe.secret-key");
+        if (secretKey != null && !secretKey.isBlank()) {
+            return secretKey.trim();
+        }
+        return null;
     }
 }

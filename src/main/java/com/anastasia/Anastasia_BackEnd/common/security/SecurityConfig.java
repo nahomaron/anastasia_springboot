@@ -49,6 +49,8 @@ public class SecurityConfig {
             "/api/v1/auth/**",
             "/oauth2/**",
             "/api/v1/tenant/**",
+            "/api/v1/onboarding/**",
+            "/webhooks/stripe",
             "/api/v1/priests/register",
             "/actuator/**",
             "/swagger-ui/**",
@@ -149,8 +151,15 @@ public class SecurityConfig {
         // 2. Allow specific HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-        // 3. Allow all headers (important for JWT/Auth headers)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "X-Tenant-Id"));
+        // 3. Allow headers used by auth, tenancy, and idempotent billing session creation
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "X-Tenant-Id",
+                "Idempotency-Key",
+                "idempotency-key"
+        ));
 
         // 4. Allow credentials (cookies, auth headers)
         configuration.setAllowCredentials(true);

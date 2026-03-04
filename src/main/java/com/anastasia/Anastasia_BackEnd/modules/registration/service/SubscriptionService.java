@@ -1,9 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PlanChangeTiming;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlanHistoryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public interface SubscriptionService {
@@ -37,4 +40,28 @@ public interface SubscriptionService {
      * Cancels subscription immediately or at period end.
      */
     TenantSubscriptionEntity cancelSubscription(UUID tenantId, boolean cancelAtPeriodEnd, UUID actorUserId);
+
+    /**
+     * Returns tenant subscription by tenant id.
+     */
+    TenantSubscriptionEntity getByTenantId(UUID tenantId);
+
+    /**
+     * Request a tenant plan change (immediate for upgrades, period-end for downgrades).
+     */
+    TenantSubscriptionEntity requestPlanChange(UUID tenantId,
+                                               SubscriptionPlan targetPlan,
+                                               PlanChangeTiming timing,
+                                               String reason,
+                                               UUID actorUserId);
+
+    /**
+     * Applies pending plan change if effective_at has been reached.
+     */
+    TenantSubscriptionEntity applyDuePendingPlanChange(UUID tenantId, UUID actorUserId);
+
+    /**
+     * Returns recent applied plan history.
+     */
+    List<SubscriptionPlanHistoryEntity> listRecentPlanHistory(UUID tenantId);
 }

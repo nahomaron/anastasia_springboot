@@ -130,20 +130,33 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Login: Account is not verified. Please find the token sent to you for verification!");
         }
 
+        return issueSessionForUser(user.getUuid());
+    }
+
+    @Override
+    public AuthenticationResponse issueSessionForUser(UUID userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Session issue failed - user not found"));
+
+        if (user.isAccountLocked()) {
+            throw new IllegalStateException("User account is locked.");
+        }
+        if (!user.isVerified()) {
+            throw new IllegalStateException("User account is not verified.");
+        }
+
         UserPrincipal userPrincipal = new UserPrincipal(user);
         AuthSessionResponse session = buildAuthSessionResponse(user);
 
         var jwtToken = jwtUtil.generateAccessToken(userPrincipal);
         var refreshToken = jwtUtil.generateRefreshToken(userPrincipal);
 
-        // first make sure the existing tokens are revoked
         revokeAllValidUserTokens(user);
-
         saveUserToken(jwtToken, user, TokenType.BEARER);
         saveUserToken(refreshToken, user, TokenType.REFRESH);
 
-        // Warm up cache if user has ADMIN role
-        if (userPrincipal.getRoles().stream().anyMatch(role -> role.getRoleName().equals("ADMIN"))) {
+        if (userPrincipal.getRoles().stream().anyMatch(role -> role.getRoleName().equals("ADMIN"))
+                && user.getTenant() != null) {
             UUID tenantId = user.getTenant().getId();
             cacheWarmupService.warmUpTenantCache(tenantId);
         }
