@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service;
 
+import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.twilio.Twilio;
 import com.twilio.exception.ApiException;
 import com.twilio.rest.api.v2010.account.Message;
@@ -29,24 +30,36 @@ public class SmsServiceImpl implements SmsService {
 
     Logger log = LoggerFactory.getLogger(SmsServiceImpl.class);
 
-    @Value("${twilio.account_sid}")
+    @Value("${twilio.account_sid:}")
     private String accountSid;
 
-    @Value("${twilio.auth_token}")
+    @Value("${twilio.auth_token:}")
     private String authToken;
 
-    @Value("${twilio.phone_number}")
+    @Value("${twilio.phone_number:}")
     private String fromNumber;
 
+    @Value("${notification.sms.enabled:true}")
+    private boolean smsEnabled;
 
     @PostConstruct
     void initTwilio() {
-        if (fromNumber.isBlank()) {
-            throw new IllegalStateException("twilio.phone-number must be configured");
+        if (!smsEnabled) {
+            log.info("SMS notifications are disabled (notification.sms.enabled=false).");
+            return;
+        }
+
+        if (accountSid == null || accountSid.isBlank()
+                || authToken == null || authToken.isBlank()
+                || fromNumber == null || fromNumber.isBlank()) {
+            throw new IllegalStateException("Twilio SMS is enabled but required credentials are missing.");
         }
 
         Twilio.init(accountSid, authToken);
-        log.info("Twilio initialized with accountSid ending in {}", accountSid.substring(accountSid.length() - 4));
+        String sidSuffix = accountSid.length() >= 4
+                ? accountSid.substring(accountSid.length() - 4)
+                : accountSid;
+        log.info("Twilio initialized with accountSid ending in {}", sidSuffix);
     }
 
 
@@ -69,17 +82,18 @@ public class SmsServiceImpl implements SmsService {
                 : type.format(props);
 
         try {
-            log.info("Sending SMS to: {}", to);
+            String normalizedTo = PhoneNumberUtils.normalize(to);
+            log.info("Sending SMS to {}", PhoneNumberUtils.mask(normalizedTo));
             Message response = Message.creator(
-                    new PhoneNumber(to),
+                    new PhoneNumber(normalizedTo),
                     new PhoneNumber(fromNumber),
                     body
             ).create();
 
-            log.info("Sent SMS SID {} → {}", response.getSid(), to);
+            log.info("Sent SMS SID {} to {}", response.getSid(), PhoneNumberUtils.mask(normalizedTo));
             return CompletableFuture.completedFuture(null);
         } catch (ApiException ex) {       // Twilio specific runtime ex
-            log.error("Twilio error {} while sending to {}", ex.getCode(), to, ex);
+            log.error("Twilio error {} while sending to {}", ex.getCode(), PhoneNumberUtils.mask(to), ex);
             throw ex;                     // bubble up so callers can react
         }
     }

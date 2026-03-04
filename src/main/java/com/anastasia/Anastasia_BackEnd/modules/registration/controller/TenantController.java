@@ -9,6 +9,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantS
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
+import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -65,14 +67,17 @@ public class TenantController {
      * @return ResponseEntity indicating success or failure of the verification.
      */
     @PostMapping("/verify-phone")
-    public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request) {
+    public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request,
+                                         HttpServletRequest httpRequest) {
         if (request.getPhone() == null || request.getPhone().isBlank()) {
             return ResponseEntity.badRequest().body("Phone number is required.");
         }
-        if (!rateLimiterService.isAllowed(request.getPhone())) {
+        String normalizedPhone = PhoneNumberUtils.normalize(request.getPhone());
+        String key = rateLimitKey("verify", normalizedPhone, httpRequest.getRemoteAddr());
+        if (!rateLimiterService.isAllowed(key)) {
             return ResponseEntity.status(429).body("Too many attempts. Try again later.");
         }
-        boolean verified = tenantService.verifyTenantPhone(request.getPhone(), request.getOtp());
+        boolean verified = tenantService.verifyTenantPhone(normalizedPhone, request.getOtp());
 
         return verified
                 ? ResponseEntity.ok("Phone verified successfully.")
@@ -87,21 +92,29 @@ public class TenantController {
      * @return ResponseEntity indicating success or failure of the resend operation.
      */
     @PostMapping("/resend-phone-otp")
-    public ResponseEntity<?> resendPhoneOtp(@RequestBody ResendOtpRequest request) {
-        if (!rateLimiterService.isAllowed(request.getPhone())) {
-            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
-        }
+    public ResponseEntity<?> resendPhoneOtp(@RequestBody ResendOtpRequest request,
+                                            HttpServletRequest httpRequest) {
         if (request.getPhone() == null || request.getPhone().isEmpty()) {
             return ResponseEntity.badRequest().body("Phone number is required.");
         }
-        phoneVerificationService.resendOtp(request.getPhone());
+        String normalizedPhone = PhoneNumberUtils.normalize(request.getPhone());
+        String key = rateLimitKey("resend", normalizedPhone, httpRequest.getRemoteAddr());
+        if (!rateLimiterService.isAllowed(key)) {
+            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+        }
+        phoneVerificationService.resendOtp(normalizedPhone);
         return ResponseEntity.ok("OTP has been resent successfully.");
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/verify-phone/current")
-    public ResponseEntity<?> verifyCurrentTenantPhone(@RequestBody PhoneVerificationRequest request) {
+    public ResponseEntity<?> verifyCurrentTenantPhone(@RequestBody PhoneVerificationRequest request,
+                                                      HttpServletRequest httpRequest) {
         String tenantPhone = resolveCurrentTenantPhoneNumber();
+        String key = rateLimitKey("verify-current", tenantPhone, httpRequest.getRemoteAddr());
+        if (!rateLimiterService.isAllowed(key)) {
+            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+        }
         boolean verified = tenantService.verifyTenantPhone(tenantPhone, request.getOtp());
 
         return verified
@@ -111,9 +124,10 @@ public class TenantController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/resend-phone-otp/current")
-    public ResponseEntity<?> resendCurrentTenantPhoneOtp() {
+    public ResponseEntity<?> resendCurrentTenantPhoneOtp(HttpServletRequest httpRequest) {
         String tenantPhone = resolveCurrentTenantPhoneNumber();
-        if (!rateLimiterService.isAllowed(tenantPhone)) {
+        String key = rateLimitKey("resend-current", tenantPhone, httpRequest.getRemoteAddr());
+        if (!rateLimiterService.isAllowed(key)) {
             return ResponseEntity.status(429).body("Too many attempts. Try again later.");
         }
         phoneVerificationService.resendOtp(tenantPhone);
@@ -199,7 +213,7 @@ public class TenantController {
         if (tenant.getPhoneNumber() == null || tenant.getPhoneNumber().isBlank()) {
             throw new IllegalStateException("Tenant phone number is not available.");
         }
-        return tenant.getPhoneNumber();
+        return PhoneNumberUtils.normalize(tenant.getPhoneNumber());
     }
 
     private TenantEntity resolveCurrentTenant() {
@@ -216,6 +230,12 @@ public class TenantController {
         TenantEntity tenant = tenantService.findTenantEntityById(tenantId)
                 .orElseThrow(() -> new SecurityException("Tenant not found."));
         return tenant;
+    }
+
+    private String rateLimitKey(String action, String phone, String remoteAddr) {
+        String safePhone = PhoneNumberUtils.normalize(phone);
+        String ip = remoteAddr == null ? "unknown-ip" : remoteAddr;
+        return "tenant-phone:" + action + ":" + safePhone + ":" + ip;
     }
 
 }

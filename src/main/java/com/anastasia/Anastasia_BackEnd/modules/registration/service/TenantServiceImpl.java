@@ -23,6 +23,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
+import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
@@ -78,6 +79,8 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     @Override
     public TenantEntity subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
+        String normalizedPhone = PhoneNumberUtils.normalize(tenantDTO.getPhoneNumber());
+        tenantDTO.setPhoneNumber(normalizedPhone);
 
         TenantEntity existingTenantForRetry = findExistingTenantForRetry(tenantDTO);
         if (existingTenantForRetry != null) {
@@ -206,11 +209,14 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     @Override
     public boolean verifyTenantPhone(String phone, String rawOtp) {
-        if (!phoneVerificationService.confirmOtp(phone, rawOtp)) {
+        String normalizedPhone = PhoneNumberUtils.normalize(phone);
+        if (!phoneVerificationService.confirmOtp(normalizedPhone, rawOtp)) {
             return false;
         }
 
-        tenantRepository.findByPhoneNumber(phone).ifPresent(tenant -> {
+        tenantRepository.findByPhoneNumber(normalizedPhone)
+                .or(() -> tenantRepository.findByPhoneNumber(phone))
+                .ifPresent(tenant -> {
             tenant.setPhoneVerified(true);
             tenantRepository.save(tenant);  // Save verification update
 //            checkAndActivateTenant(tenant); // Centralized logic
@@ -253,13 +259,13 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     public Optional<TenantEntity> findTenantEntityByPhoneNumber(String phone) {
-        return tenantRepository.findByPhoneNumber(phone);
+        return tenantRepository.findByPhoneNumber(PhoneNumberUtils.normalize(phone));
     }
 
     @Cacheable(value = "tenants_by_phone", key = "#phone")
     @Override
     public Optional<TenantDTO> findTenantDtoByPhoneNumber(String phone) {
-        return tenantRepository.findByPhoneNumber(phone).map(this::convertTenantToDTO);
+        return tenantRepository.findByPhoneNumber(PhoneNumberUtils.normalize(phone)).map(this::convertTenantToDTO);
     }
 
     @Caching(evict = {
@@ -288,7 +294,9 @@ public class TenantServiceImpl implements TenantService {
         tenantRepository.findById(tenantId).ifPresent(tenantEntity -> {
            Optional.ofNullable(tenantDTO.getOwnerName()).ifPresent(tenantEntity::setOwnerName);
            Optional.ofNullable(tenantDTO.getTenantType()).ifPresent(tenantEntity::setTenantType);
-           Optional.ofNullable(tenantDTO.getPhoneNumber()).ifPresent(tenantEntity::setPhoneNumber);
+           Optional.ofNullable(tenantDTO.getPhoneNumber())
+                   .map(PhoneNumberUtils::normalize)
+                   .ifPresent(tenantEntity::setPhoneNumber);
 
            tenantRepository.save(tenantEntity);
         }
