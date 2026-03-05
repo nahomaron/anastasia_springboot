@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, 'Weekly admin summary', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Weekly admin summary</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Here is your latest operations snapshot.</p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:10px 0;">
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('New members', ${newMembersCount})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Pending forms', ${pendingFormsCount})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Upcoming events', ${upcomingEventsCount})}"></th:block>
+        </table>
+        <th:block th:replace="~{email/components/button :: button(${dashboardUrl}, 'Open Admin Dashboard', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${dashboardUrl})}"></th:block>
+    </th:block>
+</th:block>
+</body>
+</html>

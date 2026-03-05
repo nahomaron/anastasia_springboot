@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, 'A new appointment request was submitted', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Appointment request</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">A request was submitted by <strong th:text="${memberName}">Member</strong>.</p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:10px 0;">
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Requested times', ${requestedTimes})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Purpose', ${purpose})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Contact', ${memberContact})}"></th:block>
+        </table>
+        <th:block th:replace="~{email/components/button :: button(${approveUrl}, 'Approve', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${approveUrl})}"></th:block>
+        <th:block th:replace="~{email/components/button :: button(${declineUrl}, 'Decline', 'secondary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${declineUrl})}"></th:block>
+    </th:block>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, 'We received your form request', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Request received</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${memberName}">Member</span>, we received your <strong th:text="${formName}">Form</strong> request.</p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:10px 0;">
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Submitted at', ${submittedAt})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Tracking ID', ${trackingId})}"></th:block>
+        </table>
+        <th:block th:replace="~{email/components/button :: button(${portalUrl}, 'View Request', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${portalUrl})}"></th:block>
+    </th:block>
+</th:block>
+</body>
+</html>

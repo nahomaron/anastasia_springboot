@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, 'Welcome to your church workspace', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; line-height:1.35; color:#0F172A;">Welcome to <span th:text="${appName}">Anastasia</span></h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${userName}">User</span>,</p>
+        <p style="margin:0 0 14px 0; font-size:15px; color:#334155;">Your account for <span th:text="${churchName}">Your Church</span> is ready. You can now access your dashboard and complete your profile.</p>
+        <th:block th:replace="~{email/components/button :: button(${loginUrl}, 'Sign In', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${loginUrl})}"></th:block>
+        <th:block th:replace="~{email/components/alert :: alert('info', 'If this was not expected, contact support immediately.')}"></th:block>
+    </th:block>
+</th:block>
+</body>
+</html>

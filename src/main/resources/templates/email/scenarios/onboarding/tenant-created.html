@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, 'Your workspace is ready', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Your church workspace is ready</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${ownerName}">Owner</span>,</p>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Your workspace for <strong th:text="${churchName}">Church</strong> has been created successfully.</p>
+        <th:block th:replace="~{email/components/button :: button(${dashboardUrl}, 'Open Dashboard', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${dashboardUrl})}"></th:block>
+        <th:block th:replace="~{email/components/button :: button(${nextStepsUrl}, 'View Next Steps', 'secondary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${nextStepsUrl})}"></th:block>
+    </th:block>
+</th:block>
+</body>
+</html>

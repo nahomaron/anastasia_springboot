@@ -4,11 +4,12 @@ import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChan
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationDeliveryStatus;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
-import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
+import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationIdempotencyService;
-import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateService;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateService;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +89,25 @@ public class EmailNotificationService {
         sendEmail(to, subject, template, variables, null);
     }
 
+    @Async
+    public void sendEmail(String to,
+                          String subject,
+                          String html,
+                          String text,
+                          EmailSendMetadata metadata) {
+        String idempotencyKey = metadata != null && StringUtils.hasText(metadata.idempotencyKey())
+                ? metadata.idempotencyKey()
+                : null;
+
+        if (StringUtils.hasText(idempotencyKey)
+                && notificationRepository.existsByIdempotencyKeyAndChannel(idempotencyKey, NotificationChannelType.EMAIL)) {
+            log.debug("Skipping duplicate email notification for metadata idempotency key={}", idempotencyKey);
+            return;
+        }
+
+        dispatchEmail(to, subject, html, text, metadata, null, idempotencyKey);
+    }
+
     private void sendEmail(String to,
                            String subject,
                            EmailTemplateName template,
@@ -99,38 +119,80 @@ public class EmailNotificationService {
             return;
         }
 
+        Map<String, Object> payload = CollectionUtils.isEmpty(variables) ? new HashMap<>() : new HashMap<>(variables);
+        String html = templateService.renderTemplate(template.getName(), payload);
+        String text = renderTextFallback(payload, html);
+
+        dispatchEmail(to, subject, html, text, null, eventContext, idempotencyKey);
+    }
+
+    private void dispatchEmail(String to,
+                               String subject,
+                               String html,
+                               String text,
+                               EmailSendMetadata metadata,
+                               NotificationEvent eventContext,
+                               String idempotencyKey) {
         if (!emailSendingEnabled) {
             log.debug("Email sending disabled, skipping to={}", to);
             return;
         }
 
-        Map<String, Object> payload = CollectionUtils.isEmpty(variables) ? new HashMap<>() : new HashMap<>(variables);
-
         try {
-            String html = templateService.renderTemplate(template.getName(), payload);
-
             MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, UTF_8.name());
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
             helper.setTo(to);
             helper.setFrom(defaultSenderEmail);
             helper.setSubject(subject);
-            helper.setText(html, true);
+            helper.setText(resolveTextBody(text, html), html);
 
             mailSender.send(mimeMessage);
-            log.info("✅ Email sent to {} using template '{}'", to, template.getName());
-            persistNotification(to, subject, html, template, eventContext, true, null, idempotencyKey);
+            log.info("Email sent to {} template={} category={} correlationId={}",
+                    to,
+                    metadata != null ? metadata.templateKey() : "legacy",
+                    metadata != null ? metadata.category() : null,
+                    metadata != null ? metadata.correlationId() : null);
+
+            persistNotification(to, subject, html, eventContext, metadata, true, null, idempotencyKey);
 
         } catch (Exception e) {
             log.error("Error sending email to {}: {}", to, e.getMessage(), e);
-            persistNotification(to, subject, null, template, eventContext, false, e.getMessage(), idempotencyKey);
+            persistNotification(to, subject, html, eventContext, metadata, false, e.getMessage(), idempotencyKey);
         }
+    }
+
+    private String resolveTextBody(String text, String html) {
+        if (StringUtils.hasText(text)) {
+            return text;
+        }
+        if (!StringUtils.hasText(html)) {
+            return "";
+        }
+        return html
+                .replaceAll("(?is)<style.*?>.*?</style>", " ")
+                .replaceAll("(?is)<script.*?>.*?</script>", " ")
+                .replaceAll("(?is)<br\\s*/?>", "\\n")
+                .replaceAll("(?is)</p>", "\\n\\n")
+                .replaceAll("(?is)<[^>]+>", " ")
+                .replaceAll("&nbsp;", " ")
+                .replaceAll("&amp;", "&")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private String renderTextFallback(Map<String, Object> variables, String html) {
+        Object text = variables.get("plainText");
+        if (text instanceof String plainText && StringUtils.hasText(plainText)) {
+            return plainText;
+        }
+        return resolveTextBody(null, html);
     }
 
     private void persistNotification(String recipient,
                                      String subject,
                                      String body,
-                                     EmailTemplateName template,
                                      NotificationEvent context,
+                                     EmailSendMetadata metadata,
                                      boolean success,
                                      String error,
                                      String idempotencyKey) {
@@ -139,13 +201,16 @@ public class EmailNotificationService {
         entity.setTitle(subject);
         entity.setMessage(body);
         entity.setChannel(NotificationChannelType.EMAIL);
-        entity.setType(context != null ? context.getType() : NotificationType.NOTIFICATION);
+        entity.setType(resolveNotificationType(context, metadata));
         entity.setSent(success);
         entity.setSentAt(success ? LocalDateTime.now() : null);
         entity.setDeliveryStatus(success ? NotificationDeliveryStatus.SENT : NotificationDeliveryStatus.FAILED);
         entity.setErrorMessage(success ? null : error);
         entity.setErrorCode(success ? null : "EMAIL_DELIVERY_FAILED");
         entity.setIdempotencyKey(idempotencyKey);
+        entity.setProviderMessageId(metadata != null && StringUtils.hasText(metadata.correlationId())
+                ? metadata.correlationId()
+                : null);
         entity.setRetryCount(success ? 0 : 1);
         entity.setNextRetryAt(success ? null : LocalDateTime.now().plusMinutes(5));
         if (context != null) {
@@ -153,5 +218,22 @@ public class EmailNotificationService {
             entity.setRecipientUserId(context.getUser() != null ? context.getUser().getUuid() : null);
         }
         notificationRepository.save(entity);
+    }
+
+    private NotificationType resolveNotificationType(NotificationEvent context, EmailSendMetadata metadata) {
+        if (context != null && context.getType() != null) {
+            return context.getType();
+        }
+        if (metadata == null || metadata.category() == null) {
+            return NotificationType.NOTIFICATION;
+        }
+
+        return switch (metadata.category()) {
+            case AUTH -> NotificationType.ACCOUNT_ACTIVATION;
+            case SECURITY -> NotificationType.PASSWORD_RESET;
+            case MEMBER -> NotificationType.MEMBER_REGISTRATION_SUBMITTED;
+            case EVENT -> NotificationType.EVENT_REMINDER;
+            case APPOINTMENT, FORM, TENANT, ADMIN_ALERT, BILLING, SYSTEM, COMPLIANCE -> NotificationType.NOTIFICATION;
+        };
     }
 }

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout('Subscription activated', 'Subscription is now active', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Subscription activated</h1>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:10px 0;">
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Subscription ID', ${subscriptionId})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Purpose', ${purpose})}"></th:block>
+        </table>
+    </th:block>
+</th:block>
+</body>
+</html>

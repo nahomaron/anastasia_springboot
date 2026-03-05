@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, 'A member registration needs review', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">New member registration</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">A new member has submitted registration.</p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:10px 0;">
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Name', ${memberName})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Email', ${memberEmail})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Phone', ${memberPhone})}"></th:block>
+            <th:block th:replace="~{email/components/fieldRow :: fieldRow('Member ID', ${memberId})}"></th:block>
+        </table>
+        <th:block th:replace="~{email/components/button :: button(${reviewUrl}, 'Review in Dashboard', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${reviewUrl})}"></th:block>
+    </th:block>
+</th:block>
+</body>
+</html>

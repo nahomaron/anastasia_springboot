@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, 'Upcoming event reminder', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Reminder: <span th:text="${eventTitle}">Event</span></h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${memberName}">Member</span>, your event starts soon.</p>
+        <th:block th:replace="~{email/components/eventDetails :: eventDetails(${date}, ${time}, ${location}, ${icsUrl})}"></th:block>
+        <th:block th:replace="~{email/components/button :: button(${eventUrl}, 'Open Event', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${eventUrl})}"></th:block>
+    </th:block>
+</th:block>
+</body>
+</html>

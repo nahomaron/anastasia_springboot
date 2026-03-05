@@ -1,53 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Activation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 600px;
-            margin: 10px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .activation-code {
-            font-size: 36px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .activation-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-        }
-        .activation-link a {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-    </style>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<div class="container">
-    <h1>Account Activation</h1>
-    <p class="greeting" th:text="'Hello ' + ${username} + ','"></p>
-    <p>Thank you for signing up! Please use the following activation code to activate your account:</p>
-    <div class="activation-code"><span th:text="${activation_code}"></span></div>
-    <div class="activation-link">
-        <a th:href="${confirmation_url}" target="_blank">Activate your account</a>
-    </div>
-</div>
+<th:block th:replace="~{email/layouts/base :: emailLayout('Activate your account', 'Your activation code is inside', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Account activation</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${username}">User</span>,</p>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Use the code below to activate your account.</p>
+        <th:block th:replace="~{email/components/codeBox :: codeBox(${activation_code}, 15)}"></th:block>
+        <th:block th:replace="~{email/components/button :: button(${confirmation_url}, 'Activate account', 'primary')}"></th:block>
+        <th:block th:replace="~{email/components/plainLink :: plainLink(${confirmation_url})}"></th:block>
+    </th:block>
+</th:block>
 </body>
 </html>

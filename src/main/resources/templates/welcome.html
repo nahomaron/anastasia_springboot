@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-
+<th:block th:replace="~{email/layouts/base :: emailLayout('Welcome to Anastasia', 'Welcome email', ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Welcome to Anastasia</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${username}">User</span>,</p>
+        <p style="margin:0; font-size:15px; color:#334155;" th:text="${message_content}">Welcome to our platform.</p>
+    </th:block>
+</th:block>
 </body>
 </html>

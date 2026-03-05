@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="emailLayout(title, preheader, bodyContent)">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <meta name="color-scheme" content="light dark"/>
+    <meta name="supported-color-schemes" content="light dark"/>
+    <title th:text="${title}">Email</title>
+    <style>
+        @media screen and (max-width: 620px) {
+            .email-shell {
+                width: 100% !important;
+            }
+            .email-px {
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+            }
+            .email-card {
+                padding: 18px !important;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body,
+            .email-canvas {
+                background-color: #111827 !important;
+            }
+            .email-card-wrap {
+                background-color: #1f2937 !important;
+                border-color: #374151 !important;
+            }
+            .email-text,
+            .email-title {
+                color: #e5e7eb !important;
+            }
+            .email-muted {
+                color: #9ca3af !important;
+            }
+            .email-footer-link {
+                color: #93c5fd !important;
+            }
+        }
+    </style>
+</head>
+<body class="email-canvas" style="margin:0; padding:0; background-color:#F6F7FB;">
+<div style="display:none; font-size:1px; color:#F6F7FB; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;" th:text="${preheader}">Preview</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F6F7FB; width:100%;">
+    <tr>
+        <td align="center" style="padding:24px 12px;">
+            <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" class="email-shell" style="width:600px; max-width:600px;">
+                <tr>
+                    <td class="email-px" style="padding:0 4px 14px 4px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td align="left" valign="middle" style="padding-bottom:8px;">
+                                    <img th:src="${churchLogoUrl}" alt="Church logo" height="36" style="display:block; height:36px; width:auto; border:0;"/>
+                                </td>
+                                <td align="right" valign="middle" style="padding-bottom:8px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#475569; font-size:14px; line-height:20px;">
+                                    <span th:text="${appName}">Anastasia</span>
+                                    <span style="color:#94A3B8;"> | </span>
+                                    <span th:text="${churchName}">Church</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="email-card-wrap" style="background-color:#FFFFFF; border:1px solid #E7EAF0; border-radius:14px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td class="email-card email-px email-text" style="padding:24px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#0F172A; font-size:15px; line-height:1.6;">
+                                    <th:block th:insert="${bodyContent}"></th:block>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="email-px email-muted" style="padding:16px 4px 0 4px; text-align:center; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#64748B; font-size:14px; line-height:20px;">
+                        <p style="margin:0 0 8px 0;">
+                            Need help? Contact
+                            <a th:href="${'mailto:' + supportEmail}" th:text="${supportEmail}" class="email-footer-link" style="color:#3B5BFF; text-decoration:none;">support@anastasia.app</a>
+                        </p>
+                        <p style="margin:0 0 8px 0;" th:if="${footerAddress != null and !#strings.isEmpty(footerAddress)}" th:text="${footerAddress}">Address</p>
+                        <p style="margin:0;">&copy; <span th:text="${year}">2026</span> <span th:text="${appName}">Anastasia</span></p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</th:block>
+</html>
