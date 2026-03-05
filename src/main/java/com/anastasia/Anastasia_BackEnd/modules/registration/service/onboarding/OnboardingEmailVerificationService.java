@@ -1,12 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding;
 
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailCategory;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplate;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.OnboardingEmailVerificationCodeEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OnboardingEmailVerificationCodeRepository;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
@@ -27,10 +29,10 @@ public class OnboardingEmailVerificationService {
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     private final OnboardingEmailVerificationCodeRepository repository;
-    private final JavaMailSender mailSender;
+    private final EmailTemplateService emailTemplateService;
 
-    @Value("${spring.mail.from:info@anastasia.com}")
-    private String sender;
+    @Value("${app.onboarding.verification.help-url:https://app.anastasia.com/help/security}")
+    private String helpUrl;
 
     @Transactional
     public void sendCode(String rawEmail) {
@@ -84,21 +86,19 @@ public class OnboardingEmailVerificationService {
     }
 
     private void sendEmail(String to, String code) {
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, StandardCharsets.UTF_8.name());
-            helper.setTo(to);
-            helper.setFrom(sender);
-            helper.setSubject("Verify your email for Anastasia onboarding");
-            helper.setText("""
-                    Your verification code is: %s
+        Map<String, Object> model = Map.of(
+                "userName", "Church Admin",
+                "code", code,
+                "expiresMinutes", OTP_EXPIRY_MINUTES,
+                "helpUrl", helpUrl
+        );
 
-                    This code expires in %d minutes.
-                    """.formatted(code, OTP_EXPIRY_MINUTES), false);
-            mailSender.send(mimeMessage);
-        } catch (Exception ex) {
-            throw new IllegalStateException("Failed to send verification email", ex);
-        }
+        emailTemplateService.sendTemplateEmail(
+                to,
+                EmailTemplate.VERIFY_EMAIL_OTP.templateKey(),
+                model,
+                EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.VERIFY_EMAIL_OTP.templateKey())
+        );
     }
 
     private String normalizeEmail(String email) {
