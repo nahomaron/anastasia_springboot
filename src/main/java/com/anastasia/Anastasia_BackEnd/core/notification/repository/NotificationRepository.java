@@ -16,18 +16,43 @@ import java.util.UUID;
 
 public interface NotificationRepository extends JpaRepository<NotificationEntity, Long> {
 
-    Page<NotificationEntity> findByRecipientUserIdAndTenant_IdAndChannelAndArchivedFalseOrderByCreatedAtDesc(
-            UUID recipientUserId,
-            UUID tenantId,
-            NotificationChannelType channel,
+    @Query("""
+        select n
+        from NotificationEntity n
+        where n.recipientUserId = :userId
+          and n.channel = :channel
+          and n.archived = false
+          and (
+            (:tenantId is null and n.tenant is null)
+            or n.tenant.id = :tenantId
+          )
+        order by n.createdAt desc
+    """)
+    Page<NotificationEntity> findInbox(
+            @Param("userId") UUID userId,
+            @Param("tenantId") UUID tenantId,
+            @Param("channel") NotificationChannelType channel,
             Pageable pageable
     );
 
-    Page<NotificationEntity> findByRecipientUserIdAndTenant_IdAndChannelAndTypeInAndArchivedFalseOrderByCreatedAtDesc(
-            UUID recipientUserId,
-            UUID tenantId,
-            NotificationChannelType channel,
-            Set<NotificationType> types,
+    @Query("""
+        select n
+        from NotificationEntity n
+        where n.recipientUserId = :userId
+          and n.channel = :channel
+          and n.archived = false
+          and n.type in :types
+          and (
+            (:tenantId is null and n.tenant is null)
+            or n.tenant.id = :tenantId
+          )
+        order by n.createdAt desc
+    """)
+    Page<NotificationEntity> findInboxByTypes(
+            @Param("userId") UUID userId,
+            @Param("tenantId") UUID tenantId,
+            @Param("channel") NotificationChannelType channel,
+            @Param("types") Set<NotificationType> types,
             Pageable pageable
     );
 
@@ -35,23 +60,42 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
         select count(n)
         from NotificationEntity n
         where n.recipientUserId = :userId
-          and n.tenant.id = :tenantId
           and n.channel = com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType.IN_APP
           and n.archived = false
           and n.readAt is null
+          and (
+            (:tenantId is null and n.tenant is null)
+            or n.tenant.id = :tenantId
+          )
     """)
     long countUnread(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId);
 
-    Optional<NotificationEntity> findByIdAndRecipientUserIdAndTenant_IdAndArchivedFalse(Long id, UUID userId, UUID tenantId);
+    @Query("""
+        select n
+        from NotificationEntity n
+        where n.id = :id
+          and n.recipientUserId = :userId
+          and n.archived = false
+          and (
+            (:tenantId is null and n.tenant is null)
+            or n.tenant.id = :tenantId
+          )
+    """)
+    Optional<NotificationEntity> findByIdAndScope(@Param("id") Long id,
+                                                   @Param("userId") UUID userId,
+                                                   @Param("tenantId") UUID tenantId);
 
     @Query("""
         update NotificationEntity n
         set n.readAt = CURRENT_TIMESTAMP, n.updatedAt = CURRENT_TIMESTAMP
         where n.recipientUserId = :userId
-          and n.tenant.id = :tenantId
           and n.channel = com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType.IN_APP
           and n.archived = false
           and n.readAt is null
+          and (
+            (:tenantId is null and n.tenant is null)
+            or n.tenant.id = :tenantId
+          )
     """)
     @Modifying
     int markAllRead(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId);

@@ -42,16 +42,16 @@ public class NotificationInboxService {
 
     @Transactional(readOnly = true)
     public NotificationInboxPageResponse listInbox(String status, String type, int page, int size) {
-        ActorScope scope = requireActorScope();
+        ActorScope scope = resolveActorScope();
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 200);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Set<NotificationType> types = parseTypes(type);
         Page<NotificationEntity> rows = types.isEmpty()
-                ? notificationRepository.findByRecipientUserIdAndTenant_IdAndChannelAndArchivedFalseOrderByCreatedAtDesc(
+                ? notificationRepository.findInbox(
                 scope.userId(), scope.tenantId(), NotificationChannelType.IN_APP, pageable)
-                : notificationRepository.findByRecipientUserIdAndTenant_IdAndChannelAndTypeInAndArchivedFalseOrderByCreatedAtDesc(
+                : notificationRepository.findInboxByTypes(
                 scope.userId(), scope.tenantId(), NotificationChannelType.IN_APP, types, pageable);
 
         List<NotificationInboxItemResponse> items = rows.getContent().stream()
@@ -75,15 +75,15 @@ public class NotificationInboxService {
 
     @Transactional(readOnly = true)
     public long unreadCount() {
-        ActorScope scope = requireActorScope();
+        ActorScope scope = resolveActorScope();
         return notificationRepository.countUnread(scope.tenantId(), scope.userId());
     }
 
     @Transactional
     public NotificationInboxItemResponse markRead(Long notificationId) {
-        ActorScope scope = requireActorScope();
+        ActorScope scope = resolveActorScope();
         NotificationEntity entity = notificationRepository
-                .findByIdAndRecipientUserIdAndTenant_IdAndArchivedFalse(notificationId, scope.userId(), scope.tenantId())
+                .findByIdAndScope(notificationId, scope.userId(), scope.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
 
         if (entity.getReadAt() == null) {
@@ -94,15 +94,15 @@ public class NotificationInboxService {
 
     @Transactional
     public int markAllRead() {
-        ActorScope scope = requireActorScope();
+        ActorScope scope = resolveActorScope();
         return notificationRepository.markAllRead(scope.tenantId(), scope.userId());
     }
 
     @Transactional
     public void archive(Long notificationId) {
-        ActorScope scope = requireActorScope();
+        ActorScope scope = resolveActorScope();
         NotificationEntity entity = notificationRepository
-                .findByIdAndRecipientUserIdAndTenant_IdAndArchivedFalse(notificationId, scope.userId(), scope.tenantId())
+                .findByIdAndScope(notificationId, scope.userId(), scope.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
         entity.setArchived(true);
         notificationRepository.save(entity);
@@ -110,14 +110,14 @@ public class NotificationInboxService {
 
     @Transactional(readOnly = true)
     public NotificationPreferencesResponse getPreferences() {
-        ActorScope scope = requireActorScope();
+        ActorScope scope = resolveActorScope();
         NotificationPreferenceEntity preference = findOrCreatePreference(scope.tenantId(), scope.userId());
         return toPreferenceResponse(preference);
     }
 
     @Transactional
     public NotificationPreferencesResponse updatePreferences(UpdateNotificationPreferencesRequest request) {
-        ActorScope scope = requireActorScope();
+        ActorScope scope = resolveActorScope();
         NotificationPreferenceEntity preference = findOrCreatePreference(scope.tenantId(), scope.userId());
         preference.setEmailEnabled(Boolean.TRUE.equals(request.getEmailEnabled()));
         preference.setSmsEnabled(Boolean.TRUE.equals(request.getSmsEnabled()));
@@ -131,10 +131,10 @@ public class NotificationInboxService {
 
     @Transactional(readOnly = true)
     public Set<NotificationChannelType> filterChannels(UUID tenantId, UUID userId, NotificationType type, Set<NotificationChannelType> requested) {
-        if (userId == null || tenantId == null || requested == null || requested.isEmpty()) {
+        if (userId == null || requested == null || requested.isEmpty()) {
             return requested;
         }
-        NotificationPreferenceEntity pref = preferenceRepository.findByTenantIdAndUserId(tenantId, userId).orElse(null);
+        NotificationPreferenceEntity pref = findPreference(tenantId, userId).orElse(null);
         if (pref == null) {
             return requested;
         }
@@ -173,13 +173,20 @@ public class NotificationInboxService {
     }
 
     private NotificationPreferenceEntity findOrCreatePreference(UUID tenantId, UUID userId) {
-        return preferenceRepository.findByTenantIdAndUserId(tenantId, userId)
+        return findPreference(tenantId, userId)
                 .orElseGet(() -> {
                     NotificationPreferenceEntity created = new NotificationPreferenceEntity();
                     created.setTenantId(tenantId);
                     created.setUserId(userId);
                     return preferenceRepository.save(created);
                 });
+    }
+
+    private java.util.Optional<NotificationPreferenceEntity> findPreference(UUID tenantId, UUID userId) {
+        if (tenantId == null) {
+            return preferenceRepository.findByTenantIdIsNullAndUserId(userId);
+        }
+        return preferenceRepository.findByTenantIdAndUserId(tenantId, userId);
     }
 
     private NotificationPreferencesResponse toPreferenceResponse(NotificationPreferenceEntity preference) {
@@ -202,21 +209,19 @@ public class NotificationInboxService {
         }
     }
 
-    private ActorScope requireActorScope() {
-        UUID tenantId = TenantContext.getTenantId();
-        if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID is not set in the context");
-        }
-
+    private ActorScope resolveActorScope() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
             throw new IllegalStateException("No authenticated user found");
         }
 
+        UUID tenantId = TenantContext.getTenantId();
         UUID userId = principal.getUserUuid();
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (user.getTenantId() == null || !tenantId.equals(user.getTenantId())) {
+
+        // If tenant context is provided, enforce strict tenant scope.
+        if (tenantId != null && (user.getTenantId() == null || !tenantId.equals(user.getTenantId()))) {
             throw new IllegalStateException("Authenticated user is not in tenant scope");
         }
 
