@@ -66,6 +66,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -1103,34 +1104,46 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserProfileEntity getOrCreateProfile(UserEntity user) {
-        return userProfileRepository.findById(user.getUuid()).orElseGet(() ->
-                userProfileRepository.save(UserProfileEntity.builder()
-                        .userId(user.getUuid())
-                        .user(user)
-                        .phoneVerified(false)
-                        .twoFactorEnabled(false)
-                        .build())
-        );
+        UUID userId = user.getUuid();
+        Optional<UserProfileEntity> existing = userProfileRepository.findById(userId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        try {
+            return userProfileRepository.save(UserProfileEntity.builder()
+                    .user(user)
+                    .phoneVerified(false)
+                    .twoFactorEnabled(false)
+                    .build());
+        } catch (DataIntegrityViolationException ex) {
+            return userProfileRepository.findById(userId).orElseThrow(() -> ex);
+        }
     }
 
     private UserPreferencesEntity getOrCreatePreferences(UserEntity user) {
-        return userPreferencesRepository.findById(user.getUuid()).orElseGet(() ->
-                userPreferencesRepository.save(UserPreferencesEntity.builder()
-                        .userId(user.getUuid())
-                        .user(user)
-                        .themeMode("SYSTEM")
-                        .language("en")
-                        .locale("en-US")
-                        .dateFormat("MMM d, yyyy")
-                        .firstDayOfWeek("SUNDAY")
-                        .emailNotifications(true)
-                        .pushNotifications(true)
-                        .marketingNotifications(false)
-                        .sharePresence(true)
-                        .analyticsOptIn(true)
-                        .autoDetectLocation(true)
-                        .build())
-        );
+        UUID userId = user.getUuid();
+        Optional<UserPreferencesEntity> existing = userPreferencesRepository.findById(userId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        try {
+            return userPreferencesRepository.save(UserPreferencesEntity.builder()
+                    .user(user)
+                    .themeMode("SYSTEM")
+                    .language("en")
+                    .locale("en-US")
+                    .dateFormat("MMM d, yyyy")
+                    .firstDayOfWeek("SUNDAY")
+                    .emailNotifications(true)
+                    .pushNotifications(true)
+                    .marketingNotifications(false)
+                    .sharePresence(true)
+                    .analyticsOptIn(true)
+                    .autoDetectLocation(true)
+                    .build());
+        } catch (DataIntegrityViolationException ex) {
+            return userPreferencesRepository.findById(userId).orElseThrow(() -> ex);
+        }
     }
 
     private UserProfileResponse toUserProfileResponse(UserEntity user, UserProfileEntity profile) {
