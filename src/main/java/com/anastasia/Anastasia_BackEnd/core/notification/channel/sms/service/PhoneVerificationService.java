@@ -112,7 +112,7 @@ public class PhoneVerificationService {
     @Scheduled(cron = "0 */30 * * * *")
     @Transactional
     public void cleanupExpiredOtps() {
-        long deleted = otpRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+        int deleted = otpRepository.deleteExpired(LocalDateTime.now());
         if (deleted > 0) {
             log.debug("Deleted {} expired OTP entries", deleted);
         }

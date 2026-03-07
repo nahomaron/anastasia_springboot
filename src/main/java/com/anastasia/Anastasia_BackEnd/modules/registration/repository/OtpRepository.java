@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.repository;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.OtpEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,5 +15,7 @@ public interface OtpRepository extends JpaRepository<OtpEntity, Long> {
     Optional<OtpEntity> findValid(@Param("phone") String phone,
                                   @Param("now") LocalDateTime now);
 
-    long deleteByExpiresAtBefore(LocalDateTime time);
+    @Modifying
+    @Query("delete from OtpEntity o where o.expiresAt < :time")
+    int deleteExpired(@Param("time") LocalDateTime time);
 }
