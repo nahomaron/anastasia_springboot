@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.dto;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
 import lombok.Builder;
 import lombok.Value;
 
@@ -19,6 +20,7 @@ public class UserProfileResponse {
     boolean phoneVerified;
     String recoveryEmail;
     boolean recoveryEmailVerified;
+    AvatarDTO profileAvatar;
     String profileImageUrl;
     boolean twoFactorEnabled;
     boolean totpConfigured;

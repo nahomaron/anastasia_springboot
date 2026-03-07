@@ -186,7 +186,23 @@ public class UserServiceImpl implements UserService {
         if (request.getLocation() != null) {
             profile.setLocation(trimToNull(request.getLocation()));
         }
-        if (request.getProfileImageUrl() != null) {
+        if (request.getProfileAvatar() != null) {
+            AvatarDTO profileAvatar = request.getProfileAvatar();
+            String imageUrl = trimToNull(profileAvatar.getImageUrl());
+            profile.setProfileImageUrl(imageUrl);
+            if (imageUrl != null) {
+                AvatarEntity avatar = AvatarEntity.builder()
+                        .imageUrl(imageUrl)
+                        .imageSize(trimToNull(profileAvatar.getImageSize()))
+                        .avatarType(AvatarType.USER)
+                        .ownerId(user.getUuid())
+                        .build();
+                avatar = avatarRepository.save(avatar);
+                user.setProfileAvatar(avatar);
+            } else {
+                user.setProfileAvatar(null);
+            }
+        } else if (request.getProfileImageUrl() != null) {
             String imageUrl = trimToNull(request.getProfileImageUrl());
             profile.setProfileImageUrl(imageUrl);
             if (imageUrl != null) {
@@ -197,6 +213,8 @@ public class UserServiceImpl implements UserService {
                         .build();
                 avatar = avatarRepository.save(avatar);
                 user.setProfileAvatar(avatar);
+            } else {
+                user.setProfileAvatar(null);
             }
         }
         if (request.getPhoneNumber() != null) {
@@ -1148,6 +1166,14 @@ public class UserServiceImpl implements UserService {
 
     private UserProfileResponse toUserProfileResponse(UserEntity user, UserProfileEntity profile) {
         long backupCodesRemaining = backupCodeRepository.countUnusedByUserId(user.getUuid());
+        AvatarDTO profileAvatar = user.getProfileAvatar() != null
+                ? AvatarDTO.builder()
+                .imageUrl(user.getProfileAvatar().getImageUrl())
+                .imageSize(user.getProfileAvatar().getImageSize())
+                .build()
+                : (profile.getProfileImageUrl() != null
+                ? AvatarDTO.builder().imageUrl(profile.getProfileImageUrl()).build()
+                : null);
         return UserProfileResponse.builder()
                 .userId(user.getUuid())
                 .fullName(user.getFullName())
@@ -1159,6 +1185,7 @@ public class UserServiceImpl implements UserService {
                 .phoneVerified(profile.isPhoneVerified())
                 .recoveryEmail(profile.getRecoveryEmail())
                 .recoveryEmailVerified(profile.isRecoveryEmailVerified())
+                .profileAvatar(profileAvatar)
                 .profileImageUrl(profile.getProfileImageUrl() != null
                         ? profile.getProfileImageUrl()
                         : (user.getProfileAvatar() != null ? user.getProfileAvatar().getImageUrl() : null))

@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.dto;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -26,6 +28,9 @@ public class UpdateUserProfileRequest {
 
     @Pattern(regexp = "^(?:\\+|00)\\d{7,15}$", message = "Invalid international phone number format")
     private String phoneNumber;
+
+    @Valid
+    private AvatarDTO profileAvatar;
 
     @Size(max = 1024, message = "Profile image URL is too long")
     private String profileImageUrl;
