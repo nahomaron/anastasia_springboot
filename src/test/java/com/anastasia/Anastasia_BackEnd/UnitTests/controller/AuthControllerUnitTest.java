@@ -131,10 +131,16 @@ class AuthControllerUnitTest {
 
     @Test
     void confirm_shouldActivateAccount() {
-        ResponseEntity<Map<String, String>> response = authController.confirm("token-123");
+        AuthenticationResponse expected = AuthenticationResponse.builder()
+                .accessToken("access")
+                .refreshToken("refresh")
+                .build();
+        when(authService.activateAccount("token-123")).thenReturn(expected);
+
+        ResponseEntity<?> response = authController.confirm("token-123");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).containsEntry("message", "Account successfully activated");
+        assertThat(response.getBody()).isEqualTo(expected);
         verify(authService).activateAccount("token-123");
     }
 

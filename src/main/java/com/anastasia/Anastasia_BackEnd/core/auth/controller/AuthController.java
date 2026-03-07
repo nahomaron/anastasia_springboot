@@ -105,12 +105,12 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @GetMapping("/activate-account")
-    public ResponseEntity<Map<String, String>> confirm(@RequestParam String token) {
+    public ResponseEntity<?> confirm(@RequestParam String token) {
         long start = System.currentTimeMillis();
         try {
-            authService.activateAccount(token);
+            AuthenticationResponse response = authService.activateAccount(token);
             log.info("Activation took: {} ms", System.currentTimeMillis() - start);
-            return ResponseEntity.ok(message("Account successfully activated"));
+            return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
             log.warn("Activation failed: {}", ex.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message(ex.getMessage()));

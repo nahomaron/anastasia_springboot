@@ -100,9 +100,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void activateAccount(String token) {
+    public AuthenticationResponse activateAccount(String token) {
         Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (savedToken.getTokenType() != TokenType.ACTIVATION) {
+            throw new RuntimeException("Invalid activation token");
+        }
 
 //        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
 //            sendValidationEmail(savedToken.getUser());
@@ -112,10 +116,16 @@ public class AuthServiceImpl implements AuthService {
         var user = userRepository.findById(savedToken.getUser().getUuid())
                 .orElseThrow(() -> new UsernameNotFoundException("Activation - Username not found"));
 
-        user.setVerified(true);
-        userRepository.save(user);
-        savedToken.setValidatedAt(LocalDateTime.now());
-        tokenRepository.save(savedToken);
+        if (!user.isVerified()) {
+            user.setVerified(true);
+            userRepository.save(user);
+        }
+        if (savedToken.getValidatedAt() == null) {
+            savedToken.setValidatedAt(LocalDateTime.now());
+            tokenRepository.save(savedToken);
+        }
+
+        return issueSessionForUser(user.getUuid());
     }
 
     @Override

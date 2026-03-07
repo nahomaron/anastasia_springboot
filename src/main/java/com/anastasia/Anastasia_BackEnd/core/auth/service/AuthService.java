@@ -29,7 +29,7 @@ public interface AuthService {
 
     boolean exists(UUID userId);
 
-    void activateAccount(String token);
+    AuthenticationResponse activateAccount(String token);
 
     Optional<UserEntity> findUserByEmail(@NotBlank(message = "Email is required") @Email(message = "Invalid Email format") String email);
 
