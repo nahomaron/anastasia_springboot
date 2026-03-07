@@ -24,6 +24,10 @@ import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserTwoFactorBackupCodeEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantUserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantUserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
@@ -61,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserProfileRepository userProfileRepository;
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final LoginTwoFactorChallengeRepository loginTwoFactorChallengeRepository;
+    private final TenantUserRepository tenantUserRepository;
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
@@ -406,10 +411,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private AuthSessionResponse buildAuthSessionResponse(UserEntity user) {
-        Set<String> roleNames = user.getRoles().stream()
-                .map(Role::getRoleName)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<String> roleNames = resolveSessionRoles(user);
 
         Set<String> permissionKeys = user.getRoles().stream()
                 .flatMap(role -> role.getPermissions().stream())
@@ -452,6 +454,29 @@ public class AuthServiceImpl implements AuthService {
                 .membershipStatus(membershipStatus)
                 .priestNumber(priestNumber)
                 .build();
+    }
+
+    private Set<String> resolveSessionRoles(UserEntity user) {
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getRoleName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        if (user.getTenantId() == null || user.getUuid() == null) {
+            return roleNames;
+        }
+
+        tenantUserRepository.findByTenant_IdAndUserId(user.getTenantId(), user.getUuid())
+                .filter(tenantUser -> tenantUser.getStatus() == MembershipStatus.ACTIVE)
+                .map(TenantUserEntity::getRole)
+                .filter(TenantRole.PRIMARY_ADMIN::equals)
+                .ifPresent(role -> {
+                    roleNames.remove("OWNER");
+                    roleNames.remove("ADMIN");
+                    roleNames.add("PRIMARY-ADMIN");
+                });
+
+        return roleNames;
     }
 
     private boolean isTwoFactorRequired(UserEntity user) {

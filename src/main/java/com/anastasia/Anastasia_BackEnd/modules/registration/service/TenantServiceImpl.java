@@ -151,19 +151,19 @@ public class TenantServiceImpl implements TenantService {
 
         authService.createUser(adminUser);
 
-        UUID adminUserId = Optional.ofNullable(adminUser.getUuid())
+        UUID primaryAdminUserId = Optional.ofNullable(adminUser.getUuid())
                 .orElseGet(() -> userRepository.findByEmail(adminUser.getEmail()).map(UserEntity::getUuid).orElse(null));
-        if (adminUserId != null) {
-            TenantUserEntity ownerMembership = TenantUserEntity.builder()
+        if (primaryAdminUserId != null) {
+            TenantUserEntity primaryAdminAssignment = TenantUserEntity.builder()
                     .tenant(savedTenant)
-                    .userId(adminUserId)
+                    .userId(primaryAdminUserId)
                     .role(TenantRole.PRIMARY_ADMIN)
                     .status(MembershipStatus.ACTIVE)
                     .isBillingContact(true)
-                    .createdByUserId(adminUserId)
-                    .updatedByUserId(adminUserId)
+                    .createdByUserId(primaryAdminUserId)
+                    .updatedByUserId(primaryAdminUserId)
                     .build();
-            tenantUserRepository.save(ownerMembership);
+            tenantUserRepository.save(primaryAdminAssignment);
         }
 
         // Send OTP after account creation

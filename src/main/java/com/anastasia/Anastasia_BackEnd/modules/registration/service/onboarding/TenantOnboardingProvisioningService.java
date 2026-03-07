@@ -190,7 +190,7 @@ public class TenantOnboardingProvisioningService {
                 .build();
         UserEntity savedOwner = userRepository.save(owner);
 
-        TenantUserEntity ownerMembership = TenantUserEntity.builder()
+        TenantUserEntity primaryAdminAssignment = TenantUserEntity.builder()
                 .tenant(tenant)
                 .userId(savedOwner.getUuid())
                 .role(TenantRole.PRIMARY_ADMIN)
@@ -199,7 +199,7 @@ public class TenantOnboardingProvisioningService {
                 .createdByUserId(savedOwner.getUuid())
                 .updatedByUserId(savedOwner.getUuid())
                 .build();
-        tenantUserRepository.save(ownerMembership);
+        tenantUserRepository.save(primaryAdminAssignment);
 
         return savedOwner;
     }

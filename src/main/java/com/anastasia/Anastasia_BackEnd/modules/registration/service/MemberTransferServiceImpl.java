@@ -98,25 +98,25 @@ public class MemberTransferServiceImpl implements MemberTransferService {
             throw new IllegalStateException("User is no longer assigned to the source tenant");
         }
 
-        TenantUserEntity fromMembership = tenantUserRepository.findByTenant_IdAndUserId(fromTenantId, userId)
-                .orElseThrow(() -> new IllegalStateException("Source tenant membership not found"));
-        fromMembership.setStatus(MembershipStatus.REMOVED);
-        fromMembership.setUpdatedByUserId(actorUserId);
-        tenantUserRepository.save(fromMembership);
+        TenantUserEntity sourceTenantAssignment = tenantUserRepository.findByTenant_IdAndUserId(fromTenantId, userId)
+                .orElseThrow(() -> new IllegalStateException("Source tenant assignment not found"));
+        sourceTenantAssignment.setStatus(MembershipStatus.REMOVED);
+        sourceTenantAssignment.setUpdatedByUserId(actorUserId);
+        tenantUserRepository.save(sourceTenantAssignment);
 
-        TenantUserEntity toMembership = tenantUserRepository.findByTenant_IdAndUserId(toTenantId, userId)
+        TenantUserEntity targetTenantAssignment = tenantUserRepository.findByTenant_IdAndUserId(toTenantId, userId)
                 .orElseGet(() -> TenantUserEntity.builder()
                         .tenant(request.getToTenant())
                         .userId(userId)
                         .createdByUserId(actorUserId)
                         .build());
 
-        if (toMembership.getRole() == null) {
-            toMembership.setRole(TenantRole.COMMITTEE);
+        if (targetTenantAssignment.getRole() == null) {
+            targetTenantAssignment.setRole(TenantRole.COMMITTEE);
         }
-        toMembership.setStatus(MembershipStatus.ACTIVE);
-        toMembership.setUpdatedByUserId(actorUserId);
-        tenantUserRepository.save(toMembership);
+        targetTenantAssignment.setStatus(MembershipStatus.ACTIVE);
+        targetTenantAssignment.setUpdatedByUserId(actorUserId);
+        tenantUserRepository.save(targetTenantAssignment);
 
         user.assignTenant(request.getToTenant());
         synchronizeMemberChurchAndTenant(user, request.getToTenant());
