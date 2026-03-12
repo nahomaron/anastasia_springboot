@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <th:block th:fragment="fieldRow(label, value)">
     <tr>
-        <td style="padding:8px 0; width:36%; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:14px; color:#64748B;" th:text="${label}">Label</td>
-        <td style="padding:8px 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:14px; color:#0F172A;" th:text="${value}">Value</td>
+        <td class="email-field-label" style="padding:8px 0; width:36%; font-size:14px; color:#64748B;" th:text="${label}">Label</td>
+        <td class="email-field-value" style="padding:8px 0; font-size:14px; color:#0F172A;" th:text="${value}">Value</td>
     </tr>
 </th:block>
 </html>

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <th:block th:fragment="codeBox(code, expiresMinutes)">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:16px 0; border:1px solid #D8DFF0; border-radius:12px; background-color:#F1F5FF;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-code-box" style="margin:16px 0; border:1px solid #D8DFF0; border-radius:12px; background-color:#F1F5FF;">
         <tr>
             <td align="center" style="padding:18px 16px;">
-                <p style="margin:0; font-family:'Courier New', Courier, monospace; font-size:34px; line-height:1.2; letter-spacing:4px; color:#1E3A8A; font-weight:700;" th:text="${code}">000000</p>
-                <p style="margin:10px 0 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:14px; color:#475569;" th:text="${'Expires in ' + expiresMinutes + ' minutes'}">Expires in 10 minutes</p>
-                <p style="margin:6px 0 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:14px; color:#64748B;">Never share this code with anyone.</p>
+                <p class="email-code-text" style="margin:0; font-family:'Courier New', Courier, monospace; font-size:34px; line-height:1.2; letter-spacing:4px; color:#1E3A8A; font-weight:700;" th:text="${code}">000000</p>
+                <p class="email-muted-text" style="margin:10px 0 0 0; font-size:14px; color:#475569;" th:text="${'Expires in ' + expiresMinutes + ' minutes'}">Expires in 10 minutes</p>
+                <p class="email-code-note" style="margin:6px 0 0 0; font-size:14px; color:#64748B;">Never share this code with anyone.</p>
             </td>
         </tr>
     </table>

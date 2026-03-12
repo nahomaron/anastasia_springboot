@@ -3,12 +3,34 @@
 <body>
 <th:block th:replace="~{email/layouts/base :: emailLayout('Activate your account', 'Your activation code is inside', ~{::bodyContent})}">
     <th:block th:fragment="bodyContent">
-        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;">Account activation</h1>
-        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${username}">User</span>,</p>
-        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Use the code below to activate your account.</p>
-        <th:block th:replace="~{email/components/codeBox :: codeBox(${activation_code}, 15)}"></th:block>
-        <th:block th:replace="~{email/components/button :: button(${confirmation_url}, 'Activate account', 'primary')}"></th:block>
+        <h1 class="text-main"
+            style="margin:0 0 12px 0; font-size:22px; font-family: sans-serif; color:#0F172A;">
+            Account activation
+        </h1>
+
+        <p class="text-sub"
+           style="margin:0 0 12px 0; font-size:15px; line-height:24px; font-family: sans-serif; color:#334155;">
+           Hello <span th:text="${username}" style="font-weight: bold;">User</span>,
+        </p>
+
+        <p class="text-sub"
+           style="margin:0 0 24px 0; font-size:15px; line-height:24px; font-family: sans-serif; color:#334155;">
+           Use the code below to activate your account.
+        </p>
+
+        <div style="margin-bottom: 24px;">
+            <th:block th:replace="~{email/components/codeBox :: codeBox(${activation_code}, 15)}"></th:block>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <th:block th:replace="~{email/components/button :: button(${confirmation_url}, 'Activate account', 'primary')}"></th:block>
+        </div>
+
         <th:block th:replace="~{email/components/plainLink :: plainLink(${confirmation_url})}"></th:block>
+
+        <p class="email-note" style="margin: 32px 0 0 0; font-size: 12px; color: #94a3b8;">
+            If you didn't request this, you can safely ignore this email.
+        </p>
     </th:block>
 </th:block>
 </body>

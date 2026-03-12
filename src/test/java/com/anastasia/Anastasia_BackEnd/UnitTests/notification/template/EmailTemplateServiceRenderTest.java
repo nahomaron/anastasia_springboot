@@ -53,6 +53,7 @@ class EmailTemplateServiceRenderTest {
                 "Anastasia",
                 "St. Raphael Cathedral",
                 "https://example.com/logo.png",
+                "https://example.com/church-logo.png",
                 "support@example.com",
                 "12 Church St",
                 "https://app.anastasia.com",

@@ -9,44 +9,312 @@
     <meta name="supported-color-schemes" content="light dark"/>
     <title th:text="${title}">Email</title>
     <style>
+        body,
+        table,
+        td,
+        p,
+        a {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        .email-body h1 {
+            margin: 0 0 12px 0;
+            font-size: 22px;
+            line-height: 1.35;
+            color: #0F172A;
+        }
+
+        .email-body p {
+            margin: 0 0 12px 0;
+            font-size: 15px;
+            line-height: 24px;
+            color: #334155;
+        }
+
+        .email-body .email-muted-text,
+        .email-body .email-note {
+            color: #64748B;
+        }
+
+        .email-body .email-note {
+            font-size: 13px;
+            line-height: 20px;
+        }
+
+        .email-link {
+            color: #3B5BFF;
+            text-decoration: none;
+        }
+
+        .email-brand-link {
+            text-decoration: none;
+        }
+
+        .email-brand-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background-color: #3B5BFF;
+            color: #FFFFFF;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 32px;
+            text-align: center;
+        }
+
+        .email-brand-wordmark {
+            color: #0F172A;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 24px;
+            letter-spacing: 0.02em;
+        }
+
+        .email-header-meta {
+            color: #475569;
+            font-size: 14px;
+            line-height: 20px;
+        }
+
+        .email-logo-frame {
+            padding-left: 12px;
+        }
+
+        .email-logo {
+            display: block;
+            max-height: 36px;
+            width: auto;
+            border: 0;
+        }
+
+        .email-divider-dot {
+            color: #94A3B8;
+        }
+
         @media screen and (max-width: 620px) {
             .email-shell {
                 width: 100% !important;
             }
+
             .email-px {
                 padding-left: 16px !important;
                 padding-right: 16px !important;
             }
+
             .email-card {
                 padding: 18px !important;
+            }
+
+            .email-stack-cell {
+                display: block !important;
+                width: 100% !important;
+                text-align: left !important;
+            }
+
+            .email-header-meta {
+                padding-top: 10px !important;
+            }
+
+            .email-logo-frame {
+                padding-left: 0 !important;
+                padding-top: 10px !important;
             }
         }
 
         @media (prefers-color-scheme: dark) {
             body,
-            .email-canvas {
-                background-color: #111827 !important;
+            .email-canvas,
+            .email-root {
+                background-color: #0B1120 !important;
             }
+
             .email-card-wrap {
-                background-color: #1f2937 !important;
-                border-color: #374151 !important;
+                background-color: #111827 !important;
+                border-color: #334155 !important;
             }
+
+            .email-body,
+            .email-body h1,
+            .email-body p,
+            .email-body span,
+            .email-body strong,
+            .email-body b,
+            .email-body td,
             .email-text,
-            .email-title {
-                color: #e5e7eb !important;
+            .email-title,
+            .email-brand-wordmark {
+                color: #E5EEF9 !important;
             }
-            .email-muted {
-                color: #9ca3af !important;
+
+            .email-body .email-muted-text,
+            .email-body .email-note,
+            .email-muted,
+            .email-header-meta,
+            .email-divider-dot {
+                color: #94A3B8 !important;
             }
+
+            .email-link,
             .email-footer-link {
-                color: #93c5fd !important;
+                color: #A5B4FC !important;
             }
+
+            .email-brand-badge {
+                background-color: #7C8CFF !important;
+                color: #FFFFFF !important;
+            }
+
+            .email-details-card,
+            .email-code-box,
+            .email-card-surface {
+                background-color: #172033 !important;
+                border-color: #334155 !important;
+            }
+
+            .email-field-label,
+            .email-code-note,
+            .email-plain-link-copy {
+                color: #A8B4C8 !important;
+            }
+
+            .email-field-value,
+            .email-code-text {
+                color: #F8FAFC !important;
+            }
+
+            .email-cta-primary {
+                background-color: #7C8CFF !important;
+                border-color: #7C8CFF !important;
+            }
+
+            .email-cta-primary a {
+                color: #FFFFFF !important;
+            }
+
+            .email-cta-secondary {
+                background-color: #172033 !important;
+                border-color: #5B6BFF !important;
+            }
+
+            .email-cta-secondary a {
+                color: #C7D2FE !important;
+            }
+
+            .email-alert-success {
+                background-color: #0F2F24 !important;
+                border-color: #1D6B4F !important;
+            }
+
+            .email-alert-warn {
+                background-color: #34260F !important;
+                border-color: #8B6A24 !important;
+            }
+
+            .email-alert-danger {
+                background-color: #34151B !important;
+                border-color: #8F3141 !important;
+            }
+
+            .email-alert-info {
+                background-color: #10243F !important;
+                border-color: #295B9B !important;
+            }
+
+            .email-alert-text {
+                color: #E5EEF9 !important;
+            }
+        }
+
+        [data-ogsc] body,
+        [data-ogsc] .email-canvas,
+        [data-ogsc] .email-root,
+        [data-ogsb] body,
+        [data-ogsb] .email-canvas,
+        [data-ogsb] .email-root {
+            background-color: #0B1120 !important;
+        }
+
+        [data-ogsc] .email-card-wrap,
+        [data-ogsb] .email-card-wrap {
+            background-color: #111827 !important;
+            border-color: #334155 !important;
+        }
+
+        [data-ogsc] .email-body,
+        [data-ogsc] .email-body h1,
+        [data-ogsc] .email-body p,
+        [data-ogsc] .email-body span,
+        [data-ogsc] .email-body strong,
+        [data-ogsc] .email-body b,
+        [data-ogsc] .email-body td,
+        [data-ogsc] .email-brand-wordmark,
+        [data-ogsb] .email-body,
+        [data-ogsb] .email-body h1,
+        [data-ogsb] .email-body p,
+        [data-ogsb] .email-body span,
+        [data-ogsb] .email-body strong,
+        [data-ogsb] .email-body b,
+        [data-ogsb] .email-body td,
+        [data-ogsb] .email-brand-wordmark {
+            color: #E5EEF9 !important;
+        }
+
+        [data-ogsc] .email-muted,
+        [data-ogsc] .email-header-meta,
+        [data-ogsc] .email-divider-dot,
+        [data-ogsc] .email-body .email-muted-text,
+        [data-ogsc] .email-body .email-note,
+        [data-ogsb] .email-muted,
+        [data-ogsb] .email-header-meta,
+        [data-ogsb] .email-divider-dot,
+        [data-ogsb] .email-body .email-muted-text,
+        [data-ogsb] .email-body .email-note {
+            color: #94A3B8 !important;
+        }
+
+        [data-ogsc] .email-link,
+        [data-ogsc] .email-footer-link,
+        [data-ogsb] .email-link,
+        [data-ogsb] .email-footer-link {
+            color: #A5B4FC !important;
+        }
+
+        [data-ogsc] .email-brand-badge,
+        [data-ogsb] .email-brand-badge {
+            background-color: #7C8CFF !important;
+            color: #FFFFFF !important;
+        }
+
+        [data-ogsc] .email-details-card,
+        [data-ogsc] .email-code-box,
+        [data-ogsc] .email-card-surface,
+        [data-ogsb] .email-details-card,
+        [data-ogsb] .email-code-box,
+        [data-ogsb] .email-card-surface {
+            background-color: #172033 !important;
+            border-color: #334155 !important;
+        }
+
+        [data-ogsc] .email-field-label,
+        [data-ogsc] .email-code-note,
+        [data-ogsc] .email-plain-link-copy,
+        [data-ogsb] .email-field-label,
+        [data-ogsb] .email-code-note,
+        [data-ogsb] .email-plain-link-copy {
+            color: #A8B4C8 !important;
+        }
+
+        [data-ogsc] .email-field-value,
+        [data-ogsc] .email-code-text,
+        [data-ogsb] .email-field-value,
+        [data-ogsb] .email-code-text {
+            color: #F8FAFC !important;
         }
     </style>
 </head>
 <body class="email-canvas" style="margin:0; padding:0; background-color:#F6F7FB;">
 <div style="display:none; font-size:1px; color:#F6F7FB; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;" th:text="${preheader}">Preview</div>
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F6F7FB; width:100%;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-root" style="background-color:#F6F7FB; width:100%;">
     <tr>
         <td align="center" style="padding:24px 12px;">
             <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" class="email-shell" style="width:600px; max-width:600px;">
@@ -54,12 +322,45 @@
                     <td class="email-px" style="padding:0 4px 14px 4px;">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                             <tr>
-                                <td align="left" valign="middle" style="padding-bottom:8px;">
-                                    <img th:src="${churchLogoUrl}" alt="Church logo" height="36" style="display:block; height:36px; width:auto; border:0;"/>
+                                <td align="left" valign="middle" class="email-stack-cell" style="padding-bottom:8px;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                        <tr>
+                                            <td valign="middle">
+                                                <img th:if="${appLogoUrl != null and !#strings.isEmpty(appLogoUrl)}"
+                                                     th:src="${appLogoUrl}"
+                                                     th:alt="${appName}"
+                                                     class="email-logo"
+                                                     height="32"
+                                                     style="display:block; max-height:32px; width:auto; border:0;"/>
+                                                <table th:if="${appLogoUrl == null or #strings.isEmpty(appLogoUrl)}"
+                                                       role="presentation"
+                                                       cellspacing="0"
+                                                       cellpadding="0"
+                                                       border="0">
+                                                    <tr>
+                                                        <td class="email-brand-badge" style="width:32px; height:32px; border-radius:10px; background-color:#3B5BFF; color:#FFFFFF; font-size:16px; font-weight:700; line-height:32px; text-align:center;">A</td>
+                                                        <td style="padding-left:10px;">
+                                                            <span class="email-brand-wordmark" th:text="${appName}" style="color:#0F172A; font-size:18px; font-weight:700; line-height:24px; letter-spacing:0.02em;">Anastasia</span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td valign="middle"
+                                                class="email-logo-frame"
+                                                style="padding-left:12px;"
+                                                th:if="${churchLogoUrl != null and !#strings.isEmpty(churchLogoUrl) and churchLogoUrl != appLogoUrl}">
+                                                <img th:src="${churchLogoUrl}"
+                                                     alt="Church logo"
+                                                     class="email-logo"
+                                                     height="36"
+                                                     style="display:block; max-height:36px; width:auto; border:0;"/>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </td>
-                                <td align="right" valign="middle" style="padding-bottom:8px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#475569; font-size:14px; line-height:20px;">
+                                <td align="right" valign="middle" class="email-stack-cell email-header-meta" style="padding-bottom:8px; color:#475569; font-size:14px; line-height:20px;">
                                     <span th:text="${appName}">Anastasia</span>
-                                    <span style="color:#94A3B8;"> | </span>
+                                    <span class="email-divider-dot" style="color:#94A3B8;"> | </span>
                                     <span th:text="${churchName}">Church</span>
                                 </td>
                             </tr>
@@ -70,7 +371,7 @@
                     <td class="email-card-wrap" style="background-color:#FFFFFF; border:1px solid #E7EAF0; border-radius:14px;">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                             <tr>
-                                <td class="email-card email-px email-text" style="padding:24px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#0F172A; font-size:15px; line-height:1.6;">
+                                <td class="email-card email-px email-text email-body" style="padding:24px; color:#0F172A; font-size:15px; line-height:1.6;">
                                     <th:block th:insert="${bodyContent}"></th:block>
                                 </td>
                             </tr>
@@ -78,7 +379,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="email-px email-muted" style="padding:16px 4px 0 4px; text-align:center; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#64748B; font-size:14px; line-height:20px;">
+                    <td class="email-px email-muted" style="padding:16px 4px 0 4px; text-align:center; color:#64748B; font-size:14px; line-height:20px;">
                         <p style="margin:0 0 8px 0;">
                             Need help? Contact
                             <a th:href="${'mailto:' + supportEmail}" th:text="${supportEmail}" class="email-footer-link" style="color:#3B5BFF; text-decoration:none;">support@anastasia.app</a>
