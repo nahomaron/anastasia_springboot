@@ -8,8 +8,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRe
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MarkAbsentRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.requests.AssignEventManagerRequest;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -31,10 +30,9 @@ public final class EventDataFactory {
                 .church(churchReference)
                 .title("Community Gathering " + System.currentTimeMillis())
                 .description("Quarterly community gathering for families.")
-                .date(LocalDate.now().plusDays(7))
                 .location("Main Parish Hall")
-                .startTime(LocalTime.of(10, 0))
-                .endTime(LocalTime.of(12, 0))
+                .startAt(LocalDateTime.now().plusDays(7).withHour(10).withMinute(0).withSecond(0).withNano(0))
+                .endAt(LocalDateTime.now().plusDays(7).withHour(12).withMinute(0).withSecond(0).withNano(0))
                 .visibility(EventVisibilityType.ALL)
                 .image("https://cdn.example.com/events/banner.png")
                 .build();

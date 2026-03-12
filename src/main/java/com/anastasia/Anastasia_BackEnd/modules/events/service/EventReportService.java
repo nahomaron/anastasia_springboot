@@ -62,7 +62,7 @@ public class EventReportService {
 
         return new EventReport.EventSummary(
                 event.getTitle(),
-                event.getDate(),
+                event.getStartAt() != null ? event.getStartAt().toLocalDate() : null,
                 invitedCount,
                 checkedInCount,
                 absentCount,
@@ -75,7 +75,7 @@ public class EventReportService {
 
         // Group attendance by event date
         Map<LocalDate, List<EventAttendance>> attendanceByDate = attendanceList.stream()
-                .collect(Collectors.groupingBy(attendance -> attendance.getEvent().getDate()));
+                .collect(Collectors.groupingBy(attendance -> attendance.getEvent().getStartAt().toLocalDate()));
 
         // Generate the attendance over time
         return attendanceByDate.entrySet().stream()

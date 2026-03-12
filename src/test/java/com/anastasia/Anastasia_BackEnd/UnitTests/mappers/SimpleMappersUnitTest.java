@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventManagerMapperImpl;
 import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventMapperImpl;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.*;
@@ -8,7 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType;
@@ -45,6 +46,7 @@ class SimpleMappersUnitTest {
     private final UsersMapper usersMapper = new UsersMapperImpl();
     private final EventMapper eventMapper = new EventMapperImpl();
     private final EventManagerMapper eventManagerMapper = new EventManagerMapperImpl();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void tenantMapper_roundTrip_shouldPreserveCoreFields() {
@@ -81,7 +83,11 @@ class SimpleMappersUnitTest {
     void churchMapper_shouldMapAddressAndContactDetails() {
         ChurchEntity entity = ChurchEntity.builder()
                 .churchName("St. Mary")
-                .churchNameTigrinya("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .prefix("St.")
+                .tPrefix("ቅድስት")
+                .tChurchName("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .neighborhood("Piassa")
+                .tNeighborhood("ፒያሳ")
                 .diocese("Addis Diocese")
                 .email("church@example.com")
                 .phone("+251900000000")
@@ -104,7 +110,11 @@ class SimpleMappersUnitTest {
 
         ChurchDTO dto = churchMapper.churchEntityToDTO(entity);
         assertThat(dto.getChurchName()).isEqualTo("St. Mary");
-        assertThat(dto.getChurchNameTigrinya()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
+        assertThat(dto.getPrefix()).isEqualTo("St.");
+        assertThat(dto.getTPrefix()).isEqualTo("ቅድስት");
+        assertThat(dto.getTChurchName()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
+        assertThat(dto.getNeighborhood()).isEqualTo("Piassa");
+        assertThat(dto.getTNeighborhood()).isEqualTo("ፒያሳ");
         assertThat(dto.getDiocese()).isEqualTo("Addis Diocese");
         assertThat(dto.getEmail()).isEqualTo("church@example.com");
         assertThat(dto.getAddress().getCity()).isEqualTo("Addis Ababa");
@@ -117,16 +127,37 @@ class SimpleMappersUnitTest {
 
         ChurchEntity mappedBack = churchMapper.churchDTOToEntity(dto);
         assertThat(mappedBack.getChurchName()).isEqualTo("St. Mary");
-        assertThat(mappedBack.getChurchNameTigrinya()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
+        assertThat(mappedBack.getTPrefix()).isEqualTo("ቅድስት");
+        assertThat(mappedBack.getTChurchName()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
+        assertThat(mappedBack.getTNeighborhood()).isEqualTo("ፒያሳ");
         assertThat(mappedBack.getEmail()).isEqualTo("church@example.com");
         assertThat(mappedBack.getPhone()).isEqualTo("+251900000000");
         assertThat(mappedBack.getInstagram()).isEqualTo("instagram.com/stmary");
     }
 
     @Test
+    void churchDto_shouldDeserializeLowerCamelTFields() throws Exception {
+        String json = """
+                {
+                  "churchName": "St. Michael Church",
+                  "tChurchName": "ሚካኤል ቤተ ክርስቲያን",
+                  "neighborhood": "Akria",
+                  "tNeighborhood": "ኣኽርያ",
+                  "diocese": "Addis Ababa",
+                  "email": "contact@stmichael.org"
+                }
+                """;
+
+        ChurchDTO dto = objectMapper.readValue(json, ChurchDTO.class);
+
+        assertThat(dto.getTChurchName()).isEqualTo("ሚካኤል ቤተ ክርስቲያን");
+        assertThat(dto.getTNeighborhood()).isEqualTo("ኣኽርያ");
+    }
+
+    @Test
     void priestMapper_shouldHandleLanguagesAndAddress() {
         PriestDTO dto = PriestDTO.builder()
-                .avatar(AvatarDTO.builder()
+                .avatar(ImageAssetDTO.builder()
                         .imageUrl("https://example.com/priest/avatar.png")
                         .imageSize("original")
                         .build())
@@ -188,10 +219,9 @@ class SimpleMappersUnitTest {
         EventDTO dto = EventDTO.builder()
                 .title("Youth Retreat")
                 .description("Weekend retreat")
-                .date(LocalDate.of(2024, 10, 5))
                 .location("Nazareth")
-                .startTime(LocalTime.of(10, 0))
-                .endTime(LocalTime.of(14, 0))
+                .startAt(LocalDateTime.of(2024, 10, 5, 10, 0))
+                .endAt(LocalDateTime.of(2024, 10, 5, 14, 0))
                 .visibility(EventVisibilityType.ALL)
                 .repetition(Repetition.NONE)
                 .build();

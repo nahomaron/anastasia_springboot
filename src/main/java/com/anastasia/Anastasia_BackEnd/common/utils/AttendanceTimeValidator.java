@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Component
@@ -28,13 +29,19 @@ public class AttendanceTimeValidator {
     }
 
     public boolean isCheckInAllowed(EventEntity event) {
+        LocalDateTime startAt = event.getStartAt();
+        LocalDateTime endAt = event.getEndAt();
+        if (startAt == null || endAt == null) {
+            return false;
+        }
+
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
-        if (!today.isEqual(event.getDate())) return false;
+        if (!today.isEqual(startAt.toLocalDate())) return false;
 
-        LocalTime allowedStart = event.getStartTime().minus(graceBefore);
-        LocalTime allowedEnd = event.getEndTime().plus(graceAfter);
+        LocalTime allowedStart = startAt.toLocalTime().minus(graceBefore);
+        LocalTime allowedEnd = endAt.toLocalTime().plus(graceAfter);
 
         return !now.isBefore(allowedStart) && !now.isAfter(allowedEnd);
     }

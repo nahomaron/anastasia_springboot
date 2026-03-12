@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,9 +27,8 @@ class AttendanceTimeValidatorTest {
     void isCheckInAllowed_whenWithinWindow_shouldReturnTrue() {
         LocalTime now = LocalTime.now();
         EventEntity event = EventEntity.builder()
-                .date(LocalDate.now())
-                .startTime(now.plusMinutes(10))
-                .endTime(now.plusMinutes(30))
+                .startAt(LocalDateTime.now().with(now.plusMinutes(10)))
+                .endAt(LocalDateTime.now().with(now.plusMinutes(30)))
                 .build();
 
         assertThat(validator.isCheckInAllowed(event)).isTrue();
@@ -39,9 +38,8 @@ class AttendanceTimeValidatorTest {
     void isCheckInAllowed_whenDifferentDay_shouldReturnFalse() {
         LocalTime now = LocalTime.now();
         EventEntity event = EventEntity.builder()
-                .date(LocalDate.now().plusDays(1))
-                .startTime(now)
-                .endTime(now.plusMinutes(30))
+                .startAt(LocalDateTime.now().plusDays(1).with(now))
+                .endAt(LocalDateTime.now().plusDays(1).with(now.plusMinutes(30)))
                 .build();
 
         assertThat(validator.isCheckInAllowed(event)).isFalse();
@@ -51,9 +49,8 @@ class AttendanceTimeValidatorTest {
     void isCheckInAllowed_whenOutsideWindow_shouldReturnFalse() {
         LocalTime now = LocalTime.now();
         EventEntity event = EventEntity.builder()
-                .date(LocalDate.now())
-                .startTime(now.plusHours(2))
-                .endTime(now.plusHours(3))
+                .startAt(LocalDateTime.now().with(now.plusHours(2)))
+                .endAt(LocalDateTime.now().with(now.plusHours(3)))
                 .build();
 
         assertThat(validator.isCheckInAllowed(event)).isFalse();

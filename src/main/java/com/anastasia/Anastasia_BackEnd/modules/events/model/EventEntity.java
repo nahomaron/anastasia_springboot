@@ -9,9 +9,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -26,7 +24,7 @@ import java.util.UUID;
 @Table(name = "events", indexes = {
         @Index(name = "idx_event_church", columnList = "church_id"),
         @Index(name = "idx_event_tenant", columnList = "tenantId"),
-        @Index(name = "idx_event_date", columnList = "date")
+        @Index(name = "idx_event_start_at", columnList = "startAt")
 })
 @EntityListeners(AuditingEntityListener.class)
 public class EventEntity extends Auditable {
@@ -47,19 +45,11 @@ public class EventEntity extends Auditable {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private LocalDate date;
-
-    private LocalDate endDate;
-
     @Column(length = 512)
     private String location;
 
     @Column(length = 2048)
     private String gpsLocation;
-
-    private LocalTime startTime;
-
-    private LocalTime endTime;
 
     private LocalDateTime startAt;
 
@@ -157,13 +147,10 @@ public class EventEntity extends Auditable {
 
     @Transient
     public Duration getDuration() {
-        if (startAt != null && endAt != null) {
-            return Duration.between(startAt, endAt);
-        }
-        if (startTime == null || endTime == null) {
+        if (startAt == null || endAt == null) {
             return Duration.ZERO;
         }
-        return Duration.between(startTime, endTime);
+        return Duration.between(startAt, endAt);
     }
 
 }

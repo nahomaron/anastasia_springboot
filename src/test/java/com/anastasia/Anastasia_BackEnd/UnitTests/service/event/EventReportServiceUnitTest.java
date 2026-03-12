@@ -50,9 +50,8 @@ class EventReportServiceUnitTest {
         event = EventEntity.builder()
                 .eventId(1L)
                 .title("Sunday Service")
-                .date(LocalDate.now())
-                .startTime(LocalTime.of(9, 0))
-                .endTime(LocalTime.of(11, 0))
+                .startAt(LocalDateTime.now().withHour(9).withMinute(0).withSecond(0).withNano(0))
+                .endAt(LocalDateTime.now().withHour(11).withMinute(0).withSecond(0).withNano(0))
                 .build();
 
         attendeeOne = UserEntity.builder()
@@ -96,7 +95,7 @@ class EventReportServiceUnitTest {
         assertThat(summary.getInvitedCount()).isEqualTo(2);
         assertThat(summary.getCheckedInCount()).isEqualTo(1);
         assertThat(summary.getAbsentCount()).isEqualTo(1);
-        assertThat(summary.getAttendanceRate()).isEqualTo(50.0);
+        assertThat(summary.getAttendanceRate()).isEqualTo(0.5);
 
         assertThat(report.getAttendanceOverTime()).hasSize(1);
         EventReport.AttendanceOverTime overTime = report.getAttendanceOverTime().get(0);

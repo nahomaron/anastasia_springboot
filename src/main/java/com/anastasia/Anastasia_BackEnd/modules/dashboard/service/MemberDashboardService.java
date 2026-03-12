@@ -21,6 +21,7 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentStat
 import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +70,7 @@ public class MemberDashboardService {
 
         return MemberDashboardResponse.builder()
                 .stats(stats)
+                .churchDisplayName(buildChurchDisplayName(user))
                 .familyMembers(familyMembers)
                 .upcomingEvents(upcomingEvents)
                 .build();
@@ -130,12 +132,12 @@ public class MemberDashboardService {
         LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         return eventRepository.findVisibleForUser(tenantId, user.getUuid(), user.getEmail()).stream()
-                .filter(event -> event.getDate() != null && !event.getDate().isBefore(today))
-                .sorted(Comparator.comparing(EventEntity::getDate).thenComparing(EventEntity::getStartTime, Comparator.nullsLast(Comparator.naturalOrder())))
+                .filter(event -> event.getStartAt() != null && !event.getStartAt().toLocalDate().isBefore(today))
+                .sorted(Comparator.comparing(EventEntity::getStartAt, Comparator.nullsLast(Comparator.naturalOrder())))
                 .limit(UPCOMING_LIMIT)
                 .map(event -> MemberUpcomingEventItem.builder()
                         .name(event.getTitle())
-                        .date(event.getDate())
+                        .date(event.getStartAt().toLocalDate())
                         .type(mapEventType(event))
                         .status(mapEventStatus(event, attendanceByEventId))
                         .build())
@@ -216,6 +218,30 @@ public class MemberDashboardService {
                 .filter(value -> value != null && !value.isBlank())
                 .reduce((a, b) -> a + " " + b)
                 .orElse("");
+    }
+
+    private String buildChurchDisplayName(UserEntity user) {
+        ChurchEntity church = user.getTenant() != null ? user.getTenant().getChurch() : null;
+        if (church == null) {
+            return null;
+        }
+
+        return java.util.stream.Stream.of(
+                        trimToNull(church.getPrefix()),
+                        trimToNull(church.getChurchName()),
+                        trimToNull(church.getNeighborhood())
+                )
+                .filter(value -> value != null && !value.isBlank())
+                .reduce((a, b) -> a + " " + b)
+                .orElse(null);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private UUID requireTenantId() {

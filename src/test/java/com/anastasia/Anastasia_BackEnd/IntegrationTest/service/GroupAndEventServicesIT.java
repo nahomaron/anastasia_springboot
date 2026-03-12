@@ -144,10 +144,9 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
                 .church(church)
                 .title("Integration Event")
                 .description("Full flow test")
-                .date(LocalDate.now())
                 .location("Main Hall")
-                .startTime(LocalTime.now().minusMinutes(10))
-                .endTime(LocalTime.now().plusMinutes(50))
+                .startAt(LocalDateTime.now().minusMinutes(10))
+                .endAt(LocalDateTime.now().plusMinutes(50))
                 .latitude(40.7128)
                 .longitude(-74.0060)
                 .build();

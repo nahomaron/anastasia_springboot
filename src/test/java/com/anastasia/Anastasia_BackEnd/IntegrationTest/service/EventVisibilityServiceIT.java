@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
@@ -178,10 +179,9 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
                 .church(church)
                 .title(title)
                 .description("Integration visibility test")
-                .date(LocalDate.now().plusDays(1))
                 .location("Integration Hall")
-                .startTime(LocalTime.of(9, 0))
-                .endTime(LocalTime.of(10, 0))
+                .startAt(LocalDateTime.now().plusDays(1).withHour(9).withMinute(0).withSecond(0).withNano(0))
+                .endAt(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0))
                 .visibility(visibility)
                 .image("https://example.com/event.png");
 

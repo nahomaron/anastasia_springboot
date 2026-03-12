@@ -1,9 +1,5 @@
 package com.anastasia.Anastasia_BackEnd.modules.events.model;
 
-import com.anastasia.Anastasia_BackEnd.common.json.HourMinuteLocalTimeSerializer;
-import com.anastasia.Anastasia_BackEnd.common.json.LenientLocalTimeDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -14,9 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,20 +30,8 @@ public class EventDTO {
 
     private String description;
 
-    private LocalDate date;
-
-    private LocalDate endDate;
-
     @NotBlank(message = "{validation.events.location.required}")
     private String location;
-
-    @JsonSerialize(using = HourMinuteLocalTimeSerializer.class)
-    @JsonDeserialize(using = LenientLocalTimeDeserializer.class)
-    private LocalTime startTime;
-
-    @JsonSerialize(using = HourMinuteLocalTimeSerializer.class)
-    @JsonDeserialize(using = LenientLocalTimeDeserializer.class)
-    private LocalTime endTime;
 
     private LocalDateTime startAt;
 

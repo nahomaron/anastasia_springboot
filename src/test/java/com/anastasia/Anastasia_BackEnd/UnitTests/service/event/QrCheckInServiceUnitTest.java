@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.event;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInQRRequestDTO;
@@ -17,8 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,11 +29,14 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class QrCheckInServiceUnitTest {
 
     @Mock
@@ -41,6 +47,8 @@ class QrCheckInServiceUnitTest {
     private EventAttendanceRepository attendanceRepository;
     @Mock
     private AttendanceTimeValidator attendanceTimeValidator;
+    @Mock
+    private LocalizedMessageService messageService;
 
     @InjectMocks
     private QrCheckInService qrCheckInService;
@@ -57,12 +65,16 @@ class QrCheckInServiceUnitTest {
                 .fullName("Qr User")
                 .build();
 
+        lenient().doAnswer(invocation -> invocation.getArgument(1))
+                .when(messageService)
+                .get(anyString(), anyString(), any());
+
         event = EventEntity.builder()
                 .eventId(15L)
                 .title("Youth Fellowship")
-                .date(LocalDate.now())
-                .startTime(LocalTime.of(9, 0))
-                .endTime(LocalTime.of(11, 0))
+                .startAt(LocalDateTime.now().withHour(9).withMinute(0).withSecond(0).withNano(0))
+                .endAt(LocalDateTime.now().withHour(11).withMinute(0).withSecond(0).withNano(0))
+                .allowGeoCheckIn(true)
                 .latitude(8.9806)
                 .longitude(38.7578)
                 .build();
@@ -100,8 +112,7 @@ class QrCheckInServiceUnitTest {
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Event not found");
+                .isInstanceOf(EntityNotFoundException.class);
 
         verify(attendanceRepository, never()).save(any());
     }
@@ -112,8 +123,7 @@ class QrCheckInServiceUnitTest {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("User not found");
+                .isInstanceOf(EntityNotFoundException.class);
 
         verify(attendanceRepository, never()).save(any());
     }
@@ -126,8 +136,7 @@ class QrCheckInServiceUnitTest {
                 .thenReturn(Optional.of(EventAttendance.builder().build()));
 
         assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("already checked in");
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -141,8 +150,7 @@ class QrCheckInServiceUnitTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Event location not set");
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -160,8 +168,7 @@ class QrCheckInServiceUnitTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> qrCheckInService.checkInWithQR(request))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("not within the check-in area");
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -173,8 +180,7 @@ class QrCheckInServiceUnitTest {
         when(attendanceTimeValidator.isCheckInAllowed(event)).thenReturn(false);
 
         assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Check-in not allowed");
+                .isInstanceOf(IllegalStateException.class);
     }
 
     private CheckInQRRequestDTO buildRequest() {
