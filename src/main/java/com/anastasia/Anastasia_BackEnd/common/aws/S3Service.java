@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.common.aws;
 
 /**
- * Abstraction for generating presigned upload URLs used by avatar workflows.
+ * Abstraction for generating presigned upload URLs used by image upload workflows.
  * Concrete implementations can target real AWS infrastructure or provide
  * lightweight stubs for tests.
  */

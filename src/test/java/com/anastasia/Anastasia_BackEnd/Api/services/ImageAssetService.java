@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.services;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -11,17 +11,17 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 
 /**
- * API client for avatar endpoints.
+ * API client for image asset endpoints.
  */
-public class AvatarService {
+public class ImageAssetService {
 
-    private static final String BASE_PATH = "/avatars";
+    private static final String BASE_PATH = "/images";
 
     public Response requestPresignedUrl(String fileName) {
         return requestPresignedUrl(RequestSpecFactory.authenticatedSpec(), fileName);
     }
 
-    @Step("Request avatar presigned URL for {fileName}")
+    @Step("Request image asset presigned URL for {fileName}")
     public Response requestPresignedUrl(RequestSpecification spec, String fileName) {
         return given()
                 .spec(spec)
@@ -33,12 +33,12 @@ public class AvatarService {
                 .response();
     }
 
-    public Response saveAvatar(String ownerType, UUID ownerId, AvatarDTO payload) {
+    public Response saveAvatar(String ownerType, UUID ownerId, ImageAssetDTO payload) {
         return saveAvatar(RequestSpecFactory.authenticatedSpec(), ownerType, ownerId, payload);
     }
 
-    @Step("Save avatar for {ownerType} {ownerId}")
-    public Response saveAvatar(RequestSpecification spec, String ownerType, UUID ownerId, AvatarDTO payload) {
+    @Step("Save image asset for {ownerType} {ownerId}")
+    public Response saveAvatar(RequestSpecification spec, String ownerType, UUID ownerId, ImageAssetDTO payload) {
         return given()
                 .spec(spec)
                 .body(payload)
@@ -53,7 +53,7 @@ public class AvatarService {
         return getAvatar(RequestSpecFactory.authenticatedSpec(), ownerType, ownerId);
     }
 
-    @Step("Fetch avatar for {ownerType} {ownerId}")
+    @Step("Fetch image asset for {ownerType} {ownerId}")
     public Response getAvatar(RequestSpecification spec, String ownerType, UUID ownerId) {
         return given()
                 .spec(spec)

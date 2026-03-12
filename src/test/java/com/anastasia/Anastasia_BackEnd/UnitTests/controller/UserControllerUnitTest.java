@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.controller.UserController;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
@@ -138,7 +138,7 @@ class UserControllerUnitTest {
 
     @Test
     void updateProfileAvatar_shouldDelegateToService() {
-        AvatarDTO avatarDTO = AvatarDTO.builder().imageUrl("avatar.png").build();
+        ImageAssetDTO avatarDTO = ImageAssetDTO.builder().imageUrl("avatar.png").build();
 
         ResponseEntity<String> response = userController.updateProfileAvatar(avatarDTO);
 

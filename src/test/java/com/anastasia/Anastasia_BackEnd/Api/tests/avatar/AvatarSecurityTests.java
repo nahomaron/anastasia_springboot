@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.Api.tests.avatar;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.factories.AvatarDataFactory;
-import com.anastasia.Anastasia_BackEnd.Api.services.AvatarService;
+import com.anastasia.Anastasia_BackEnd.Api.services.ImageAssetService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
@@ -22,8 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Owner("API Guild")
 class AvatarSecurityTests extends BaseApiTest {
 
-    private final AvatarService avatarService = new AvatarService();
-
     @Test
     void savingAvatarWithoutTokenShouldReturnForbidden() {
         UUID userId = BaseApiTest.getCachedUserId();
@@ -32,7 +30,7 @@ class AvatarSecurityTests extends BaseApiTest {
                 .contentType(ContentType.JSON)
                 .body(AvatarDataFactory.newValidAvatar())
                 .when()
-                .post("/avatars/USER/" + userId)
+                .post("/images/USER/" + userId)
                 .then()
                 .extract()
                 .response();

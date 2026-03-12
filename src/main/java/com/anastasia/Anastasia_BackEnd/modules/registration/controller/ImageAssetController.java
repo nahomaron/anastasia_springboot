@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.common.aws.PresignedUrlResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.service.AvatarService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.ImageAssetService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -15,38 +15,38 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/avatars")
+@RequestMapping("/api/v1/images")
 @Validated
-public class AvatarController {
+public class ImageAssetController {
 
-    private final AvatarService avatarService;
+    private final ImageAssetService imageAssetService;
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/presigned-url")
     public ResponseEntity<PresignedUrlResponse> generatePresignedUrl(
             @RequestParam @NotBlank(message = "fileName must be provided") String fileName
     ) {
-        return ResponseEntity.ok(avatarService.requestPresignedUrl(fileName));
+        return ResponseEntity.ok(imageAssetService.requestPresignedUrl(fileName));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{ownerType}/{ownerId}")
-    public ResponseEntity<AvatarDTO> saveAvatar(
+    public ResponseEntity<ImageAssetDTO> saveImageAsset(
             @PathVariable String ownerType,
             @PathVariable UUID ownerId,
-            @Valid @RequestBody AvatarDTO avatarDTO
+            @Valid @RequestBody ImageAssetDTO imageAssetDTO
     ) {
-        return ResponseEntity.ok(avatarService.saveAvatar(ownerType, ownerId, avatarDTO));
+        return ResponseEntity.ok(imageAssetService.saveImageAsset(ownerType, ownerId, imageAssetDTO));
     }
 
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{ownerType}/{ownerId}")
-    public ResponseEntity<AvatarDTO> getAvatar(
+    public ResponseEntity<ImageAssetDTO> getImageAsset(
             @PathVariable String ownerType,
             @PathVariable UUID ownerId
     ) {
-        return ResponseEntity.ok(avatarService.getAvatar(ownerType, ownerId));
+        return ResponseEntity.ok(imageAssetService.getImageAsset(ownerType, ownerId));
     }
 
 }

@@ -1,4 +1,4 @@
-package com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar;
+package com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AvatarDTO {
+public class ImageAssetDTO {
 
     @NotBlank(message = "Image URL is required")
     private String imageUrl;

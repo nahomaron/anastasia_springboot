@@ -24,7 +24,7 @@ public class AwsS3Service implements S3Service {
 
     @Override
     public PresignedUrlResponse generatePresignedUploadUrl(String fileName) {
-        String objectKey = "avatars/" + UUID.randomUUID() + "_" + fileName;
+        String objectKey = "images/" + UUID.randomUUID() + "_" + fileName;
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)

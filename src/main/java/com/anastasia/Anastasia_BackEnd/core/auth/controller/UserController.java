@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.controller;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -72,7 +72,7 @@ public class UserController {
      *
      * @return A map containing user attributes.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'MEMBER')")
     @GetMapping("/dashboard")
     public String getDashboard(){
         return "bravo! You are logged in";
@@ -109,7 +109,7 @@ public class UserController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'ADMIN', 'PRIEST')")
+    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST')")
     @GetMapping("/me/memberships")
     public ResponseEntity<UserMembershipsResponse> getMyMemberships() {
         return ResponseEntity.ok(userService.getCurrentUserMemberships());
@@ -214,7 +214,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Other sessions revoked."));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT')")
     @GetMapping("/search")
     public ResponseEntity<List<SimpleUserDTO>> searchUsers(
             @RequestParam("q") String query,
@@ -223,7 +223,7 @@ public class UserController {
         return ResponseEntity.ok(userService.searchUsers(query, roles));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
     @GetMapping("/tenant-access")
     public ResponseEntity<TenantUsersPageResponse> listTenantUsers(
             @RequestParam(value = "q", required = false) String query,
@@ -235,13 +235,13 @@ public class UserController {
         return ResponseEntity.ok(userService.listTenantUsers(query, status, role, page, size));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
     @PostMapping("/tenant-access/invitations")
     public ResponseEntity<TenantInviteResponse> inviteTenantUser(@Valid @RequestBody TenantInviteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.inviteUserToTenant(request.getEmail()));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
     @PatchMapping("/tenant-access/{userId}/membership")
     public ResponseEntity<TenantUserRowResponse> applyMembershipAction(
             @PathVariable UUID userId,
@@ -250,7 +250,7 @@ public class UserController {
         return ResponseEntity.ok(userService.applyMembershipAction(userId, request.getAction()));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
     @PostMapping("/tenant-access/{userId}/transfer-requests")
     public ResponseEntity<MemberTransferResponse> requestMemberTransfer(
             @PathVariable UUID userId,
@@ -264,7 +264,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
     @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/approve")
     public ResponseEntity<MemberTransferResponse> approveMemberTransfer(
             @PathVariable UUID transferRequestId,
@@ -274,7 +274,7 @@ public class UserController {
         return ResponseEntity.ok(userService.approveMemberTransferRequest(transferRequestId, note));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
     @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/reject")
     public ResponseEntity<MemberTransferResponse> rejectMemberTransfer(
             @PathVariable UUID transferRequestId,
@@ -301,7 +301,7 @@ public class UserController {
 
     @PutMapping("/avatar")
     public ResponseEntity<String> updateProfileAvatar(
-            @Valid @RequestBody AvatarDTO avatarDTO
+            @Valid @RequestBody ImageAssetDTO avatarDTO
     ) {
         userService.updateProfileAvatar(avatarDTO);
         return ResponseEntity.ok("Profile avatar updated successfully.");
@@ -314,7 +314,7 @@ public class UserController {
      * @param request The AssignRolesRequest containing the roles to be assigned.
      * @return  ResponseEntity indicating the success of the operation.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
     @PutMapping("/{userId}/assign-roles")
     public ResponseEntity<?> assignRolesToUser(@PathVariable UUID userId, @RequestBody AssignRolesRequest request){
         userService.assignRolesToUser(userId, request);
@@ -349,7 +349,7 @@ public class UserController {
      * @param userId The UUID of the user to be deleted.
      * @return ResponseEntity indicating the success of the deletion operation.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID userId){
         userService.deleteUser(userId);

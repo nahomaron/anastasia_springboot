@@ -20,7 +20,6 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
-import lombok.Getter;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -62,18 +61,12 @@ public class BaseApiTest {
     protected static AuthenticationResponse cachedAuth;
     protected static RequestSpecification authSpec;
 
-    @Getter
     private static String ownerAccessToken;
     private static TenantDTO cachedTenant;
-    @Getter
     protected static String cachedAccessToken;
-    @Getter
     protected static String cachedRefreshToken;
-    @Getter
     protected static String cachedEmail;
-    @Getter
     protected static String cachedPassword;
-    @Getter
     protected static UUID cachedUserId;
 
     protected static Map<Long, AuthenticationResponse> tokenCache = new HashMap<>();
@@ -313,6 +306,30 @@ public class BaseApiTest {
 
     public static boolean hasValidToken() {
         return cachedAccessToken != null && !cachedAccessToken.isBlank();
+    }
+
+    public static String getOwnerAccessToken() {
+        return ownerAccessToken;
+    }
+
+    public static String getCachedAccessToken() {
+        return cachedAccessToken;
+    }
+
+    public static String getCachedRefreshToken() {
+        return cachedRefreshToken;
+    }
+
+    public static String getCachedEmail() {
+        return cachedEmail;
+    }
+
+    public static String getCachedPassword() {
+        return cachedPassword;
+    }
+
+    public static UUID getCachedUserId() {
+        return cachedUserId;
     }
 
     /**

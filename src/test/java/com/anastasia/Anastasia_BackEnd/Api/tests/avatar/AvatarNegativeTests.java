@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.Api.tests.avatar;
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.AvatarDataFactory;
-import com.anastasia.Anastasia_BackEnd.Api.services.AvatarService;
+import com.anastasia.Anastasia_BackEnd.Api.services.ImageAssetService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Severity(SeverityLevel.NORMAL)
 class AvatarNegativeTests extends BaseApiTest {
 
-    private final AvatarService avatarService = new AvatarService();
+    private final ImageAssetService avatarService = new ImageAssetService();
 
     @Test
     @Story("Missing filename should be rejected")

@@ -1,16 +1,16 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.common.aws.PresignedUrlResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
-public interface AvatarService {
+public interface ImageAssetService {
     PresignedUrlResponse requestPresignedUrl(String fileName);
 
-    AvatarDTO saveAvatar(String ownerType, UUID ownerId, AvatarDTO avatarDTO);
+    ImageAssetDTO saveImageAsset(String ownerType, UUID ownerId, ImageAssetDTO imageAssetDTO);
 
-    AvatarDTO getAvatar(String ownerType, UUID ownerId);
+    ImageAssetDTO getImageAsset(String ownerType, UUID ownerId);
 }
