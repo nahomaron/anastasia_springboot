@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -96,7 +97,7 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
                         "BAPTISM",
                         request.getStatus(),
                         request.getCreatedDate(),
-                        request.getReviewedAt(),
+                        request.getReviewedAt() == null ? null : LocalDateTime.ofInstant(request.getReviewedAt(), java.time.ZoneId.systemDefault()),
                         request.getEnglish() != null ? request.getEnglish().getFullName() : null,
                         request.getChurch() != null ? request.getChurch().getChurchName() : request.getChurchNumber(),
                         request.getChurchNumber()

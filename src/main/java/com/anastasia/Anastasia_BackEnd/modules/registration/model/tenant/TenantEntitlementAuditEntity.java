@@ -19,7 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -53,12 +53,12 @@ public class TenantEntitlementAuditEntity {
     private UUID actorUserId;
 
     @Column(name = "occurred_at", nullable = false)
-    private LocalDateTime occurredAt;
+    private Instant occurredAt;
 
     @PrePersist
     public void onCreate() {
         if (this.occurredAt == null) {
-            this.occurredAt = LocalDateTime.now();
+            this.occurredAt = Instant.now();
         }
     }
 }

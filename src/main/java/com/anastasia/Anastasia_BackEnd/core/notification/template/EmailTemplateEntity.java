@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "email_templates")
@@ -34,5 +34,5 @@ public class EmailTemplateEntity {
     @Enumerated(EnumType.STRING)
     private TemplateType type = TemplateType.TENANT_CUSTOM;
 
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private Instant updatedAt = Instant.now();
 }

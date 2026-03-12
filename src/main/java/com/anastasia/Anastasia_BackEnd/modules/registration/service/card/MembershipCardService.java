@@ -27,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -283,7 +284,7 @@ public class MembershipCardService {
                 && !LocalDate.now().isAfter(card.getExpirationDate());
 
         audit(card, MembershipCardAuditEventType.VERIFIED,
-                "Verification result=" + valid + " at " + LocalDateTime.now());
+                "Verification result=" + valid + " at " + Instant.now());
 
         return MembershipCardVerifyResponse.builder()
                 .valid(valid)
@@ -313,7 +314,7 @@ public class MembershipCardService {
         byte[] content = storageService.read(objectKey);
 
         card.setDownloadedCount(card.getDownloadedCount() + 1);
-        card.setLastDownloadedAt(LocalDateTime.now());
+        card.setLastDownloadedAt(Instant.now());
         membershipCardRepository.save(card);
 
         audit(card, MembershipCardAuditEventType.DOWNLOADED,

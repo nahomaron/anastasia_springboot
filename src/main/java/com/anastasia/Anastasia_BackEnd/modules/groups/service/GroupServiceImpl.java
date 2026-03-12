@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -633,7 +634,7 @@ public class GroupServiceImpl implements GroupService {
                 )));
 
         joinRequest.setStatus(GroupJoinRequestStatus.CANCELLED);
-        joinRequest.setDecidedAt(LocalDateTime.now());
+        joinRequest.setDecidedAt(Instant.now());
         joinRequest.setDecidedBy(currentUserId);
 
         return toMyJoinRequestResponse(groupJoinRequestRepository.save(joinRequest));
@@ -654,7 +655,7 @@ public class GroupServiceImpl implements GroupService {
 
         joinRequest.setStatus(GroupJoinRequestStatus.APPROVED);
         joinRequest.setDecisionNote(normalizeDecisionNote(request));
-        joinRequest.setDecidedAt(LocalDateTime.now());
+        joinRequest.setDecidedAt(Instant.now());
         joinRequest.setDecidedBy(requireCurrentUserId());
 
         groupRepository.save(group);
@@ -675,7 +676,7 @@ public class GroupServiceImpl implements GroupService {
 
         joinRequest.setStatus(GroupJoinRequestStatus.REJECTED);
         joinRequest.setDecisionNote(normalizeDecisionNote(request));
-        joinRequest.setDecidedAt(LocalDateTime.now());
+        joinRequest.setDecidedAt(Instant.now());
         joinRequest.setDecidedBy(requireCurrentUserId());
 
         GroupJoinRequestEntity saved = groupJoinRequestRepository.save(joinRequest);
@@ -917,7 +918,7 @@ public class GroupServiceImpl implements GroupService {
                 .status(joinRequest.getStatus().name())
                 .decisionNote(joinRequest.getDecisionNote())
                 .requestedAt(joinRequest.getCreatedDate())
-                .decidedAt(joinRequest.getDecidedAt())
+                .decidedAt(joinRequest.getDecidedAt() == null ? null : LocalDateTime.ofInstant(joinRequest.getDecidedAt(), java.time.ZoneId.systemDefault()))
                 .decidedBy(joinRequest.getDecidedBy())
                 .build();
     }
