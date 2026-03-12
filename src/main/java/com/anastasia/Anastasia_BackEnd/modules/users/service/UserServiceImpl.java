@@ -292,7 +292,7 @@ public class UserServiceImpl implements UserService {
         boolean verified = recoveryEmailVerificationService.verifyCode(profile.getRecoveryEmail(), request.getCode());
         if (verified) {
             profile.setRecoveryEmailVerified(true);
-            profile.setRecoveryEmailVerifiedAt(java.time.LocalDateTime.now());
+            profile.setRecoveryEmailVerifiedAt(Instant.now());
             userProfileRepository.save(profile);
         }
         return verified;
@@ -412,7 +412,7 @@ public class UserServiceImpl implements UserService {
 
         String secret = TotpUtils.generateSecretBase32();
         profile.setTotpSecretBase32(secret);
-        profile.setTotpSetupAt(LocalDateTime.now());
+        profile.setTotpSetupAt(Instant.now());
         profile.setTwoFactorEnabled(false);
         profile.setTotpEnabledAt(null);
         userProfileRepository.save(profile);
@@ -440,7 +440,7 @@ public class UserServiceImpl implements UserService {
         }
 
         profile.setTwoFactorEnabled(true);
-        profile.setTotpEnabledAt(LocalDateTime.now());
+        profile.setTotpEnabledAt(Instant.now());
         userProfileRepository.save(profile);
 
         return generateAndStoreBackupCodes(user);
@@ -577,7 +577,7 @@ public class UserServiceImpl implements UserService {
 
         // Update the password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setLastPasswordChangedAt(LocalDateTime.now());
+        user.setLastPasswordChangedAt(Instant.now());
         user.setMustChangePassword(false);
         userRepository.save(user);
     }
@@ -1273,7 +1273,7 @@ public class UserServiceImpl implements UserService {
             codeEntities.add(UserTwoFactorBackupCodeEntity.builder()
                     .user(user)
                     .codeHash(passwordEncoder.encode(code))
-                    .createdAt(LocalDateTime.now())
+                    .createdAt(Instant.now())
                     .build());
         }
 

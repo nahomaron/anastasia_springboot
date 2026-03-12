@@ -294,7 +294,7 @@ public class AuthServiceImpl implements AuthService {
         if (!user.isVerified()) {
             throw new IllegalStateException(messageService.get("auth.account.notVerified", "User account is not verified."));
         }
-        user.setLastLoginAt(java.time.LocalDateTime.now());
+        user.setLastLoginAt(Instant.now());
         userRepository.save(user);
         touchStaffLoginAudit(user);
 
@@ -654,7 +654,7 @@ public class AuthServiceImpl implements AuthService {
 
         for (UserTwoFactorBackupCodeEntity backupCode : activeBackupCodes) {
             if (passwordEncoder.matches(normalizedBackupInput, backupCode.getCodeHash())) {
-                backupCode.setUsedAt(java.time.LocalDateTime.now());
+                backupCode.setUsedAt(Instant.now());
                 backupCodeRepository.save(backupCode);
                 return true;
             }

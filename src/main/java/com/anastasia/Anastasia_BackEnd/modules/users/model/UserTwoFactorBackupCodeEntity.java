@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.users.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -26,8 +26,8 @@ public class UserTwoFactorBackupCodeEntity {
     private String codeHash;
 
     @Column(name = "used_at")
-    private LocalDateTime usedAt;
+    private Instant usedAt;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 }

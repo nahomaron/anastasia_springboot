@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,7 +92,7 @@ public class StaffServiceImpl implements StaffService {
                 .verified(true)
                 .tenant(tenant)
                 .mustChangePassword(true)
-                .temporaryPasswordIssuedAt(LocalDateTime.now())
+                .temporaryPasswordIssuedAt(Instant.now())
                 .lastPasswordChangedAt(null)
                 .build();
         user = userRepository.save(user);
@@ -228,7 +229,7 @@ public class StaffServiceImpl implements StaffService {
         UserEntity user = staff.getUser();
         user.setPassword(passwordEncoder.encode(temporaryPassword));
         user.setMustChangePassword(true);
-        user.setTemporaryPasswordIssuedAt(LocalDateTime.now());
+        user.setTemporaryPasswordIssuedAt(Instant.now());
         user.setLastPasswordChangedAt(null);
         user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);

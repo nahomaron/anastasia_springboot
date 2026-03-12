@@ -16,6 +16,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -70,36 +71,36 @@ public class UserEntity{
     private String phoneNumber;
 
     @Column(name = "email_verified_at")
-    private LocalDateTime emailVerifiedAt;
+    private Instant emailVerifiedAt;
 
     @Column(name = "phone_verified_at")
-    private LocalDateTime phoneVerifiedAt;
+    private Instant phoneVerifiedAt;
 
     @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
+    private Instant lastLoginAt;
 
     @Column(name = "last_password_changed_at")
-    private LocalDateTime lastPasswordChangedAt;
+    private Instant lastPasswordChangedAt;
 
     @Builder.Default
     @Column(name = "must_change_password", nullable = false)
     private boolean mustChangePassword = false;
 
     @Column(name = "temporary_password_issued_at")
-    private LocalDateTime temporaryPasswordIssuedAt;
+    private Instant temporaryPasswordIssuedAt;
 
     @Column(name = "locked_at")
-    private LocalDateTime lockedAt;
+    private Instant lockedAt;
 
     @Column(name = "locked_until")
-    private LocalDateTime lockedUntil;
+    private Instant lockedUntil;
 
     @Builder.Default
     @Column(name = "failed_login_attempts", nullable = false)
     private int failedLoginAttempts = 0;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Builder.Default
     @Column(name = "timezone", nullable = false, length = 64)
@@ -172,7 +173,7 @@ public class UserEntity{
     public void setVerified(boolean verified) {
         if (verified) {
             if (this.emailVerifiedAt == null) {
-                this.emailVerifiedAt = LocalDateTime.now();
+                this.emailVerifiedAt = Instant.now();
             }
             if (this.status == null || this.status == UserStatus.PENDING_VERIFICATION) {
                 this.status = UserStatus.ACTIVE;
@@ -188,14 +189,14 @@ public class UserEntity{
 
     public boolean isAccountLocked() {
         return status == UserStatus.LOCKED
-                || (lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now()));
+                || (lockedUntil != null && lockedUntil.isAfter(Instant.now()));
     }
 
     public void setAccountLocked(boolean accountLocked) {
         if (accountLocked) {
             this.status = UserStatus.LOCKED;
             if (this.lockedAt == null) {
-                this.lockedAt = LocalDateTime.now();
+                this.lockedAt = Instant.now();
             }
             return;
         }
@@ -242,7 +243,7 @@ public class UserEntity{
         public B verified(boolean verified) {
             if (verified) {
                 if (this.emailVerifiedAt == null) {
-                    this.emailVerifiedAt = LocalDateTime.now();
+                    this.emailVerifiedAt = Instant.now();
                 }
                 if (this.status == null || this.status == UserStatus.PENDING_VERIFICATION) {
                     this.status = UserStatus.ACTIVE;
@@ -260,7 +261,7 @@ public class UserEntity{
             if (accountLocked) {
                 this.status = UserStatus.LOCKED;
                 if (this.lockedAt == null) {
-                    this.lockedAt = LocalDateTime.now();
+                    this.lockedAt = Instant.now();
                 }
             } else if (this.status == null) {
                 this.status = UserStatus.PENDING_VERIFICATION;
