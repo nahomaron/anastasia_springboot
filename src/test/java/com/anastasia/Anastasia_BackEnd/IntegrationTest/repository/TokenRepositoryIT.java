@@ -44,7 +44,7 @@ class TokenRepositoryIT extends ServiceIntegrationTestBase {
                 .tokenType(TokenType.BEARER)
                 .expired(false)
                 .revoked(false)
-                .expiryDate(Instant.now().minusSeconds(120))
+                .expiresAt(Instant.now().minusSeconds(120))
                 .user(user)
                 .build());
 

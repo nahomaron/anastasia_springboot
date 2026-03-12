@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,5 +23,5 @@ public interface LoginTwoFactorChallengeRepository extends JpaRepository<LoginTw
     @Transactional
     @Modifying
     @Query("delete from LoginTwoFactorChallengeEntity c where c.expiresAt < :now or c.consumedAt is not null")
-    void deleteExpiredOrConsumed(@Param("now") LocalDateTime now);
+    void deleteExpiredOrConsumed(@Param("now") Instant now);
 }

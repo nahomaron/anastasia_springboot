@@ -202,6 +202,8 @@ public class MemberTransferServiceImpl implements MemberTransferService {
         for (Token token : tokens) {
             token.setExpired(true);
             token.setRevoked(true);
+            token.setExpiredAt(Instant.now());
+            token.setRevokedAt(Instant.now());
         }
         tokenRepository.saveAll(tokens);
     }

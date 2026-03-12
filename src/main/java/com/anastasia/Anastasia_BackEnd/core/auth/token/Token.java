@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -29,22 +28,37 @@ public class Token {
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 
-    private LocalDateTime validatedAt;
+    private Instant validatedAt;
 
-    private Instant expiryDate;
+    private Instant revokedAt;
+
+    private Instant expiredAt;
+
+    private Instant deletedAt;
 
     private boolean expired;
 
     private boolean revoked;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-}
+    public Instant getExpiryDate() {
+        return expiresAt;
+    }
 
+    public void setExpiryDate(Instant expiryDate) {
+        this.expiresAt = expiryDate;
+    }
+
+}

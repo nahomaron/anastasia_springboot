@@ -84,6 +84,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -468,8 +469,8 @@ public class UserServiceImpl implements UserService {
                 .map(token -> UserSessionResponse.builder()
                         .sessionId(token.getId())
                         .tokenType(token.getTokenType().name())
-                        .createdAt(token.getCreatedAt())
-                        .expiresAt(token.getExpiryDate() == null ? null : LocalDateTime.ofInstant(token.getExpiryDate(), ZoneId.systemDefault()))
+                        .createdAt(token.getCreatedAt() == null ? null : LocalDateTime.ofInstant(token.getCreatedAt(), ZoneId.systemDefault()))
+                        .expiresAt(token.getExpiresAt() == null ? null : LocalDateTime.ofInstant(token.getExpiresAt(), ZoneId.systemDefault()))
                         .revoked(token.isRevoked())
                         .expired(token.isExpired())
                         .current(currentBearerToken != null && currentBearerToken.equals(token.getToken()))
@@ -485,6 +486,8 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Session not found"));
         token.setRevoked(true);
         token.setExpired(true);
+        token.setRevokedAt(Instant.now());
+        token.setExpiredAt(Instant.now());
         tokenRepository.save(token);
     }
 
@@ -499,6 +502,8 @@ public class UserServiceImpl implements UserService {
             }
             token.setRevoked(true);
             token.setExpired(true);
+            token.setRevokedAt(Instant.now());
+            token.setExpiredAt(Instant.now());
         }
         tokenRepository.saveAll(tokens);
     }

@@ -52,7 +52,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -140,7 +140,7 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
         }
         if (savedToken.getValidatedAt() == null) {
-            savedToken.setValidatedAt(LocalDateTime.now());
+            savedToken.setValidatedAt(Instant.now());
             tokenRepository.save(savedToken);
         }
 
@@ -166,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
 
 
         if(!user.isVerified()){
-            if (user.getCreatedDate().isBefore(LocalDateTime.now().minusHours(24))) {
+            if (user.getCreatedDate().isBefore(java.time.LocalDateTime.now().minusHours(24))) {
                 // The user was created more than 24 hours ago
                 sendValidationEmail(user);
                 throw new RuntimeException(messageService.get(
@@ -257,7 +257,7 @@ public class AuthServiceImpl implements AuthService {
         if (challenge.getConsumedAt() != null) {
             throw new IllegalArgumentException(messageService.get("auth.twoFactor.challenge.used", "Two-factor challenge already used."));
         }
-        if (challenge.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (challenge.getExpiresAt().isBefore(Instant.now())) {
             throw new IllegalArgumentException(messageService.get("auth.twoFactor.challenge.expired", "Two-factor challenge expired. Please login again."));
         }
         if (challenge.getAttemptCount() >= LOGIN_2FA_MAX_ATTEMPTS) {
@@ -272,12 +272,13 @@ public class AuthServiceImpl implements AuthService {
         boolean valid = verifyTwoFactorInput(profile, user, input);
 
         challenge.setAttemptCount(challenge.getAttemptCount() + 1);
+        challenge.setLastAttemptAt(Instant.now());
         if (!valid) {
             loginTwoFactorChallengeRepository.save(challenge);
             throw new IllegalArgumentException(messageService.get("auth.verificationCode.invalid", "Invalid verification code."));
         }
 
-        challenge.setConsumedAt(LocalDateTime.now());
+        challenge.setConsumedAt(Instant.now());
         loginTwoFactorChallengeRepository.save(challenge);
         return issueSessionForUser(user.getUuid());
     }
@@ -293,7 +294,7 @@ public class AuthServiceImpl implements AuthService {
         if (!user.isVerified()) {
             throw new IllegalStateException(messageService.get("auth.account.notVerified", "User account is not verified."));
         }
-        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginAt(java.time.LocalDateTime.now());
         userRepository.save(user);
         touchStaffLoginAudit(user);
 
@@ -326,7 +327,7 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         boolean changed = false;
 
         if (staffProfile.getInviteAcceptedAt() == null) {
@@ -399,13 +400,15 @@ public class AuthServiceImpl implements AuthService {
                 .forEach(token -> {
                     token.setExpired(true);
                     token.setRevoked(true);
+                    token.setExpiredAt(Instant.now());
+                    token.setRevokedAt(Instant.now());
                 });
 
         Token resetToken = Token.builder()
                 .token(resetTokenValue)
                 .tokenType(TokenType.PASSWORD_RESET) // Assign a specific type
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusHours(1)) // Reset token valid for 1 hour
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(60L * 60L))
                 .user(user)
                 .build();
         tokenRepository.save(resetToken);
@@ -441,7 +444,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Check if the token has expired
-        if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
+        if (Instant.now().isAfter(savedToken.getExpiresAt())) {
             // Optionally, you could resend a new reset email here or prompt the user to request a new one
             throw new RuntimeException(messageService.get("auth.passwordReset.expired", "Password reset token has expired. Please request a new one."));
         }
@@ -462,9 +465,11 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         // Invalidate the reset token after use
-        savedToken.setValidatedAt(LocalDateTime.now());
+        savedToken.setValidatedAt(Instant.now());
         savedToken.setExpired(true);
         savedToken.setRevoked(true);
+        savedToken.setExpiredAt(Instant.now());
+        savedToken.setRevokedAt(Instant.now());
         tokenRepository.save(savedToken);
 
         System.out.println("Password reset successfully for user: " + user.getEmail());
@@ -492,8 +497,8 @@ public class AuthServiceImpl implements AuthService {
                 .token(theToken)
                 .user(user)
                 .tokenType(tokenType)
-                .createdAt(LocalDateTime.now())
-                .expiryDate(expiry)
+                .createdAt(Instant.now())
+                .expiresAt(expiry)
                 .expired(false)
                 .revoked(false)
                 .build();
@@ -511,6 +516,8 @@ public class AuthServiceImpl implements AuthService {
             if(token.getTokenType() == TokenType.BEARER){
                 token.setRevoked(true);
                 token.setExpired(true);
+                token.setRevokedAt(Instant.now());
+                token.setExpiredAt(Instant.now());
             }
         });
         tokenRepository.saveAll(validUserTokens);
@@ -609,15 +616,15 @@ public class AuthServiceImpl implements AuthService {
 
     private AuthenticationResponse createTwoFactorChallenge(UserEntity user) {
         loginTwoFactorChallengeRepository.deleteByUserId(user.getUuid());
-        loginTwoFactorChallengeRepository.deleteExpiredOrConsumed(LocalDateTime.now());
+        loginTwoFactorChallengeRepository.deleteExpiredOrConsumed(Instant.now());
 
         String challengeToken = UUID.randomUUID().toString() + UUID.randomUUID().toString().replace("-", "");
         LoginTwoFactorChallengeEntity challenge = LoginTwoFactorChallengeEntity.builder()
                 .challengeToken(challengeToken)
                 .user(user)
                 .attemptCount(0)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(LOGIN_2FA_CHALLENGE_MINUTES))
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(LOGIN_2FA_CHALLENGE_MINUTES * 60L))
                 .build();
         loginTwoFactorChallengeRepository.save(challenge);
 
@@ -647,7 +654,7 @@ public class AuthServiceImpl implements AuthService {
 
         for (UserTwoFactorBackupCodeEntity backupCode : activeBackupCodes) {
             if (passwordEncoder.matches(normalizedBackupInput, backupCode.getCodeHash())) {
-                backupCode.setUsedAt(LocalDateTime.now());
+                backupCode.setUsedAt(java.time.LocalDateTime.now());
                 backupCodeRepository.save(backupCode);
                 return true;
             }
@@ -687,8 +694,8 @@ public class AuthServiceImpl implements AuthService {
         var token = Token.builder()
                 .token(generatedToken)
                 .tokenType(TokenType.ACTIVATION)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(15 * 60L))
                 .user(user)
                 .build();
 

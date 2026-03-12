@@ -4,7 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -24,14 +24,21 @@ public class LoginTwoFactorChallengeEntity {
     private UserEntity user;
 
     @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 
     @Column(name = "consumed_at")
-    private LocalDateTime consumedAt;
+    private Instant consumedAt;
 
     @Column(name = "attempt_count", nullable = false)
     private int attemptCount;
 
+    @Column(name = "last_attempt_at")
+    private Instant lastAttemptAt;
+
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 }
