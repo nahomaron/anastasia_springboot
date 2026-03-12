@@ -1,64 +1,55 @@
 package com.anastasia.Anastasia_BackEnd.modules.common;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @MappedSuperclass
-public abstract class Auditable {
+public abstract class Auditable extends AuditMetadata {
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-
-    @LastModifiedDate
-    @Column(nullable = false)
-    private LocalDateTime lastModifiedDate;
-
-    @CreatedBy
-    @Column(nullable = false, updatable = false)
-    private UUID createdBy;
-
-    @LastModifiedBy
-    @Column(nullable = false)
-    private UUID lastModifiedBy;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdDate == null) {
-            createdDate = LocalDateTime.now();
-        }
-        if (lastModifiedDate == null) {
-            lastModifiedDate = createdDate;
-        }
-        if (lastModifiedBy == null) {
-            lastModifiedBy = createdBy;
-        }
+    protected Auditable() {
+        super();
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        if (lastModifiedDate == null) {
-            lastModifiedDate = LocalDateTime.now();
-        }
-        if (lastModifiedBy == null) {
-            lastModifiedBy = createdBy;
-        }
+    public LocalDateTime getCreatedDate() {
+        return toLocalDateTime(getCreatedAt());
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        setCreatedAt(toInstant(createdDate));
+    }
+
+    public LocalDateTime getLastModifiedDate() {
+        return toLocalDateTime(getUpdatedAt());
+    }
+
+    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
+        setUpdatedAt(toInstant(lastModifiedDate));
+    }
+
+    public UUID getLastModifiedBy() {
+        return getUpdatedBy();
+    }
+
+    public void setLastModifiedBy(UUID lastModifiedBy) {
+        setUpdatedBy(lastModifiedBy);
+    }
+
+    private LocalDateTime toLocalDateTime(Instant value) {
+        return value == null ? null : LocalDateTime.ofInstant(value, java.time.ZoneOffset.UTC);
+    }
+
+    private Instant toInstant(LocalDateTime value) {
+        return value == null ? null : value.toInstant(java.time.ZoneOffset.UTC);
     }
 }

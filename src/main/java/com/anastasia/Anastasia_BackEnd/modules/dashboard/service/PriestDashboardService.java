@@ -76,7 +76,7 @@ public class PriestDashboardService {
     }
 
     private List<MemberOverviewItem> buildRecentMembers(UUID tenantId, String priestNumber) {
-        var page = PageRequest.of(0, RECENT_LIMIT, Sort.by(Sort.Direction.DESC, "createdDate"));
+        var page = PageRequest.of(0, RECENT_LIMIT, Sort.by(Sort.Direction.DESC, "createdAt"));
         List<MemberOverviewItem> adults = memberRepository.findByTenantIdAndPriestNumber(tenantId, priestNumber, page)
                 .map(this::toMemberOverview)
                 .getContent();
