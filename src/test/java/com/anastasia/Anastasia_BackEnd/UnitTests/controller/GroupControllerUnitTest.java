@@ -22,6 +22,9 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.List;
 import java.util.Optional;
@@ -107,7 +110,7 @@ class GroupControllerUnitTest {
 
         ResponseEntity<GroupResponse> response = groupController.getGroup(5L, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(groupResponse);
     }
 
@@ -167,6 +170,55 @@ class GroupControllerUnitTest {
         when(groupService.addUsersToGroup(5L, request)).thenReturn(expected);
 
         ResponseEntity<AddUsersToGroupResponse> response = groupController.addUsersToGroup(5L, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expected);
+    }
+
+    @Test
+    void searchCandidatesForGroup_adminShouldReturnCandidates() {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                "admin",
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
+        List<GroupUserCandidateDTO> expected = List.of(
+                GroupUserCandidateDTO.builder().uuid(UUID.randomUUID()).fullName("John Doe").alreadyInGroup(false).build()
+        );
+        when(groupService.searchGroupUserCandidates(5L, "john")).thenReturn(expected);
+
+        ResponseEntity<List<GroupUserCandidateDTO>> response =
+                groupController.searchCandidatesForGroup(5L, "john", authentication);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expected);
+    }
+
+    @Test
+    void submitJoinRequest_shouldReturnCreated() {
+        GroupJoinRequestResponse expected = GroupJoinRequestResponse.builder()
+                .id(1L)
+                .groupId(5L)
+                .status("PENDING")
+                .build();
+        when(groupService.submitJoinRequest(5L)).thenReturn(expected);
+
+        ResponseEntity<GroupJoinRequestResponse> response = groupController.submitJoinRequest(5L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isEqualTo(expected);
+    }
+
+    @Test
+    void cancelMyJoinRequest_shouldReturnOk() {
+        MyGroupJoinRequestResponse expected = MyGroupJoinRequestResponse.builder()
+                .groupId(5L)
+                .requestId(1L)
+                .status("CANCELLED")
+                .build();
+        when(groupService.cancelMyJoinRequest(5L)).thenReturn(expected);
+
+        ResponseEntity<MyGroupJoinRequestResponse> response = groupController.cancelMyJoinRequest(5L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expected);

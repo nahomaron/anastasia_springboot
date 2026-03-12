@@ -1,8 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.modules.groups.GroupJoinRequestRepository;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupJoinRequestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupJoinRequestStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.GroupMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
@@ -17,12 +21,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.*;
 
@@ -39,9 +47,13 @@ class GroupServiceUnitTest {
     @Mock
     private GroupRepository groupRepository;
     @Mock
+    private GroupJoinRequestRepository groupJoinRequestRepository;
+    @Mock
     private UserRepository userRepository;
     @Mock
     private ChurchRepository churchRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private GroupServiceImpl groupService;
@@ -71,10 +83,12 @@ class GroupServiceUnitTest {
     @AfterEach
     void tearDown() {
         TenantContext.clear();
+        SecurityContextHolder.clearContext();
     }
 
     @Test
-    void createGroup_assignsTenantUsersAndManagers() {
+    void createGroup_assignsCreatorAndManagersAsMembers() {
+        UUID creatorId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
 
@@ -94,23 +108,31 @@ class GroupServiceUnitTest {
 
         UserEntity user = userEntity(userId, tenantId);
         UserEntity manager = userEntity(managerId, tenantId);
+        UserEntity creator = userEntity(creatorId, tenantId);
 
         when(groupRepository.existsByGroupNameAndTenantId("New Group", tenantId)).thenReturn(false);
         when(groupMapper.groupDTOToEntity(groupDTO)).thenReturn(mappedEntity);
         when(churchRepository.findByTenantId(tenantId)).thenReturn(Optional.of(church));
         when(userRepository.findAllByUuidIn(Set.of(userId))).thenReturn(List.of(user));
         when(userRepository.findAllByUuidIn(Set.of(managerId))).thenReturn(List.of(manager));
+        when(userRepository.findById(creatorId)).thenReturn(Optional.of(creator));
         when(groupRepository.save(any(GroupEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(groupMapper.groupEntityToResponse(any(GroupEntity.class)))
                 .thenReturn(GroupResponse.builder().groupId(1L).groupName("New Group").build());
 
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(new UserPrincipal(creator), null, List.of())
+        );
+
         GroupResponse result = groupService.createGroup(groupDTO);
 
         assertThat(result.getGroupName()).isEqualTo("New Group");
-        verify(groupRepository).save(argThat(saved ->
-                saved.getTenantId().equals(tenantId)
-                        && saved.getUsers().contains(user)
-                        && saved.getManagers().contains(manager)));
+        ArgumentCaptor<GroupEntity> captor = ArgumentCaptor.forClass(GroupEntity.class);
+        verify(groupRepository).save(captor.capture());
+        GroupEntity saved = captor.getValue();
+        assertThat(saved.getTenantId()).isEqualTo(tenantId);
+        assertThat(saved.getUsers()).contains(user, manager, creator);
+        assertThat(saved.getManagers()).contains(manager);
     }
 
     @Test
@@ -205,6 +227,7 @@ class GroupServiceUnitTest {
         assertThat(response.getAddedManagerIds()).containsExactly(managerId);
         assertThat(response.getSkippedManagerIds()).containsExactly(existingManagerId);
         assertThat(response.getNotFoundManagerIds()).containsExactly(missingManagerId);
+        assertThat(existingGroup.getUsers()).contains(newManager, existingManager);
         verify(groupRepository).save(existingGroup);
     }
 
@@ -265,6 +288,138 @@ class GroupServiceUnitTest {
         assertThat(response.getSkippedEmails()).containsExactly("member@example.com");
         assertThat(response.getNotFoundEmails()).containsExactlyInAnyOrder("missing@example.com", "foreign@example.com");
         verify(groupRepository).saveAndFlush(existingGroup);
+    }
+
+    @Test
+    void searchGroupUserCandidates_returnsReducedMatchesWithExistingState() {
+        UUID existingMemberId = UUID.randomUUID();
+        UserEntity existingMember = userEntity(existingMemberId, tenantId);
+        existingGroup.addUser(existingMember);
+
+        SimpleUserDTO existingCandidate = SimpleUserDTO.builder()
+                .uuid(existingMemberId)
+                .fullName("Existing Member")
+                .email("existing@example.com")
+                .build();
+        SimpleUserDTO newCandidate = SimpleUserDTO.builder()
+                .uuid(UUID.randomUUID())
+                .fullName("New Member")
+                .email("new@example.com")
+                .build();
+
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(userRepository.searchSimpleUsersByChurchId(church.getChurchId(), "member"))
+                .thenReturn(List.of(existingCandidate, newCandidate));
+
+        List<GroupUserCandidateDTO> response =
+                groupService.searchGroupUserCandidates(existingGroup.getGroupId(), "member");
+
+        assertThat(response).hasSize(2);
+        assertThat(response).anySatisfy(candidate -> {
+            assertThat(candidate.getUuid()).isEqualTo(existingMemberId);
+            assertThat(candidate.isAlreadyInGroup()).isTrue();
+        });
+        assertThat(response).anySatisfy(candidate -> {
+            assertThat(candidate.getUuid()).isEqualTo(newCandidate.uuid());
+            assertThat(candidate.isAlreadyInGroup()).isFalse();
+        });
+    }
+
+    @Test
+    void submitJoinRequest_createsPendingRequestForPublicGroup() {
+        UUID requesterId = UUID.randomUUID();
+        UserEntity requester = userEntity(requesterId, tenantId);
+        existingGroup.setVisibility("PUBLIC_REQUEST_TO_JOIN");
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(new UserPrincipal(requester), null, List.of())
+        );
+
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
+        when(groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+                eq(existingGroup.getGroupId()),
+                eq(requesterId),
+                anyCollection()
+        )).thenReturn(Optional.empty());
+        when(groupJoinRequestRepository.save(any(GroupJoinRequestEntity.class))).thenAnswer(invocation -> {
+            GroupJoinRequestEntity entity = invocation.getArgument(0);
+            entity.setId(99L);
+            entity.setCreatedDate(java.time.LocalDateTime.now());
+            return entity;
+        });
+
+        GroupJoinRequestResponse response = groupService.submitJoinRequest(existingGroup.getGroupId());
+
+        assertThat(response.getGroupId()).isEqualTo(existingGroup.getGroupId());
+        assertThat(response.getRequesterId()).isEqualTo(requesterId);
+        assertThat(response.getStatus()).isEqualTo(GroupJoinRequestStatus.PENDING.name());
+    }
+
+    @Test
+    void approveJoinRequest_addsRequesterToGroup() {
+        UUID managerId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
+        UserEntity manager = userEntity(managerId, tenantId);
+        UserEntity requester = userEntity(requesterId, tenantId);
+        existingGroup.getManagers().add(manager);
+
+        GroupJoinRequestEntity joinRequest = GroupJoinRequestEntity.builder()
+                .id(55L)
+                .tenantId(tenantId)
+                .group(existingGroup)
+                .requester(requester)
+                .status(GroupJoinRequestStatus.PENDING)
+                .build();
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(new UserPrincipal(manager), null, List.of())
+        );
+
+        when(groupJoinRequestRepository.findById(55L)).thenReturn(Optional.of(joinRequest));
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(groupRepository.save(existingGroup)).thenReturn(existingGroup);
+        when(groupJoinRequestRepository.save(joinRequest)).thenReturn(joinRequest);
+
+        GroupJoinRequestResponse response = groupService.approveJoinRequest(
+                existingGroup.getGroupId(),
+                55L,
+                GroupJoinRequestDecisionRequest.builder().note("Approved").build()
+        );
+
+        assertThat(response.getStatus()).isEqualTo(GroupJoinRequestStatus.APPROVED.name());
+        assertThat(existingGroup.getUsers()).contains(requester);
+        assertThat(joinRequest.getDecisionNote()).isEqualTo("Approved");
+    }
+
+    @Test
+    void cancelMyJoinRequest_marksPendingRequestAsCancelled() {
+        UUID requesterId = UUID.randomUUID();
+        UserEntity requester = userEntity(requesterId, tenantId);
+        GroupJoinRequestEntity joinRequest = GroupJoinRequestEntity.builder()
+                .id(77L)
+                .tenantId(tenantId)
+                .group(existingGroup)
+                .requester(requester)
+                .status(GroupJoinRequestStatus.PENDING)
+                .build();
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(new UserPrincipal(requester), null, List.of())
+        );
+
+        when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
+        when(groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+                eq(existingGroup.getGroupId()),
+                eq(requesterId),
+                anyCollection()
+        )).thenReturn(Optional.of(joinRequest));
+        when(groupJoinRequestRepository.save(joinRequest)).thenReturn(joinRequest);
+
+        MyGroupJoinRequestResponse response = groupService.cancelMyJoinRequest(existingGroup.getGroupId());
+
+        assertThat(response.getStatus()).isEqualTo(GroupJoinRequestStatus.CANCELLED.name());
+        assertThat(joinRequest.getStatus()).isEqualTo(GroupJoinRequestStatus.CANCELLED);
     }
 
     @Test

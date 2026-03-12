@@ -49,5 +49,23 @@ public interface GroupService {
 
     List<GroupUserCandidateDTO> getGroupUserStatus(Long groupId);
 
+    List<GroupUserCandidateDTO> searchGroupUserCandidates(Long groupId, String query);
+
+    boolean canManageGroup(Long groupId, UUID userId);
+
+    GroupJoinRequestResponse submitJoinRequest(Long groupId);
+
+    List<GroupJoinRequestResponse> listJoinRequests(Long groupId);
+
+    Optional<MyGroupJoinRequestResponse> getMyJoinRequestStatus(Long groupId);
+
+    List<MyGroupJoinRequestResponse> listMyPendingJoinRequests();
+
+    MyGroupJoinRequestResponse cancelMyJoinRequest(Long groupId);
+
+    GroupJoinRequestResponse approveJoinRequest(Long groupId, Long requestId, GroupJoinRequestDecisionRequest request);
+
+    GroupJoinRequestResponse rejectJoinRequest(Long groupId, Long requestId, GroupJoinRequestDecisionRequest request);
+
     BatchInviteResponse batchInviteUsersToGroup(Long groupId, @Valid BatchInviteRequest request);
 }
