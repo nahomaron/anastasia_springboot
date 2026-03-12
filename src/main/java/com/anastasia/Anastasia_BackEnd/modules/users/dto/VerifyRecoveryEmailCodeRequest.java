@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class VerifyRecoveryEmailCodeRequest {
 
-    @NotBlank(message = "Verification code is required")
-    @Pattern(regexp = "^\\d{6}$", message = "Verification code must be exactly 6 digits")
+    @NotBlank(message = "validation.auth.verificationCode.required")
+    @Pattern(regexp = "^\\d{6}$", message = "validation.auth.verificationCode.sixDigits")
     private String code;
 }

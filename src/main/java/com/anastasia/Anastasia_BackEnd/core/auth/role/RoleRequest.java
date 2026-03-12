@@ -16,8 +16,8 @@ import java.util.Set;
 @Builder
 public class RoleRequest {
 
-    @NotBlank(message = "Role name is required")
-    @NotEmpty(message = "Role name is required")
+    @NotBlank(message = "validation.role.name.required")
+    @NotEmpty(message = "validation.role.name.required")
     private String roleName;
 
     private String description;

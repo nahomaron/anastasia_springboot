@@ -14,6 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class RemoveUsersFromGroupRequest {
-    @NotEmpty(message = "At least one user identifier is required")
+    @NotEmpty(message = "{validation.groups.removeUsers.required}")
     private List<UUID> userIds;
 }

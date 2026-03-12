@@ -6,6 +6,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 
+import java.util.Locale;
 import java.util.Map;
 
 @Component
@@ -18,7 +19,7 @@ public class TemplateRenderer {
     }
 
     public String render(TemplateResolution resolution, Map<String, Object> variables) {
-        Context context = new Context();
+        Context context = new Context(resolveLocale(variables));
         context.setVariables(variables);
 
         if (resolution.hasInlineContent()) {
@@ -28,5 +29,16 @@ public class TemplateRenderer {
         }
 
         return templateEngine.process(resolution.identifier(), context);
+    }
+
+    private Locale resolveLocale(Map<String, Object> variables) {
+        Object localeValue = variables.get("locale");
+        if (localeValue instanceof Locale locale) {
+            return locale;
+        }
+        if (localeValue instanceof String localeTag && !localeTag.isBlank()) {
+            return Locale.forLanguageTag(localeTag);
+        }
+        return Locale.getDefault();
     }
 }

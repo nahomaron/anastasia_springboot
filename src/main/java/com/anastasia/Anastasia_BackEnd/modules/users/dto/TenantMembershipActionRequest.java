@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class TenantMembershipActionRequest {
-    @NotNull(message = "Action is required")
+    @NotNull(message = "validation.user.membership.action.required")
     private TenantMembershipAction action;
 }

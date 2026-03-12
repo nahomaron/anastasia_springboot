@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class VerifyTotpSetupRequest {
 
-    @NotBlank(message = "Verification code is required")
-    @Pattern(regexp = "^\\d{6}$", message = "Verification code must be a 6-digit number")
+    @NotBlank(message = "validation.auth.verificationCode.required")
+    @Pattern(regexp = "^\\d{6}$", message = "validation.auth.verificationCode.totp")
     private String code;
 }

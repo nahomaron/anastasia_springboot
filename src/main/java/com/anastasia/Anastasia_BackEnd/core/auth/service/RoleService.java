@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.PermissionRepository;
@@ -41,6 +42,7 @@ public class RoleService {
     private final PermissionRepository permissionRepository;
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
+    private final LocalizedMessageService messageService;
 
     @Transactional(readOnly = true)
     public List<RoleResponse> listRoles() {
@@ -56,11 +58,11 @@ public class RoleService {
         String normalizedRoleName = normalizeRoleName(roleRequest.getRoleName());
 
         if (isSystemRoleName(normalizedRoleName)) {
-            throw new IllegalArgumentException("System roles cannot be created or modified");
+            throw new IllegalArgumentException(messageService.get("role.system.createForbidden", "System roles cannot be created or modified"));
         }
 
         if (roleRepository.existsByRoleNameAndTenantId(normalizedRoleName, tenantId)) {
-            throw new IllegalArgumentException("Role already exists for this tenant");
+            throw new IllegalArgumentException(messageService.get("role.alreadyExists", "Role already exists for this tenant"));
         }
 
         TenantEntity tenant = tenantRepository.findById(tenantId)
@@ -86,21 +88,21 @@ public class RoleService {
                 .orElseThrow(() -> new EntityNotFoundException("Role not found"));
 
         if (isSystemRole(role)) {
-            throw new IllegalArgumentException("System roles are not editable");
+            throw new IllegalArgumentException(messageService.get("role.system.editForbidden", "System roles are not editable"));
         }
 
         if (!tenantId.equals(role.getTenantId())) {
-            throw new EntityNotFoundException("Role not found in tenant");
+            throw new EntityNotFoundException(messageService.get("role.notFoundInTenant", "Role not found in tenant"));
         }
 
         String normalizedRoleName = normalizeRoleName(roleRequest.getRoleName());
         if (!normalizedRoleName.equals(role.getRoleName())
                 && roleRepository.existsByRoleNameAndTenantId(normalizedRoleName, tenantId)) {
-            throw new IllegalArgumentException("Role name already exists for this tenant");
+            throw new IllegalArgumentException(messageService.get("role.nameAlreadyExists", "Role name already exists for this tenant"));
         }
 
         if (isSystemRoleName(normalizedRoleName)) {
-            throw new IllegalArgumentException("System role names are reserved");
+            throw new IllegalArgumentException(messageService.get("role.system.nameReserved", "System role names are reserved"));
         }
 
         role.setRoleName(normalizedRoleName);
@@ -118,11 +120,11 @@ public class RoleService {
                 .orElseThrow(() -> new EntityNotFoundException("Role not found"));
 
         if (isSystemRole(role)) {
-            throw new IllegalArgumentException("System roles cannot be deleted");
+            throw new IllegalArgumentException(messageService.get("role.system.deleteForbidden", "System roles cannot be deleted"));
         }
 
         if (!tenantId.equals(role.getTenantId())) {
-            throw new EntityNotFoundException("Role not found in tenant");
+            throw new EntityNotFoundException(messageService.get("role.notFoundInTenant", "Role not found in tenant"));
         }
 
         roleRepository.delete(role);
@@ -167,7 +169,7 @@ public class RoleService {
 
     private String normalizeRoleName(String roleName) {
         if (roleName == null || roleName.isBlank()) {
-            throw new IllegalArgumentException("Role name is required");
+            throw new IllegalArgumentException(messageService.get("validation.role.name.required", "Role name is required"));
         }
         return roleName.trim().toUpperCase(Locale.ROOT);
     }
@@ -175,7 +177,7 @@ public class RoleService {
     private UUID requireTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID is not set in the context");
+            throw new IllegalStateException(messageService.get("tenant.context.missing", "Tenant ID is not set in the context"));
         }
         return tenantId;
     }

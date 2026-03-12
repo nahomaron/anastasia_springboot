@@ -1,7 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.modules.groups.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.groups.GroupRepository;
+import com.anastasia.Anastasia_BackEnd.modules.groups.GroupJoinRequestRepository;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.*;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.GroupMapper;
@@ -19,14 +25,19 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,8 +54,11 @@ public class GroupServiceImpl implements GroupService {
 
     private final GroupMapper groupMapper;
     private final GroupRepository groupRepository;
+    private final GroupJoinRequestRepository groupJoinRequestRepository;
     private final UserRepository userRepository;
     private final ChurchRepository churchRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final LocalizedMessageService messageService;
 
     @Override
     public GroupEntity convertToEntity(GroupDTO groupDTO) {
@@ -61,13 +75,19 @@ public class GroupServiceImpl implements GroupService {
         UUID tenantId = requireTenantId();
 
         if (groupRepository.existsByGroupNameAndTenantId(groupDTO.getGroupName(), tenantId)) {
-            throw new EntityExistsException("Group name already exists for this tenant");
+            throw new EntityExistsException(messageService.get(
+                    "groups.name.duplicate",
+                    "Group name already exists for this tenant"
+            ));
         }
 
         GroupEntity groupEntity = groupMapper.groupDTOToEntity(groupDTO);
 
         ChurchEntity church = churchRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> new EntityNotFoundException("Church not found for tenant"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "groups.church.notFoundForTenant",
+                        "Church not found for tenant"
+                )));
 
         groupEntity.setTenantId(tenantId);
         groupEntity.setChurch(church);
@@ -77,7 +97,13 @@ public class GroupServiceImpl implements GroupService {
         loadUsersForTenant(toNonNullSet(groupDTO.getUsers()), tenantId)
                 .forEach(groupEntity::addUser);
 
-        groupEntity.getManagers().addAll(loadUsersForTenant(toNonNullSet(groupDTO.getManagers()), tenantId));
+        loadUsersForTenant(toNonNullSet(groupDTO.getManagers()), tenantId)
+                .forEach(manager -> addManagerAsMember(groupEntity, manager));
+
+        resolveCurrentUserId()
+                .flatMap(userRepository::findById)
+                .filter(user -> belongsToTenant(user, tenantId))
+                .ifPresent(groupEntity::addUser);
 
         GroupEntity savedGroup = groupRepository.save(groupEntity);
 
@@ -143,7 +169,10 @@ public class GroupServiceImpl implements GroupService {
 
         if (StringUtils.hasText(request.getGroupName()) && !request.getGroupName().equals(group.getGroupName())) {
             if (groupRepository.existsByGroupNameAndTenantId(request.getGroupName(), tenantId)) {
-                throw new EntityExistsException("Group name already exists for this tenant");
+                throw new EntityExistsException(messageService.get(
+                        "groups.name.duplicate",
+                        "Group name already exists for this tenant"
+                ));
             }
             group.setGroupName(request.getGroupName());
         }
@@ -155,7 +184,7 @@ public class GroupServiceImpl implements GroupService {
         if (request.getManagers() != null) {
             List<UserEntity> managers = loadUsersForTenant(request.getManagers(), tenantId);
             group.getManagers().clear();
-            group.getManagers().addAll(managers);
+            managers.forEach(manager -> addManagerAsMember(group, manager));
         }
 
         if (request.getUsers() != null) {
@@ -163,6 +192,8 @@ public class GroupServiceImpl implements GroupService {
             group.getUsers().clear();
             users.forEach(group::addUser);
         }
+
+        group.getManagers().forEach(group::addUser);
 
         GroupEntity savedGroup = groupRepository.save(group);
         return groupMapper.groupEntityToResponse(savedGroup);
@@ -178,7 +209,10 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public AddUsersToGroupResponse addUsersToGroup(Long groupId, AddUsersToGroupRequest request) {
         if (request == null || request.getUserIds() == null || request.getUserIds().isEmpty()) {
-            throw new IllegalArgumentException(USERS_REQUIRED_MESSAGE);
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.users.required",
+                    USERS_REQUIRED_MESSAGE
+            ));
         }
 
         GroupEntity group = loadGroupForTenant(groupId);
@@ -237,7 +271,10 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public RemoveUsersFromGroupResponse removeMembersFromGroup(Long groupId, RemoveUsersFromGroupRequest request) {
         if (request == null || request.getUserIds() == null || request.getUserIds().isEmpty()) {
-            throw new IllegalArgumentException(USERS_REQUIRED_MESSAGE);
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.users.required",
+                    USERS_REQUIRED_MESSAGE
+            ));
         }
 
         GroupEntity group = loadGroupForTenant(groupId);
@@ -292,7 +329,10 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public AddManagersResponse addManagersToGroup(Long groupId, GroupManagerRequest request) {
         if (request == null || request.getManagerIds() == null || request.getManagerIds().isEmpty()) {
-            throw new IllegalArgumentException("Manager identifiers cannot be empty");
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.managers.required",
+                    "Manager identifiers cannot be empty"
+            ));
         }
 
         GroupEntity group = loadGroupForTenant(groupId);
@@ -331,9 +371,11 @@ public class GroupServiceImpl implements GroupService {
             }
 
             UserEntity manager = fetchedUsers.get(managerId);
-            group.getManagers().add(manager);
+            addManagerAsMember(group, manager);
             addedManagerIds.add(managerId);
         }
+
+        group.getManagers().forEach(group::addUser);
 
         groupRepository.save(group);
 
@@ -351,7 +393,10 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public RemoveManagersResponse removeManagersFromGroup(Long groupId, GroupManagerRequest request) {
         if (request == null || request.getManagerIds() == null || request.getManagerIds().isEmpty()) {
-            throw new IllegalArgumentException("Manager identifiers cannot be empty");
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.managers.required",
+                    "Manager identifiers cannot be empty"
+            ));
         }
 
         GroupEntity group = loadGroupForTenant(groupId);
@@ -443,6 +488,201 @@ public class GroupServiceImpl implements GroupService {
                 .toList();
     }
 
+    @Override
+    public List<GroupUserCandidateDTO> searchGroupUserCandidates(Long groupId, String query) {
+        GroupEntity group = loadGroupForTenant(groupId);
+        String q = query == null ? "" : query.trim();
+        if (q.isBlank()) {
+            return List.of();
+        }
+
+        Long churchId = group.getChurch().getChurchId();
+        Set<UUID> usersAlreadyInGroup = group.getUsers().stream()
+                .map(UserEntity::getUuid)
+                .collect(Collectors.toSet());
+
+        return userRepository.searchSimpleUsersByChurchId(churchId, q).stream()
+                .map(user -> GroupUserCandidateDTO.builder()
+                        .uuid(user.uuid())
+                        .fullName(user.fullName())
+                        .avatarUrl(null)
+                        .alreadyInGroup(usersAlreadyInGroup.contains(user.uuid()))
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public boolean canManageGroup(Long groupId, UUID userId) {
+        if (userId == null) {
+            return false;
+        }
+
+        GroupEntity group = loadGroupForTenant(groupId);
+        if (userId.equals(group.getCreatedBy())) {
+            return true;
+        }
+
+        return group.getManagers().stream()
+                .map(UserEntity::getUuid)
+                .anyMatch(userId::equals);
+    }
+
+    @Override
+    public GroupJoinRequestResponse submitJoinRequest(Long groupId) {
+        UUID tenantId = requireTenantId();
+        UUID currentUserId = requireCurrentUserId();
+        GroupEntity group = loadGroupForTenant(groupId);
+
+        if (!"PUBLIC_REQUEST_TO_JOIN".equalsIgnoreCase(group.getVisibility())) {
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.joinRequests.publicOnly",
+                    "Join requests are only allowed for public groups."
+            ));
+        }
+
+        UserEntity requester = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "user.notFound",
+                        "User not found"
+                )));
+
+        if (!belongsToTenant(requester, tenantId)) {
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.user.tenantMismatch",
+                    "User does not belong to this tenant"
+            ));
+        }
+
+        if (group.getUsers().stream().anyMatch(user -> currentUserId.equals(user.getUuid()))
+                || group.getManagers().stream().anyMatch(user -> currentUserId.equals(user.getUuid()))
+                || currentUserId.equals(group.getCreatedBy())) {
+            throw new EntityExistsException(messageService.get(
+                    "groups.joinRequests.alreadyMember",
+                    "You are already part of this group."
+            ));
+        }
+
+        Optional<GroupJoinRequestEntity> existingPending = groupJoinRequestRepository
+                .findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+                        groupId,
+                        currentUserId,
+                        List.of(GroupJoinRequestStatus.PENDING)
+                );
+        if (existingPending.isPresent()) {
+            throw new EntityExistsException(messageService.get(
+                    "groups.joinRequests.alreadyPending",
+                    "A join request is already pending for this group."
+            ));
+        }
+
+        GroupJoinRequestEntity joinRequest = GroupJoinRequestEntity.builder()
+                .tenantId(tenantId)
+                .group(group)
+                .requester(requester)
+                .status(GroupJoinRequestStatus.PENDING)
+                .build();
+
+        GroupJoinRequestEntity saved = groupJoinRequestRepository.save(joinRequest);
+        notifyManagersOfJoinRequest(group, requester);
+        return toJoinRequestResponse(saved);
+    }
+
+    @Override
+    public List<GroupJoinRequestResponse> listJoinRequests(Long groupId) {
+        loadGroupForTenant(groupId);
+        return groupJoinRequestRepository.findByGroup_GroupIdAndStatusOrderByCreatedDateAsc(groupId, GroupJoinRequestStatus.PENDING)
+                .stream()
+                .map(this::toJoinRequestResponse)
+                .toList();
+    }
+
+    @Override
+    public Optional<MyGroupJoinRequestResponse> getMyJoinRequestStatus(Long groupId) {
+        loadGroupForTenant(groupId);
+        UUID currentUserId = requireCurrentUserId();
+        return groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidOrderByCreatedDateDesc(groupId, currentUserId)
+                .map(this::toMyJoinRequestResponse);
+    }
+
+    @Override
+    public List<MyGroupJoinRequestResponse> listMyPendingJoinRequests() {
+        UUID tenantId = requireTenantId();
+        UUID currentUserId = requireCurrentUserId();
+        return groupJoinRequestRepository.findByRequester_UuidAndTenantIdAndStatusOrderByCreatedDateDesc(
+                        currentUserId,
+                        tenantId,
+                        GroupJoinRequestStatus.PENDING
+                ).stream()
+                .map(this::toMyJoinRequestResponse)
+                .toList();
+    }
+
+    @Override
+    public MyGroupJoinRequestResponse cancelMyJoinRequest(Long groupId) {
+        loadGroupForTenant(groupId);
+        UUID currentUserId = requireCurrentUserId();
+        GroupJoinRequestEntity joinRequest = groupJoinRequestRepository
+                .findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+                        groupId,
+                        currentUserId,
+                        List.of(GroupJoinRequestStatus.PENDING)
+                )
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "groups.joinRequests.pending.notFound",
+                        "Pending join request not found"
+                )));
+
+        joinRequest.setStatus(GroupJoinRequestStatus.CANCELLED);
+        joinRequest.setDecidedAt(LocalDateTime.now());
+        joinRequest.setDecidedBy(currentUserId);
+
+        return toMyJoinRequestResponse(groupJoinRequestRepository.save(joinRequest));
+    }
+
+    @Override
+    public GroupJoinRequestResponse approveJoinRequest(Long groupId, Long requestId, GroupJoinRequestDecisionRequest request) {
+        GroupJoinRequestEntity joinRequest = loadJoinRequest(groupId, requestId);
+        if (joinRequest.getStatus() != GroupJoinRequestStatus.PENDING) {
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.joinRequests.approve.pendingOnly",
+                    "Only pending join requests can be approved."
+            ));
+        }
+
+        GroupEntity group = joinRequest.getGroup();
+        group.addUser(joinRequest.getRequester());
+
+        joinRequest.setStatus(GroupJoinRequestStatus.APPROVED);
+        joinRequest.setDecisionNote(normalizeDecisionNote(request));
+        joinRequest.setDecidedAt(LocalDateTime.now());
+        joinRequest.setDecidedBy(requireCurrentUserId());
+
+        groupRepository.save(group);
+        GroupJoinRequestEntity saved = groupJoinRequestRepository.save(joinRequest);
+        notifyRequesterOfDecision(saved, true);
+        return toJoinRequestResponse(saved);
+    }
+
+    @Override
+    public GroupJoinRequestResponse rejectJoinRequest(Long groupId, Long requestId, GroupJoinRequestDecisionRequest request) {
+        GroupJoinRequestEntity joinRequest = loadJoinRequest(groupId, requestId);
+        if (joinRequest.getStatus() != GroupJoinRequestStatus.PENDING) {
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.joinRequests.reject.pendingOnly",
+                    "Only pending join requests can be rejected."
+            ));
+        }
+
+        joinRequest.setStatus(GroupJoinRequestStatus.REJECTED);
+        joinRequest.setDecisionNote(normalizeDecisionNote(request));
+        joinRequest.setDecidedAt(LocalDateTime.now());
+        joinRequest.setDecidedBy(requireCurrentUserId());
+
+        GroupJoinRequestEntity saved = groupJoinRequestRepository.save(joinRequest);
+        notifyRequesterOfDecision(saved, false);
+        return toJoinRequestResponse(saved);
+    }
+
     /**
      * Batch invite users to a group based on their email addresses.
      * @param groupId The ID of the group to which users will be invited.
@@ -453,7 +693,10 @@ public class GroupServiceImpl implements GroupService {
     @Transactional
     public BatchInviteResponse batchInviteUsersToGroup(Long groupId, BatchInviteRequest request) {
         if (request.getGroupEmails() == null || request.getGroupEmails().isEmpty()) {
-            throw new IllegalArgumentException("Email list cannot be empty");
+            throw new IllegalArgumentException(messageService.get(
+                    "groups.batchInvite.emails.required",
+                    "Email list cannot be empty"
+            ));
         }
 
         GroupEntity group = loadGroupForTenant(groupId);
@@ -538,18 +781,35 @@ public class GroupServiceImpl implements GroupService {
     private UUID requireTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID not found in context");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.context.missing",
+                    "Tenant ID not found in context"
+            ));
         }
         return tenantId;
+    }
+
+    private UUID requireCurrentUserId() {
+        return resolveCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "auth.user.notAuthenticated",
+                        "Current user not found in security context"
+                )));
     }
 
     private GroupEntity loadGroupForTenant(Long groupId) {
         UUID tenantId = requireTenantId();
         GroupEntity group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException(GROUP_NOT_FOUND));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "groups.notFound",
+                        GROUP_NOT_FOUND
+                )));
 
         if (!tenantId.equals(group.getTenantId())) {
-            throw new EntityNotFoundException(GROUP_NOT_FOUND);
+            throw new EntityNotFoundException(messageService.get(
+                    "groups.notFound",
+                    GROUP_NOT_FOUND
+            ));
         }
 
         return group;
@@ -569,12 +829,20 @@ public class GroupServiceImpl implements GroupService {
                 .toList();
 
         if (!missing.isEmpty()) {
-            throw new EntityNotFoundException("Users not found: " + missing);
+            throw new EntityNotFoundException(messageService.get(
+                    "groups.users.notFound",
+                    "Users not found: {0}",
+                    missing
+            ));
         }
 
         users.forEach(user -> {
             if (!belongsToTenant(user, tenantId)) {
-                throw new IllegalArgumentException("User " + user.getUuid() + " does not belong to this tenant");
+                throw new IllegalArgumentException(messageService.get(
+                        "groups.user.tenantMismatch.withId",
+                        "User {0} does not belong to this tenant",
+                        user.getUuid()
+                ));
             }
         });
 
@@ -585,10 +853,142 @@ public class GroupServiceImpl implements GroupService {
         return source == null ? Collections.emptySet() : source;
     }
 
+    private void addManagerAsMember(GroupEntity group, UserEntity manager) {
+        if (group == null || manager == null) {
+            return;
+        }
+        group.getManagers().add(manager);
+        group.addUser(manager);
+    }
+
     private <T> List<T> mergeLists(List<T> first, List<T> second) {
         List<T> merged = new ArrayList<>(first);
         merged.addAll(second);
         return merged;
+    }
+
+    private Optional<UUID> resolveCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return Optional.empty();
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            return Optional.ofNullable(userPrincipal.getUserUuid());
+        }
+
+        return Optional.empty();
+    }
+
+    private GroupJoinRequestEntity loadJoinRequest(Long groupId, Long requestId) {
+        GroupJoinRequestEntity joinRequest = groupJoinRequestRepository.findById(requestId)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "groups.joinRequests.notFound",
+                        "Join request not found"
+                )));
+        GroupEntity group = loadGroupForTenant(groupId);
+        if (!joinRequest.getGroup().getGroupId().equals(group.getGroupId())) {
+            throw new EntityNotFoundException(messageService.get(
+                    "groups.joinRequests.notFound",
+                    "Join request not found"
+            ));
+        }
+        return joinRequest;
+    }
+
+    private String normalizeDecisionNote(GroupJoinRequestDecisionRequest request) {
+        if (request == null || request.getNote() == null) {
+            return null;
+        }
+        String note = request.getNote().trim();
+        return note.isEmpty() ? null : note;
+    }
+
+    private GroupJoinRequestResponse toJoinRequestResponse(GroupJoinRequestEntity joinRequest) {
+        return GroupJoinRequestResponse.builder()
+                .id(joinRequest.getId())
+                .groupId(joinRequest.getGroup().getGroupId())
+                .requesterId(joinRequest.getRequester().getUuid())
+                .requesterName(joinRequest.getRequester().getFullName())
+                .requesterEmail(joinRequest.getRequester().getEmail())
+                .status(joinRequest.getStatus().name())
+                .decisionNote(joinRequest.getDecisionNote())
+                .requestedAt(joinRequest.getCreatedDate())
+                .decidedAt(joinRequest.getDecidedAt())
+                .decidedBy(joinRequest.getDecidedBy())
+                .build();
+    }
+
+    private MyGroupJoinRequestResponse toMyJoinRequestResponse(GroupJoinRequestEntity joinRequest) {
+        return MyGroupJoinRequestResponse.builder()
+                .groupId(joinRequest.getGroup().getGroupId())
+                .requestId(joinRequest.getId())
+                .status(joinRequest.getStatus().name())
+                .build();
+    }
+
+    private void notifyManagersOfJoinRequest(GroupEntity group, UserEntity requester) {
+        Set<UserEntity> recipients = new LinkedHashSet<>(group.getManagers());
+        if (group.getCreatedBy() != null) {
+            userRepository.findById(group.getCreatedBy()).ifPresent(recipients::add);
+        }
+
+        for (UserEntity recipient : recipients) {
+            if (recipient == null || recipient.getUuid() == null || recipient.getUuid().equals(requester.getUuid())) {
+                continue;
+            }
+            eventPublisher.publishEvent(new NotificationEvent(
+                    this,
+                    NotificationType.NOTIFICATION,
+                    recipient,
+                    Map.of(
+                            "title", messageService.get(
+                                    "groups.notifications.joinRequest.title",
+                                    "New group join request"
+                            ),
+                            "message_content", messageService.get(
+                                    "groups.notifications.joinRequest.message",
+                                    "{0} requested to join {1}.",
+                                    requester.getFullName(),
+                                    group.getGroupName()
+                            )
+                    ),
+                    java.util.EnumSet.of(NotificationChannelType.IN_APP)
+            ));
+        }
+    }
+
+    private void notifyRequesterOfDecision(GroupJoinRequestEntity joinRequest, boolean approved) {
+        UserEntity requester = joinRequest.getRequester();
+        if (requester == null) {
+            return;
+        }
+
+        String verb = approved ? "approved" : "rejected";
+        eventPublisher.publishEvent(new NotificationEvent(
+                this,
+                NotificationType.NOTIFICATION,
+                requester,
+                Map.of(
+                        "title", messageService.get(
+                                approved ? "groups.notifications.joinRequest.approved.title"
+                                        : "groups.notifications.joinRequest.rejected.title",
+                                approved ? "Group join request approved" : "Group join request rejected"
+                        ),
+                        "message_content", messageService.get(
+                                approved ? "groups.notifications.joinRequest.approved.message"
+                                        : "groups.notifications.joinRequest.rejected.message",
+                                approved
+                                        ? "Your request to join {0} was approved."
+                                        : "Your request to join {0} was rejected.",
+                                joinRequest.getGroup().getGroupName()
+                        )
+                ),
+                java.util.EnumSet.of(NotificationChannelType.IN_APP)
+        ));
     }
 
     private boolean belongsToTenant(UserEntity user, UUID tenantId) {

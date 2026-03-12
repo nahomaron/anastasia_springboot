@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.dto;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
@@ -14,24 +14,24 @@ import java.time.LocalDate;
 @Setter
 public class UpdateUserProfileRequest {
 
-    @Size(max = 255, message = "Full name is too long")
+    @Size(max = 255, message = "validation.user.profile.fullName.max")
     private String fullName;
 
-    @Past(message = "Date of birth must be in the past")
+    @Past(message = "validation.user.profile.dateOfBirth.past")
     private LocalDate dateOfBirth;
 
-    @Size(max = 32, message = "Gender is too long")
+    @Size(max = 32, message = "validation.user.profile.gender.max")
     private String gender;
 
-    @Size(max = 255, message = "Location is too long")
+    @Size(max = 255, message = "validation.user.profile.location.max")
     private String location;
 
-    @Pattern(regexp = "^(?:\\+|00)\\d{7,15}$", message = "Invalid international phone number format")
+    @Pattern(regexp = "^(?:\\+|00)\\d{7,15}$", message = "validation.user.profile.phone.invalid")
     private String phoneNumber;
 
     @Valid
-    private AvatarDTO profileAvatar;
+    private ImageAssetDTO profileAvatar;
 
-    @Size(max = 1024, message = "Profile image URL is too long")
+    @Size(max = 1024, message = "validation.user.profile.imageUrl.max")
     private String profileImageUrl;
 }

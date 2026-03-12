@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailCategory;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplate;
@@ -30,6 +31,7 @@ public class OnboardingEmailVerificationService {
 
     private final OnboardingEmailVerificationCodeRepository repository;
     private final EmailTemplateService emailTemplateService;
+    private final LocalizedMessageService messageService;
 
     @Value("${app.onboarding.verification.help-url:https://app.anastasia.com/help/security}")
     private String helpUrl;
@@ -59,10 +61,16 @@ public class OnboardingEmailVerificationService {
         String code = normalizeCode(rawCode);
 
         OnboardingEmailVerificationCodeEntity entity = repository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new IllegalArgumentException("No verification code found for this email."));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "auth.verificationCode.notFound",
+                        "No verification code found for this email."
+                )));
 
         if (entity.getExpiresAt() == null || entity.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Verification code has expired. Please request a new code.");
+            throw new IllegalStateException(messageService.get(
+                    "auth.verificationCode.expiredNewCode",
+                    "Verification code has expired. Please request a new code."
+            ));
         }
 
         entity.setAttemptCount(entity.getAttemptCount() + 1);
@@ -90,7 +98,8 @@ public class OnboardingEmailVerificationService {
                 "userName", "Church Admin",
                 "code", code,
                 "expiresMinutes", OTP_EXPIRY_MINUTES,
-                "helpUrl", helpUrl
+                "helpUrl", helpUrl,
+                "locale", messageService.currentLocale()
         );
 
         emailTemplateService.sendTemplateEmail(
@@ -103,18 +112,21 @@ public class OnboardingEmailVerificationService {
 
     private String normalizeEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("Email is required.");
+            throw new IllegalArgumentException(messageService.get("validation.auth.email.required", "Email is required."));
         }
         String normalized = email.trim().toLowerCase();
         if (!EMAIL_PATTERN.matcher(normalized).matches()) {
-            throw new IllegalArgumentException("Email format is invalid.");
+            throw new IllegalArgumentException(messageService.get("validation.auth.email.invalid", "Email format is invalid."));
         }
         return normalized;
     }
 
     private String normalizeCode(String code) {
         if (code == null || !code.trim().matches("^\\d{6}$")) {
-            throw new IllegalArgumentException("Verification code must be 6 digits.");
+            throw new IllegalArgumentException(messageService.get(
+                    "validation.auth.verificationCode.sixDigits",
+                    "Verification code must be 6 digits."
+            ));
         }
         return code.trim();
     }

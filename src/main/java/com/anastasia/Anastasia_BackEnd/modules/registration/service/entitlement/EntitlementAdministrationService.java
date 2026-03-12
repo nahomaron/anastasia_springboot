@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.CreatePromoCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.EntitlementSnapshotResponse;
@@ -48,6 +49,7 @@ public class EntitlementAdministrationService {
     private final TenantEntitlementAuditRepository tenantEntitlementAuditRepository;
     private final EntitlementResolverService entitlementResolverService;
     private final PlanEntitlementCatalog planEntitlementCatalog;
+    private final LocalizedMessageService messageService;
 
     @Transactional(readOnly = true)
     public EntitlementSnapshotResponse resolveCurrentTenant() {
@@ -118,9 +120,15 @@ public class EntitlementAdministrationService {
     public void revokePlanGrant(UUID tenantId, UUID grantId, String reason) {
         UUID actorUserId = currentActorUserId();
         TenantPlanGrantEntity grant = tenantPlanGrantRepository.findById(grantId)
-                .orElseThrow(() -> new EntityNotFoundException("Plan grant not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "tenant.entitlement.planGrant.notFound",
+                        "Plan grant not found"
+                )));
         if (!grant.getTenant().getId().equals(tenantId)) {
-            throw new IllegalArgumentException("Plan grant does not belong to tenant");
+            throw new IllegalArgumentException(messageService.get(
+                    "tenant.entitlement.planGrant.tenantMismatch",
+                    "Plan grant does not belong to tenant"
+            ));
         }
         grant.setActive(false);
         grant.setExpiresAt(LocalDateTime.now());
@@ -158,9 +166,15 @@ public class EntitlementAdministrationService {
     public void removeFeatureOverride(UUID tenantId, UUID overrideId, String reason) {
         UUID actorUserId = currentActorUserId();
         TenantFeatureOverrideEntity override = tenantFeatureOverrideRepository.findById(overrideId)
-                .orElseThrow(() -> new EntityNotFoundException("Feature override not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "tenant.entitlement.featureOverride.notFound",
+                        "Feature override not found"
+                )));
         if (!override.getTenant().getId().equals(tenantId)) {
-            throw new IllegalArgumentException("Feature override does not belong to tenant");
+            throw new IllegalArgumentException(messageService.get(
+                    "tenant.entitlement.featureOverride.tenantMismatch",
+                    "Feature override does not belong to tenant"
+            ));
         }
         override.setActive(false);
         override.setExpiresAt(LocalDateTime.now());
@@ -176,7 +190,10 @@ public class EntitlementAdministrationService {
         UUID actorUserId = currentActorUserId();
         String normalizedCode = normalizeCode(request.getCode());
         if (promoCodeRepository.existsByCodeIgnoreCase(normalizedCode)) {
-            throw new IllegalArgumentException("Promo code already exists");
+            throw new IllegalArgumentException(messageService.get(
+                    "tenant.entitlement.promoCode.alreadyExists",
+                    "Promo code already exists"
+            ));
         }
         PromoCodeEntity promoCode = PromoCodeEntity.builder()
                 .code(normalizedCode)
@@ -200,21 +217,36 @@ public class EntitlementAdministrationService {
         UUID actorUserId = currentActorUserId();
         TenantEntity tenant = requireTenant(tenantId);
         PromoCodeEntity promoCode = promoCodeRepository.findByCodeIgnoreCase(normalizeCode(request.getCode()))
-                .orElseThrow(() -> new EntityNotFoundException("Promo code not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "tenant.entitlement.promoCode.notFound",
+                        "Promo code not found"
+                )));
 
         LocalDateTime now = LocalDateTime.now();
         if (!promoCode.isActive()) {
-            throw new IllegalStateException("Promo code is not active");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.entitlement.promoCode.inactive",
+                    "Promo code is not active"
+            ));
         }
         if (promoCode.getExpiresAt() != null && !promoCode.getExpiresAt().isAfter(now)) {
-            throw new IllegalStateException("Promo code has expired");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.entitlement.promoCode.expired",
+                    "Promo code has expired"
+            ));
         }
         if (promoCode.getMaxRedemptions() != null && promoCode.getCurrentRedemptions() >= promoCode.getMaxRedemptions()) {
-            throw new IllegalStateException("Promo code redemption limit reached");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.entitlement.promoCode.redemptionLimitReached",
+                    "Promo code redemption limit reached"
+            ));
         }
         if (promoCode.isOneTimePerTenant() &&
                 promoRedemptionRepository.existsByTenant_IdAndPromoCode_IdAndActiveTrue(tenantId, promoCode.getId())) {
-            throw new IllegalStateException("Promo code already redeemed for this tenant");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.entitlement.promoCode.alreadyRedeemed",
+                    "Promo code already redeemed for this tenant"
+            ));
         }
 
         PromoRedemptionEntity redemption = PromoRedemptionEntity.builder()
@@ -275,9 +307,15 @@ public class EntitlementAdministrationService {
     public EntitlementSnapshotResponse revokePromoRedemption(UUID tenantId, UUID redemptionId, String reason) {
         UUID actorUserId = currentActorUserId();
         PromoRedemptionEntity redemption = promoRedemptionRepository.findById(redemptionId)
-                .orElseThrow(() -> new EntityNotFoundException("Promo redemption not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "tenant.entitlement.promoRedemption.notFound",
+                        "Promo redemption not found"
+                )));
         if (!redemption.getTenant().getId().equals(tenantId)) {
-            throw new IllegalArgumentException("Promo redemption does not belong to tenant");
+            throw new IllegalArgumentException(messageService.get(
+                    "tenant.entitlement.promoRedemption.tenantMismatch",
+                    "Promo redemption does not belong to tenant"
+            ));
         }
         redemption.setActive(false);
         redemption.setRevokedAt(LocalDateTime.now());
@@ -311,13 +349,19 @@ public class EntitlementAdministrationService {
 
     private TenantEntity requireTenant(UUID tenantId) {
         return tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "tenant.notFound",
+                        "Tenant not found"
+                )));
     }
 
     private UUID requireTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant context is missing");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.context.missing",
+                    "Tenant context is missing"
+            ));
         }
         return tenantId;
     }

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthSessionResponse;
@@ -19,23 +20,27 @@ import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificati
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.common.cache.CacheWarmupService;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailCategory;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplate;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateService;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserTwoFactorBackupCodeEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantUserEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantUserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -43,7 +48,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
-import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -54,18 +58,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    @Value("${app.public.frontend-base-url:http://192.168.1.79:4200}")
+    private String frontendBaseUrl;
+
     private final JwtUtil jwtUtil;
+    private final RefreshTokenCookieService refreshTokenCookieService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
     private final EmailNotificationService emailNotificationService;
+    private final EmailTemplateService emailTemplateService;
+    private final LocalizedMessageService messageService;
     private final CacheWarmupService cacheWarmupService;
     private final RoleRepository roleRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final LoginTwoFactorChallengeRepository loginTwoFactorChallengeRepository;
-    private final TenantUserRepository tenantUserRepository;
+    private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
@@ -99,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             // Log the error for debugging
             System.err.println("Error creating user: " + e.getMessage());
-            throw new RuntimeException("User creation failed: " + e.getMessage());
+            throw new RuntimeException(messageService.get("auth.user.creationFailed", "User creation failed: {0}", e.getMessage()));
         }
 
     }
@@ -107,10 +117,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthenticationResponse activateAccount(String token) {
         Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
+                .orElseThrow(() -> new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid token")));
 
         if (savedToken.getTokenType() != TokenType.ACTIVATION) {
-            throw new RuntimeException("Invalid activation token");
+            throw new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token"));
         }
 
 //        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
@@ -123,6 +133,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (!user.isVerified()) {
             user.setVerified(true);
+            user.setStatus(UserStatus.ACTIVE);
             userRepository.save(user);
         }
         if (savedToken.getValidatedAt() == null) {
@@ -141,23 +152,29 @@ public class AuthServiceImpl implements AuthService {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException(messageService.get("auth.login.invalidCredentials", "Invalid email or password"));
         } catch (Exception e) {
-            throw new AuthenticationProcessException("An unexpected error occurred during login");
+            throw new AuthenticationProcessException(messageService.get("auth.login.unexpectedError", "An unexpected error occurred during login"));
         }
 
 
         var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("Login - Username not found"));
+                .orElseThrow(() -> new UsernameNotFoundException(messageService.get("auth.login.userNotFound", "Login - Username not found")));
 
 
         if(!user.isVerified()){
             if (user.getCreatedDate().isBefore(LocalDateTime.now().minusHours(24))) {
                 // The user was created more than 24 hours ago
                 sendValidationEmail(user);
-                throw new RuntimeException("Login: Account is not verified. Please find a new token sent to you for verification!");
+                throw new RuntimeException(messageService.get(
+                        "auth.login.accountNotVerifiedResent",
+                        "Login: Account is not verified. Please find a new token sent to you for verification!"
+                ));
             }
-            throw new RuntimeException("Login: Account is not verified. Please find the token sent to you for verification!");
+            throw new RuntimeException(messageService.get(
+                    "auth.login.accountNotVerified",
+                    "Login: Account is not verified. Please find the token sent to you for verification!"
+            ));
         }
 
         if (isTwoFactorRequired(user)) {
@@ -168,24 +185,85 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public AuthenticationResponse authenticateGoogleUser(String googleId, String email, String fullName) {
+        String normalizedGoogleId = googleId == null ? null : googleId.trim();
+        String normalizedEmail = email == null ? null : email.trim().toLowerCase(Locale.ROOT);
+        String resolvedName = fullName == null ? null : fullName.trim();
+
+        if (normalizedGoogleId == null || normalizedGoogleId.isBlank()) {
+            throw new IllegalArgumentException(messageService.get("auth.google.idMissing", "Google account id is missing."));
+        }
+        if (normalizedEmail == null || normalizedEmail.isBlank()) {
+            throw new IllegalArgumentException(messageService.get("auth.google.emailMissing", "Google account email is missing."));
+        }
+
+        UserEntity user = userRepository.findByGoogleId(normalizedGoogleId)
+                .orElseGet(() -> userRepository.findByEmail(normalizedEmail).orElse(null));
+
+        if (user == null) {
+            Role userRole = roleRepository.findByRoleName("USER")
+                    .orElseThrow(() -> new IllegalStateException("User role not found"));
+
+            String fallbackName = resolvedName;
+            if (fallbackName == null || fallbackName.isBlank()) {
+                fallbackName = normalizedEmail.substring(0, normalizedEmail.indexOf('@'));
+            }
+
+            user = UserEntity.builder()
+                    .googleId(normalizedGoogleId)
+                    .email(normalizedEmail)
+                    .fullName(fallbackName)
+                    .verified(true)
+                    .status(UserStatus.ACTIVE)
+                    .userType(UserType.GUEST)
+                    .roles(Set.of(userRole))
+                    .build();
+        } else {
+            if (user.getGoogleId() != null && !user.getGoogleId().equals(normalizedGoogleId)) {
+                throw new IllegalStateException(messageService.get(
+                        "auth.google.emailLinkedElsewhere",
+                        "This email is already linked to a different Google account."
+                ));
+            }
+
+            user.setGoogleId(normalizedGoogleId);
+            if (resolvedName != null && !resolvedName.isBlank()) {
+                user.setFullName(resolvedName);
+            }
+            if (!user.isVerified()) {
+                user.setVerified(true);
+                user.setStatus(UserStatus.ACTIVE);
+            }
+        }
+
+        UserEntity savedUser = userRepository.save(user);
+
+        if (isTwoFactorRequired(savedUser)) {
+            return createTwoFactorChallenge(savedUser);
+        }
+
+        return issueSessionForUser(savedUser.getUuid());
+    }
+
+    @Override
     public AuthenticationResponse verifyLoginTwoFactor(VerifyLoginTwoFactorRequest request) {
         String challengeToken = request.getChallengeToken().trim();
         LoginTwoFactorChallengeEntity challenge = loginTwoFactorChallengeRepository.findByChallengeToken(challengeToken)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid two-factor challenge."));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get("auth.twoFactor.challenge.invalid", "Invalid two-factor challenge.")));
 
         if (challenge.getConsumedAt() != null) {
-            throw new IllegalArgumentException("Two-factor challenge already used.");
+            throw new IllegalArgumentException(messageService.get("auth.twoFactor.challenge.used", "Two-factor challenge already used."));
         }
         if (challenge.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Two-factor challenge expired. Please login again.");
+            throw new IllegalArgumentException(messageService.get("auth.twoFactor.challenge.expired", "Two-factor challenge expired. Please login again."));
         }
         if (challenge.getAttemptCount() >= LOGIN_2FA_MAX_ATTEMPTS) {
-            throw new IllegalStateException("Too many invalid two-factor attempts. Please login again.");
+            throw new IllegalStateException(messageService.get("auth.twoFactor.challenge.tooManyAttempts", "Too many invalid two-factor attempts. Please login again."));
         }
 
         UserEntity user = challenge.getUser();
         UserProfileEntity profile = userProfileRepository.findById(user.getUuid())
-                .orElseThrow(() -> new IllegalStateException("Two-factor profile is missing."));
+                .orElseThrow(() -> new IllegalStateException(messageService.get("auth.twoFactor.profileMissing", "Two-factor profile is missing.")));
 
         String input = request.getCode() == null ? "" : request.getCode().trim();
         boolean valid = verifyTwoFactorInput(profile, user, input);
@@ -193,7 +271,7 @@ public class AuthServiceImpl implements AuthService {
         challenge.setAttemptCount(challenge.getAttemptCount() + 1);
         if (!valid) {
             loginTwoFactorChallengeRepository.save(challenge);
-            throw new IllegalArgumentException("Invalid verification code.");
+            throw new IllegalArgumentException(messageService.get("auth.verificationCode.invalid", "Invalid verification code."));
         }
 
         challenge.setConsumedAt(LocalDateTime.now());
@@ -207,11 +285,13 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UsernameNotFoundException("Session issue failed - user not found"));
 
         if (user.isAccountLocked()) {
-            throw new IllegalStateException("User account is locked.");
+            throw new IllegalStateException(messageService.get("auth.account.locked", "User account is locked."));
         }
         if (!user.isVerified()) {
-            throw new IllegalStateException("User account is not verified.");
+            throw new IllegalStateException(messageService.get("auth.account.notVerified", "User account is not verified."));
         }
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
         AuthSessionResponse session = buildAuthSessionResponse(user);
@@ -237,39 +317,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        final String authHeader = request.getHeader("Authorization");
-        String refreshToken = null;
-        String username = null;
+    public AuthenticationResponse refreshToken(HttpServletRequest request) {
+        String refreshToken = refreshTokenCookieService.extractRefreshToken(request)
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get("auth.refreshToken.missing", "Refresh token cookie is missing.")));
+        String username = jwtUtil.extractUsername(refreshToken);
 
-        if(authHeader != null && authHeader.startsWith("Bearer ")){
-            refreshToken = authHeader.substring(7);
-            username = jwtUtil.extractUsername(refreshToken);
+        UserEntity user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid, User doesn't exist"));
+
+        UserPrincipal userPrincipal = new UserPrincipal(user);
+
+        if (!jwtUtil.isTokenValid(refreshToken, userPrincipal)) {
+            throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
         }
 
-        if(username != null){
-            UserEntity user = userRepository.findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Invalid, User doesn't exist"));
+        var accessToken = jwtUtil.generateAccessToken(userPrincipal);
+        saveUserToken(accessToken, user, TokenType.BEARER);
 
-            UserPrincipal userPrincipal = new UserPrincipal(user);
-
-            if(jwtUtil.isTokenValid(refreshToken, userPrincipal)){
-                var accessToken = jwtUtil.generateAccessToken(userPrincipal);
-                revokeAllValidUserTokens(user);
-                saveUserToken(accessToken, user, TokenType.BEARER);
-
-                var authResponse = AuthenticationResponse.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .build();
-
-                try {
-                    new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .session(buildAuthSessionResponse(user))
+                .build();
     }
 
     @Override
@@ -285,7 +353,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Check if the user is already activated
         if (user.isVerified()) {
-            throw new IllegalStateException("User is already verified");
+            throw new IllegalStateException(messageService.get("auth.account.alreadyVerified", "User is already verified"));
         }
 
         // Generate and send a new activation email
@@ -294,7 +362,9 @@ public class AuthServiceImpl implements AuthService {
 
     public void initiatePasswordReset(String email) throws MessagingException {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        messageService.get("auth.passwordReset.userNotFound", "User not found with email: {0}", email)
+                ));
 
         String resetTokenValue = generateActivationCode(8); // Longer token for security
         // Invalidate any existing password reset tokens for this user first (optional but good practice)
@@ -314,15 +384,18 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(resetToken);
 
         Map<String, Object> templateProperties = new HashMap<>();
-        templateProperties.put("username", user.getFullName());
-        templateProperties.put("reset_url", "http://localhost:3000/reset-password?token=" + resetTokenValue);
-        templateProperties.put("reset_token", resetTokenValue); // Also provide the raw token if needed
+        templateProperties.put("userName", user.getFullName());
+        templateProperties.put("resetUrl", normalizeBaseUrl(frontendBaseUrl) + "/reset-password?token=" + resetTokenValue);
+        templateProperties.put("expiresHours", 1);
+        templateProperties.put("requestIp", "N/A");
+        templateProperties.put("requestDevice", null);
+        templateProperties.put("locale", messageService.resolveLocaleForUser(user));
 
-        emailNotificationService.sendEmail(
+        emailTemplateService.sendTemplateEmail(
                 user.getEmail(),
-                "Password Reset for Anastasia Account",
-                EmailTemplateName.RESET_PASSWORD, // Make sure you have a reset_password.html template
-                templateProperties
+                EmailTemplate.PASSWORD_RESET.templateKey(),
+                templateProperties,
+                EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.PASSWORD_RESET.templateKey())
         );
         System.out.println("Password reset email triggered for: " + user.getEmail());
     }
@@ -330,22 +403,28 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void resetPassword(String token, String newPassword) {
         Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired password reset token."));
+                .orElseThrow(() -> new RuntimeException(messageService.get(
+                        "auth.passwordReset.invalidOrExpired",
+                        "Invalid or expired password reset token."
+                )));
 
         // Validate token type (ensure it's a password reset token)
         if (savedToken.getTokenType() != TokenType.PASSWORD_RESET) {
-            throw new RuntimeException("Invalid token type for password reset.");
+            throw new RuntimeException(messageService.get("auth.passwordReset.invalidTokenType", "Invalid token type for password reset."));
         }
 
         // Check if the token has expired
         if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
             // Optionally, you could resend a new reset email here or prompt the user to request a new one
-            throw new RuntimeException("Password reset token has expired. Please request a new one.");
+            throw new RuntimeException(messageService.get("auth.passwordReset.expired", "Password reset token has expired. Please request a new one."));
         }
 
         // Check if the token has already been validated, expired or revoked
         if (savedToken.getValidatedAt() != null || savedToken.isExpired() || savedToken.isRevoked()) {
-            throw new RuntimeException("Password reset token has already been used or is invalid.");
+            throw new RuntimeException(messageService.get(
+                    "auth.passwordReset.usedOrInvalid",
+                    "Password reset token has already been used or is invalid."
+            ));
         }
 
         UserEntity user = userRepository.findById(savedToken.getUser().getUuid())
@@ -466,9 +545,9 @@ public class AuthServiceImpl implements AuthService {
             return roleNames;
         }
 
-        tenantUserRepository.findByTenant_IdAndUserId(user.getTenantId(), user.getUuid())
-                .filter(tenantUser -> tenantUser.getStatus() == MembershipStatus.ACTIVE)
-                .map(TenantUserEntity::getRole)
+        tenantAdminAssignmentRepository.findByTenant_IdAndUserId(user.getTenantId(), user.getUuid())
+                .filter(assignment -> assignment.getStatus() == MembershipStatus.ACTIVE)
+                .map(TenantAdminAssignmentEntity::getRole)
                 .filter(TenantRole.PRIMARY_ADMIN::equals)
                 .ifPresent(role -> {
                     roleNames.remove("OWNER");
@@ -543,23 +622,23 @@ public class AuthServiceImpl implements AuthService {
         var newToken = generateAndSaveActivationToken(user);
 
         // One-click activation URL (frontend will verify using the token)
-        String activationUrl = "http://localhost:4200/auth/activate?token="
+        String activationUrl = normalizeBaseUrl(frontendBaseUrl) + "/auth/activate?token="
                 + java.net.URLEncoder.encode(newToken, java.nio.charset.StandardCharsets.UTF_8)
                 + "&email="
                 + java.net.URLEncoder.encode(user.getEmail(), java.nio.charset.StandardCharsets.UTF_8);
 
         // Prepare the properties map for the email template
         Map<String, Object> templateProperties = new HashMap<>();
-        templateProperties.put("username", user.getFullName());
-        templateProperties.put("confirmation_url", activationUrl);
-        templateProperties.put("activation_code", newToken);
+        templateProperties.put("userName", user.getFullName());
+        templateProperties.put("verifyUrl", activationUrl);
+        templateProperties.put("expiresHours", 24);
+        templateProperties.put("locale", messageService.resolveLocaleForUser(user));
 
-        // Call the enhanced EmailService with the dynamic properties map
-        emailNotificationService.sendEmail(
+        emailTemplateService.sendTemplateEmail(
                 user.getEmail(),
-                "Account Activation for Anastasia",
-                EmailTemplateName.ACTIVATE_ACCOUNT,
-                templateProperties
+                EmailTemplate.VERIFY_EMAIL_LINK.templateKey(),
+                templateProperties,
+                EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.VERIFY_EMAIL_LINK.templateKey())
         );
 
         System.out.println("Validation email triggered for: " + user.getEmail());
@@ -578,6 +657,13 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(token);
 
         return generatedToken;
+    }
+
+    private String normalizeBaseUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return "http://192.168.1.79:4200";
+        }
+        return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
     }
 
     private String generateActivationCode(int length) {

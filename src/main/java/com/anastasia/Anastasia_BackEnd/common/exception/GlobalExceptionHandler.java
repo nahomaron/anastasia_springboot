@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.common.exception;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.exception.AccountNotFoundException;
@@ -41,9 +42,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import lombok.RequiredArgsConstructor;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -73,9 +76,11 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.HttpStatus.UNSUPPORTED_MEDIA_TYPE;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final LocalizedMessageService messageService;
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
@@ -85,7 +90,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         log.error("Malformed JSON request", ex);
-        return bodyOnly(buildResponse(BAD_REQUEST, INVALID_REQUEST, "Malformed JSON request"), BAD_REQUEST);
+        return bodyOnly(buildResponse(BAD_REQUEST, INVALID_REQUEST, key("error.request.malformedJson", "Malformed JSON request")), BAD_REQUEST);
     }
 
     @Override
@@ -100,7 +105,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 buildResponse(
                         METHOD_NOT_ALLOWED,
                         INVALID_REQUEST,
-                        String.format("Method %s not supported for this endpoint", ex.getMethod())
+                        key("error.request.methodNotSupported", "Method {0} not supported for this endpoint", ex.getMethod())
                 ),
                 METHOD_NOT_ALLOWED
         );
@@ -115,7 +120,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.error("Missing request parameter", ex);
         return bodyOnly(
-                buildResponse(BAD_REQUEST, INVALID_REQUEST, String.format("Missing parameter: %s", ex.getParameterName())),
+                buildResponse(BAD_REQUEST, INVALID_REQUEST, key("error.request.missingParameter", "Missing parameter: {0}", ex.getParameterName())),
                 BAD_REQUEST
         );
     }
@@ -133,7 +138,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 buildResponse(
                         BAD_REQUEST,
                         INVALID_REQUEST,
-                        String.format("Parameter '%s' expects value of type %s", ex.getPropertyName(), expectedType)
+                        key("error.request.typeMismatch", "Parameter ''{0}'' expects value of type {1}", ex.getPropertyName(), expectedType)
                 ),
                 BAD_REQUEST
         );
@@ -151,7 +156,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 buildResponse(
                         NOT_FOUND,
                         RESOURCE_NOT_FOUND,
-                        String.format("No handler found for %s %s", ex.getHttpMethod(), ex.getRequestURL())
+                        key("error.request.noHandler", "No handler found for {0} {1}", ex.getHttpMethod(), ex.getRequestURL())
                 ),
                 NOT_FOUND
         );
@@ -169,7 +174,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 buildResponse(
                         UNSUPPORTED_MEDIA_TYPE,
                         INVALID_REQUEST,
-                        String.format("Media type %s not supported", ex.getContentType())
+                        key("error.request.mediaTypeNotSupported", "Media type {0} not supported", ex.getContentType())
                 ),
                 UNSUPPORTED_MEDIA_TYPE
         );
@@ -183,7 +188,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         log.error("Media type not acceptable", ex);
-        return bodyOnly(buildResponse(NOT_ACCEPTABLE, INVALID_REQUEST, "Requested media type not acceptable"), NOT_ACCEPTABLE);
+        return bodyOnly(buildResponse(NOT_ACCEPTABLE, INVALID_REQUEST, key("error.request.mediaTypeNotAcceptable", "Requested media type not acceptable")), NOT_ACCEPTABLE);
     }
 
     @ExceptionHandler(BindException.class)
@@ -210,7 +215,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponse(
                 BAD_REQUEST,
                 INVALID_REQUEST,
-                String.format("'%s' should be of type %s", ex.getName(), Objects.requireNonNull(ex.getRequiredType()).getSimpleName())
+                key("error.request.argumentTypeMismatch", "''{0}'' should be of type {1}", ex.getName(), Objects.requireNonNull(ex.getRequiredType()).getSimpleName())
         );
     }
 
@@ -218,11 +223,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ExceptionResponse> handleConstraintViolation(ConstraintViolationException ex) {
         log.error("Constraint violation", ex);
         Set<String> violations = new HashSet<>();
-        ex.getConstraintViolations().forEach(v -> violations.add(v.getPropertyPath() + ": " + v.getMessage()));
+        ex.getConstraintViolations().forEach(v -> violations.add(v.getPropertyPath() + ": " + messageService.resolve(v.getMessage(), null)));
         return ResponseEntity.status(BAD_REQUEST).body(
                 ExceptionResponse.builder()
                         .errorCode(INVALID_REQUEST.getCode())
-                        .errorDescription(INVALID_REQUEST.getDescription())
+                        .errorDescription(localizedDescription(INVALID_REQUEST))
                         .validationErrors(violations)
                         .build()
         );
@@ -236,7 +241,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 : DisabledException.class.isInstance(ex)
                 ? ACCOUNT_DISABLED
                 : BAD_CREDENTIALS;
-        return buildResponse(UNAUTHORIZED, code, ex.getMessage() != null ? ex.getMessage() : code.getDescription());
+        return buildResponse(UNAUTHORIZED, code, ex.getMessage() != null ? ex.getMessage() : localizedDescription(code));
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -254,13 +259,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ExceptionResponse> handleAccessDenied(AccessDeniedException ex) {
         log.error("Access denied", ex);
-        return buildResponse(FORBIDDEN, ACCESS_DENIED, ACCESS_DENIED.getDescription());
+        return buildResponse(FORBIDDEN, ACCESS_DENIED, localizedDescription(ACCESS_DENIED));
     }
 
     @ExceptionHandler({EntityNotFoundException.class, ResourceNotFoundException.class, AccountNotFoundException.class})
     public ResponseEntity<ExceptionResponse> handleNotFound(RuntimeException ex) {
         log.error("Resource not found", ex);
-        String message = ex.getMessage() != null ? ex.getMessage() : "Requested resource was not found";
+        String message = ex.getMessage() != null ? ex.getMessage() : key("error.resource.notFound", "Requested resource was not found");
         return buildResponse(NOT_FOUND, RESOURCE_NOT_FOUND, message);
     }
 
@@ -277,7 +282,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(CONFLICT).body(
                 ExceptionResponse.builder()
                         .errorCode(DUPLICATE_RESOURCE.getCode())
-                        .errorDescription(DUPLICATE_RESOURCE.formatDescription(field))
+                        .errorDescription(key("error.code.duplicateResource", DUPLICATE_RESOURCE.formatDescription(field), field, field))
                         .error(ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage())
                         .build()
         );
@@ -286,13 +291,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ExceptionResponse> handleDataAccess(DataAccessException ex) {
         log.error("General data access exception", ex);
-        return buildResponse(INTERNAL_SERVER_ERROR, DATA_ACCESS_ERROR, DATA_ACCESS_ERROR.getDescription());
+        return buildResponse(INTERNAL_SERVER_ERROR, DATA_ACCESS_ERROR, localizedDescription(DATA_ACCESS_ERROR));
     }
 
     @ExceptionHandler(MessagingException.class)
     public ResponseEntity<ExceptionResponse> handleMessaging(MessagingException ex) {
         log.error("Email error", ex);
-        return buildResponse(INTERNAL_SERVER_ERROR, DATA_ACCESS_ERROR, "Failed to send email: " + ex.getMessage());
+        return buildResponse(INTERNAL_SERVER_ERROR, DATA_ACCESS_ERROR, key("error.email.sendFailed", "Failed to send email: {0}", ex.getMessage()));
     }
 
     @ExceptionHandler({InvalidTransactionException.class, InsufficientFundsException.class, ReconciliationException.class})
@@ -316,7 +321,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(NumberFormatException.class)
     public ResponseEntity<ExceptionResponse> handleNumberFormat(NumberFormatException ex) {
         log.error("Number format exception", ex);
-        return buildResponse(BAD_REQUEST, INVALID_REQUEST, "Invalid numeric value in request");
+        return buildResponse(BAD_REQUEST, INVALID_REQUEST, key("error.request.invalidNumber", "Invalid numeric value in request"));
     }
 
     @ExceptionHandler(UnsupportedOperationException.class)
@@ -347,32 +352,32 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(status).body(
                 ExceptionResponse.builder()
                         .errorCode(code.getCode())
-                        .errorDescription(code.getDescription())
+                        .errorDescription(localizedDescription(code))
                         .error(message)
                         .build()
         );
     }
 
-    private ExceptionResponse validationResponse(java.util.List<FieldError> fieldErrors,
-                                                 java.util.List<org.springframework.validation.ObjectError> globalErrors) {
+    private ExceptionResponse validationResponse(List<FieldError> fieldErrors,
+                                                 List<org.springframework.validation.ObjectError> globalErrors) {
         Map<String, String> errors = new LinkedHashMap<>();
         Set<String> validationErrors = new HashSet<>();
 
         for (FieldError fieldError : fieldErrors) {
-            String message = fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "Invalid value";
+            String message = resolveValidationMessage(fieldError.getDefaultMessage(), fieldError.getArguments());
             errors.putIfAbsent(fieldError.getField(), message);
             validationErrors.add(fieldError.getField() + ": " + message);
         }
 
         for (org.springframework.validation.ObjectError globalError : globalErrors) {
             if (globalError.getDefaultMessage() != null) {
-                validationErrors.add(globalError.getDefaultMessage());
+                validationErrors.add(resolveValidationMessage(globalError.getDefaultMessage(), globalError.getArguments()));
             }
         }
 
         return ExceptionResponse.builder()
                 .errorCode(INVALID_REQUEST.getCode())
-                .errorDescription(INVALID_REQUEST.getDescription())
+                .errorDescription(localizedDescription(INVALID_REQUEST))
                 .errors(errors.isEmpty() ? null : errors)
                 .validationErrors(validationErrors.isEmpty() ? null : validationErrors)
                 .build();
@@ -404,5 +409,35 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private ResponseEntity<Object> bodyOnly(ResponseEntity<ExceptionResponse> response, HttpStatus status) {
         return new ResponseEntity<>(response.getBody(), status);
+    }
+
+    private String resolveValidationMessage(String keyOrMessage, Object[] args) {
+        if (keyOrMessage == null) {
+            return key("validation.common.invalid", "Invalid value");
+        }
+        return messageService.resolve(keyOrMessage, args);
+    }
+
+    private String localizedDescription(BusinessErrorCodes code) {
+        return switch (code) {
+            case INVALID_REQUEST -> key("error.code.invalidRequest", code.getDescription());
+            case RESOURCE_NOT_FOUND -> key("error.code.resourceNotFound", code.getDescription());
+            case DUPLICATE_REQUEST -> key("error.code.duplicateRequest", code.getDescription());
+            case DUPLICATE_RESOURCE -> key("error.code.duplicateResourceGeneric", code.getDescription());
+            case ACCESS_DENIED -> key("error.code.accessDenied", code.getDescription());
+            case AUTHENTICATION_FAILED -> key("error.code.authenticationFailed", code.getDescription());
+            case ACCOUNT_DISABLED -> key("error.code.accountDisabled", code.getDescription());
+            case ACCOUNT_LOCKED -> key("error.code.accountLocked", code.getDescription());
+            case BAD_CREDENTIALS -> key("error.code.badCredentials", code.getDescription());
+            case BUSINESS_RULE_VIOLATION -> key("error.code.businessRuleViolation", code.getDescription());
+            case STATE_CONFLICT -> key("error.code.stateConflict", code.getDescription());
+            case DATA_ACCESS_ERROR -> key("error.code.dataAccessError", code.getDescription());
+            case UNSUPPORTED_OPERATION -> key("error.code.unsupportedOperation", code.getDescription());
+            default -> code.getDescription();
+        };
+    }
+
+    private String key(String key, String fallback, Object... args) {
+        return messageService.get(key, fallback, args);
     }
 }

@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.events.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType;
@@ -56,15 +57,31 @@ public class EventServiceImpl implements EventService {
     private final ChurchRepository churchRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final EmailNotificationService emailNotificationService;
+    private final LocalizedMessageService messageService;
 
     @Override
     public EventEntity convertToEntity(EventDTO eventDTO) {
-        return eventMapper.eventDTOToEntity(eventDTO);
+        EventEntity entity = eventMapper.eventDTOToEntity(eventDTO);
+        if (entity != null) {
+            entity.setEndDate(eventDTO.getEndDate());
+        }
+        return entity;
     }
 
     @Override
     public EventDTO convertToDTO(EventEntity eventEntity) {
-        return eventMapper.eventEntityToDTO(eventEntity);
+        EventDTO dto = eventMapper.eventEntityToDTO(eventEntity);
+        if (dto != null) {
+            LocalDate resolvedEndDate = eventEntity.getEndDate();
+            if (resolvedEndDate == null && eventEntity.getEndAt() != null) {
+                resolvedEndDate = eventEntity.getEndAt().toLocalDate();
+            }
+            if (resolvedEndDate == null && eventEntity.getDate() != null && eventEntity.getEndTime() != null) {
+                resolvedEndDate = eventEntity.getDate();
+            }
+            dto.setEndDate(resolvedEndDate);
+        }
+        return dto;
     }
 
     @Override
@@ -80,28 +97,40 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventDTO> getVisibleEventsForUser(UUID userId) {
         if (userId == null) {
-            throw new IllegalArgumentException("User ID is required to resolve visible events");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.userId.required",
+                    "User ID is required to resolve visible events"
+            ));
         }
 
         UUID tenantId = requireTenantId();
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "user.notFound",
+                        "User not found"
+                )));
 
         return eventRepository.findVisibleForUser(tenantId, userId, user.getEmail()).stream()
-                .map(eventMapper::eventEntityToDTO)
+                .map(this::convertToDTO)
                 .toList();
     }
 
     @Override
     public EventDTO getEventByIdForUser(UUID userId, Long eventId) {
         if (eventId == null) {
-            throw new IllegalArgumentException("Event ID is required");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.eventId.required",
+                    "Event ID is required"
+            ));
         }
 
         return getVisibleEventsForUser(userId).stream()
                 .filter(event -> eventId.equals(event.getEventId()))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "events.notFound",
+                        "Event not found"
+                )));
     }
 
     @Override
@@ -109,7 +138,10 @@ public class EventServiceImpl implements EventService {
         UUID tenantId = requireTenantId();
         EventEntity event = findEventForTenant(eventId, tenantId);
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "user.notFound",
+                        "User not found"
+                )));
 
         assertUserInEventScope(event, user, "Manager");
 
@@ -139,7 +171,10 @@ public class EventServiceImpl implements EventService {
         EventEntity event = findEventForTenant(eventId, tenantId);
 
         if (event.getEventManagers() == null || event.getEventManagers().isEmpty()) {
-            throw new EntityNotFoundException("Manager not assigned to event");
+            throw new EntityNotFoundException(messageService.get(
+                    "events.manager.notAssigned",
+                    "Manager not assigned to event"
+            ));
         }
 
         boolean removed = event.getEventManagers().removeIf(existingManager -> {
@@ -148,7 +183,10 @@ public class EventServiceImpl implements EventService {
         });
 
         if (!removed) {
-            throw new EntityNotFoundException("Manager not assigned to event");
+            throw new EntityNotFoundException(messageService.get(
+                    "events.manager.notAssigned",
+                    "Manager not assigned to event"
+            ));
         }
 
         eventRepository.save(event);
@@ -199,12 +237,21 @@ public class EventServiceImpl implements EventService {
 
     private void normalizeAndValidateEvent(EventEntity event, UUID tenantId) {
         if (event.getChurch() == null || event.getChurch().getChurchId() == null) {
-            throw new IllegalArgumentException("Church is required");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.church.required",
+                    "Church is required"
+            ));
         }
         ChurchEntity resolvedChurch = churchRepository.findById(event.getChurch().getChurchId())
-                .orElseThrow(() -> new EntityNotFoundException("Church not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "church.notFound",
+                        "Church not found"
+                )));
         if (resolvedChurch.getTenant() == null || !tenantId.equals(resolvedChurch.getTenant().getId())) {
-            throw new IllegalArgumentException("Church does not belong to current tenant");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.church.tenantMismatch",
+                    "Church does not belong to current tenant"
+            ));
         }
         event.setChurch(resolvedChurch);
 
@@ -223,9 +270,16 @@ public class EventServiceImpl implements EventService {
                     continue;
                 }
                 GroupEntity resolved = groupRepository.findById(incoming.getGroupId())
-                        .orElseThrow(() -> new EntityNotFoundException("Group not found: " + incoming.getGroupId()));
+                        .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                                "groups.notFound.withId",
+                                "Group not found: {0}",
+                                incoming.getGroupId()
+                        )));
                 if (!tenantId.equals(resolved.getTenantId())) {
-                    throw new IllegalArgumentException("Group does not belong to current tenant");
+                    throw new IllegalArgumentException(messageService.get(
+                            "groups.tenantMismatch",
+                            "Group does not belong to current tenant"
+                    ));
                 }
                 resolvedGroups.add(resolved);
             }
@@ -239,7 +293,11 @@ public class EventServiceImpl implements EventService {
                     continue;
                 }
                 UserEntity resolved = userRepository.findById(incoming.getUuid())
-                        .orElseThrow(() -> new EntityNotFoundException("User not found: " + incoming.getUuid()));
+                        .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                                "user.notFound.withId",
+                                "User not found: {0}",
+                                incoming.getUuid()
+                        )));
                 assertUserInEventScope(event, resolved, "Invitee");
                 resolvedUsers.add(resolved);
             }
@@ -262,31 +320,39 @@ public class EventServiceImpl implements EventService {
     private void normalizeDateTimes(EventEntity event) {
         LocalDateTime startAt = event.getStartAt();
         LocalDateTime endAt = event.getEndAt();
+        LocalDate startDate = event.getDate();
+        LocalDate endDate = event.getEndDate();
 
         if (startAt == null) {
-            if (event.getDate() == null || event.getStartTime() == null) {
-                throw new IllegalArgumentException("Either startAt or date + startTime is required");
+            if (startDate == null || event.getStartTime() == null) {
+                throw new IllegalArgumentException(messageService.get(
+                        "events.start.required",
+                        "Either startAt or date + startTime is required"
+                ));
             }
-            startAt = LocalDateTime.of(event.getDate(), event.getStartTime());
+            startAt = LocalDateTime.of(startDate, event.getStartTime());
             event.setStartAt(startAt);
         }
 
         if (endAt == null && event.getEndTime() != null) {
-            LocalDate baseDate = event.getDate() != null ? event.getDate() : startAt.toLocalDate();
+            LocalDate baseDate = endDate != null ? endDate : (startDate != null ? startDate : startAt.toLocalDate());
             LocalDateTime candidate = LocalDateTime.of(baseDate, event.getEndTime());
-            if (!candidate.isAfter(startAt)) {
-                candidate = candidate.plusDays(1);
-            }
             endAt = candidate;
             event.setEndAt(endAt);
         }
 
         if (endAt != null && !endAt.isAfter(startAt)) {
-            throw new IllegalArgumentException("Event end must be after start");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.end.afterStart",
+                    "Event end must be after start"
+            ));
         }
 
         if (event.getDate() == null) {
             event.setDate(startAt.toLocalDate());
+        }
+        if (event.getEndDate() == null && endAt != null) {
+            event.setEndDate(endAt.toLocalDate());
         }
         if (event.getStartTime() == null) {
             event.setStartTime(startAt.toLocalTime());
@@ -304,7 +370,10 @@ public class EventServiceImpl implements EventService {
 
         String gps = event.getGpsLocation() == null ? "" : event.getGpsLocation().trim();
         if (gps.isBlank()) {
-            throw new IllegalArgumentException("gpsLocation is required when geo check-in is enabled");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.geo.gpsLocation.required",
+                    "gpsLocation is required when geo check-in is enabled"
+            ));
         }
 
         Double lat = event.getLatitude();
@@ -320,10 +389,16 @@ public class EventServiceImpl implements EventService {
         }
 
         if (lat == null || lng == null) {
-            throw new IllegalArgumentException("Latitude and longitude are required when geo check-in is enabled");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.geo.coordinates.required",
+                    "Latitude and longitude are required when geo check-in is enabled"
+            ));
         }
         if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-            throw new IllegalArgumentException("Invalid latitude/longitude values");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.geo.coordinates.invalid",
+                    "Invalid latitude/longitude values"
+            ));
         }
     }
 
@@ -337,7 +412,10 @@ public class EventServiceImpl implements EventService {
                 continue;
             }
             UserEntity persisted = userRepository.findById(manager.getUser().getUuid())
-                    .orElseThrow(() -> new EntityNotFoundException("Manager user not found"));
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                            "events.manager.user.notFound",
+                            "Manager user not found"
+                    )));
             assertUserInEventScope(event, persisted, "Manager");
             manager.setUser(persisted);
             manager.setEvent(event);
@@ -380,7 +458,11 @@ public class EventServiceImpl implements EventService {
 
         emailNotificationService.sendEmail(
                 email,
-                "You're invited: " + event.getTitle(),
+                messageService.get(
+                        "events.invitation.subject",
+                        "You're invited: {0}",
+                        event.getTitle()
+                ),
                 EmailTemplateName.NOTIFICATION,
                 props
         );
@@ -394,13 +476,22 @@ public class EventServiceImpl implements EventService {
         props.put("event_date", event.getDate() != null ? event.getDate().toString() : "");
         props.put("event_start_at", event.getStartAt() != null ? event.getStartAt().toString() : "");
         props.put("message_content",
-                "You are invited to \"" + event.getTitle() + "\" at " + event.getLocation() + ".");
+                messageService.get(
+                        "events.invitation.message",
+                        "You are invited to \"{0}\" at {1}.",
+                        event.getTitle(),
+                        event.getLocation()
+                ));
         return props;
     }
 
     private void assertUserInEventScope(EventEntity event, UserEntity user, String subject) {
         if (!isUserInEventScope(event, user)) {
-            throw new IllegalArgumentException(subject + " must belong to the same tenant/church membership scope");
+            throw new IllegalArgumentException(messageService.get(
+                    "events.scope.user.invalid",
+                    "{0} must belong to the same tenant/church membership scope",
+                    subject
+            ));
         }
     }
 
@@ -419,9 +510,15 @@ public class EventServiceImpl implements EventService {
 
     private EventEntity findEventForTenant(Long eventId, UUID tenantId) {
         EventEntity event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "events.notFound",
+                        "Event not found"
+                )));
         if (!tenantId.equals(event.getTenantId())) {
-            throw new EntityNotFoundException("Event not found");
+            throw new EntityNotFoundException(messageService.get(
+                    "events.notFound",
+                    "Event not found"
+            ));
         }
         return event;
     }
@@ -429,7 +526,10 @@ public class EventServiceImpl implements EventService {
     private UUID requireTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID not found in context");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.context.missing",
+                    "Tenant ID not found in context"
+            ));
         }
         return tenantId;
     }

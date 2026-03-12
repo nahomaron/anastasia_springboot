@@ -8,9 +8,9 @@ import lombok.Setter;
 @Setter
 public class VerifyLoginTwoFactorRequest {
 
-    @NotBlank(message = "Challenge token is required")
+    @NotBlank(message = "validation.auth.twoFactor.challengeToken.required")
     private String challengeToken;
 
-    @NotBlank(message = "Verification code is required")
+    @NotBlank(message = "validation.auth.verificationCode.required")
     private String code;
 }

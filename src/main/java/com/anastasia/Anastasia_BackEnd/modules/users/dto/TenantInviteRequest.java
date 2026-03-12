@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class TenantInviteRequest {
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "validation.auth.email.required")
+    @Email(message = "validation.auth.email.invalid")
     private String email;
 }

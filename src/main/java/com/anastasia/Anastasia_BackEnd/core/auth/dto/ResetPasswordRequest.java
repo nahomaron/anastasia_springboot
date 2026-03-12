@@ -19,14 +19,14 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ResetPasswordRequest {
 
-    @NotBlank(message = "Reset token is required.")
+    @NotBlank(message = "validation.auth.reset.token.required")
     private String token;
 
-    @NotBlank(message = "New password is required.")
-    @Size(min = 8, message = "New password must be at least 8 characters long.")
+    @NotBlank(message = "validation.auth.reset.newPassword.required")
+    @Size(min = 8, message = "validation.auth.reset.newPassword.min")
     private String newPassword;
 
-    @NotBlank(message = "Password confirmation is required.")
+    @NotBlank(message = "validation.auth.reset.confirmPassword.required")
     private String confirmNewPassword;
 
     public boolean isPasswordMatch() {

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class UpdateRecoveryEmailRequest {
 
-    @NotBlank(message = "Recovery email is required")
-    @Email(message = "Recovery email must be a valid email")
+    @NotBlank(message = "validation.user.recoveryEmail.required")
+    @Email(message = "validation.user.recoveryEmail.invalid")
     private String recoveryEmail;
 }

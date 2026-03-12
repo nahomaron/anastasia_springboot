@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.events.service;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRequestDTO;
@@ -25,21 +26,31 @@ public class EventAttendanceService {
     private final UserRepository userRepository;
     private final EventAttendanceRepository attendanceRepository;
     private final EventRepository eventRepository;
+    private final LocalizedMessageService messageService;
 
     public EventAttendance checkIn(CheckInRequestDTO requestDTO) {
 
         EventEntity event = eventRepository.findById(requestDTO.getEventId())
-                .orElseThrow(() -> new EntityNotFoundException("Event not valid"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "events.invalid",
+                        "Event not valid"
+                )));
 
         UserEntity user = userRepository.findById(requestDTO.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "user.notFound",
+                        "User not found"
+                )));
 
         boolean alreadyCheckIn = attendanceRepository
                 .findByUserUuidAndEventId(user.getUuid(), event.getEventId())
                 .isPresent();
 
         if(alreadyCheckIn){
-            throw new IllegalStateException("User already checked in");
+            throw new IllegalStateException(messageService.get(
+                    "events.attendance.alreadyCheckedIn",
+                    "User already checked in"
+            ));
         }
 
         EventAttendance attendance = EventAttendance.builder()
@@ -56,16 +67,25 @@ public class EventAttendanceService {
 
     public EventAttendance markAbsent(MarkAbsentRequestDTO request) {
         EventEntity event = eventRepository.findById(request.getEventId())
-                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "events.notFound",
+                        "Event not found"
+                )));
 
         UserEntity user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "user.notFound",
+                        "User not found"
+                )));
 
         boolean alreadyMarked = attendanceRepository
                 .findByUserUuidAndEventId(user.getUuid(), event.getEventId()).isPresent();
 
         if (alreadyMarked) {
-            throw new IllegalStateException("Attendance already recorded");
+            throw new IllegalStateException(messageService.get(
+                    "events.attendance.alreadyRecorded",
+                    "Attendance already recorded"
+            ));
         }
 
         EventAttendance attendance = EventAttendance.builder()
@@ -96,10 +116,16 @@ public class EventAttendanceService {
 
     public EventAttendance updateAttendanceStatus(UpdateAttendanceStatusRequestDTO request) {
         EventEntity event = eventRepository.findById(request.getEventId())
-                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "events.notFound",
+                        "Event not found"
+                )));
 
         UserEntity user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "user.notFound",
+                        "User not found"
+                )));
 
         EventAttendance attendance = attendanceRepository
                 .findByUserUuidAndEventId(user.getUuid(), event.getEventId())

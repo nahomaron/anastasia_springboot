@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.onboarding.OnboardingSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.OnboardingSessionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
@@ -41,6 +42,7 @@ public class TenantOnboardingBillingService {
     private final TenantOnboardingProvisioningService onboardingProvisioningService;
     private final OnboardingEmailVerificationService onboardingEmailVerificationService;
     private final AuthService authService;
+    private final LocalizedMessageService messageService;
 
     @Transactional
     public OnboardingSessionResponse createSession(TenantDTO tenantDTO, String idempotencyKey) {
@@ -56,7 +58,10 @@ public class TenantOnboardingBillingService {
     @Transactional
     public OnboardingSessionResponse createCheckout(UUID sessionId, String idempotencyKey) {
         TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Onboarding session not found"));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "onboarding.session.notFound",
+                        "Onboarding session not found"
+                )));
 
         ensureEmailVerifiedForOnboarding(session);
 
@@ -77,7 +82,11 @@ public class TenantOnboardingBillingService {
         if (session.getStatus() != OnboardingSessionStatus.DRAFT
                 && session.getStatus() != OnboardingSessionStatus.CHECKOUT_CREATED
                 && session.getStatus() != OnboardingSessionStatus.PAYMENT_PENDING) {
-            throw new IllegalStateException("Session status does not allow checkout creation: " + session.getStatus());
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.checkout.status.invalid",
+                    "Session status does not allow checkout creation: {0}",
+                    session.getStatus()
+            ));
         }
 
         TenantPlanBillingCatalog.PlanPrice planPrice = billingCatalog.resolve(session.getSelectedPlan());
@@ -108,14 +117,20 @@ public class TenantOnboardingBillingService {
     public OnboardingSessionResponse finalizeProvisioning(UUID sessionId) {
         onboardingProvisioningService.finalizeProvisioningIfReady(sessionId);
         TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Onboarding session not found"));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "onboarding.session.notFound",
+                        "Onboarding session not found"
+                )));
         return toResponse(session);
     }
 
     @Transactional
     public OnboardingSessionResponse getSession(UUID sessionId) {
         TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Onboarding session not found"));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "onboarding.session.notFound",
+                        "Onboarding session not found"
+                )));
         refreshFromStripeIfNeeded(session);
         return toResponse(session);
     }
@@ -123,14 +138,23 @@ public class TenantOnboardingBillingService {
     @Transactional
     public AuthenticationResponse autoLogin(UUID sessionId) {
         TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Onboarding session not found"));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "onboarding.session.notFound",
+                        "Onboarding session not found"
+                )));
 
         refreshFromStripeIfNeeded(session);
         if (session.getStatus() != OnboardingSessionStatus.PROVISIONED) {
-            throw new IllegalStateException("Session is not provisioned yet.");
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.session.notProvisioned",
+                    "Session is not provisioned yet."
+            ));
         }
         if (session.getProvisionedOwnerUserId() == null) {
-            throw new IllegalStateException("Provisioned owner user was not found for this session.");
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.session.ownerMissing",
+                    "Provisioned owner user was not found for this session."
+            ));
         }
 
         return authService.issueSessionForUser(session.getProvisionedOwnerUserId());
@@ -138,13 +162,22 @@ public class TenantOnboardingBillingService {
 
     private TenantOnboardingSessionEntity buildSession(TenantDTO tenantDTO, String normalizedIdempotency) {
         if (!tenantDTO.isPasswordMatch()) {
-            throw new IllegalArgumentException("Password and confirm password do not match");
+            throw new IllegalArgumentException(messageService.get(
+                    "onboarding.password.mismatch",
+                    "Password and confirm password do not match"
+            ));
         }
         if (!Boolean.TRUE.equals(tenantDTO.getTermsAccepted())) {
-            throw new IllegalArgumentException("Terms and Conditions must be accepted before payment.");
+            throw new IllegalArgumentException(messageService.get(
+                    "onboarding.terms.required",
+                    "Terms and Conditions must be accepted before payment."
+            ));
         }
         if (tenantDTO.getTermsVersion() == null || tenantDTO.getTermsVersion().isBlank()) {
-            throw new IllegalArgumentException("Terms version is required.");
+            throw new IllegalArgumentException(messageService.get(
+                    "onboarding.terms.version.required",
+                    "Terms version is required."
+            ));
         }
 
         boolean paymentRequired = tenantDTO.getSubscriptionPlan() != SubscriptionPlan.FREE;
@@ -183,20 +216,29 @@ public class TenantOnboardingBillingService {
         try {
             return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize onboarding draft payload", e);
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.session.draftPayload.serializeFailed",
+                    "Failed to serialize onboarding draft payload"
+            ), e);
         }
     }
 
     private String normalizeIdempotency(String idempotencyKey) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            throw new IllegalArgumentException("Idempotency-Key header is required");
+            throw new IllegalArgumentException(messageService.get(
+                    "onboarding.idempotency.required",
+                    "Idempotency-Key header is required"
+            ));
         }
         return idempotencyKey.trim();
     }
 
     private void ensureEmailVerifiedForOnboarding(TenantOnboardingSessionEntity session) {
         if (!onboardingEmailVerificationService.isVerified(session.getOwnerEmail())) {
-            throw new IllegalStateException("Email must be verified before continuing to checkout.");
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.emailVerification.required",
+                    "Email must be verified before continuing to checkout."
+            ));
         }
     }
 
@@ -226,7 +268,10 @@ public class TenantOnboardingBillingService {
                 String checkoutStatus = checkoutSession.getStatus() == null ? "" : checkoutSession.getStatus().toLowerCase();
                 if ("expired".equals(checkoutStatus)) {
                     session.setStatus(OnboardingSessionStatus.EXPIRED);
-                    session.setFailureReason("Stripe checkout session expired.");
+                    session.setFailureReason(messageService.get(
+                            "onboarding.stripe.checkout.expired",
+                            "Stripe checkout session expired."
+                    ));
                     onboardingSessionRepository.save(session);
                 }
                 return;
@@ -255,7 +300,11 @@ public class TenantOnboardingBillingService {
                 }
                 case "canceled", "unpaid", "incomplete_expired" -> {
                     session.setStatus(OnboardingSessionStatus.CANCELED);
-                    session.setFailureReason("Stripe subscription status is " + stripeStatus);
+                    session.setFailureReason(messageService.get(
+                            "onboarding.stripe.subscription.status",
+                            "Stripe subscription status is {0}",
+                            stripeStatus
+                    ));
                     onboardingSessionRepository.save(session);
                 }
                 default -> {
@@ -271,7 +320,10 @@ public class TenantOnboardingBillingService {
     private IllegalStateException mapCheckoutStripeException(StripeException ex) {
         if (ex instanceof AuthenticationException) {
             return new IllegalStateException(
-                    "Stripe is not configured on the server. Missing or invalid Stripe API key.",
+                    messageService.get(
+                            "onboarding.stripe.configuration.invalid",
+                            "Stripe is not configured on the server. Missing or invalid Stripe API key."
+                    ),
                     ex
             );
         }
@@ -280,13 +332,19 @@ public class TenantOnboardingBillingService {
             String message = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
             if (message.contains("no such price")) {
                 return new IllegalStateException(
-                        "Stripe pricing is not configured correctly for the selected plan.",
+                        messageService.get(
+                                "onboarding.stripe.pricing.invalid",
+                                "Stripe pricing is not configured correctly for the selected plan."
+                        ),
                         ex
                 );
             }
         }
 
-        return new IllegalStateException("Unable to create Stripe onboarding checkout session", ex);
+        return new IllegalStateException(messageService.get(
+                "onboarding.stripe.checkout.createFailed",
+                "Unable to create Stripe onboarding checkout session"
+        ), ex);
     }
 
     private OnboardingSessionResponse toResponse(TenantOnboardingSessionEntity session) {

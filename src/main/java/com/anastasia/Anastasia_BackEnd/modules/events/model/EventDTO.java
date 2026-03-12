@@ -1,5 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.modules.events.model;
 
+import com.anastasia.Anastasia_BackEnd.common.json.HourMinuteLocalTimeSerializer;
+import com.anastasia.Anastasia_BackEnd.common.json.LenientLocalTimeDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -27,18 +31,24 @@ public class EventDTO {
 
     private ChurchEntity church;
 
-    @NotBlank(message = "Title is required")
+    @NotBlank(message = "{validation.events.title.required}")
     private String title;
 
     private String description;
 
     private LocalDate date;
 
-    @NotBlank(message = "Location is required")
+    private LocalDate endDate;
+
+    @NotBlank(message = "{validation.events.location.required}")
     private String location;
 
+    @JsonSerialize(using = HourMinuteLocalTimeSerializer.class)
+    @JsonDeserialize(using = LenientLocalTimeDeserializer.class)
     private LocalTime startTime;
 
+    @JsonSerialize(using = HourMinuteLocalTimeSerializer.class)
+    @JsonDeserialize(using = LenientLocalTimeDeserializer.class)
     private LocalTime endTime;
 
     private LocalDateTime startAt;
@@ -73,7 +83,7 @@ public class EventDTO {
 
     private Set<String> invitedEmails;
 
-    @NotNull(message = "Who can see it, is required")
+    @NotNull(message = "{validation.events.visibility.required}")
     private EventVisibilityType visibility;
 
     private Repetition repetition;

@@ -1,12 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingInterval;
@@ -15,16 +16,18 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Members
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.OnboardingSessionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantOnboardingSessionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionProviderLinkEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantUserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantOnboardingSessionRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantUserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,17 +53,21 @@ public class TenantOnboardingProvisioningService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final ChurchMapper churchMapper;
-    private final TenantUserRepository tenantUserRepository;
+    private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final PhoneVerificationService phoneVerificationService;
     private final SecurityUtils securityUtils;
     private final ObjectMapper objectMapper;
     private final TenantPlanBillingCatalog billingCatalog;
     private final OnboardingEmailVerificationService onboardingEmailVerificationService;
+    private final LocalizedMessageService messageService;
 
     @Transactional
     public void finalizeProvisioningIfReady(UUID onboardingSessionId) {
         TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(onboardingSessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Onboarding session not found"));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "onboarding.session.notFound",
+                        "Onboarding session not found"
+                )));
 
         if (session.getStatus() == OnboardingSessionStatus.PROVISIONED) {
             return;
@@ -103,7 +110,7 @@ public class TenantOnboardingProvisioningService {
                 .tenantType(session.getTenantType())
                 .ownerName(session.getOwnerName())
                 .phoneNumber(session.getOwnerPhone())
-                .isActiveTenant(true)
+                .status(TenantStatus.ACTIVE)
                 .build();
 
         boolean paidFlow = session.isPaymentRequired();
@@ -111,14 +118,20 @@ public class TenantOnboardingProvisioningService {
                 .plan(session.getSelectedPlan())
                 .status(paidFlow ? SubscriptionStatus.ACTIVE : SubscriptionStatus.TRIALING)
                 .provider(paidFlow ? BillingProvider.STRIPE : BillingProvider.MANUAL)
-                .providerCustomerId(session.getProviderCustomerId())
-                .providerSubscriptionId(session.getProviderSubscriptionId())
-                .stripePriceId(resolvePriceId(session.getSelectedPlan()))
                 .billingInterval(BillingInterval.MONTHLY)
                 .currentPeriodStartAt(LocalDateTime.now())
                 .currentPeriodEndAt(LocalDateTime.now().plusMonths(1))
                 .lastPaymentAt(paidFlow ? LocalDateTime.now() : null)
                 .build();
+        if (paidFlow) {
+            subscription.addProviderLink(TenantSubscriptionProviderLinkEntity.builder()
+                    .provider(BillingProvider.STRIPE)
+                    .providerCustomerId(session.getProviderCustomerId())
+                    .providerSubscriptionId(session.getProviderSubscriptionId())
+                    .providerPriceReference(resolvePriceId(session.getSelectedPlan()))
+                    .active(true)
+                    .build());
+        }
         tenant.assignSubscription(subscription);
 
         TenantEntity savedTenant = tenantRepository.save(tenant);
@@ -147,7 +160,10 @@ public class TenantOnboardingProvisioningService {
                 return tenant;
             }
         }
-        throw new IllegalStateException("Cannot provision onboarding session due to email/phone collision");
+        throw new IllegalStateException(messageService.get(
+                "onboarding.provisioning.contactCollision",
+                "Cannot provision onboarding session due to email/phone collision"
+        ));
     }
 
     private void provisionChurchIfNeeded(TenantEntity tenant, TenantOnboardingSessionEntity session) {
@@ -157,14 +173,17 @@ public class TenantOnboardingProvisioningService {
 
         DraftTenantPayload draft = parseDraft(session);
         if (draft.church() == null) {
-            throw new IllegalStateException("Church onboarding draft is missing church data");
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.provisioning.churchDraftMissing",
+                    "Church onboarding draft is missing church data"
+            ));
         }
 
         ChurchEntity church = churchMapper.churchDTOToEntity(draft.church());
         church.setTenant(tenant);
         church.setUsesOurServices(true);
         if (church.getProfilePicture() != null) {
-            church.getProfilePicture().setAvatarType(AvatarType.CHURCH);
+            church.getProfilePicture().setImageAssetType(ImageAssetType.CHURCH);
             church.getProfilePicture().setOwnerId(tenant.getId());
         }
         church.setChurchNumber(generateUniqueChurchNumber(church.getChurchName(), 5));
@@ -175,9 +194,15 @@ public class TenantOnboardingProvisioningService {
 
     private UserEntity provisionOwner(TenantEntity tenant, TenantOnboardingSessionEntity session) {
         Role ownerRole = roleRepository.findByRoleName("OWNER")
-                .orElseThrow(() -> new IllegalStateException("Owner role not found"));
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "role.owner.notFound",
+                        "Owner role not found"
+                )));
         Role adminRole = roleRepository.findByRoleName("ADMIN")
-                .orElseThrow(() -> new IllegalStateException("Admin role not found"));
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "role.admin.notFound",
+                        "Admin role not found"
+                )));
 
         UserEntity owner = UserEntity.builder()
                 .fullName(session.getOwnerName())
@@ -190,7 +215,7 @@ public class TenantOnboardingProvisioningService {
                 .build();
         UserEntity savedOwner = userRepository.save(owner);
 
-        TenantUserEntity primaryAdminAssignment = TenantUserEntity.builder()
+        TenantAdminAssignmentEntity primaryAdminAssignment = TenantAdminAssignmentEntity.builder()
                 .tenant(tenant)
                 .userId(savedOwner.getUuid())
                 .role(TenantRole.PRIMARY_ADMIN)
@@ -199,7 +224,7 @@ public class TenantOnboardingProvisioningService {
                 .createdByUserId(savedOwner.getUuid())
                 .updatedByUserId(savedOwner.getUuid())
                 .build();
-        tenantUserRepository.save(primaryAdminAssignment);
+        tenantAdminAssignmentRepository.save(primaryAdminAssignment);
 
         return savedOwner;
     }
@@ -208,7 +233,10 @@ public class TenantOnboardingProvisioningService {
         try {
             return objectMapper.readValue(session.getDraftPayloadJson(), DraftTenantPayload.class);
         } catch (Exception ex) {
-            throw new IllegalStateException("Invalid onboarding draft payload");
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.session.draftPayload.invalid",
+                    "Invalid onboarding draft payload"
+            ));
         }
     }
 
@@ -241,7 +269,10 @@ public class TenantOnboardingProvisioningService {
 
     private String trimError(String message) {
         if (message == null || message.isBlank()) {
-            return "Unknown provisioning error";
+            return messageService.get(
+                    "onboarding.provisioning.unknownError",
+                    "Unknown provisioning error"
+            );
         }
         return message.length() > 1000 ? message.substring(0, 1000) : message;
     }

@@ -15,17 +15,17 @@ import java.util.UUID;
 @Builder
 public class GroupDTO {
 
-    @NotBlank(message = "Church Id is required")
+    @NotBlank(message = "{validation.groups.churchId.required}")
     private String churchId;
 
-    @NotBlank(message = "Group name is required")
+    @NotBlank(message = "{validation.groups.name.required}")
     private String groupName;
 
     private String description;
 
     private String avatar;
 
-    @NotBlank(message = "Visibility Required")
+    @NotBlank(message = "{validation.groups.visibility.required}")
     private String visibility;
 
     private Set<UUID> managers;

@@ -15,6 +15,6 @@ import java.util.UUID;
 @Builder
 public class AddUsersToGroupRequest {
 
-    @NotEmpty(message = "User IDs cannot be empty")
+    @NotEmpty(message = "{validation.groups.users.required}")
     private Set<UUID> userIds;
 }

@@ -1,21 +1,22 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantUserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantUserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -58,7 +59,8 @@ public class TenantServiceImpl implements TenantService {
     private final RoleRepository roleRepository;
     private final PhoneVerificationService phoneVerificationService;   // NEW
     private final SecurityUtils securityUtils;
-    private final TenantUserRepository tenantUserRepository;
+    private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
+    private final LocalizedMessageService messageService;
 
     @Override
     public TenantEntity convertTenantToEntity(TenantDTO tenantDTO) {
@@ -89,13 +91,19 @@ public class TenantServiceImpl implements TenantService {
 
         // 1. ADD DUPLICATE PHONE NUMBER CHECK
         if (tenantRepository.existsByPhoneNumber(tenantDTO.getPhoneNumber())) {
-            throw new DuplicateKeyException("Phone number already in use.");
+            throw new DuplicateKeyException(messageService.get(
+                    "tenant.phone.duplicate",
+                    "Phone number already in use."
+            ));
             // Or throw a more specific exception that your controller can handle and return a 409 Conflict.
         }
 
         // 2. Add Email Duplication check (Good Practice)
         if (userRepository.existsByEmail(tenantDTO.getEmail())) {
-            throw new DuplicateKeyException("Email address already in use.");
+            throw new DuplicateKeyException(messageService.get(
+                    "tenant.email.duplicate",
+                    "Email address already in use."
+            ));
         }
 
         TenantEntity tenantEntity = TenantEntity.builder()
@@ -115,7 +123,10 @@ public class TenantServiceImpl implements TenantService {
 
         if (tenantDTO.getTenantType() == TenantType.CHURCH) {
             if (tenantDTO.getChurch() == null) {
-                throw new IllegalArgumentException("Church details are required for church tenants.");
+                throw new IllegalArgumentException(messageService.get(
+                        "tenant.church.details.required",
+                        "Church details are required for church tenants."
+                ));
             }
 
             ChurchEntity churchEntity = churchMapper.churchDTOToEntity(tenantDTO.getChurch());
@@ -123,7 +134,7 @@ public class TenantServiceImpl implements TenantService {
             churchEntity.setUsesOurServices(true);
 
             if (churchEntity.getProfilePicture() != null) {
-                churchEntity.getProfilePicture().setAvatarType(AvatarType.CHURCH);
+                churchEntity.getProfilePicture().setImageAssetType(ImageAssetType.CHURCH);
                 churchEntity.getProfilePicture().setOwnerId(savedTenant.getId());
             }
 
@@ -134,10 +145,16 @@ public class TenantServiceImpl implements TenantService {
         }
 
         Role ownerRole = roleRepository.findByRoleName("OWNER")
-                .orElseThrow(() -> new RuntimeException("Owner role not found"));
+                .orElseThrow(() -> new RuntimeException(messageService.get(
+                        "role.owner.notFound",
+                        "Owner role not found"
+                )));
 
         Role adminRole = roleRepository.findByRoleName("ADMIN")
-                .orElseThrow(() -> new RuntimeException("Admin role not found"));
+                .orElseThrow(() -> new RuntimeException(messageService.get(
+                        "role.admin.notFound",
+                        "Admin role not found"
+                )));
 
 
         UserEntity adminUser = UserEntity.builder()
@@ -154,7 +171,7 @@ public class TenantServiceImpl implements TenantService {
         UUID primaryAdminUserId = Optional.ofNullable(adminUser.getUuid())
                 .orElseGet(() -> userRepository.findByEmail(adminUser.getEmail()).map(UserEntity::getUuid).orElse(null));
         if (primaryAdminUserId != null) {
-            TenantUserEntity primaryAdminAssignment = TenantUserEntity.builder()
+            TenantAdminAssignmentEntity primaryAdminAssignment = TenantAdminAssignmentEntity.builder()
                     .tenant(savedTenant)
                     .userId(primaryAdminUserId)
                     .role(TenantRole.PRIMARY_ADMIN)
@@ -163,7 +180,7 @@ public class TenantServiceImpl implements TenantService {
                     .createdByUserId(primaryAdminUserId)
                     .updatedByUserId(primaryAdminUserId)
                     .build();
-            tenantUserRepository.save(primaryAdminAssignment);
+            tenantAdminAssignmentRepository.save(primaryAdminAssignment);
         }
 
         // Send OTP after account creation

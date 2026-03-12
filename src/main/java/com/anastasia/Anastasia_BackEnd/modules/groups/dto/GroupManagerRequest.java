@@ -15,6 +15,6 @@ import java.util.UUID;
 @Builder
 public class GroupManagerRequest {
 
-    @NotEmpty(message = "At least one manager identifier is required")
+    @NotEmpty(message = "{validation.groups.managers.required}")
     private Set<UUID> managerIds;
 }

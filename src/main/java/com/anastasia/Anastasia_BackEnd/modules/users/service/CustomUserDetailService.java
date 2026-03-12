@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final LocalizedMessageService messageService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -21,9 +23,11 @@ public class CustomUserDetailService implements UserDetailsService {
 
         if(user.isEmpty()){
             System.out.println("User not found");
-            throw new UsernameNotFoundException("User not found");
+            throw new UsernameNotFoundException(messageService.get("auth.login.userNotFound", "User not found"));
         }
 
-        return new UserPrincipal(user.orElseThrow(() -> new UsernameNotFoundException("user not found")));
+        return new UserPrincipal(user.orElseThrow(() -> new UsernameNotFoundException(
+                messageService.get("auth.login.userNotFound", "User not found")
+        )));
     }
 }

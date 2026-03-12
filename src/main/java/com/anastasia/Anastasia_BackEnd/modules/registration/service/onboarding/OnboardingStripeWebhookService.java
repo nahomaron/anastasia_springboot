@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.OnboardingSessionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantOnboardingSessionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WebhookEventReceiptEntity;
@@ -34,15 +35,21 @@ public class OnboardingStripeWebhookService {
     private final WebhookEventReceiptRepository webhookEventReceiptRepository;
     private final TenantPlanBillingCatalog billingCatalog;
     private final TenantOnboardingProvisioningService onboardingProvisioningService;
+    private final LocalizedMessageService messageService;
 
     @Transactional
-    public boolean handleCheckoutSessionCompleted(String eventId, String eventType, Instant eventCreatedAt, Session session) {
+    public boolean handleCheckoutSessionCompleted(String eventId,
+                                                  String eventType,
+                                                  Instant eventCreatedAt,
+                                                  String payload,
+                                                  String signatureHeader,
+                                                  Session session) {
         UUID onboardingSessionId = extractOnboardingSessionId(session.getMetadata());
         if (onboardingSessionId == null) {
             return false;
         }
 
-        return processEvent(eventId, eventType, onboardingSessionId, () -> {
+        return processEvent(eventId, eventType, eventCreatedAt, payload, signatureHeader, onboardingSessionId, () -> {
             TenantOnboardingSessionEntity onboardingSession = requireSession(onboardingSessionId);
             if (isTerminal(onboardingSession.getStatus())) {
                 return true;
@@ -66,13 +73,18 @@ public class OnboardingStripeWebhookService {
     }
 
     @Transactional
-    public boolean handleSubscriptionEvent(String eventId, String eventType, Instant eventCreatedAt, Subscription subscription) {
+    public boolean handleSubscriptionEvent(String eventId,
+                                           String eventType,
+                                           Instant eventCreatedAt,
+                                           String payload,
+                                           String signatureHeader,
+                                           Subscription subscription) {
         UUID onboardingSessionId = extractOnboardingSessionId(subscription.getMetadata());
         if (onboardingSessionId == null) {
             return false;
         }
 
-        return processEvent(eventId, eventType, onboardingSessionId, () -> {
+        return processEvent(eventId, eventType, eventCreatedAt, payload, signatureHeader, onboardingSessionId, () -> {
             TenantOnboardingSessionEntity onboardingSession = requireSession(onboardingSessionId);
             if (isTerminal(onboardingSession.getStatus())) {
                 return true;
@@ -89,7 +101,11 @@ public class OnboardingStripeWebhookService {
                 }
             } else if ("canceled".equals(stripeStatus) || "unpaid".equals(stripeStatus)) {
                 onboardingSession.setStatus(OnboardingSessionStatus.CANCELED);
-                onboardingSession.setFailureReason("Stripe subscription status is " + stripeStatus);
+                onboardingSession.setFailureReason(messageService.get(
+                        "onboarding.stripe.subscription.status",
+                        "Stripe subscription status is {0}",
+                        stripeStatus
+                ));
             } else {
                 onboardingSession.setStatus(OnboardingSessionStatus.PAYMENT_PENDING);
             }
@@ -103,7 +119,12 @@ public class OnboardingStripeWebhookService {
     }
 
     @Transactional
-    public boolean handleInvoicePaid(String eventId, String eventType, Instant eventCreatedAt, Invoice invoice) {
+    public boolean handleInvoicePaid(String eventId,
+                                     String eventType,
+                                     Instant eventCreatedAt,
+                                     String payload,
+                                     String signatureHeader,
+                                     Invoice invoice) {
         String subscriptionId = resolveInvoiceSubscriptionId(invoice);
         if (subscriptionId == null || subscriptionId.isBlank()) {
             return false;
@@ -117,7 +138,10 @@ public class OnboardingStripeWebhookService {
         try {
             subscription = Subscription.retrieve(subscriptionId);
         } catch (StripeException e) {
-            throw new IllegalStateException("Failed to retrieve Stripe subscription for invoice.paid", e);
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.stripe.invoice.subscriptionFetchFailed",
+                    "Failed to retrieve Stripe subscription for invoice.paid"
+            ), e);
         }
 
         UUID onboardingSessionId = knownSession != null
@@ -127,7 +151,7 @@ public class OnboardingStripeWebhookService {
             return false;
         }
 
-        return processEvent(eventId, eventType, onboardingSessionId, () -> {
+        return processEvent(eventId, eventType, eventCreatedAt, payload, signatureHeader, onboardingSessionId, () -> {
             TenantOnboardingSessionEntity onboardingSession = requireSession(onboardingSessionId);
             if (isTerminal(onboardingSession.getStatus())) {
                 return true;
@@ -147,6 +171,9 @@ public class OnboardingStripeWebhookService {
 
     private boolean processEvent(String eventId,
                                  String eventType,
+                                 Instant eventCreatedAt,
+                                 String payload,
+                                 String signatureHeader,
                                  UUID onboardingSessionId,
                                  Supplier<Boolean> handler) {
         Optional<WebhookEventReceiptEntity> existing = webhookEventReceiptRepository
@@ -162,6 +189,13 @@ public class OnboardingStripeWebhookService {
                 .build());
         receipt.setEventType(eventType);
         receipt.setOnboardingSessionId(onboardingSessionId);
+        receipt.setEventCreatedAt(toLocalDateTime(java.util.Objects.requireNonNullElse(eventCreatedAt, Instant.now())));
+        if (receipt.getPayload() == null) {
+            receipt.setPayload(payload);
+        }
+        if (receipt.getSignatureHeader() == null) {
+            receipt.setSignatureHeader(signatureHeader);
+        }
         receipt.setProcessingResult(WebhookProcessingResult.RETRY);
         receipt.setErrorMessage(null);
         receipt.setProcessedAt(null);
@@ -185,7 +219,11 @@ public class OnboardingStripeWebhookService {
 
     private TenantOnboardingSessionEntity requireSession(UUID onboardingSessionId) {
         return onboardingSessionRepository.findById(onboardingSessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Onboarding session not found: " + onboardingSessionId));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "onboarding.session.notFound.withId",
+                        "Onboarding session not found: {0}",
+                        onboardingSessionId
+                )));
     }
 
     private void verifyPriceMapping(TenantOnboardingSessionEntity onboardingSession, Subscription subscription) {
@@ -202,8 +240,11 @@ public class OnboardingStripeWebhookService {
                     .filter(java.util.Objects::nonNull)
                     .reduce((a, b) -> a + "," + b)
                     .orElse("none");
-            throw new IllegalStateException("Stripe price mismatch for onboarding session "
-                    + onboardingSession.getId() + ". expected=" + expectedPriceId + " found=" + found);
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.stripe.priceMismatch",
+                    "Stripe price mismatch for onboarding session {0}. expected={1} found={2}",
+                    onboardingSession.getId(), expectedPriceId, found
+            ));
         }
     }
 
@@ -247,7 +288,10 @@ public class OnboardingStripeWebhookService {
 
     private String trimError(String message) {
         if (message == null || message.isBlank()) {
-            return "Unknown webhook processing error";
+            return messageService.get(
+                    "onboarding.webhook.unknownError",
+                    "Unknown webhook processing error"
+            );
         }
         return message.length() > 1000 ? message.substring(0, 1000) : message;
     }

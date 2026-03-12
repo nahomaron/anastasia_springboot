@@ -1,9 +1,9 @@
-Your [[${appName}]] verification code
+[[#{email.auth.verifyOtp.textTitle(${appName})}]]
 
-Hello [[${userName}]],
+[[#{email.auth.verifyOtp.greeting(${userName})}]]
 
-Code: [[${code}]]
-Expires in [[${expiresMinutes}]] minutes.
+[[#{email.auth.verifyOtp.textCode(${code})}]]
+[[#{email.auth.verifyOtp.textExpiry(${expiresMinutes})}]]
 
-If you did not request this, ignore this email or contact support.
-Help: [[${helpUrl}]]
+[[#{email.auth.verifyOtp.textIgnore}]]
+[[${helpUrl != null and !#strings.isEmpty(helpUrl) ? #messages.msg('email.auth.verifyOtp.textHelp', helpUrl) : ''}]]

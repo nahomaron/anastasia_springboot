@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalePreferenceService;
 import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
@@ -15,9 +17,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRep
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberTransferService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.card.MembershipCardService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
@@ -26,7 +28,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.BaseMember;
@@ -50,6 +52,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersMetricsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserStatus;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
@@ -103,7 +106,7 @@ public class UserServiceImpl implements UserService {
     private final UsersMapper usersMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
-    private final AvatarRepository avatarRepository;
+    private final ImageAssetRepository imageAssetRepository;
     private final ChildRepository childRepository;
     private final TenantRepository tenantRepository;
     private final MemberTransferService memberTransferService;
@@ -115,6 +118,8 @@ public class UserServiceImpl implements UserService {
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final UserRecoveryEmailVerificationService recoveryEmailVerificationService;
     private final TokenRepository tokenRepository;
+    private final LocalePreferenceService localePreferenceService;
+    private final LocalizedMessageService messageService;
 
     private static final String BACKUP_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int BACKUP_CODES_COUNT = 10;
@@ -168,14 +173,14 @@ public class UserServiceImpl implements UserService {
         if (request.getFullName() != null) {
             String fullName = request.getFullName().trim();
             if (fullName.isBlank()) {
-                throw new IllegalArgumentException("Full name cannot be empty");
+                throw new IllegalArgumentException(messageService.get("user.profile.fullName.empty", "Full name cannot be empty"));
             }
             user.setFullName(fullName);
         }
 
         if (request.getDateOfBirth() != null) {
             if (request.getDateOfBirth().isAfter(LocalDate.now())) {
-                throw new IllegalArgumentException("Date of birth must be in the past");
+                throw new IllegalArgumentException(messageService.get("validation.user.profile.dateOfBirth.past", "Date of birth must be in the past"));
             }
             profile.setDateOfBirth(request.getDateOfBirth());
         }
@@ -187,17 +192,17 @@ public class UserServiceImpl implements UserService {
             profile.setLocation(trimToNull(request.getLocation()));
         }
         if (request.getProfileAvatar() != null) {
-            AvatarDTO profileAvatar = request.getProfileAvatar();
+            ImageAssetDTO profileAvatar = request.getProfileAvatar();
             String imageUrl = trimToNull(profileAvatar.getImageUrl());
             profile.setProfileImageUrl(imageUrl);
             if (imageUrl != null) {
-                AvatarEntity avatar = AvatarEntity.builder()
+                ImageAssetEntity avatar = ImageAssetEntity.builder()
                         .imageUrl(imageUrl)
                         .imageSize(trimToNull(profileAvatar.getImageSize()))
-                        .avatarType(AvatarType.USER)
+                        .imageAssetType(ImageAssetType.USER)
                         .ownerId(user.getUuid())
                         .build();
-                avatar = avatarRepository.save(avatar);
+                avatar = imageAssetRepository.save(avatar);
                 user.setProfileAvatar(avatar);
             } else {
                 user.setProfileAvatar(null);
@@ -206,12 +211,12 @@ public class UserServiceImpl implements UserService {
             String imageUrl = trimToNull(request.getProfileImageUrl());
             profile.setProfileImageUrl(imageUrl);
             if (imageUrl != null) {
-                AvatarEntity avatar = AvatarEntity.builder()
+                ImageAssetEntity avatar = ImageAssetEntity.builder()
                         .imageUrl(imageUrl)
-                        .avatarType(AvatarType.USER)
+                        .imageAssetType(ImageAssetType.USER)
                         .ownerId(user.getUuid())
                         .build();
-                avatar = avatarRepository.save(avatar);
+                avatar = imageAssetRepository.save(avatar);
                 user.setProfileAvatar(avatar);
             } else {
                 user.setProfileAvatar(null);
@@ -241,10 +246,13 @@ public class UserServiceImpl implements UserService {
                 : request.getRecoveryEmail().trim().toLowerCase(Locale.ROOT);
 
         if (recoveryEmail == null || recoveryEmail.isBlank()) {
-            throw new IllegalArgumentException("Recovery email is required");
+            throw new IllegalArgumentException(messageService.get("validation.user.recoveryEmail.required", "Recovery email is required"));
         }
         if (recoveryEmail.equalsIgnoreCase(user.getEmail())) {
-            throw new IllegalArgumentException("Recovery email must be different from login email");
+            throw new IllegalArgumentException(messageService.get(
+                    "user.recoveryEmail.mustDifferFromLogin",
+                    "Recovery email must be different from login email"
+            ));
         }
 
         profile.setRecoveryEmail(recoveryEmail);
@@ -260,7 +268,10 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getCurrentAuthenticatedUser();
         UserProfileEntity profile = getOrCreateProfile(user);
         if (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank()) {
-            throw new IllegalStateException("Set a recovery email before requesting verification.");
+            throw new IllegalStateException(messageService.get(
+                    "user.recoveryEmail.requiredBeforeVerificationRequest",
+                    "Set a recovery email before requesting verification."
+            ));
         }
         recoveryEmailVerificationService.sendCode(profile.getRecoveryEmail());
     }
@@ -271,7 +282,10 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getCurrentAuthenticatedUser();
         UserProfileEntity profile = getOrCreateProfile(user);
         if (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank()) {
-            throw new IllegalStateException("Set a recovery email before verifying it.");
+            throw new IllegalStateException(messageService.get(
+                    "user.recoveryEmail.requiredBeforeVerification",
+                    "Set a recovery email before verifying it."
+            ));
         }
 
         boolean verified = recoveryEmailVerificationService.verifyCode(profile.getRecoveryEmail(), request.getCode());
@@ -290,7 +304,10 @@ public class UserServiceImpl implements UserService {
         UserProfileEntity profile = getOrCreateProfile(user);
 
         if (request.isEnabled()) {
-            throw new IllegalStateException("Use TOTP setup flow to enable two-factor authentication.");
+            throw new IllegalStateException(messageService.get(
+                    "user.twoFactor.enableViaSetupFlow",
+                    "Use TOTP setup flow to enable two-factor authentication."
+            ));
         }
 
         profile.setTwoFactorEnabled(false);
@@ -319,25 +336,23 @@ public class UserServiceImpl implements UserService {
         if (request.getThemeMode() != null) {
             String theme = request.getThemeMode().trim().toUpperCase(Locale.ROOT);
             if (!Set.of("SYSTEM", "LIGHT", "DARK").contains(theme)) {
-                throw new IllegalArgumentException("Theme mode must be SYSTEM, LIGHT, or DARK.");
+                throw new IllegalArgumentException(messageService.get(
+                        "validation.preferences.themeMode.invalid",
+                        "Theme mode must be SYSTEM, LIGHT, or DARK."
+                ));
             }
             preferences.setThemeMode(theme);
         }
         if (request.getLanguage() != null) {
-            preferences.setLanguage(defaultIfBlank(request.getLanguage(), "en"));
+            localePreferenceService.validateLanguage(request.getLanguage());
+            preferences.setLanguage(localePreferenceService.normalizeLanguage(request.getLanguage()));
+            if (request.getLocale() == null) {
+                preferences.setLocale(localePreferenceService.normalizeLocale(request.getLanguage()));
+            }
         }
         if (request.getLocale() != null) {
-            preferences.setLocale(defaultIfBlank(request.getLocale(), "en-US"));
-        }
-        if (request.getTimezone() != null) {
-            preferences.setTimezone(trimToNull(request.getTimezone()));
-        }
-        if (request.getCountryCode() != null) {
-            String country = trimToNull(request.getCountryCode());
-            preferences.setCountryCode(country == null ? null : country.toUpperCase(Locale.ROOT));
-        }
-        if (request.getCity() != null) {
-            preferences.setCity(trimToNull(request.getCity()));
+            localePreferenceService.validateLocale(request.getLocale());
+            preferences.setLocale(localePreferenceService.normalizeLocale(request.getLocale()));
         }
         if (request.getDateFormat() != null) {
             preferences.setDateFormat(defaultIfBlank(request.getDateFormat(), "MMM d, yyyy"));
@@ -345,7 +360,10 @@ public class UserServiceImpl implements UserService {
         if (request.getFirstDayOfWeek() != null) {
             String firstDay = request.getFirstDayOfWeek().trim().toUpperCase(Locale.ROOT);
             if (!Set.of("SUNDAY", "MONDAY").contains(firstDay)) {
-                throw new IllegalArgumentException("First day of week must be SUNDAY or MONDAY.");
+                throw new IllegalArgumentException(messageService.get(
+                        "validation.preferences.firstDayOfWeek.invalid",
+                        "First day of week must be SUNDAY or MONDAY."
+                ));
             }
             preferences.setFirstDayOfWeek(firstDay);
         }
@@ -385,7 +403,10 @@ public class UserServiceImpl implements UserService {
         UserProfileEntity profile = getOrCreateProfile(user);
 
         if (profile.getRecoveryEmail() == null || profile.getRecoveryEmail().isBlank() || !profile.isRecoveryEmailVerified()) {
-            throw new IllegalStateException("Verify a recovery email before starting two-factor setup.");
+            throw new IllegalStateException(messageService.get(
+                    "user.twoFactor.recoveryEmailRequired",
+                    "Verify a recovery email before starting two-factor setup."
+            ));
         }
 
         String secret = TotpUtils.generateSecretBase32();
@@ -409,12 +430,12 @@ public class UserServiceImpl implements UserService {
 
         String secret = trimToNull(profile.getTotpSecretBase32());
         if (secret == null) {
-            throw new IllegalStateException("Start TOTP setup before verifying.");
+            throw new IllegalStateException(messageService.get("user.twoFactor.setupRequired", "Start TOTP setup before verifying."));
         }
 
         boolean valid = TotpUtils.verifyTotpCode(secret, request.getCode(), java.time.Instant.now(), 1);
         if (!valid) {
-            throw new IllegalArgumentException("Invalid TOTP code.");
+            throw new IllegalArgumentException(messageService.get("user.twoFactor.invalidTotp", "Invalid TOTP code."));
         }
 
         profile.setTwoFactorEnabled(true);
@@ -430,7 +451,10 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getCurrentAuthenticatedUser();
         UserProfileEntity profile = getOrCreateProfile(user);
         if (!profile.isTwoFactorEnabled() || trimToNull(profile.getTotpSecretBase32()) == null) {
-            throw new IllegalStateException("Enable TOTP before generating backup codes.");
+            throw new IllegalStateException(messageService.get(
+                    "user.twoFactor.enableBeforeBackupCodes",
+                    "Enable TOTP before generating backup codes."
+            ));
         }
         return generateAndStoreBackupCodes(user);
     }
@@ -488,14 +512,14 @@ public class UserServiceImpl implements UserService {
 //        var currentUser = (UserEntity) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
         if (!(connectedUser instanceof Authentication)){
-            throw new IllegalStateException("Invalid user authorization");
+            throw new IllegalStateException(messageService.get("auth.user.authorizationInvalid", "Invalid user authorization"));
         }
 
         Authentication authentication = (Authentication) connectedUser;
         Object principal = authentication.getPrincipal();
 
         if(!(principal instanceof UserPrincipal)){
-            throw new IllegalStateException("Invalid user principal");
+            throw new IllegalStateException(messageService.get("auth.user.principalInvalid", "Invalid user principal"));
         }
 
         UserPrincipal userPrincipal = (UserPrincipal) principal;
@@ -520,14 +544,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(ChangePasswordRequest request, Principal connectedUser) {
         if (!(connectedUser instanceof Authentication)) {
-            throw new IllegalStateException("Invalid user authentication");
+            throw new IllegalStateException(messageService.get("auth.user.authenticationInvalid", "Invalid user authentication"));
         }
 
         Authentication authentication = (Authentication) connectedUser;
         Object principal = authentication.getPrincipal();
 
         if (!(principal instanceof UserPrincipal)) {
-            throw new IllegalStateException("Invalid user principal");
+            throw new IllegalStateException(messageService.get("auth.user.principalInvalid", "Invalid user principal"));
         }
 
         UserPrincipal userPrincipal = (UserPrincipal) principal;
@@ -538,12 +562,12 @@ public class UserServiceImpl implements UserService {
 
         // Validate current password
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Incorrect password provided");
+            throw new BadCredentialsException(messageService.get("auth.changePassword.currentIncorrect", "Incorrect password provided"));
         }
 
         // Check if the new password matches confirmation
         if (!request.isPasswordMatch()) {
-            throw new BadCredentialsException("Passwords do not match");
+            throw new BadCredentialsException(messageService.get("auth.changePassword.mismatch", "Passwords do not match"));
         }
 
         // Update the password
@@ -569,7 +593,7 @@ public class UserServiceImpl implements UserService {
         UUID tenantId = TenantContext.getTenantId();
 
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID is not set in the context");
+            throw new IllegalStateException(messageService.get("tenant.context.missing", "Tenant ID is not set in the context"));
         }
 
 
@@ -596,7 +620,7 @@ public class UserServiceImpl implements UserService {
     public List<SimpleUserDTO> searchUsers(String query, Set<String> roles) {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID is not set in the context");
+            throw new IllegalStateException(messageService.get("tenant.context.missing", "Tenant ID is not set in the context"));
         }
         String q = query == null ? "" : query.trim();
         if (q.isBlank()) {
@@ -654,7 +678,7 @@ public class UserServiceImpl implements UserService {
         UUID tenantId = requireTenantId();
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
         if (normalizedEmail.isBlank()) {
-            throw new IllegalArgumentException("Email is required");
+            throw new IllegalArgumentException(messageService.get("validation.auth.email.required", "Email is required"));
         }
 
         Optional<UserEntity> existingInTenant = userRepository.findByTenantIdAndEmailIgnoreCase(tenantId, normalizedEmail);
@@ -664,7 +688,7 @@ public class UserServiceImpl implements UserService {
                 try {
                     authService.resendActivationEmail(user.getEmail());
                 } catch (Exception e) {
-                    throw new IllegalStateException("Failed to resend activation email");
+                    throw new IllegalStateException(messageService.get("auth.activation.resendFailed", "Failed to resend activation email"));
                 }
             } else {
                 sendTenantInviteEmail(normalizedEmail);
@@ -672,20 +696,23 @@ public class UserServiceImpl implements UserService {
             return TenantInviteResponse.builder()
                     .email(normalizedEmail)
                     .existingUser(true)
-                    .message("Invitation email sent.")
+                    .message(messageService.get("user.tenantInvite.sent", "Invitation email sent."))
                     .build();
         }
 
         // Prevent leaking or hijacking users from other tenants by email.
         if (userRepository.findByEmail(normalizedEmail).isPresent()) {
-            throw new IllegalArgumentException("Email is already associated with another tenant.");
+            throw new IllegalArgumentException(messageService.get(
+                    "user.tenantInvite.emailBelongsToAnotherTenant",
+                    "Email is already associated with another tenant."
+            ));
         }
 
         sendTenantInviteEmail(normalizedEmail);
         return TenantInviteResponse.builder()
                 .email(normalizedEmail)
                 .existingUser(false)
-                .message("Invitation email sent.")
+                .message(messageService.get("user.tenantInvite.sent", "Invitation email sent."))
                 .build();
     }
 
@@ -701,7 +728,10 @@ public class UserServiceImpl implements UserService {
         }
 
         if (isProtectedTenantAccount(user)) {
-            throw new IllegalArgumentException("Protected tenant account cannot be modified by membership actions.");
+            throw new IllegalArgumentException(messageService.get(
+                    "user.membership.protectedAccount",
+                    "Protected tenant account cannot be modified by membership actions."
+            ));
         }
 
         switch (action) {
@@ -790,7 +820,7 @@ public class UserServiceImpl implements UserService {
         if (auth != null && auth.getPrincipal() instanceof UserPrincipal userPrincipal) {
             return userPrincipal.getUserUuid(); // or userPrincipal.getId();
         }
-        throw new RuntimeException("No authenticated user found.");
+        throw new RuntimeException(messageService.get("auth.user.notAuthenticated", "No authenticated user found."));
     }
 
     @CachePut(value = "users",
@@ -798,19 +828,19 @@ public class UserServiceImpl implements UserService {
 //            keyGenerator = "tenantAwareKeyGenerator"
     )
     @Override
-    public void updateProfileAvatar(AvatarDTO avatarDTO) {
+    public void updateProfileAvatar(ImageAssetDTO imageAssetDTO) {
         UUID userId = getCurrentUserId();
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        AvatarEntity avatar = AvatarEntity.builder()
-                .imageUrl(avatarDTO.getImageUrl())
-                .imageSize(avatarDTO.getImageSize())
-                .avatarType(AvatarType.USER)
+        ImageAssetEntity avatar = ImageAssetEntity.builder()
+                .imageUrl(imageAssetDTO.getImageUrl())
+                .imageSize(imageAssetDTO.getImageSize())
+                .imageAssetType(ImageAssetType.USER)
                 .ownerId(user.getUuid())
                 .build();
 
-        avatar = avatarRepository.save(avatar);
+        avatar = imageAssetRepository.save(avatar);
         user.setProfileAvatar(avatar);
         userRepository.save(user);
     }
@@ -936,15 +966,21 @@ public class UserServiceImpl implements UserService {
             var membershipJoin = root.join("membership", jakarta.persistence.criteria.JoinType.LEFT);
             return switch (normalized) {
                 case "ACTIVE" -> cb.and(
-                        cb.isFalse(root.get("accountLocked")),
+                        cb.equal(root.get("status"), UserStatus.ACTIVE),
                         membershipJoin.get("status").in(MemberStatus.ACTIVE.name(), MemberStatus.APPROVED.name())
                 );
                 case "INVITED" -> cb.or(
                         cb.isNull(root.get("membershipId")),
+                        cb.equal(root.get("status"), UserStatus.PENDING_VERIFICATION),
                         cb.equal(membershipJoin.get("status"), MemberStatus.PENDING.name())
                 );
-                case "DISABLED" -> membershipJoin.get("status").in(MemberStatus.NON_ACTIVE.name(), MemberStatus.DECEASED.name());
-                case "LOCKED" -> cb.isTrue(root.get("accountLocked"));
+                case "DISABLED" -> cb.or(
+                        cb.equal(root.get("status"), UserStatus.DISABLED),
+                        cb.equal(root.get("status"), UserStatus.SUSPENDED),
+                        cb.equal(root.get("status"), UserStatus.DELETED),
+                        membershipJoin.get("status").in(MemberStatus.NON_ACTIVE.name(), MemberStatus.DECEASED.name())
+                );
+                case "LOCKED" -> cb.equal(root.get("status"), UserStatus.LOCKED);
                 default -> cb.conjunction();
             };
         };
@@ -1016,6 +1052,12 @@ public class UserServiceImpl implements UserService {
     private TenantUserStatus resolveTenantUserStatus(UserEntity user) {
         if (user.isAccountLocked()) {
             return TenantUserStatus.LOCKED;
+        }
+
+        if (user.getStatus() == UserStatus.DISABLED
+                || user.getStatus() == UserStatus.SUSPENDED
+                || user.getStatus() == UserStatus.DELETED) {
+            return TenantUserStatus.DISABLED;
         }
 
         if (user.getMembership() == null || user.getMembership().getStatus() == null) {
@@ -1148,8 +1190,8 @@ public class UserServiceImpl implements UserService {
             return userPreferencesRepository.save(UserPreferencesEntity.builder()
                     .user(user)
                     .themeMode("SYSTEM")
-                    .language("en")
-                    .locale("en-US")
+                    .language(localePreferenceService.normalizeLanguage("en"))
+                    .locale(localePreferenceService.normalizeLocale("en"))
                     .dateFormat("MMM d, yyyy")
                     .firstDayOfWeek("SUNDAY")
                     .emailNotifications(true)
@@ -1166,13 +1208,13 @@ public class UserServiceImpl implements UserService {
 
     private UserProfileResponse toUserProfileResponse(UserEntity user, UserProfileEntity profile) {
         long backupCodesRemaining = backupCodeRepository.countUnusedByUserId(user.getUuid());
-        AvatarDTO profileAvatar = user.getProfileAvatar() != null
-                ? AvatarDTO.builder()
+        ImageAssetDTO profileAvatar = user.getProfileAvatar() != null
+                ? ImageAssetDTO.builder()
                 .imageUrl(user.getProfileAvatar().getImageUrl())
                 .imageSize(user.getProfileAvatar().getImageSize())
                 .build()
                 : (profile.getProfileImageUrl() != null
-                ? AvatarDTO.builder().imageUrl(profile.getProfileImageUrl()).build()
+                ? ImageAssetDTO.builder().imageUrl(profile.getProfileImageUrl()).build()
                 : null);
         return UserProfileResponse.builder()
                 .userId(user.getUuid())
@@ -1199,11 +1241,7 @@ public class UserServiceImpl implements UserService {
         return UserPreferencesResponse.builder()
                 .userId(preferences.getUserId())
                 .themeMode(preferences.getThemeMode())
-                .language(preferences.getLanguage())
                 .locale(preferences.getLocale())
-                .timezone(preferences.getTimezone())
-                .countryCode(preferences.getCountryCode())
-                .city(preferences.getCity())
                 .dateFormat(preferences.getDateFormat())
                 .firstDayOfWeek(preferences.getFirstDayOfWeek())
                 .reducedMotion(preferences.isReducedMotion())

@@ -13,31 +13,31 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchD
 @AllArgsConstructor
 @Builder
 public class TenantDTO {
-    @NotNull(message = "Tenant type is required")
+    @NotNull(message = "{validation.tenant.type.required}")
     private TenantType tenantType; // CHURCH or PRIEST
 
-    @NotNull(message = "Subscription plan is required")
+    @NotNull(message = "{validation.tenant.subscriptionPlan.required}")
     private SubscriptionPlan subscriptionPlan; // Subscription Type
 
-    @NotBlank(message = "Owner name is required")
+    @NotBlank(message = "{validation.tenant.ownerName.required}")
     private String ownerName; // Can be a church name or a priest's full name
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid Email format")
+    @NotBlank(message = "{validation.tenant.email.required}")
+    @Email(message = "{validation.tenant.email.invalid}")
     private String email; // Contact email (Church or Priest)
 
 
-    @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^(?:\\+|00)\\d{1,3}\\d{6,12}$", message = "Invalid international phone number format")
+    @NotBlank(message = "{validation.tenant.phone.required}")
+    @Pattern(regexp = "^(?:\\+|00)\\d{1,3}\\d{6,12}$", message = "{validation.tenant.phone.invalid}")
     private String phoneNumber; // Contact
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @NotBlank(message = "{validation.tenant.password.required}")
+    @Size(min = 8, message = "{validation.tenant.password.min}")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-            message = "Password must contain an uppercase letter, a lowercase letter, a number, and a special character")
+            message = "{validation.tenant.password.pattern}")
     private String password;
 
-    @NotBlank(message = "Confirm Password is required")
+    @NotBlank(message = "{validation.tenant.confirmPassword.required}")
     private String confirmPassword;
 
     private Boolean termsAccepted;
