@@ -572,6 +572,8 @@ public class UserServiceImpl implements UserService {
 
         // Update the password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setLastPasswordChangedAt(LocalDateTime.now());
+        user.setMustChangePassword(false);
         userRepository.save(user);
     }
 

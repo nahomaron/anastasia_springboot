@@ -23,5 +23,8 @@ public class AuthSessionResponse {
     private Set<String> permissions;
     private Long membershipId;
     private String membershipStatus;
+    private Long staffId;
+    private String staffNumber;
     private String priestNumber;
+    private boolean mustChangePassword;
 }

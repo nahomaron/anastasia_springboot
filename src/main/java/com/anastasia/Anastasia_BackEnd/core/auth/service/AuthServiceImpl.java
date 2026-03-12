@@ -34,6 +34,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Members
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffEntity;
+import com.anastasia.Anastasia_BackEnd.modules.staff.repository.StaffRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
@@ -76,6 +78,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final LoginTwoFactorChallengeRepository loginTwoFactorChallengeRepository;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
+    private final StaffRepository staffRepository;
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
@@ -292,6 +295,7 @@ public class AuthServiceImpl implements AuthService {
         }
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
+        touchStaffLoginAudit(user);
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
         AuthSessionResponse session = buildAuthSessionResponse(user);
@@ -314,6 +318,29 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken)
                 .session(session)
                 .build();
+    }
+
+    private void touchStaffLoginAudit(UserEntity user) {
+        StaffEntity staffProfile = user.getStaffProfile();
+        if (staffProfile == null) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        boolean changed = false;
+
+        if (staffProfile.getInviteAcceptedAt() == null) {
+            staffProfile.setInviteAcceptedAt(now);
+            changed = true;
+        }
+        if (staffProfile.getFirstLoginAt() == null) {
+            staffProfile.setFirstLoginAt(now);
+            changed = true;
+        }
+
+        if (changed) {
+            staffRepository.save(staffProfile);
+        }
     }
 
     @Override
@@ -520,6 +547,14 @@ public class AuthServiceImpl implements AuthService {
             priestNumber = user.getPriestNumber();
         }
 
+        Long staffId = null;
+        String staffNumber = null;
+        StaffEntity staffProfile = user.getStaffProfile();
+        if (staffProfile != null) {
+            staffId = staffProfile.getId();
+            staffNumber = staffProfile.getStaffNumber();
+        }
+
         return AuthSessionResponse.builder()
                 .userId(user.getUuid())
                 .email(user.getEmail())
@@ -531,7 +566,10 @@ public class AuthServiceImpl implements AuthService {
                 .permissions(permissionKeys)
                 .membershipId(user.getMembershipId())
                 .membershipStatus(membershipStatus)
+                .staffId(staffId)
+                .staffNumber(staffNumber)
                 .priestNumber(priestNumber)
+                .mustChangePassword(user.isMustChangePassword())
                 .build();
     }
 

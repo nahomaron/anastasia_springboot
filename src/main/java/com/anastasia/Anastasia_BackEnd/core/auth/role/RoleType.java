@@ -27,6 +27,13 @@ public enum RoleType {
             ), "Owns the subscription"
     ),
 
+    PRIMARY_ADMIN(
+            Set.of(
+                    MANAGE_USERS, MANAGE_ROLES, MANAGE_MEMBERS, MANAGE_GROUPS,
+                    MANAGE_EVENTS, MANAGE_FOLLOWUPS, MANAGE_APPOINTMENT, MANAGE_FINANCE
+            ), "Primary tenant admin manages everything under the tenant"
+    ),
+
     USER(
             Collections.emptySet(),
             "User does not have roles"
@@ -35,13 +42,15 @@ public enum RoleType {
             Collections.emptySet(),
             "Member access"
     ),
+    STAFF(
+            Collections.emptySet(),
+            "Operational staff access"
+    ),
 
     ADMIN(
             Set.of(
-                    MANAGE_USERS,  MANAGE_ROLES, MANAGE_MEMBERS,MANAGE_GROUPS,
-                    MANAGE_EVENTS, MANAGE_FOLLOWUPS,MANAGE_APPOINTMENT,MANAGE_FINANCE
-
-
+                    MANAGE_USERS, MANAGE_ROLES, MANAGE_MEMBERS, MANAGE_GROUPS,
+                    MANAGE_EVENTS, MANAGE_FOLLOWUPS, MANAGE_APPOINTMENT, MANAGE_FINANCE
             ), "Admin manages everything under the tenant"
     ),
     PRIEST(

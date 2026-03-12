@@ -31,6 +31,7 @@ public class RoleService {
             "OWNER",
             "ADMIN",
             "PRIEST",
+            "STAFF",
             "MEMBER",
             "USER",
             "CHILD",

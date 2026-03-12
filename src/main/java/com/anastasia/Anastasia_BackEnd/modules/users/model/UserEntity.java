@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import jakarta.persistence.*;
@@ -80,6 +81,13 @@ public class UserEntity{
     @Column(name = "last_password_changed_at")
     private LocalDateTime lastPasswordChangedAt;
 
+    @Builder.Default
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword = false;
+
+    @Column(name = "temporary_password_issued_at")
+    private LocalDateTime temporaryPasswordIssuedAt;
+
     @Column(name = "locked_at")
     private LocalDateTime lockedAt;
 
@@ -114,6 +122,9 @@ public class UserEntity{
 
     @OneToOne
     private Adult_MemberEntity membership;
+
+    @OneToOne(mappedBy = "user")
+    private StaffEntity staffProfile;
 
     @Column(name = "membership_id", insertable = false, updatable = false)
     private Long membershipId;
