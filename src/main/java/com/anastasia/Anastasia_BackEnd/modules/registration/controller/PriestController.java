@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
@@ -32,12 +33,16 @@ public class PriestController {
     private final PriestService priestService;
     private final MemberService memberService;
     private final ChildService childService;
+    private final LocalizedMessageService messageService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerPriest(@Valid @RequestBody PriestDTO priestDTO){
 
         if(!priestDTO.isPasswordMatch()){
-            return ResponseEntity.badRequest().body("Password do not match");
+            return ResponseEntity.badRequest().body(messageService.get(
+                    "auth.changePassword.mismatch",
+                    "Password do not match"
+            ));
         }
         priestService.registerPriest(priestDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
@@ -50,21 +55,21 @@ public class PriestController {
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/church/{churchId}")
     public ResponseEntity<List<PriestResponse>> listPriestsByChurch(@PathVariable Long churchId) {
         List<PriestResponse> priests = priestService.findPriestsByChurchId(churchId);
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/church/{churchId}/active")
     public ResponseEntity<List<PriestResponse>> listActivePriestsByChurch(@PathVariable Long churchId) {
         List<PriestResponse> priests = priestService.findActivePriestsByChurchId(churchId);
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/{priestId}")
     public ResponseEntity<PriestResponse> getPriest(@PathVariable Long priestId){
         Optional<PriestResponse> foundPriest = priestService.findPriestById(priestId);
@@ -76,7 +81,7 @@ public class PriestController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN', 'PRIEST')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN', 'PRIEST')")
     @PatchMapping("/{priestId}")
     public ResponseEntity<PriestResponse> updatePriestDetails(@PathVariable Long priestId,
                                                          @RequestBody PriestDTO priestDTO){
@@ -85,14 +90,14 @@ public class PriestController {
         return new ResponseEntity<>(updatedPriest, HttpStatus.ACCEPTED);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @PostMapping("/delete/{priestId}")
     public ResponseEntity<?> deletePriest(@PathVariable Long priestId){
         priestService.deletePriest(priestId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN') " +
+    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{priestNumber}/members")
     public ResponseEntity<Page<Adult_MemberSummaryResponse>> listMembersByPriest(
@@ -108,7 +113,7 @@ public class PriestController {
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN') " +
+    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{priestNumber}/members/pending")
     public ResponseEntity<Page<Adult_MemberResponse>> listPendingMembersByPriest(
@@ -125,7 +130,7 @@ public class PriestController {
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN') " +
+    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{priestNumber}/children")
     public ResponseEntity<Page<Child_MemberSummaryResponse>> listChildrenByPriest(
@@ -145,7 +150,10 @@ public class PriestController {
     private UUID resolveTenantId(UUID tenantId) {
         UUID effectiveTenantId = tenantId != null ? tenantId : TenantContext.getTenantId();
         if (effectiveTenantId == null) {
-            throw new IllegalStateException("Tenant id is required");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.context.missing",
+                    "Tenant id is required"
+            ));
         }
         return effectiveTenantId;
     }

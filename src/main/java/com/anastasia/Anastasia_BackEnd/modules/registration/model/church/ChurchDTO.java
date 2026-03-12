@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.church;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -18,23 +20,41 @@ public class ChurchDTO {
 
     private String prefix;
 
-    @NotBlank(message = "Church name is required")
+    @JsonProperty("tPrefix")
+    @JsonAlias("TPrefix")
+    private String tPrefix;
+
+    @NotBlank(message = "{validation.church.name.required}")
     private String churchName;
 
-    @NotBlank(message = "Church name in tigrinya is required")
-    private String churchNameTigrinya;
+    @NotBlank(message = "{validation.church.localName.required}")
+    @JsonProperty("tChurchName")
+    @JsonAlias("TChurchName")
+    private String tChurchName;
 
-    @NotBlank(message = "Diocese is required")
+    @NotBlank(message = "{validation.church.neighborhood.required}")
+    private String neighborhood;
+
+    @NotBlank(message = "{validation.church.localNeighborhood.required}")
+    @JsonProperty("tNeighborhood")
+    @JsonAlias("TNeighborhood")
+    private String tNeighborhood;
+
+    @NotBlank(message = "{validation.church.diocese.required}")
     private String diocese;
 
     @Valid
     private Address address;
 
-    @NotBlank(message = "Church email is required")
-    @Email(message = "Invalid church email format")
+    @NotBlank(message = "{validation.church.email.required}")
+    @Email(message = "{validation.church.email.invalid}")
     private String email;
 
     private String phone;
+
+    private String timezone;
+
+    private String locale;
 
     private String denomination;
 
@@ -44,14 +64,19 @@ public class ChurchDTO {
 
     private String gpsLocation;
 
+    private Double latitude;
+
+    private Double longitude;
+
     private String instagram;
 
     private String website;
     private String youtube;
     private String facebook;
     private boolean churchProfileComplete;
+    private ChurchStatus status;
 
-    private AvatarDTO profilePicture;
+    private ImageAssetDTO profilePicture;
     
 
 }

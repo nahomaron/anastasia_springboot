@@ -1,8 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
@@ -33,6 +34,7 @@ public class ChurchServiceImpl implements ChurchService{
     private final ChurchMapper churchMapper;
     private final TenantRepository tenantRepository;
     private final SecurityUtils securityUtils;
+    private final LocalizedMessageService messageService;
 
     @Override
     public ChurchEntity convertToEntity(ChurchDTO churchDTO) {
@@ -41,12 +43,15 @@ public class ChurchServiceImpl implements ChurchService{
         if (entity.getTenant() == null && TenantContext.getTenantId() != null) {
             UUID tenantId = TenantContext.getTenantId();
             TenantEntity tenant = tenantRepository.findById(tenantId)
-                    .orElseThrow(() -> new IllegalStateException("Tenant not found for context ID"));
+                    .orElseThrow(() -> new IllegalStateException(messageService.get(
+                            "tenant.notFound.forContext",
+                            "Tenant not found for context ID"
+                    )));
             entity.setTenant(tenant);
         }
 
         if (entity.getProfilePicture() != null && entity.getTenant() != null) {
-            entity.getProfilePicture().setAvatarType(AvatarType.CHURCH);
+            entity.getProfilePicture().setImageAssetType(ImageAssetType.CHURCH);
             entity.getProfilePicture().setOwnerId(entity.getTenant().getId());
         }
 
@@ -83,11 +88,17 @@ public class ChurchServiceImpl implements ChurchService{
 
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant ID is not set in the context");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.context.missing",
+                    "Tenant ID is not set in the context"
+            ));
         }
 
         TenantEntity tenant = tenantRepository.findById(TenantContext.getTenantId())
-                .orElseThrow(() -> new InvalidDataAccessApiUsageException("No valid tenant found"));
+                .orElseThrow(() -> new InvalidDataAccessApiUsageException(messageService.get(
+                        "tenant.invalid",
+                        "No valid tenant found"
+                )));
 
         churchEntity.setTenant(tenant);
 
@@ -151,7 +162,10 @@ public class ChurchServiceImpl implements ChurchService{
     @Override
     public void updateChurch(Long churchId, ChurchEntity churchEntity) {
         ChurchEntity existingChurch = churchRepository.findById(churchId)
-                .orElseThrow(()-> new EntityNotFoundException("Church Not Found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "church.notFound",
+                        "Church Not Found"
+                )));
 
         churchEntity.setChurchId(existingChurch.getChurchId());
         churchEntity.setTenant(existingChurch.getTenant());

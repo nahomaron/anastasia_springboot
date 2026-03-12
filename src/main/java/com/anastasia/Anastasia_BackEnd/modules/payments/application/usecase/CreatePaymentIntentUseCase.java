@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.FundRepository;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
@@ -36,6 +37,7 @@ public class CreatePaymentIntentUseCase {
     private final StripeClient stripeClient;
     private final MemberRepository memberRepo;
     private final FundRepository fundRepo;
+    private final LocalizedMessageService messageService;
 
     // Creates or retrieves a payment intent based on the provided parameters.
     @Transactional
@@ -72,7 +74,11 @@ public class CreatePaymentIntentUseCase {
         if (resolvedMemberId.get() != null) {
             Adult_MemberEntity member = memberRepo.findByIdAndTenantId(resolvedMemberId.get(), normalizedTenantId)
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "Member does not belong to tenant: " + resolvedMemberId));
+                            messageService.get(
+                                    "payments.member.tenantMismatch",
+                                    "Member does not belong to tenant: {0}",
+                                    resolvedMemberId.get()
+                            )));
             resolvedUserId = resolvedUserId != null ? resolvedUserId : member.getUserId();
             if (resolvedUserEmail.get() == null || resolvedUserEmail.get().isBlank()) {
                 resolvedUserEmail.set(member.getEmail());
@@ -115,7 +121,10 @@ public class CreatePaymentIntentUseCase {
             paymentIntentRepository.save(intent);
             log.warn("Stripe session creation failed for tenant={} idempotencyKey={}: {}", normalizedTenantId,
                     normalizedIdempotencyKey, e.getMessage());
-            throw new IllegalStateException("Stripe session creation failed", e);
+            throw new IllegalStateException(messageService.get(
+                    "payments.stripe.session.createFailed",
+                    "Stripe session creation failed"
+            ), e);
         }
 
         return paymentIntentRepository.save(intent);
@@ -132,13 +141,21 @@ public class CreatePaymentIntentUseCase {
         if (memberId != null) {
             var exists = memberRepo.findByIdAndTenantId(memberId, tenantId);
             if (exists.isEmpty())
-                throw new IllegalArgumentException("Member does not belong to this tenant: " + memberId);
+                throw new IllegalArgumentException(messageService.get(
+                        "payments.member.tenantMismatch",
+                        "Member does not belong to this tenant: {0}",
+                        memberId
+                ));
         }
 
         if (fundId != null) {
             var exists = fundRepo.existsByIdAndTenantId(fundId, tenantId);
             if (!exists)
-                throw new IllegalArgumentException("Fund does not belong to this tenant: " + fundId);
+                throw new IllegalArgumentException(messageService.get(
+                        "payments.fund.tenantMismatch",
+                        "Fund does not belong to this tenant: {0}",
+                        fundId
+                ));
         }
     }
 }

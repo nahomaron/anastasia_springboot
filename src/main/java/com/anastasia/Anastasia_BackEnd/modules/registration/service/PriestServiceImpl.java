@@ -1,8 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.PriestMapper;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
@@ -50,6 +51,7 @@ public class PriestServiceImpl implements PriestService{
     private final AuthServiceImpl authService;
     private final RoleRepository roleRepository;
     private final SecurityUtils securityUtils;
+    private final LocalizedMessageService messageService;
 
     @Override
     public PriestEntity convertToEntity(PriestDTO priestDTO) {
@@ -88,7 +90,10 @@ public class PriestServiceImpl implements PriestService{
         String priestNumber = generateUniquePriestNumber(6);
 
         Role priestRole = roleRepository.findByRoleName(RoleType.PRIEST.name())
-                .orElseThrow(() -> new RuntimeException("Priest role not found"));
+                .orElseThrow(() -> new RuntimeException(messageService.get(
+                        "role.priest.notFound",
+                        "Priest role not found"
+                )));
 
         if (priestUser == null) {
             // If user does not exist, create a new one
@@ -106,7 +111,11 @@ public class PriestServiceImpl implements PriestService{
                 var savedPriest = userRepository.save(priestUser);
                 authService.sendValidationEmail(savedPriest);
             } catch (Exception e) {
-                throw new RuntimeException("User creation failed: " + e.getMessage());
+                throw new RuntimeException(messageService.get(
+                        "auth.user.creationFailed",
+                        "User creation failed: {0}",
+                        e.getMessage()
+                ));
             }
         } else {
             priestUser.setPriestNumber(priestNumber);
@@ -115,7 +124,10 @@ public class PriestServiceImpl implements PriestService{
 
 
         if(sanitizedChurchNumber == null && priestDTO.getTenantId() == null){
-            throw new IllegalStateException("A priest should provide church number or be a tenant");
+            throw new IllegalStateException(messageService.get(
+                    "registration.priest.churchOrTenant.required",
+                    "A priest should provide church number or be a tenant"
+            ));
         }
         // Start building the PriestEntity
         PriestEntity.PriestEntityBuilder priestBuilder = PriestEntity.builder()
@@ -144,13 +156,20 @@ public class PriestServiceImpl implements PriestService{
 
         // Validation: A priest cannot be both a tenant and belong to a church
         if (priestIsTenant && priestIsUnderChurch) {
-            throw new IllegalStateException("A priest cannot be both a tenant and belong to a church. Choose one.");
+            throw new IllegalStateException(messageService.get(
+                    "registration.priest.churchAndTenant.conflict",
+                    "A priest cannot be both a tenant and belong to a church. Choose one."
+            ));
         }
 
         // If the priest is a tenant, associate with tenant
         if (priestIsTenant) {
             TenantEntity tenantFound = tenantRepository.findById(priestDTO.getTenantId())
-                    .orElseThrow(() -> new EntityNotFoundException("Tenant with ID " + priestDTO.getTenantId() + " does not exist"));
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                            "tenant.notFound.withId",
+                            "Tenant with ID {0} does not exist",
+                            priestDTO.getTenantId()
+                    )));
             priestBuilder.tenant(tenantFound);
             priestUser.assignTenant(tenantFound);
             userRepository.save(priestUser);
@@ -158,11 +177,19 @@ public class PriestServiceImpl implements PriestService{
         // If the priest is under a church, associate with church
         else if (priestIsUnderChurch) {
             ChurchEntity churchFound = churchRepository.findByChurchNumber(sanitizedChurchNumber)
-                    .orElseThrow(() -> new EntityNotFoundException("Church with number " + sanitizedChurchNumber + " not found"));
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                            "church.notFound.withNumber",
+                            "Church with number {0} not found",
+                            sanitizedChurchNumber
+                    )));
             priestBuilder.church(churchFound);
             TenantEntity churchTenant = churchFound.getTenant();
             if (churchTenant == null) {
-                throw new IllegalStateException("Church tenant is missing for church " + sanitizedChurchNumber);
+                throw new IllegalStateException(messageService.get(
+                        "registration.priest.churchTenant.missing",
+                        "Church tenant is missing for church {0}",
+                        sanitizedChurchNumber
+                ));
             }
             priestUser.assignTenant(churchTenant);
             userRepository.save(priestUser);
@@ -242,15 +269,15 @@ public class PriestServiceImpl implements PriestService{
         }).orElseThrow(() -> new UsernameNotFoundException("Priest not found"));
     }
 
-    private AvatarEntity enrichAvatar(AvatarEntity avatar, UserEntity user) {
+    private ImageAssetEntity enrichAvatar(ImageAssetEntity avatar, UserEntity user) {
         if (avatar == null) {
             return null;
         }
         if (avatar.getOwnerId() == null && user != null) {
             avatar.setOwnerId(user.getUuid());
         }
-        if (avatar.getAvatarType() == null) {
-            avatar.setAvatarType(AvatarType.USER);
+        if (avatar.getImageAssetType() == null) {
+            avatar.setImageAssetType(ImageAssetType.USER);
         }
         return avatar;
     }

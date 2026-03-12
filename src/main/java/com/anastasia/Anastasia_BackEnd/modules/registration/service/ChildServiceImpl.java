@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
@@ -15,6 +16,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.ApprovalStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
@@ -49,6 +51,7 @@ public class ChildServiceImpl implements ChildService{
     private final SecurityUtils securityUtils;
     private final TenantAdminNotificationService tenantAdminNotificationService;
     private final ActiveMemberLimitPolicy activeMemberLimitPolicy;
+    private final LocalizedMessageService messageService;
 
     @Override
     public Child_MemberEntity convertToEntity(Child_MemberDTO childMemberDTO) {
@@ -81,20 +84,33 @@ public class ChildServiceImpl implements ChildService{
     public ChildResponse registerChild(Child_MemberEntity childMemberEntity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)){
-            throw new IllegalStateException("User not authenticated");
+            throw new IllegalStateException(messageService.get(
+                    "auth.user.notAuthenticated",
+                    "User not authenticated"
+            ));
         }
         UserEntity user = userRepository.findById(userPrincipal.getUserUuid())
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "auth.user.notAuthenticated",
+                        "Authenticated user not found"
+                )));
 
 
         String churchNumber = normalizeChurchNumber(childMemberEntity.getChurchNumber());
         if (!StringUtils.hasText(churchNumber)) {
-            throw new IllegalStateException("Church number must be provided");
+            throw new IllegalStateException(messageService.get(
+                    "registration.churchNumber.required",
+                    "Church number must be provided"
+            ));
         }
 
         childMemberEntity.setChurchNumber(churchNumber);
         ChurchEntity church = churchRepository.findByChurchNumber(churchNumber)
-                .orElseThrow(() -> new IllegalStateException("Church not found for number: " + churchNumber));
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "church.notFound.withNumber",
+                        "Church not found for number: {0}",
+                        churchNumber
+                )));
         childMemberEntity.setChurch(church);
         childMemberEntity.setTenantId(church.getTenant().getId());
 
@@ -237,6 +253,8 @@ public class ChildServiceImpl implements ChildService{
             Optional.ofNullable(request.getWhatsApp()).ifPresent(memberEntity::setWhatsApp);
             Optional.ofNullable(request.getEmergencyContactNumber()).ifPresent(memberEntity::setEmergencyContactNumber);
             Optional.ofNullable(request.getContactRelation()).ifPresent(memberEntity::setContactRelation);
+            Optional.ofNullable(request.getPrimaryGuardianPhone()).ifPresent(memberEntity::setPrimaryGuardianPhone);
+            Optional.ofNullable(request.getGuardianRelationship()).ifPresent(memberEntity::setGuardianRelationship);
 
             Optional.ofNullable(request.getFirstLanguage()).ifPresent(memberEntity::setFirstLanguage);
             Optional.ofNullable(request.getSecondLanguage()).ifPresent(memberEntity::setSecondLanguage);
@@ -293,10 +311,15 @@ public class ChildServiceImpl implements ChildService{
     public Child_MemberResponse approveByChurch(Long childId) {
         UUID tenantId = requireTenantId();
         Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "registration.child.notFound",
+                        "Child not found"
+                )));
         if (!ChildStatus.APPROVED.name().equals(child.getStatus()) && !ChildStatus.ACTIVE.name().equals(child.getStatus())) {
             activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
         }
+        child.setChurchApprovalStatus(ApprovalStatus.APPROVED);
+        child.setApprovedByChurch(true);
         child.setStatus(ChildStatus.APPROVED.name());
         Child_MemberEntity saved = childRepository.save(child);
         return convertToResponse(saved);
@@ -312,10 +335,15 @@ public class ChildServiceImpl implements ChildService{
     public Child_MemberResponse approveByPriest(Long childId) {
         UUID tenantId = requireTenantId();
         Child_MemberEntity child = childRepository.findByIdAndTenantId(childId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "registration.child.notFound",
+                        "Child not found"
+                )));
         if (!ChildStatus.APPROVED.name().equals(child.getStatus()) && !ChildStatus.ACTIVE.name().equals(child.getStatus())) {
             activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
         }
+        child.setChurchApprovalStatus(ApprovalStatus.APPROVED);
+        child.setApprovedByChurch(true);
         child.setStatus(ChildStatus.APPROVED.name());
         Child_MemberEntity saved = childRepository.save(child);
         return convertToResponse(saved);
@@ -351,7 +379,11 @@ public class ChildServiceImpl implements ChildService{
         }
 
         Adult_MemberEntity parent = memberRepository.findById(parentId)
-                .orElseThrow(() -> new IllegalArgumentException("Parent not found for id: " + parentId));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "registration.parent.notFound.withId",
+                        "Parent not found for id: {0}",
+                        parentId
+                )));
 
         Adult_MemberEntity current = isFather ? child.getFather() : child.getMother();
         if (current != null && current.getId().equals(parentId)) {
@@ -390,7 +422,10 @@ public class ChildServiceImpl implements ChildService{
     private UUID requireTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new IllegalStateException("Tenant context is missing for child member access");
+            throw new IllegalStateException(messageService.get(
+                    "registration.child.tenantContext.missing",
+                    "Tenant context is missing for child member access"
+            ));
         }
         return tenantId;
     }

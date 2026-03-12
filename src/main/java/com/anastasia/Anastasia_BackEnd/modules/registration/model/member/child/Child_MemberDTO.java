@@ -20,79 +20,90 @@ import java.time.LocalDate;
 public class Child_MemberDTO {
 
     @NotBlank
-    @Pattern(regexp = "^[A-Za-z]{1,2}\\d{5}$", message = "Invalid church number")
+    @Pattern(regexp = "^[A-Za-z]{1,2}\\d{5}$", message = "{validation.member.churchNumber.invalid}")
     private String churchNumber;
 
     private boolean deacon;
 
-    @NotBlank(message = "Title is required")
+    @NotBlank(message = "{validation.member.title.required}")
     private String title;
 
-    @NotBlank(message = "First name is required")
+    @NotBlank(message = "{validation.member.firstName.required}")
     private String firstName;
 
-    @NotBlank(message = "Father's name is required")
+    @NotBlank(message = "{validation.member.fatherName.required}")
     private String fatherName;
 
-    @NotBlank(message = "Grandfather's name is required")
+    @NotBlank(message = "{validation.member.grandFatherName.required}")
     private String grandFatherName;
 
-    @NotBlank(message = "Mother's name is required")
+    @NotBlank(message = "{validation.member.motherName.required}")
     private String motherName;
 
-    @NotBlank(message = "Mother's father name is required")
+    @NotBlank(message = "{validation.member.mothersFather.required}")
     private String mothersFather;
 
-    @NotBlank(message = "First name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.firstNameLocal.required}")
     private String firstNameT;
 
-    @NotBlank(message = "Father's name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.fatherNameLocal.required}")
     private String fatherNameT;
 
-    @NotBlank(message = "Grandfather's name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.grandFatherNameLocal.required}")
     private String grandFatherNameT;
 
-    @NotBlank(message = "Mother's full name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.motherFullNameLocal.required}")
     private String motherFullNameT;
 
-    @NotBlank(message = "Gender is required")
-    @Pattern(regexp = "^(Male|Female)$", message = "Gender is required'")
+    @NotBlank(message = "{validation.member.gender.required}")
+    @Pattern(regexp = "^(Male|Female)$", message = "{validation.member.gender.invalid}")
     private String gender;
 
-    @NotNull(message = "Birthday is required")
+    @NotNull(message = "{validation.member.birthday.required}")
     private LocalDate birthday;
 
-    @NotBlank(message = "Nationality is required")
+    @NotBlank(message = "{validation.member.nationality.required}")
     private String nationality;
 
-    @NotBlank(message = "Place of birth is required")
+    @NotBlank(message = "{validation.member.placeOfBirth.required}")
     private String placeOfBirth;
 
-    @Email(message = "Invalid email format")
+    private String village;
+
+    @Email(message = "{validation.member.email.invalid}")
     private String email;
 
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid phone number format")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "{validation.member.phone.invalid}")
     private String phone;
 
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid WhatsApp number format")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "{validation.member.whatsApp.invalid}")
     private String whatsApp;
 
-     @NotBlank(message = "Emergency contact number is required")
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid emergency contact number format")
+     @NotBlank(message = "{validation.child.emergencyContact.required}")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "{validation.member.emergencyContact.invalid}")
     private String emergencyContactNumber;
 
-    @NotBlank(message = "Emergency contact relation is required")
+    @NotBlank(message = "{validation.child.contactRelation.required}")
     private String contactRelation;
 
-    @NotBlank(message = "First language is required")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "{validation.child.guardianPhone.invalid}")
+    private String primaryGuardianPhone;
+
+    private String guardianRelationship;
+
+    @NotBlank(message = "{validation.member.firstLanguage.required}")
     private String firstLanguage;
 
     private String secondLanguage;
 
     private String levelOfEducation;
 
-    @NotBlank(message = "Father of Confession is required")
+    @NotBlank(message = "{validation.member.fatherOfConfession.required}")
     private String fatherOfConfession;
+
+    private String churchOfBaptism;
+
+    private String baptismName;
 
     private String priestNumber;
 

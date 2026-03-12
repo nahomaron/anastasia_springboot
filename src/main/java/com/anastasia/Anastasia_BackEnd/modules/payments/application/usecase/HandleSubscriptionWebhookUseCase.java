@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
@@ -19,14 +20,23 @@ public class HandleSubscriptionWebhookUseCase {
 
     private final PaymentSubscriptionRepository subscriptionRepository;
     private final OutboxPublisher outboxPublisher;
+    private final LocalizedMessageService messageService;
 
     @Transactional
     public void handleSubscriptionActivated(UUID subscriptionId, String providerSubscriptionId) {
         var subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown payment subscription: " + subscriptionId));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "payments.subscription.unknown",
+                        "Unknown payment subscription: {0}",
+                        subscriptionId
+                )));
 
         if (!"STRIPE".equalsIgnoreCase(subscription.getProvider())) {
-            throw new IllegalStateException("Unsupported provider for subscription " + subscriptionId);
+            throw new IllegalStateException(messageService.get(
+                    "payments.subscription.provider.unsupported",
+                    "Unsupported provider for subscription {0}",
+                    subscriptionId
+            ));
         }
 
         boolean alreadyActive = subscription.getProviderRef() != null
@@ -60,10 +70,18 @@ public class HandleSubscriptionWebhookUseCase {
     @Transactional
     public void handleSubscriptionCanceled(UUID subscriptionId) {
         var subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown payment subscription: " + subscriptionId));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "payments.subscription.unknown",
+                        "Unknown payment subscription: {0}",
+                        subscriptionId
+                )));
 
         if (!"STRIPE".equalsIgnoreCase(subscription.getProvider())) {
-            throw new IllegalStateException("Unsupported provider for subscription " + subscriptionId);
+            throw new IllegalStateException(messageService.get(
+                    "payments.subscription.provider.unsupported",
+                    "Unsupported provider for subscription {0}",
+                    subscriptionId
+            ));
         }
 
         if (subscription.getStatus() == SubscriptionStatus.CANCELED) {

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.accounting.messaging;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.PaymentCapturedMessage;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.TransactionService;
 import com.anastasia.Anastasia_BackEnd.core.kafka.util.KafkaConsumerGroupNames;
@@ -25,6 +26,7 @@ public class PaymentAccountingListener {
 
     private final ObjectMapper objectMapper;
     private final TransactionService transactionService;
+    private final LocalizedMessageService messageService;
 
     @KafkaListener(
             topics = "#{@kafkaTopicNameResolver.paymentsCaptured()}",
@@ -37,7 +39,10 @@ public class PaymentAccountingListener {
         } catch (Exception ex) {
             log.error("Failed to record captured payment in accounting. key={} error={}", record.key(), ex.getMessage(), ex);
             // Let the container's error handler decide on retries / DLQ.
-            throw new IllegalStateException("Accounting posting failed", ex);
+            throw new IllegalStateException(messageService.get(
+                    "accounting.posting.failed",
+                    "Accounting posting failed"
+            ), ex);
         }
     }
 
@@ -46,7 +51,10 @@ public class PaymentAccountingListener {
 
         UUID tenantId = extractTenantId(record, payload);
         if (tenantId == null) {
-            throw new IllegalArgumentException("Captured payment payload missing tenantId");
+            throw new IllegalArgumentException(messageService.get(
+                    "accounting.paymentCapture.tenantId.missing",
+                    "Captured payment payload missing tenantId"
+            ));
         }
 
         return PaymentCapturedMessage.builder()
@@ -80,7 +88,11 @@ public class PaymentAccountingListener {
         try {
             return UUID.fromString(raw);
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Invalid tenantId supplied for accounting event: " + raw, ex);
+            throw new IllegalArgumentException(messageService.get(
+                    "accounting.tenantId.invalid",
+                    "Invalid tenantId supplied for accounting event: {0}",
+                    raw
+            ), ex);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
 import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
@@ -28,6 +29,7 @@ public class HandleWebhookEventUseCase {
 
     private final PaymentIntentRepository paymentRepo;
     private final OutboxPublisher outbox;
+    private final LocalizedMessageService messageService;
 
     @Transactional
     public void handleAuthorized(UUID paymentId,
@@ -37,7 +39,11 @@ public class HandleWebhookEventUseCase {
                                  Instant occurredAt,
                                  Long amountMinor) {
         var pi = paymentRepo.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown payment intent: " + paymentId));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "payments.intent.unknown",
+                        "Unknown payment intent: {0}",
+                        paymentId
+                )));
 
         enforceStripeProvider(pi, providerRef);
         pi.recordStripeEvent(stripeEventId, stripeEventType, occurredAt);
@@ -76,7 +82,11 @@ public class HandleWebhookEventUseCase {
                                String stripeEventType,
                                Instant occurredAt) {
         var pi = paymentRepo.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown payment intent: " + paymentId));
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "payments.intent.unknown",
+                        "Unknown payment intent: {0}",
+                        paymentId
+                )));
 
         enforceStripeProvider(pi, providerRef);
         pi.recordStripeEvent(stripeEventId, stripeEventType, occurredAt);
@@ -111,16 +121,28 @@ public class HandleWebhookEventUseCase {
 
     private void enforceStripeProvider(PaymentIntent pi, String providerRef) {
         if (!"STRIPE".equalsIgnoreCase(pi.getProvider())) {
-            throw new IllegalStateException("Unsupported payment provider for webhook intent " + pi.getId());
+            throw new IllegalStateException(messageService.get(
+                    "payments.provider.unsupportedWebhook",
+                    "Unsupported payment provider for webhook intent {0}",
+                    pi.getId()
+            ));
         }
         if (providerRef == null || providerRef.isBlank()) {
-            throw new IllegalArgumentException("providerRef missing for payment " + pi.getId());
+            throw new IllegalArgumentException(messageService.get(
+                    "payments.providerRef.missing",
+                    "providerRef missing for payment {0}",
+                    pi.getId()
+            ));
         }
         String currentRef = pi.getProviderRef();
         if (currentRef != null && !currentRef.equals(providerRef)) {
             log.error("Provider reference mismatch for payment {} (expected={}, received={})",
                     pi.getId(), currentRef, providerRef);
-            throw new IllegalStateException("Provider reference mismatch for payment " + pi.getId());
+            throw new IllegalStateException(messageService.get(
+                    "payments.providerRef.mismatch",
+                    "Provider reference mismatch for payment {0}",
+                    pi.getId()
+            ));
         }
     }
 }

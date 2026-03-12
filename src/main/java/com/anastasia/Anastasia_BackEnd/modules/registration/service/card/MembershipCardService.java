@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.card;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.card.MembershipCardDownloadPayload;
@@ -43,8 +44,9 @@ public class MembershipCardService {
     private final MembershipCardTokenService tokenService;
     private final MembershipCardStorageService storageService;
     private final MembershipCardRenderService renderService;
+    private final LocalizedMessageService messageService;
 
-    @Value("${app.membership-card.verify-base-url:http://localhost:8080}")
+    @Value("${app.public.backend-base-url:http://192.168.1.79:8080}")
     private String verifyBaseUrl;
 
     @Transactional
@@ -139,11 +141,17 @@ public class MembershipCardService {
         UserEntity user = requireCurrentUser();
         Adult_MemberEntity membership = user.getMembership();
         if (membership == null || membership.getId() == null || membership.getTenantId() == null) {
-            throw new EntityNotFoundException("No membership associated with current user");
+            throw new EntityNotFoundException(messageService.get(
+                    "registration.membership.currentUser.missing",
+                    "No membership associated with current user"
+            ));
         }
 
         MembershipCardEntity card = membershipCardRepository.findByTenantIdAndMemberId(membership.getTenantId(), membership.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Membership card not issued yet"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "registration.membershipCard.notIssued",
+                        "Membership card not issued yet"
+                )));
 
         return toSummary(card);
     }
@@ -153,10 +161,16 @@ public class MembershipCardService {
         UserEntity user = requireCurrentUser();
         Adult_MemberEntity membership = user.getMembership();
         if (membership == null || membership.getId() == null || membership.getTenantId() == null) {
-            throw new EntityNotFoundException("No membership associated with current user");
+            throw new EntityNotFoundException(messageService.get(
+                    "registration.membership.currentUser.missing",
+                    "No membership associated with current user"
+            ));
         }
         MembershipCardEntity card = membershipCardRepository.findByTenantIdAndMemberId(membership.getTenantId(), membership.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Membership card not issued yet"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "registration.membershipCard.notIssued",
+                        "Membership card not issued yet"
+                )));
 
         return buildDownloadPayload(card, format, user.getUuid());
     }
@@ -165,7 +179,10 @@ public class MembershipCardService {
     public MembershipCardDownloadPayload downloadByMemberId(Long memberId, String format) {
         UUID tenantId = requireTenantId();
         MembershipCardEntity card = membershipCardRepository.findByTenantIdAndMemberId(tenantId, memberId)
-                .orElseThrow(() -> new EntityNotFoundException("Membership card not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "registration.membershipCard.notFound",
+                        "Membership card not found"
+                )));
         return buildDownloadPayload(card, format, currentUserId().orElse(null));
     }
 
@@ -194,7 +211,10 @@ public class MembershipCardService {
     public MembershipCardTemplateResponse setDefaultTemplateForCurrentTenant(Long templateId) {
         UUID tenantId = requireTenantId();
         MembershipCardTemplateEntity template = membershipCardTemplateRepository.findByIdAndTenantId(templateId, tenantId)
-                .orElseThrow(() -> new EntityNotFoundException("Template not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "registration.membershipCard.template.notFound",
+                        "Template not found"
+                )));
 
         List<MembershipCardTemplateEntity> templates = membershipCardTemplateRepository
                 .findByTenantIdAndActiveTrueOrderBySortOrderAscDisplayNameAsc(tenantId);
@@ -235,7 +255,10 @@ public class MembershipCardService {
         MembershipCardTokenService.ParsedMembershipCardToken parsed = tokenService.parse(token);
 
         MembershipCardEntity card = membershipCardRepository.findById(parsed.cardId())
-                .orElseThrow(() -> new EntityNotFoundException("Card not found"));
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "registration.membershipCard.card.notFound",
+                        "Card not found"
+                )));
 
         boolean hashMatches = tokenService.hash(token).equals(card.getQrTokenHash());
         boolean tenantMatches = parsed.tenantId().equals(card.getTenantId());
@@ -244,7 +267,10 @@ public class MembershipCardService {
         if (!hashMatches || !tenantMatches || !memberMatches) {
             return MembershipCardVerifyResponse.builder()
                     .valid(false)
-                    .message("Invalid card token")
+                    .message(messageService.get(
+                            "registration.membershipCard.token.invalid",
+                            "Invalid card token"
+                    ))
                     .build();
         }
 
@@ -397,7 +423,7 @@ public class MembershipCardService {
 
     private String normalizeBaseUrl(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            return "http://localhost:8080";
+            return "http://192.168.1.79:8080";
         }
         return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
     }

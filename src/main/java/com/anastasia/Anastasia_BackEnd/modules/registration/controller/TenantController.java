@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.ResendOtpRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
@@ -35,6 +36,7 @@ public class TenantController {
     private final TenantService tenantService;
     private final RateLimiterService rateLimiterService;
     private final PhoneVerificationService phoneVerificationService;
+    private final LocalizedMessageService messageService;
 
     /**
      * Subscribes a new tenant to the system.
@@ -47,7 +49,10 @@ public class TenantController {
     @PostMapping("/subscription")
     public ResponseEntity<?> subscribeTenant(@Valid @RequestBody TenantDTO tenantDTO) throws MessagingException {
         if(tenantDTO.getPassword() != null && !tenantDTO.isPasswordMatch()){
-            return ResponseEntity.badRequest().body("Password do not match");
+            return ResponseEntity.badRequest().body(messageService.get(
+                    "auth.changePassword.mismatch",
+                    "Password do not match"
+            ));
         }
         TenantEntity tenant = tenantService.subscribeTenant(tenantDTO);
         Long churchId = tenant.getChurch() != null ? tenant.getChurch().getChurchId() : null;
@@ -70,12 +75,18 @@ public class TenantController {
     public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request,
                                          HttpServletRequest httpRequest) {
         if (request.getPhone() == null || request.getPhone().isBlank()) {
-            return ResponseEntity.badRequest().body("Phone number is required.");
+            return ResponseEntity.badRequest().body(messageService.get(
+                    "validation.tenant.phone.required",
+                    "Phone number is required."
+            ));
         }
         String normalizedPhone = PhoneNumberUtils.normalize(request.getPhone());
         String key = rateLimitKey("verify", normalizedPhone, httpRequest.getRemoteAddr());
         if (!rateLimiterService.isAllowed(key)) {
-            return ResponseEntity.status(429).body("Too many attempts. Try again later.");
+            return ResponseEntity.status(429).body(messageService.get(
+                    "tenant.phone.rateLimit",
+                    "Too many attempts. Try again later."
+            ));
         }
         boolean verified = tenantService.verifyTenantPhone(normalizedPhone, request.getOtp());
 
@@ -183,7 +194,7 @@ public class TenantController {
      * @param tenantId The ID of the tenant to unsubscribe.
      * @return ResponseEntity indicating success or failure of the un-subscription.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PLATFORM_ADMIN')")
     @PostMapping("/unsubscribe/{tenantId}")
     public ResponseEntity<?> unsubscribeTenant(@PathVariable UUID tenantId){
         tenantService.unsubscribeTenant(tenantId);
@@ -198,11 +209,14 @@ public class TenantController {
      * @param tenantDTO The data transfer object containing updated tenant details.
      * @return ResponseEntity indicating success or failure of the update operation.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PLATFORM_ADMIN')")
     @PatchMapping("/update/{tenantId}")
     public ResponseEntity<?> updateTenant(@PathVariable UUID tenantId, @Valid @RequestBody TenantDTO tenantDTO) {
         if(tenantDTO.getPassword() != null && !tenantDTO.isPasswordMatch()){
-            return ResponseEntity.badRequest().body("Password do not match");
+            return ResponseEntity.badRequest().body(messageService.get(
+                    "auth.changePassword.mismatch",
+                    "Password do not match"
+            ));
         }
         tenantService.updateTenant(tenantId, tenantDTO);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -211,7 +225,10 @@ public class TenantController {
     private String resolveCurrentTenantPhoneNumber() {
         TenantEntity tenant = resolveCurrentTenant();
         if (tenant.getPhoneNumber() == null || tenant.getPhoneNumber().isBlank()) {
-            throw new IllegalStateException("Tenant phone number is not available.");
+            throw new IllegalStateException(messageService.get(
+                    "tenant.phone.missing",
+                    "Tenant phone number is not available."
+            ));
         }
         return PhoneNumberUtils.normalize(tenant.getPhoneNumber());
     }
@@ -219,16 +236,25 @@ public class TenantController {
     private TenantEntity resolveCurrentTenant() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
-            throw new SecurityException("Authenticated user context not found.");
+            throw new SecurityException(messageService.get(
+                    "auth.user.notAuthenticated",
+                    "Authenticated user context not found."
+            ));
         }
 
         UUID tenantId = principal.getTenantId();
         if (tenantId == null) {
-            throw new SecurityException("No tenant linked to authenticated user.");
+            throw new SecurityException(messageService.get(
+                    "tenant.currentUser.linkMissing",
+                    "No tenant linked to authenticated user."
+            ));
         }
 
         TenantEntity tenant = tenantService.findTenantEntityById(tenantId)
-                .orElseThrow(() -> new SecurityException("Tenant not found."));
+                .orElseThrow(() -> new SecurityException(messageService.get(
+                        "tenant.notFound",
+                        "Tenant not found."
+                )));
         return tenant;
     }
 

@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,96 +21,102 @@ import java.time.LocalDate;
 public class Adult_MemberDTO {
 
     @NotBlank
-    @Pattern(regexp = "^[A-Za-z]{1,2}\\d{5}$", message = "Invalid church number")
+    @Pattern(regexp = "^[A-Za-z]{1,2}\\d{5}$", message = "{validation.member.churchNumber.invalid}")
     private String churchNumber;
 
     @Valid
     @NotNull
-    private AvatarDTO avatar;
+    private ImageAssetDTO avatar;
 
     private boolean deacon;
 
-    @NotBlank(message = "Title is required")
+    @NotBlank(message = "{validation.member.title.required}")
     private String title;
 
-    @NotBlank(message = "First name is required")
+    @NotBlank(message = "{validation.member.firstName.required}")
     private String firstName;
 
-    @NotBlank(message = "Father's name is required")
+    @NotBlank(message = "{validation.member.fatherName.required}")
     private String fatherName;
 
-    @NotBlank(message = "Grandfather's name is required")
+    @NotBlank(message = "{validation.member.grandFatherName.required}")
     private String grandFatherName;
 
-    @NotBlank(message = "Mother's name is required")
+    @NotBlank(message = "{validation.member.motherName.required}")
     private String motherName;
 
-    @NotBlank(message = "Mother's father name is required")
+    @NotBlank(message = "{validation.member.mothersFather.required}")
     private String mothersFather;
 
-    @NotBlank(message = "First name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.firstNameLocal.required}")
     private String firstNameT;
 
-    @NotBlank(message = "Father's name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.fatherNameLocal.required}")
     private String fatherNameT;
 
-    @NotBlank(message = "Grandfather's name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.grandFatherNameLocal.required}")
     private String grandFatherNameT;
 
-    @NotBlank(message = "Mother's full name (in Tigrinya) is required")
+    @NotBlank(message = "{validation.member.motherFullNameLocal.required}")
     private String motherFullNameT;
 
-    @NotBlank(message = "Gender is required")
-    @Pattern(regexp = "^(Male|Female)$", message = "Gender is required'")
+    @NotBlank(message = "{validation.member.gender.required}")
+    @Pattern(regexp = "^(Male|Female)$", message = "{validation.member.gender.invalid}")
     private String gender;
 
-    @NotNull(message = "Birthday is required")
+    @NotNull(message = "{validation.member.birthday.required}")
     private LocalDate birthday;
 
-    @NotBlank(message = "Nationality is required")
+    @NotBlank(message = "{validation.member.nationality.required}")
     private String nationality;
 
-    @NotBlank(message = "Place of birth is required")
+    @NotBlank(message = "{validation.member.placeOfBirth.required}")
     private String placeOfBirth;
 
-    @Email(message = "Invalid email format")
+    private String village;
+
+    @Email(message = "{validation.member.email.invalid}")
     private String email;
 
-    @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid phone number format")
+    @NotBlank(message = "{validation.member.phone.required}")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "{validation.member.phone.invalid}")
     private String phone;
 
-    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "Invalid WhatsApp number format")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "{validation.member.whatsApp.invalid}")
     private String whatsApp;
 
    // @NotBlank(message = "Emergency contact number is required")
-    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "Invalid emergency contact number format")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "{validation.member.emergencyContact.invalid}")
     private String emergencyContactNumber;
 
     private String contactRelation;
 
-    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "Invalid Eritrea contact number format")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,15}$", message = "{validation.member.eritreaContact.invalid}")
     private String eritreaContact;
 
-    @NotBlank(message = "Marital status is required")
-    @Pattern(regexp = "^(Single|Married|Divorced|Widowed)$", message = "Invalid marital status")
+    @NotBlank(message = "{validation.member.maritalStatus.required}")
+    @Pattern(regexp = "^(Single|Married|Divorced|Widowed)$", message = "{validation.member.maritalStatus.invalid}")
     private String maritalStatus;
 
-    @Max(value = 14, message = "Invalid number of children")
+    @Max(value = 14, message = "{validation.member.numberOfChildren.invalid}")
     private int numberOfChildren;
 
-    @NotBlank(message = "First language is required")
+    @NotBlank(message = "{validation.member.firstLanguage.required}")
     private String firstLanguage;
 
     private String secondLanguage;
 
-    @NotBlank(message = "Profession is required")
+    @NotBlank(message = "{validation.member.profession.required}")
     private String profession;
 
     private String levelOfEducation;
 
-    @NotBlank(message = "Father of Confession is required")
+    @NotBlank(message = "{validation.member.fatherOfConfession.required}")
     private String fatherOfConfession;
+
+    private String churchOfBaptism;
+
+    private String baptismName;
 
     private String priestNumber;
 
@@ -121,17 +127,17 @@ public class Adult_MemberDTO {
 
     @JsonProperty("terms_accepted")
     @JsonAlias("termsAccepted")
-    @AssertTrue(message = "Terms must be accepted")
+    @AssertTrue(message = "{validation.member.terms.accepted}")
     private boolean termsAccepted;
 
     @JsonProperty("terms_version")
     @JsonAlias("termsVersion")
-    @NotBlank(message = "Terms version is required")
+    @NotBlank(message = "{validation.member.terms.version.required}")
     private String termsVersion;
 
     @JsonProperty("terms_accepted_at")
     @JsonAlias("termsAcceptedAt")
-    @NotNull(message = "Terms accepted timestamp is required")
+    @NotNull(message = "{validation.member.terms.acceptedAt.required}")
     private Instant termsAcceptedAt;
 
 }

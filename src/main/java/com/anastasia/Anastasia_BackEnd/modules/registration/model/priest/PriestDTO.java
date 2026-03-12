@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.priest;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -30,36 +30,36 @@ public class PriestDTO {
 
     private UUID tenantId;
 
-    private AvatarDTO avatar;
+    private ImageAssetDTO avatar;
 
     private PriestStatus status;
 
     private String prefixes; //(additional title)
 
-    @NotBlank(message = "First name is required")
+    @NotBlank(message = "{validation.priest.firstName.required}")
     private String firstName;
 
-    @NotBlank(message = "Father's name is required")
+    @NotBlank(message = "{validation.priest.fatherName.required}")
     private String fatherName;
 
-    @NotBlank(message = "Grandfather's name is required")
+    @NotBlank(message = "{validation.priest.grandFatherName.required}")
     private String grandFatherName;
 
-    @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^(?:\\+|00)\\d{1,3}\\d{6,12}$", message = "Invalid phone number format")
+    @NotBlank(message = "{validation.priest.phone.required}")
+    @Pattern(regexp = "^(?:\\+|00)\\d{1,3}\\d{6,12}$", message = "{validation.priest.phone.invalid}")
     private String phoneNumber;
 
-    @NotBlank(message = "Personal email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "{validation.priest.personalEmail.required}")
+    @Email(message = "{validation.priest.email.invalid}")
     private String personalEmail;
 
-    @Email(message = "Invalid email format")
+    @Email(message = "{validation.priest.email.invalid}")
     private String churchEmail;
 
     private String priesthoodCardId; // (if any)
     private String priesthoodCardScan;
 
-    @NotBlank(message = "Birthdate is required")
+    @NotBlank(message = "{validation.priest.birthdate.required}")
     private String birthdate;
 
     @Builder.Default
@@ -70,13 +70,13 @@ public class PriestDTO {
     private Address address;
 
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @NotBlank(message = "{validation.priest.password.required}")
+    @Size(min = 8, message = "{validation.priest.password.min}")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-            message = "Password must contain an uppercase letter, a lowercase letter, a number, and a special character")
+            message = "{validation.priest.password.pattern}")
     private String password;
 
-    @NotBlank(message = "Confirm Password is required")
+    @NotBlank(message = "{validation.priest.confirmPassword.required}")
     private String confirmPassword;
 
     public boolean isPasswordMatch() {

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.CreateSubscriptionUseCase;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.saga.PaymentCheckoutSaga;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.CreateIntentRequest;
@@ -27,6 +28,7 @@ public class PaymentController {
     private final PaymentCheckoutSaga checkoutSaga;
     private final CreateSubscriptionUseCase createSubscription;
     private final EntitlementResolverService entitlementResolverService;
+    private final LocalizedMessageService messageService;
 
     @PostMapping("/intents")
     public ResponseEntity<PaymentResponse> create(
@@ -84,13 +86,19 @@ public class PaymentController {
         try {
             return UUID.fromString(headerValue);
         } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid tenant id");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageService.get(
+                    "payments.tenantId.invalid",
+                    "Invalid tenant id"
+            ));
         }
     }
 
     private void ensureStewardshipEnabled(UUID tenantId) {
         if (!entitlementResolverService.hasFeature(tenantId, TenantFeature.STEWARDSHIP_GIVING)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Stewardship/giving is not enabled for this tenant plan");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageService.get(
+                    "payments.stewardship.disabled",
+                    "Stewardship/giving is not enabled for this tenant plan"
+            ));
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.query.SubscriptionQueryService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.SubscriptionView;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SubscriptionQueryController {
     private final SubscriptionQueryService queryService;
+    private final LocalizedMessageService messageService;
 
     @GetMapping
     public ResponseEntity<Page<SubscriptionView>> findAll(
@@ -50,7 +52,10 @@ public class SubscriptionQueryController {
         try {
             return UUID.fromString(headerValue);
         } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid tenant id");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageService.get(
+                    "payments.tenantId.invalid",
+                    "Invalid tenant id"
+            ));
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.events.PaymentEventType;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentPurpose;
 import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentSubscription;
@@ -28,6 +29,7 @@ public class CreateSubscriptionUseCase {
     private final StripeClient stripeClient;
     private final OutboxPublisher outboxPublisher;
     private final MemberRepository memberRepository;
+    private final LocalizedMessageService messageService;
 
     @Transactional
     public PaymentSubscription execute(UUID tenantId,
@@ -110,7 +112,10 @@ public class CreateSubscriptionUseCase {
         } catch (StripeException e) {
             log.warn("Stripe subscription session creation failed for tenant={} idempotencyKey={}: {}",
                     normalizedTenantId, normalizedIdempotencyKey, e.getMessage());
-            throw new IllegalStateException("Stripe subscription session creation failed", e);
+            throw new IllegalStateException(messageService.get(
+                    "payments.stripe.subscriptionSession.createFailed",
+                    "Stripe subscription session creation failed"
+            ), e);
         }
 
         var saved = subscriptionRepository.save(subscription);

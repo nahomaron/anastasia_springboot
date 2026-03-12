@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.query.PaymentQueryService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.PaymentView;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class PaymentQueryController {
 
     private final PaymentQueryService queryService;
+    private final LocalizedMessageService messageService;
 
     @GetMapping
     public ResponseEntity<Page<PaymentView>> findAll(
@@ -62,7 +64,10 @@ public class PaymentQueryController {
         try {
             return UUID.fromString(headerValue);
         } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid tenant id");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageService.get(
+                    "payments.tenantId.invalid",
+                    "Invalid tenant id"
+            ));
         }
     }
 
