@@ -34,8 +34,8 @@ public class HandleWebhookEventUseCase {
     @Transactional
     public void handleAuthorized(UUID paymentId,
                                  String providerRef,
-                                 String stripeEventId,
-                                 String stripeEventType,
+                                 String providerEventId,
+                                 String providerEventType,
                                  Instant occurredAt,
                                  Long amountMinor) {
         var pi = paymentRepo.findById(paymentId)
@@ -46,7 +46,7 @@ public class HandleWebhookEventUseCase {
                 )));
 
         enforceStripeProvider(pi, providerRef);
-        pi.recordStripeEvent(stripeEventId, stripeEventType, occurredAt);
+        pi.recordProviderEvent(providerEventId, providerEventType, occurredAt);
         pi.markAuthorized(providerRef, occurredAt, amountMinor);
         paymentRepo.save(pi);
 
@@ -56,8 +56,8 @@ public class HandleWebhookEventUseCase {
         payload.put("status", pi.getStatus().name());
         payload.put("authorizedAt", pi.getAuthorizedAt() != null ? pi.getAuthorizedAt().toString() : null);
         payload.put("authorizedAmountMinor", pi.getAuthorizedAmountMinor());
-        payload.put("stripeEventId", pi.getLastStripeEventId());
-        payload.put("stripeEventType", pi.getLastStripeEventType());
+        payload.put("providerEventId", pi.getLastProviderEventId());
+        payload.put("providerEventType", pi.getLastProviderEventType());
         payload.put("tenantId", pi.getTenantId() != null ? pi.getTenantId().toString() : null);
         payload.put("memberId", pi.getMemberId());
         payload.put("userId", pi.getUserId() != null ? pi.getUserId().toString() : null);
@@ -78,8 +78,8 @@ public class HandleWebhookEventUseCase {
                                long fees,
                                long net,
                                String currency,
-                               String stripeEventId,
-                               String stripeEventType,
+                               String providerEventId,
+                               String providerEventType,
                                Instant occurredAt) {
         var pi = paymentRepo.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get(
@@ -89,7 +89,7 @@ public class HandleWebhookEventUseCase {
                 )));
 
         enforceStripeProvider(pi, providerRef);
-        pi.recordStripeEvent(stripeEventId, stripeEventType, occurredAt);
+        pi.recordProviderEvent(providerEventId, providerEventType, occurredAt);
         pi.markCaptured(providerRef, gross, fees, net, currency, occurredAt);
         paymentRepo.save(pi);
 
@@ -106,8 +106,8 @@ public class HandleWebhookEventUseCase {
         payload.put("fundId", pi.getFundId());
         payload.put("memberId", pi.getMemberId());
         payload.put("capturedAt", pi.getCapturedAt() != null ? pi.getCapturedAt().toString() : Instant.now().toString());
-        payload.put("stripeEventId", pi.getLastStripeEventId());
-        payload.put("stripeEventType", pi.getLastStripeEventType());
+        payload.put("providerEventId", pi.getLastProviderEventId());
+        payload.put("providerEventType", pi.getLastProviderEventType());
         payload.put("userId", pi.getUserId() != null ? pi.getUserId().toString() : null);
         payload.put("userEmail", pi.getUserEmail());
 

@@ -114,10 +114,12 @@ public class CreatePaymentIntentUseCase {
                     normalizedCurrency,
                     purpose.name(),
                     normalizedIdempotencyKey);
-            intent.setProviderRef(session.getPaymentIntent());
-            intent.setCheckoutUrl(session.getUrl());
+            intent.attachCheckoutSession(session.getId(), session.getUrl());
+            if (session.getPaymentIntent() != null && !session.getPaymentIntent().isBlank()) {
+                intent.setProviderPaymentReference(session.getPaymentIntent());
+            }
         } catch (StripeException e) {
-            intent.markFailed();
+            intent.markFailed(e.getMessage());
             paymentIntentRepository.save(intent);
             log.warn("Stripe session creation failed for tenant={} idempotencyKey={}: {}", normalizedTenantId,
                     normalizedIdempotencyKey, e.getMessage());
@@ -130,32 +132,4 @@ public class CreatePaymentIntentUseCase {
         return paymentIntentRepository.save(intent);
     }
 
-    /**
-     * Validates that the provided memberId and fundId belong to the specified tenantId.
-     * @param tenantId tenant UUID
-     * @param memberId member ID
-     * @param fundId fund ID
-     * @throws IllegalArgumentException if memberId or fundId do not belong to the tenant
-     */
-    private void validateReferences(UUID tenantId, Long memberId, Long fundId) {
-        if (memberId != null) {
-            var exists = memberRepo.findByIdAndTenantId(memberId, tenantId);
-            if (exists.isEmpty())
-                throw new IllegalArgumentException(messageService.get(
-                        "payments.member.tenantMismatch",
-                        "Member does not belong to this tenant: {0}",
-                        memberId
-                ));
-        }
-
-        if (fundId != null) {
-            var exists = fundRepo.existsByIdAndTenantId(fundId, tenantId);
-            if (!exists)
-                throw new IllegalArgumentException(messageService.get(
-                        "payments.fund.tenantMismatch",
-                        "Fund does not belong to this tenant: {0}",
-                        fundId
-                ));
-        }
-    }
 }

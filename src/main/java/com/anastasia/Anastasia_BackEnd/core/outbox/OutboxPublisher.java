@@ -52,20 +52,27 @@ public class OutboxPublisher {
         entity.setTenantId(tenantId);
         entity.setType(eventType.name());
         entity.setPayload(toJsonNode(payload));
-        entity.setHeaders(toJsonNode(buildHeaders(eventType, tenantId)));
+        entity.setCorrelationId(aggregateId != null ? aggregateId : entity.getId().toString());
+        entity.setIdempotencyKey(entity.getCorrelationId() + ":" + eventType.name());
+        entity.setHeaders(toJsonNode(buildHeaders(eventType, tenantId, entity)));
         entity.setCreatedAt(Instant.now());
-        entity.setPublished(false);
+        entity.setStatus(OutboxStatus.PENDING);
+        entity.setAttemptCount(0);
+        entity.setNextAttemptAt(Instant.now());
 
         em.persist(entity);
     }
 
-
-
-    private Map<String, Object> buildHeaders(Enum<?> eventType, UUID tenantId) {
+    private Map<String, Object> buildHeaders(Enum<?> eventType, UUID tenantId, OutboxEntity entity) {
         Map<String, Object> headers = new HashMap<>();
-        if (tenantId != null) headers.put("tenantId", tenantId.toString());
+        if (tenantId != null) {
+            headers.put("tenantId", tenantId.toString());
+        }
         headers.put("eventType", eventType.name());
         headers.put("source", "OutboxPublisher");
+        headers.put("eventId", entity.getId().toString());
+        headers.put("correlationId", entity.getCorrelationId());
+        headers.put("idempotencyKey", entity.getIdempotencyKey());
         return headers;
     }
 

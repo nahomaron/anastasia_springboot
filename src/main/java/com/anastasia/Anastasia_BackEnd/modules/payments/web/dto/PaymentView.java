@@ -19,7 +19,15 @@ public class PaymentView {
     private String memberEmail;
     private String fundId;
     private String fundName;
+    private String provider;
+    private String providerPaymentReference;
+    private String providerCheckoutReference;
     private Instant createdAt;
+    private Instant authorizedAt;
+    private Instant capturedAt;
+    private Instant failedAt;
+    private Instant refundedAt;
+    private Instant statusChangedAt;
 
     public static PaymentView fromEntity(PaymentIntent p) {
         var v = new PaymentView();
@@ -32,7 +40,15 @@ public class PaymentView {
         v.setUserId(p.getUserId());
         v.setFundId(p.getFundId());
         v.setFundName(p.getFundName());
+        v.setProvider(p.getProvider());
+        v.setProviderPaymentReference(p.getProviderPaymentReference());
+        v.setProviderCheckoutReference(p.getProviderCheckoutReference());
         v.setCreatedAt(p.getCreatedAt());
+        v.setAuthorizedAt(p.getAuthorizedAt());
+        v.setCapturedAt(p.getCapturedAt());
+        v.setFailedAt(p.getFailedAt());
+        v.setRefundedAt(p.getRefundedAt());
+        v.setStatusChangedAt(p.getStatusChangedAt());
         return v;
     }
 }
