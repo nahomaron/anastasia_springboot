@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
@@ -37,6 +37,7 @@ public class MemberMapper {
                 .birthday(adultMemberEntity.getBirthday())
                 .nationality(adultMemberEntity.getNationality())
                 .placeOfBirth(adultMemberEntity.getPlaceOfBirth())
+                .village(adultMemberEntity.getVillage())
                 .email(adultMemberEntity.getEmail())
                 .phone(adultMemberEntity.getPhone())
                 .whatsApp(adultMemberEntity.getWhatsApp())
@@ -50,6 +51,8 @@ public class MemberMapper {
                 .profession(adultMemberEntity.getProfession())
                 .levelOfEducation(adultMemberEntity.getLevelOfEducation())
                 .fatherOfConfession(adultMemberEntity.getFatherOfConfession())
+                .churchOfBaptism(adultMemberEntity.getChurchOfBaptism())
+                .baptismName(adultMemberEntity.getBaptismName())
                 .priestNumber(adultMemberEntity.getPriestNumber())
                 .spouseIdNumber(adultMemberEntity.getSpouseIdNumber())
                 .address(adultMemberEntity.getAddress())
@@ -84,6 +87,7 @@ public class MemberMapper {
                 .birthday(adultMemberEntity.getBirthday())
                 .nationality(adultMemberEntity.getNationality())
                 .placeOfBirth(adultMemberEntity.getPlaceOfBirth())
+                .village(adultMemberEntity.getVillage())
                 .email(adultMemberEntity.getEmail())
                 .phone(adultMemberEntity.getPhone())
                 .whatsApp(adultMemberEntity.getWhatsApp())
@@ -93,6 +97,8 @@ public class MemberMapper {
                 .secondLanguage(adultMemberEntity.getSecondLanguage())
                 .levelOfEducation(adultMemberEntity.getLevelOfEducation())
                 .fatherOfConfession(adultMemberEntity.getFatherOfConfession())
+                .churchOfBaptism(adultMemberEntity.getChurchOfBaptism())
+                .baptismName(adultMemberEntity.getBaptismName())
                 .priestNumber(adultMemberEntity.getPriestNumber())
                 .address(adultMemberEntity.getAddress())
                 .userId(adultMemberEntity.getUserId())
@@ -150,6 +156,7 @@ public class MemberMapper {
                 .birthday(dto.getBirthday())
                 .nationality(dto.getNationality())
                 .placeOfBirth(dto.getPlaceOfBirth())
+                .village(dto.getVillage())
                 .email(dto.getEmail())
                 .phone(dto.getPhone())
                 .whatsApp(dto.getWhatsApp())
@@ -163,6 +170,8 @@ public class MemberMapper {
                 .profession(dto.getProfession())
                 .levelOfEducation(dto.getLevelOfEducation())
                 .fatherOfConfession(dto.getFatherOfConfession())
+                .churchOfBaptism(dto.getChurchOfBaptism())
+                .baptismName(dto.getBaptismName())
                 .priestNumber(dto.getPriestNumber())
                 .spouseIdNumber(dto.getSpouseIdNumber())
                 .address(dto.getAddress())
@@ -173,11 +182,11 @@ public class MemberMapper {
                 .build();
     }
 
-    private AvatarDTO mapAvatar(AvatarEntity avatar) {
+    private ImageAssetDTO mapAvatar(ImageAssetEntity avatar) {
         if (avatar == null) {
             return null;
         }
-        return AvatarDTO.builder()
+        return ImageAssetDTO.builder()
                 .imageUrl(avatar.getImageUrl())
                 .imageSize(avatar.getImageSize())
                 .build();

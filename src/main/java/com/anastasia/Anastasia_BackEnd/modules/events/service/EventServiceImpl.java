@@ -13,6 +13,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventMapper;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventManagerEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.EventStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.requests.EventManagerDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
 import com.anastasia.Anastasia_BackEnd.modules.groups.GroupRepository;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -254,6 +256,15 @@ public class EventServiceImpl implements EventService {
             ));
         }
         event.setChurch(resolvedChurch);
+        if (event.getTimezone() == null || event.getTimezone().isBlank()) {
+            event.setTimezone(resolvedChurch.getTimezone());
+        }
+        if (event.getTimezone() == null || event.getTimezone().isBlank()) {
+            event.setTimezone("UTC");
+        }
+        if (event.getStatus() == null) {
+            event.setStatus(EventStatus.SCHEDULED);
+        }
 
         normalizeInviteEmails(event);
         resolveInvitedEntities(event, tenantId);
@@ -322,6 +333,30 @@ public class EventServiceImpl implements EventService {
         LocalDateTime endAt = event.getEndAt();
         LocalDate startDate = event.getDate();
         LocalDate endDate = event.getEndDate();
+
+        if (event.isAllDay()) {
+            if (startDate == null && startAt != null) {
+                startDate = startAt.toLocalDate();
+            }
+            if (startDate == null) {
+                throw new IllegalArgumentException(messageService.get(
+                        "events.start.required",
+                        "Either startAt or date + startTime is required"
+                ));
+            }
+            if (endDate == null) {
+                endDate = startDate;
+            }
+            startAt = LocalDateTime.of(startDate, LocalTime.MIN);
+            endAt = LocalDateTime.of(endDate.plusDays(1), LocalTime.MIN);
+            event.setStartAt(startAt);
+            event.setEndAt(endAt);
+            event.setDate(startDate);
+            event.setEndDate(endDate);
+            event.setStartTime(LocalTime.MIN);
+            event.setEndTime(LocalTime.MIDNIGHT);
+            return;
+        }
 
         if (startAt == null) {
             if (startDate == null || event.getStartTime() == null) {

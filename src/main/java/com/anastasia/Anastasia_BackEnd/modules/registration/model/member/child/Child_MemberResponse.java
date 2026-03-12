@@ -13,6 +13,9 @@ import lombok.experimental.SuperBuilder;
 public class Child_MemberResponse extends BaseMemberResponse {
 
     private Long id;
+    private boolean approvedByChurch;
+    private String primaryGuardianPhone;
+    private String guardianRelationship;
     private ParentSummary father;
     private ParentSummary mother;
 }

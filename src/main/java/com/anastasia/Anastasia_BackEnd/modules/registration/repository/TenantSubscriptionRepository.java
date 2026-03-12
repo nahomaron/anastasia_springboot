@@ -16,6 +16,4 @@ public interface TenantSubscriptionRepository extends JpaRepository<TenantSubscr
         where ts.tenant.id = :tenantId
     """)
     Optional<TenantSubscriptionEntity> findByTenantId(@Param("tenantId") UUID tenantId);
-
-    Optional<TenantSubscriptionEntity> findByProviderSubscriptionId(String providerSubscriptionId);
 }

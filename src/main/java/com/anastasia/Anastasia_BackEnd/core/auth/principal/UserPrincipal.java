@@ -75,7 +75,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !user.isAccountLocked();
     }
 
     @Override
@@ -85,7 +85,12 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.getDeletedAt() == null
+                && user.getStatus() != null
+                && switch (user.getStatus()) {
+                    case ACTIVE -> true;
+                    case PENDING_VERIFICATION, LOCKED, SUSPENDED, DISABLED, DELETED -> false;
+                };
     }
 
 }

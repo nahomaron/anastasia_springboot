@@ -27,7 +27,8 @@ public class ChildMapperUnitTest {
                 new ChildMapper(), // use real mapper
                 null,  // securityUtils not needed
                 null,  // tenantAdminNotificationService not needed
-                null   // activeMemberLimitPolicy not needed
+                null,  // activeMemberLimitPolicy not needed
+                null   // localizedMessageService not needed
         );
     }
 

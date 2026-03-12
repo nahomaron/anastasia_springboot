@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -30,7 +31,8 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_webhook_event_receipts_provider_received", columnList = "provider, received_at"),
                 @Index(name = "idx_webhook_event_receipts_tenant", columnList = "tenant_id"),
-                @Index(name = "idx_webhook_event_receipts_onboarding", columnList = "onboarding_session_id")
+                @Index(name = "idx_webhook_event_receipts_onboarding", columnList = "onboarding_session_id"),
+                @Index(name = "idx_webhook_event_receipts_subscription", columnList = "tenant_subscription_id")
         }
 )
 public class WebhookEventReceiptEntity {
@@ -53,6 +55,19 @@ public class WebhookEventReceiptEntity {
 
     @Column(name = "onboarding_session_id")
     private UUID onboardingSessionId;
+
+    @Column(name = "tenant_subscription_id")
+    private UUID tenantSubscriptionId;
+
+    @Column(name = "event_created_at")
+    private LocalDateTime eventCreatedAt;
+
+    @Lob
+    @Column(name = "payload")
+    private String payload;
+
+    @Column(name = "signature_header", length = 512)
+    private String signatureHeader;
 
     @Column(name = "received_at", nullable = false)
     private LocalDateTime receivedAt;

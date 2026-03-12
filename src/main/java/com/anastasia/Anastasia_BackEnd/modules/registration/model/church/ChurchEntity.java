@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.church;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
@@ -10,7 +10,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 
 @Getter
@@ -19,7 +21,13 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "churches")
+@Table(
+        name = "churches",
+        indexes = {
+                @Index(name = "idx_churches_status", columnList = "status"),
+                @Index(name = "idx_churches_uses_our_services", columnList = "uses_our_services")
+        }
+)
 public class ChurchEntity {
 
     @Id
@@ -35,20 +43,33 @@ public class ChurchEntity {
     @JsonIgnore
     private TenantEntity tenant;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 24)
+    private ChurchStatus status = ChurchStatus.DRAFT;
+
     @Column(nullable = false)
     private String churchName;
 
-    @Column(nullable = false)
-    private String churchNameTigrinya;
-
     private String prefix;
+
+    private String tPrefix;
+
+    @Column(name = "church_name_tigrinya", nullable = false)
+    private String tChurchName;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "avatar_id", referencedColumnName = "id")
-    private AvatarEntity profilePicture;
+    private ImageAssetEntity profilePicture;
 
     @Embedded
     private Address address;
+
+    @Column(nullable = false)
+    private String neighborhood;
+
+    @Column(nullable = false)
+    private String tNeighborhood;
 
     @Column(nullable = false)
     private String diocese;
@@ -58,14 +79,27 @@ public class ChurchEntity {
 
     private String phone;
 
+    @Column(name = "timezone", nullable = false, length = 64)
+    @Builder.Default
+    private String timezone = "UTC";
+
+    @Column(name = "locale", nullable = false, length = 16)
+    @Builder.Default
+    private String locale = "en-US";
+
     private String denomination;
 
     @Column(length = 1000)
     private String description;
 
+    @Column(name = "uses_our_services", nullable = false)
     private boolean usesOurServices;
 
     private String gpsLocation;
+
+    private Double latitude;
+
+    private Double longitude;
 
     private String website;
 
@@ -79,6 +113,31 @@ public class ChurchEntity {
 
     @Column(name = "is_church_profile_complete", nullable = false)
     private boolean churchProfileComplete;
+
+    @Column(name = "activated_at")
+    private LocalDateTime activatedAt;
+
+    @Column(name = "deactivated_at")
+    private LocalDateTime deactivatedAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "created_by")
+    private UUID createdBy;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     @OneToMany(mappedBy = "church", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -94,9 +153,36 @@ public class ChurchEntity {
         this.churchProfileComplete = isComplete();
     }
 
+    @PrePersist
+    void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        if (updatedAt == null) {
+            updatedAt = createdAt;
+        }
+        if (status == null) {
+            status = ChurchStatus.DRAFT;
+        }
+        if (timezone == null || timezone.isBlank()) {
+            timezone = "UTC";
+        }
+        if (locale == null || locale.isBlank()) {
+            locale = "en-US";
+        }
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
     public boolean isComplete() {
         return hasText(churchName)
-                && hasText(churchNameTigrinya)
+                && hasText(tChurchName)
+                && hasText(neighborhood)
+                && hasText(tNeighborhood)
                 && hasText(diocese)
                 && hasText(email)
                 && hasText(phone)

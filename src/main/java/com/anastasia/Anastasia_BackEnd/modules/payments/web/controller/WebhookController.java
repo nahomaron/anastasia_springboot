@@ -48,12 +48,12 @@ public class WebhookController {
             log.info("Stripe webhook verified: id={}, type={}", event.getId(), event.getType());
 
             switch (event.getType()) {
-                case "checkout.session.completed" -> handleCheckoutCompleted(event);
+                case "checkout.session.completed" -> handleCheckoutCompleted(event, payload, sigHeader);
                 case "payment_intent.succeeded" -> handlePaymentSucceeded(event);
-                case "customer.subscription.created" -> handleSubscriptionCreated(event);
-                case "customer.subscription.deleted" -> handleSubscriptionCanceled(event);
-                case "customer.subscription.updated" -> handleSubscriptionUpdated(event);
-                case "invoice.paid" -> handleInvoicePaid(event);
+                case "customer.subscription.created" -> handleSubscriptionCreated(event, payload, sigHeader);
+                case "customer.subscription.deleted" -> handleSubscriptionCanceled(event, payload, sigHeader);
+                case "customer.subscription.updated" -> handleSubscriptionUpdated(event, payload, sigHeader);
+                case "invoice.paid" -> handleInvoicePaid(event, payload, sigHeader);
                 default -> log.debug("Ignoring unsupported Stripe event {}", event.getType());
             }
             log.info("Stripe webhook processed: id={}, type={}", event.getId(), event.getType());
@@ -68,7 +68,7 @@ public class WebhookController {
     }
 
     // checkout was successful (but not captured yet)
-    private void handleCheckoutCompleted(Event event) {
+    private void handleCheckoutCompleted(Event event, String payload, String sigHeader) {
         Session session = deserializeStripeObject(event, Session.class, "checkout.session.completed");
         if (session == null) {
             return;
@@ -76,7 +76,7 @@ public class WebhookController {
         {
             Instant occurredAt = event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now();
             if (onboardingStripeWebhookService.handleCheckoutSessionCompleted(
-                    event.getId(), event.getType(), occurredAt, session)) {
+                    event.getId(), event.getType(), occurredAt, payload, sigHeader, session)) {
                 return;
             }
             Map<String, String> metadata = session.getMetadata();
@@ -156,7 +156,7 @@ public class WebhookController {
         }
     }
 
-    private void handleSubscriptionCreated(Event event) {
+    private void handleSubscriptionCreated(Event event, String payload, String sigHeader) {
         Subscription subscription = deserializeStripeObject(event, Subscription.class, "customer.subscription.created");
         if (subscription == null) {
             return;
@@ -164,7 +164,7 @@ public class WebhookController {
         {
             Instant occurredAt = event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now();
             if (onboardingStripeWebhookService.handleSubscriptionEvent(
-                    event.getId(), event.getType(), occurredAt, subscription)) {
+                    event.getId(), event.getType(), occurredAt, payload, sigHeader, subscription)) {
                 return;
             }
             Map<String, String> metadata = subscription.getMetadata();
@@ -178,7 +178,7 @@ public class WebhookController {
         }
     }
 
-    private void handleSubscriptionCanceled(Event event) {
+    private void handleSubscriptionCanceled(Event event, String payload, String sigHeader) {
         Subscription subscription = deserializeStripeObject(event, Subscription.class, "customer.subscription.deleted");
         if (subscription == null) {
             return;
@@ -186,10 +186,10 @@ public class WebhookController {
         {
             Instant occurredAt = event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now();
             if (onboardingStripeWebhookService.handleSubscriptionEvent(
-                    event.getId(), event.getType(), occurredAt, subscription)) {
+                    event.getId(), event.getType(), occurredAt, payload, sigHeader, subscription)) {
                 return;
             }
-            if (tenantSubscriptionStripeWebhookService.handleSubscriptionUpdated(event.getId(), occurredAt, subscription)) {
+            if (tenantSubscriptionStripeWebhookService.handleSubscriptionUpdated(event.getId(), occurredAt, payload, sigHeader, subscription)) {
                 return;
             }
             Map<String, String> metadata = subscription.getMetadata();
@@ -201,7 +201,7 @@ public class WebhookController {
         }
     }
 
-    private void handleSubscriptionUpdated(Event event) {
+    private void handleSubscriptionUpdated(Event event, String payload, String sigHeader) {
         Subscription subscription = deserializeStripeObject(event, Subscription.class, "customer.subscription.updated");
         if (subscription == null) {
             return;
@@ -209,10 +209,10 @@ public class WebhookController {
         {
             Instant occurredAt = event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now();
             if (onboardingStripeWebhookService.handleSubscriptionEvent(
-                    event.getId(), event.getType(), occurredAt, subscription)) {
+                    event.getId(), event.getType(), occurredAt, payload, sigHeader, subscription)) {
                 return;
             }
-            if (tenantSubscriptionStripeWebhookService.handleSubscriptionUpdated(event.getId(), occurredAt, subscription)) {
+            if (tenantSubscriptionStripeWebhookService.handleSubscriptionUpdated(event.getId(), occurredAt, payload, sigHeader, subscription)) {
                 return;
             }
             if ("canceled".equalsIgnoreCase(subscription.getStatus())) {
@@ -224,17 +224,17 @@ public class WebhookController {
         }
     }
 
-    private void handleInvoicePaid(Event event) {
+    private void handleInvoicePaid(Event event, String payload, String sigHeader) {
         Invoice invoice = deserializeStripeObject(event, Invoice.class, "invoice.paid");
         if (invoice == null) {
             return;
         }
         {
             Instant occurredAt = event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now();
-            if (onboardingStripeWebhookService.handleInvoicePaid(event.getId(), event.getType(), occurredAt, invoice)) {
+            if (onboardingStripeWebhookService.handleInvoicePaid(event.getId(), event.getType(), occurredAt, payload, sigHeader, invoice)) {
                 return;
             }
-            tenantSubscriptionStripeWebhookService.handleInvoicePaid(event.getId(), occurredAt, invoice);
+            tenantSubscriptionStripeWebhookService.handleInvoicePaid(event.getId(), occurredAt, payload, sigHeader, invoice);
         }
     }
 

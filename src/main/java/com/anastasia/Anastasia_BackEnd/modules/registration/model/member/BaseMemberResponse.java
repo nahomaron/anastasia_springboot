@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.member;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +22,7 @@ public class BaseMemberResponse {
     private String churchNumber;
     private String status;
     private boolean deacon;
-    private AvatarDTO avatar;
+    private ImageAssetDTO avatar;
 
     private String title;
     private String firstName;
@@ -38,6 +38,7 @@ public class BaseMemberResponse {
     private LocalDate birthday;
     private String nationality;
     private String placeOfBirth;
+    private String village;
     private String email;
     private String phone;
     private String whatsApp;
@@ -47,6 +48,8 @@ public class BaseMemberResponse {
     private String secondLanguage;
     private String levelOfEducation;
     private String fatherOfConfession;
+    private String churchOfBaptism;
+    private String baptismName;
     private String priestNumber;
     private Address address;
 

@@ -49,6 +49,8 @@ public class EventEntity extends Auditable {
 
     private LocalDate date;
 
+    private LocalDate endDate;
+
     @Column(length = 512)
     private String location;
 
@@ -63,8 +65,25 @@ public class EventEntity extends Auditable {
 
     private LocalDateTime endAt;
 
+    @Builder.Default
+    @Column(nullable = false, length = 64)
+    private String timezone = "UTC";
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean allDay = false;
+
     @Column(length = 2048)
     private String image;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(nullable = false, length = 24)
+    private EventStatus status = EventStatus.SCHEDULED;
+
+    private LocalDateTime canceledAt;
+
+    private LocalDateTime statusChangedAt;
 
     @Enumerated(EnumType.STRING)
     private EventType type;
@@ -119,7 +138,22 @@ public class EventEntity extends Auditable {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventManagerEntity> eventManagers = new HashSet<>();
 
+    @Version
+    @Column(nullable = false)
+    private long version;
 
+    @PrePersist
+    public void onCreate() {
+        if (timezone == null || timezone.isBlank()) {
+            timezone = "UTC";
+        }
+        if (status == null) {
+            status = EventStatus.SCHEDULED;
+        }
+        if (statusChangedAt == null) {
+            statusChangedAt = LocalDateTime.now();
+        }
+    }
 
     @Transient
     public Duration getDuration() {

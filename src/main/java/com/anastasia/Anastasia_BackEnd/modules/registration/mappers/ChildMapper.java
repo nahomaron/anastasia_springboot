@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
@@ -33,15 +33,20 @@ public class ChildMapper {
                 .birthday(childMemberEntity.getBirthday())
                 .nationality(childMemberEntity.getNationality())
                 .placeOfBirth(childMemberEntity.getPlaceOfBirth())
+                .village(childMemberEntity.getVillage())
                 .email(childMemberEntity.getEmail())
                 .phone(childMemberEntity.getPhone())
                 .whatsApp(childMemberEntity.getWhatsApp())
                 .emergencyContactNumber(childMemberEntity.getEmergencyContactNumber())
                 .contactRelation(childMemberEntity.getContactRelation())
+                .primaryGuardianPhone(childMemberEntity.getPrimaryGuardianPhone())
+                .guardianRelationship(childMemberEntity.getGuardianRelationship())
                 .firstLanguage(childMemberEntity.getFirstLanguage())
                 .secondLanguage(childMemberEntity.getSecondLanguage())
                 .levelOfEducation(childMemberEntity.getLevelOfEducation())
                 .fatherOfConfession(childMemberEntity.getFatherOfConfession())
+                .churchOfBaptism(childMemberEntity.getChurchOfBaptism())
+                .baptismName(childMemberEntity.getBaptismName())
                 .priestNumber(childMemberEntity.getPriestNumber())
                 .address(childMemberEntity.getAddress())
                 .father(buildParentSummary(childMemberEntity.getFather()))
@@ -74,15 +79,21 @@ public class ChildMapper {
                 .birthday(childMemberEntity.getBirthday())
                 .nationality(childMemberEntity.getNationality())
                 .placeOfBirth(childMemberEntity.getPlaceOfBirth())
+                .village(childMemberEntity.getVillage())
                 .email(childMemberEntity.getEmail())
                 .phone(childMemberEntity.getPhone())
                 .whatsApp(childMemberEntity.getWhatsApp())
                 .emergencyContactNumber(childMemberEntity.getEmergencyContactNumber())
                 .contactRelation(childMemberEntity.getContactRelation())
+                .approvedByChurch(childMemberEntity.isApprovedByChurch())
+                .primaryGuardianPhone(childMemberEntity.getPrimaryGuardianPhone())
+                .guardianRelationship(childMemberEntity.getGuardianRelationship())
                 .firstLanguage(childMemberEntity.getFirstLanguage())
                 .secondLanguage(childMemberEntity.getSecondLanguage())
                 .levelOfEducation(childMemberEntity.getLevelOfEducation())
                 .fatherOfConfession(childMemberEntity.getFatherOfConfession())
+                .churchOfBaptism(childMemberEntity.getChurchOfBaptism())
+                .baptismName(childMemberEntity.getBaptismName())
                 .priestNumber(childMemberEntity.getPriestNumber())
                 .address(childMemberEntity.getAddress())
                 .userId(childMemberEntity.getUserId())
@@ -130,25 +141,30 @@ public class ChildMapper {
                 .birthday(dto.getBirthday())
                 .nationality(dto.getNationality())
                 .placeOfBirth(dto.getPlaceOfBirth())
+                .village(dto.getVillage())
                 .email(dto.getEmail())
                 .phone(dto.getPhone())
                 .whatsApp(dto.getWhatsApp())
                 .emergencyContactNumber(dto.getEmergencyContactNumber())
                 .contactRelation(dto.getContactRelation())
+                .primaryGuardianPhone(dto.getPrimaryGuardianPhone())
+                .guardianRelationship(dto.getGuardianRelationship())
                 .firstLanguage(dto.getFirstLanguage())
                 .secondLanguage(dto.getSecondLanguage())
                 .levelOfEducation(dto.getLevelOfEducation())
                 .fatherOfConfession(dto.getFatherOfConfession())
+                .churchOfBaptism(dto.getChurchOfBaptism())
+                .baptismName(dto.getBaptismName())
                 .priestNumber(dto.getPriestNumber())
                 .address(dto.getAddress())
                 .build();
     }
 
-    private AvatarDTO mapAvatar(AvatarEntity avatar) {
+    private ImageAssetDTO mapAvatar(ImageAssetEntity avatar) {
         if (avatar == null) {
             return null;
         }
-        return AvatarDTO.builder()
+        return ImageAssetDTO.builder()
                 .imageUrl(avatar.getImageUrl())
                 .imageSize(avatar.getImageSize())
                 .build();

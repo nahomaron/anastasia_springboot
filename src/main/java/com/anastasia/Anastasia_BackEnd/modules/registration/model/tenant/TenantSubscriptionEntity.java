@@ -11,10 +11,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +24,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -34,8 +38,7 @@ import java.util.UUID;
         name = "tenant_subscriptions",
         indexes = {
                 @Index(name = "idx_tenant_subscriptions_tenant", columnList = "tenant_id"),
-                @Index(name = "idx_tenant_subscriptions_status", columnList = "status"),
-                @Index(name = "idx_tenant_subscriptions_provider_subscription", columnList = "provider_subscription_id")
+                @Index(name = "idx_tenant_subscriptions_status", columnList = "status")
         }
 )
 public class TenantSubscriptionEntity {
@@ -80,24 +83,21 @@ public class TenantSubscriptionEntity {
     @Column(name = "canceled_at")
     private LocalDateTime canceledAt;
 
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "ended_at")
+    private LocalDateTime endedAt;
+
+    @Column(name = "paused_at")
+    private LocalDateTime pausedAt;
+
+    @Column(name = "resumed_at")
+    private LocalDateTime resumedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 24)
     private BillingProvider provider;
-
-    @Column(name = "provider_customer_id")
-    private String providerCustomerId;
-
-    @Column(name = "provider_subscription_id")
-    private String providerSubscriptionId;
-
-    @Column(name = "stripe_price_id")
-    private String stripePriceId;
-
-    @Column(name = "last_stripe_event_id")
-    private String lastStripeEventId;
-
-    @Column(name = "last_stripe_event_at")
-    private LocalDateTime lastStripeEventAt;
 
     @Column(name = "last_payment_at")
     private LocalDateTime lastPaymentAt;
@@ -112,8 +112,11 @@ public class TenantSubscriptionEntity {
     @Column(name = "pending_plan_effective_at")
     private LocalDateTime pendingPlanEffectiveAt;
 
-    @Column(name = "payment_method_last4", length = 4)
-    private String paymentMethodLast4;
+    @Column(name = "status_changed_at")
+    private LocalDateTime statusChangedAt;
+
+    @Column(name = "status_change_reason", length = 512)
+    private String statusChangeReason;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -127,11 +130,44 @@ public class TenantSubscriptionEntity {
     @Column(name = "updated_by_user_id")
     private UUID updatedByUserId;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "tenantSubscription", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    private Set<TenantSubscriptionProviderLinkEntity> providerLinks = new HashSet<>();
+
+    public void addProviderLink(TenantSubscriptionProviderLinkEntity providerLink) {
+        if (providerLink == null) {
+            return;
+        }
+        providerLinks.add(providerLink);
+        providerLink.setTenantSubscription(this);
+    }
+
+    public void removeProviderLink(TenantSubscriptionProviderLinkEntity providerLink) {
+        if (providerLink == null) {
+            return;
+        }
+        providerLinks.remove(providerLink);
+        providerLink.setTenantSubscription(null);
+    }
+
     @PrePersist
     public void onCreate() {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.startedAt == null) {
+            this.startedAt = now;
+        }
+        if (this.statusChangedAt == null) {
+            this.statusChangedAt = now;
+        }
         if (this.status == null) {
             this.status = SubscriptionStatus.TRIALING;
         }

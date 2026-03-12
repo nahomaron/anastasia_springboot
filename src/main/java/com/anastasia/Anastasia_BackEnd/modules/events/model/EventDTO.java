@@ -55,7 +55,15 @@ public class EventDTO {
 
     private LocalDateTime endAt;
 
+    private String timezone;
+
+    private boolean allDay;
+
     private String image;
+
+    private EventStatus status;
+
+    private LocalDateTime canceledAt;
 
     private EventType type;
 

@@ -40,15 +40,6 @@ public class UserPreferencesEntity {
     @Column(name = "locale", nullable = false, length = 16)
     private String locale = "en-US";
 
-    @Column(name = "timezone", length = 64)
-    private String timezone;
-
-    @Column(name = "country_code", length = 8)
-    private String countryCode;
-
-    @Column(name = "city", length = 120)
-    private String city;
-
     @Builder.Default
     @Column(name = "date_format", nullable = false, length = 32)
     private String dateFormat = "MMM d, yyyy";
@@ -96,4 +87,8 @@ public class UserPreferencesEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 }

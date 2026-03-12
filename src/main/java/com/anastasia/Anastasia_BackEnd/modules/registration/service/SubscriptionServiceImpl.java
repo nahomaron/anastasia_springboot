@@ -9,9 +9,11 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEventType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionProviderLinkEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.SubscriptionPlanHistoryRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionEventRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionProviderLinkRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     private final TenantSubscriptionRepository tenantSubscriptionRepository;
+    private final TenantSubscriptionProviderLinkRepository tenantSubscriptionProviderLinkRepository;
     private final TenantSubscriptionEventRepository tenantSubscriptionEventRepository;
     private final SubscriptionPlanHistoryRepository subscriptionPlanHistoryRepository;
     private final TenantRepository tenantRepository;
@@ -89,11 +92,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setLastPaymentAt(paymentAt != null ? paymentAt : LocalDateTime.now());
-        subscription.setProviderCustomerId(providerCustomerId);
-        subscription.setProviderSubscriptionId(providerSubscriptionId);
-        subscription.setPaymentMethodLast4(normalizeLast4(paymentMethodLast4));
         if (providerSubscriptionId != null || providerCustomerId != null) {
             subscription.setProvider(BillingProvider.STRIPE);
+            upsertProviderLink(subscription, BillingProvider.STRIPE, providerCustomerId, providerSubscriptionId, null, paymentMethodLast4);
         }
         if (subscription.getCurrentPeriodStartAt() == null) {
             subscription.setCurrentPeriodStartAt(LocalDateTime.now());
@@ -285,7 +286,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    LocalDateTime effectiveAt,
                                    String reason,
                                    UUID actorUserId,
-                                   String stripeEventId) {
+                                   String providerEventId) {
         subscriptionPlanHistoryRepository.save(SubscriptionPlanHistoryEntity.builder()
                 .tenantId(subscription.getTenant().getId())
                 .tenantSubscriptionId(subscription.getId())
@@ -294,8 +295,32 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .effectiveAt(effectiveAt != null ? effectiveAt : LocalDateTime.now())
                 .reason(reason)
                 .actorUserId(actorUserId)
-                .stripeEventId(stripeEventId)
+                .providerEventId(providerEventId)
                 .build());
+    }
+
+    private void upsertProviderLink(TenantSubscriptionEntity subscription,
+                                    BillingProvider provider,
+                                    String providerCustomerId,
+                                    String providerSubscriptionId,
+                                    String providerPriceReference,
+                                    String paymentMethodLast4) {
+        TenantSubscriptionProviderLinkEntity providerLink = tenantSubscriptionProviderLinkRepository
+                .findByTenantSubscription_IdAndProvider(subscription.getId(), provider)
+                .orElseGet(() -> {
+                    TenantSubscriptionProviderLinkEntity created = TenantSubscriptionProviderLinkEntity.builder()
+                            .provider(provider)
+                            .active(true)
+                            .build();
+                    subscription.addProviderLink(created);
+                    return created;
+                });
+
+        providerLink.setProviderCustomerId(providerCustomerId);
+        providerLink.setProviderSubscriptionId(providerSubscriptionId);
+        providerLink.setProviderPriceReference(providerPriceReference);
+        providerLink.setPaymentMethodLast4(normalizeLast4(paymentMethodLast4));
+        providerLink.setActive(true);
     }
 
     private String normalizeLast4(String paymentMethodLast4) {

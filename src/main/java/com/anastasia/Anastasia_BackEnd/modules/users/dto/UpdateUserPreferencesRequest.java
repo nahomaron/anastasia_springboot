@@ -9,9 +9,6 @@ public class UpdateUserPreferencesRequest {
     private String themeMode;
     private String language;
     private String locale;
-    private String timezone;
-    private String countryCode;
-    private String city;
     private String dateFormat;
     private String firstDayOfWeek;
     private Boolean reducedMotion;

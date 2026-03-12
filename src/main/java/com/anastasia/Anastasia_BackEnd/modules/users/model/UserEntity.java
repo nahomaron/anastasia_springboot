@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.model;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
@@ -30,7 +30,7 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_membership", columnList = "membership_id"),
-        @Index(name = "idx_user_tenant", columnList = "tenant_id")
+        @Index(name = "idx_user_affiliated_tenant", columnList = "affiliated_tenant_id")
 })
 public class UserEntity{
     @Id
@@ -42,12 +42,16 @@ public class UserEntity{
     @Column(nullable = false)
     private UserType userType = UserType.GUEST;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private UserStatus status = UserStatus.PENDING_VERIFICATION;
+
     @OneToOne
     @JoinColumn(name = "profile_avatar_id", unique = true)
-    private AvatarEntity profileAvatar;
+    private ImageAssetEntity profileAvatar;
 
     @OneToMany(cascade = CascadeType.ALL)
-    private List<AvatarEntity> avatars;
+    private List<ImageAssetEntity> imageAssets;
 
     @Column(nullable = false)
     private String fullName;
@@ -61,9 +65,37 @@ public class UserEntity{
 
     private String facebookId;
 
-    private boolean accountLocked;
+    @Column(name = "phone_number", length = 64)
+    private String phoneNumber;
 
-    private boolean verified;
+    @Column(name = "email_verified_at")
+    private LocalDateTime emailVerifiedAt;
+
+    @Column(name = "phone_verified_at")
+    private LocalDateTime phoneVerifiedAt;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
+    @Column(name = "last_password_changed_at")
+    private LocalDateTime lastPasswordChangedAt;
+
+    @Column(name = "locked_at")
+    private LocalDateTime lockedAt;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
+    @Builder.Default
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Builder.Default
+    @Column(name = "timezone", nullable = false, length = 64)
+    private String timezone = "UTC";
 
     private String priestNumber;
 
@@ -87,11 +119,11 @@ public class UserEntity{
     private Long membershipId;
 
     @ManyToOne
-    @JoinColumn(name = "tenant_id")
-    private TenantEntity tenant; // Linked tenant details
+    @JoinColumn(name = "affiliated_tenant_id")
+    private TenantEntity affiliatedTenant; // Tenant the user belongs to as a church/member user
 
-    @Column(name = "tenant_id", insertable = false, updatable = false)
-    private UUID tenantId;
+    @Column(name = "affiliated_tenant_id", insertable = false, updatable = false)
+    private UUID affiliatedTenantId;
 
     @ManyToMany(mappedBy = "users")
     @Builder.Default
@@ -105,6 +137,10 @@ public class UserEntity{
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
 
+    @Version
+    @Column(nullable = false)
+    private long version;
+
     public void setRoles(Set<Role> roles) {
         this.roles = roles == null ? new HashSet<>() : new HashSet<>(roles);
     }
@@ -114,8 +150,112 @@ public class UserEntity{
         membership.setUser(this);
     }
 
+    public void assignAffiliatedTenant(TenantEntity tenant){
+        this.setAffiliatedTenant(tenant);
+    }
+
+    public boolean isVerified() {
+        return emailVerifiedAt != null;
+    }
+
+    public void setVerified(boolean verified) {
+        if (verified) {
+            if (this.emailVerifiedAt == null) {
+                this.emailVerifiedAt = LocalDateTime.now();
+            }
+            if (this.status == null || this.status == UserStatus.PENDING_VERIFICATION) {
+                this.status = UserStatus.ACTIVE;
+            }
+            return;
+        }
+
+        this.emailVerifiedAt = null;
+        if (this.status == null || this.status == UserStatus.ACTIVE) {
+            this.status = UserStatus.PENDING_VERIFICATION;
+        }
+    }
+
+    public boolean isAccountLocked() {
+        return status == UserStatus.LOCKED
+                || (lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now()));
+    }
+
+    public void setAccountLocked(boolean accountLocked) {
+        if (accountLocked) {
+            this.status = UserStatus.LOCKED;
+            if (this.lockedAt == null) {
+                this.lockedAt = LocalDateTime.now();
+            }
+            return;
+        }
+
+        if (this.status == UserStatus.LOCKED) {
+            this.status = isVerified() ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION;
+        }
+        this.lockedAt = null;
+        this.lockedUntil = null;
+    }
+
+    // Temporary compatibility layer while the codebase moves to affiliation naming.
+    public TenantEntity getTenant() {
+        return affiliatedTenant;
+    }
+
+    public void setTenant(TenantEntity tenant) {
+        this.affiliatedTenant = tenant;
+    }
+
+    public UUID getTenantId() {
+        return affiliatedTenantId;
+    }
+
+    public void setTenantId(UUID tenantId) {
+        this.affiliatedTenantId = tenantId;
+    }
+
     public void assignTenant(TenantEntity tenant){
-        this.setTenant(tenant);
+        this.setAffiliatedTenant(tenant);
+    }
+
+    public abstract static class UserEntityBuilder<C extends UserEntity, B extends UserEntityBuilder<C, B>> {
+        public B tenant(TenantEntity tenant) {
+            this.affiliatedTenant = tenant;
+            return self();
+        }
+
+        public B tenantId(UUID tenantId) {
+            this.affiliatedTenantId = tenantId;
+            return self();
+        }
+
+        public B verified(boolean verified) {
+            if (verified) {
+                if (this.emailVerifiedAt == null) {
+                    this.emailVerifiedAt = LocalDateTime.now();
+                }
+                if (this.status == null || this.status == UserStatus.PENDING_VERIFICATION) {
+                    this.status = UserStatus.ACTIVE;
+                }
+            } else {
+                this.emailVerifiedAt = null;
+                if (this.status == null) {
+                    this.status = UserStatus.PENDING_VERIFICATION;
+                }
+            }
+            return self();
+        }
+
+        public B accountLocked(boolean accountLocked) {
+            if (accountLocked) {
+                this.status = UserStatus.LOCKED;
+                if (this.lockedAt == null) {
+                    this.lockedAt = LocalDateTime.now();
+                }
+            } else if (this.status == null) {
+                this.status = UserStatus.PENDING_VERIFICATION;
+            }
+            return self();
+        }
     }
 
     public void addGroup(GroupEntity group) {

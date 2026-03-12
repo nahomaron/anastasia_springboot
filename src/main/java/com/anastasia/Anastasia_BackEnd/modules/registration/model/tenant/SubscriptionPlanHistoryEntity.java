@@ -29,7 +29,7 @@ import java.util.UUID;
         name = "tenant_subscription_plan_history",
         indexes = {
                 @Index(name = "idx_tenant_subscription_plan_history_tenant_effective", columnList = "tenant_id, effective_at"),
-                @Index(name = "idx_tenant_subscription_plan_history_event", columnList = "stripe_event_id")
+                @Index(name = "idx_tenant_subscription_plan_history_event", columnList = "provider_event_id")
         }
 )
 public class SubscriptionPlanHistoryEntity {
@@ -61,8 +61,8 @@ public class SubscriptionPlanHistoryEntity {
     @Column(name = "actor_user_id")
     private UUID actorUserId;
 
-    @Column(name = "stripe_event_id", length = 128)
-    private String stripeEventId;
+    @Column(name = "provider_event_id", length = 128)
+    private String providerEventId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

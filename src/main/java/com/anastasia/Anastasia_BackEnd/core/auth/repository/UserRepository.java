@@ -24,7 +24,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
     @Query("""
         SELECT u
         FROM UserEntity u
-        WHERE u.tenantId = :tenantId
+        WHERE u.affiliatedTenantId = :tenantId
           AND LOWER(u.email) = LOWER(:email)
     """)
     Optional<UserEntity> findByTenantIdAndEmailIgnoreCase(@Param("tenantId") UUID tenantId, @Param("email") String email);
@@ -49,7 +49,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
     @Query("""
         SELECT new com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO(u.uuid, u.fullName, u.email)
         FROM UserEntity u
-        WHERE u.tenantId = :tenantId
+        WHERE u.affiliatedTenantId = :tenantId
           AND (
             LOWER(COALESCE(u.fullName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
             OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -62,7 +62,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
         SELECT DISTINCT new com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO(u.uuid, u.fullName, u.email)
         FROM UserEntity u
         JOIN u.roles r
-        WHERE u.tenantId = :tenantId
+        WHERE u.affiliatedTenantId = :tenantId
           AND r.roleName IN :roles
           AND (
             LOWER(COALESCE(u.fullName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -109,14 +109,32 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
     """)
     List<SimpleUserDTO> findSimpleUsersByChurchId(@Param("churchId") Long churchId);
 
+    @Query("""
+        SELECT new com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO(u.uuid, u.fullName, u.email)
+        FROM UserEntity u
+        JOIN Adult_MemberEntity m ON u.membershipId = m.id
+        WHERE m.church.churchId = :churchId
+          AND u.membershipId IS NOT NULL
+          AND (
+            LOWER(COALESCE(u.fullName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+            OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+          )
+        ORDER BY u.fullName
+    """)
+    List<SimpleUserDTO> searchSimpleUsersByChurchId(@Param("churchId") Long churchId, @Param("q") String query);
+
 
     List<UserEntity> findAllByEmailIn(Set<String> groupEmail);
 
-    List<UserEntity> findByTenantId(UUID tenantId);
+    List<UserEntity> findByAffiliatedTenantId(UUID tenantId);
+
+    default List<UserEntity> findByTenantId(UUID tenantId) {
+        return findByAffiliatedTenantId(tenantId);
+    }
 
     long countByRoles_Id(Long roleId);
 
-    @Query("SELECT u FROM UserEntity u WHERE u.tenant.id = :tenantId AND u.userType = 'TENANT'")
+    @Query("SELECT u FROM UserEntity u WHERE u.affiliatedTenant.id = :tenantId AND u.userType = 'TENANT'")
     Optional<UserEntity> findTenantAdmin(UUID tenantId);
 
 }
