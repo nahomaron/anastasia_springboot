@@ -25,7 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -87,7 +87,7 @@ public class NotificationInboxService {
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
 
         if (entity.getReadAt() == null) {
-            entity.setReadAt(LocalDateTime.now());
+            entity.setReadAt(Instant.now());
         }
         return toInboxItem(notificationRepository.save(entity));
     }
@@ -104,7 +104,7 @@ public class NotificationInboxService {
         NotificationEntity entity = notificationRepository
                 .findByIdAndScope(notificationId, scope.userId(), scope.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
-        entity.setArchived(true);
+        entity.setArchivedAt(Instant.now());
         notificationRepository.save(entity);
     }
 

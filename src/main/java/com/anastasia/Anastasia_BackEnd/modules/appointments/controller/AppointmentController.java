@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentParti
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentRescheduleRequest;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentStatusUpdateRequest;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.MemberAppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatus;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentType;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.service.AppointmentService;
@@ -41,7 +42,7 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
     @PostMapping
     public ResponseEntity<AppointmentResponse> createAppointment(@Valid @RequestBody AppointmentCreateRequest request) {
         UUID userId = resolveCurrentUserId();
@@ -49,7 +50,7 @@ public class AppointmentController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
     @GetMapping
     public ResponseEntity<List<AppointmentResponse>> listAppointments(
             @RequestParam(value = "start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
@@ -61,13 +62,32 @@ public class AppointmentController {
         return ResponseEntity.ok(responses);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
+    @PreAuthorize("hasRole('MEMBER')")
+    @GetMapping("/me")
+    public ResponseEntity<List<MemberAppointmentResponse>> listMyAppointments(
+            @RequestParam(value = "start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
+            @RequestParam(value = "end", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant end,
+            @RequestParam(value = "status", required = false) AppointmentStatus status,
+            @RequestParam(value = "type", required = false) AppointmentType type
+    ) {
+        UUID userId = resolveCurrentUserId();
+        return ResponseEntity.ok(appointmentService.listMyAppointments(userId, start, end, status, type));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
     @GetMapping("/{appointmentId}")
     public ResponseEntity<AppointmentResponse> getAppointment(@PathVariable UUID appointmentId) {
         return ResponseEntity.ok(appointmentService.getAppointment(appointmentId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
+    @PreAuthorize("hasRole('MEMBER')")
+    @GetMapping("/me/{appointmentId}")
+    public ResponseEntity<MemberAppointmentResponse> getMyAppointment(@PathVariable UUID appointmentId) {
+        UUID userId = resolveCurrentUserId();
+        return ResponseEntity.ok(appointmentService.getMyAppointment(appointmentId, userId));
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
     @PatchMapping("/{appointmentId}/reschedule")
     public ResponseEntity<AppointmentResponse> rescheduleAppointment(
             @PathVariable UUID appointmentId,
@@ -77,7 +97,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.rescheduleAppointment(appointmentId, request, userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'CANCEL_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'CANCEL_APPOINTMENT')")
     @PatchMapping("/{appointmentId}/status")
     public ResponseEntity<AppointmentResponse> updateStatus(
             @PathVariable UUID appointmentId,
@@ -87,7 +107,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.updateStatus(appointmentId, request, userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @PostMapping("/{appointmentId}/assignees")
     public ResponseEntity<AppointmentResponse> addAssignees(
             @PathVariable UUID appointmentId,
@@ -97,7 +117,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.addAssignees(appointmentId, assignees, userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @DeleteMapping("/{appointmentId}/assignees/{userId}")
     public ResponseEntity<AppointmentResponse> removeAssignee(
             @PathVariable UUID appointmentId,
@@ -106,7 +126,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.removeAssignee(appointmentId, userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @PostMapping("/{appointmentId}/participants")
     public ResponseEntity<AppointmentResponse> addParticipants(
             @PathVariable UUID appointmentId,
@@ -115,7 +135,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.addParticipants(appointmentId, participants));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @DeleteMapping("/{appointmentId}/participants/{participantId}")
     public ResponseEntity<AppointmentResponse> removeParticipant(
             @PathVariable UUID appointmentId,

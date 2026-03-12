@@ -27,7 +27,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/notifications")
-@PreAuthorize("hasAnyRole('USER', 'MEMBER', 'PRIEST', 'OWNER', 'ADMIN', 'PLATFORM_ADMIN')")
+@PreAuthorize("hasAnyRole('USER', 'MEMBER', 'PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
 @RequiresTenantFeature(TenantFeature.NOTIFICATIONS)
 public class NotificationController {
 

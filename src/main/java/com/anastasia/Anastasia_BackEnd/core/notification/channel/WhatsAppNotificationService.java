@@ -16,7 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 
 @Service
@@ -85,6 +85,7 @@ public class WhatsAppNotificationService {
         }
 
         try {
+            Instant sentAt = Instant.now();
             Message response = Message.creator(
                     new PhoneNumber("whatsapp:" + destination),
                     new PhoneNumber("whatsapp:" + whatsappFrom),
@@ -92,28 +93,40 @@ public class WhatsAppNotificationService {
             ).create();
 
             NotificationEntity entity = new NotificationEntity();
-            entity.setRecipientEmail(destination);
+            entity.setRecipientAddress(destination);
             entity.setTitle("WhatsApp Notification");
             entity.setMessage(resolvedBody);
             entity.setType(event.getType());
             entity.setChannel(NotificationChannelType.WHATSAPP);
-            entity.setSent(true);
-            entity.setSentAt(LocalDateTime.now());
+            entity.setDeliveryStatus(com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationDeliveryStatus.SENT);
+            entity.setProvider("TWILIO_WHATSAPP");
+            entity.setProviderStatus("DELIVERED");
+            entity.setSentAt(sentAt);
+            entity.setLastAttemptAt(sentAt);
             entity.setProviderMessageId(response.getSid());
+            entity.setCorrelationId(response.getSid());
             entity.setTenant(event.getUser() != null ? event.getUser().getTenant() : null);
+            entity.setRecipientUserId(event.getUser() != null ? event.getUser().getUuid() : null);
             notificationRepository.save(entity);
 
             log.info("✅ WhatsApp message sent to {} (sid={})", destination, response.getSid());
         } catch (ApiException ex) {
+            Instant now = Instant.now();
             NotificationEntity entity = new NotificationEntity();
-            entity.setRecipientEmail(destination);
+            entity.setRecipientAddress(destination);
             entity.setTitle("WhatsApp Notification");
             entity.setMessage(resolvedBody);
             entity.setType(event.getType());
             entity.setChannel(NotificationChannelType.WHATSAPP);
-            entity.setSent(false);
+            entity.setDeliveryStatus(com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationDeliveryStatus.FAILED);
+            entity.setProvider("TWILIO_WHATSAPP");
+            entity.setProviderStatus("FAILED");
             entity.setErrorMessage(ex.getMessage());
+            entity.setErrorCode("WHATSAPP_DELIVERY_FAILED");
+            entity.setFailedAt(now);
+            entity.setLastAttemptAt(now);
             entity.setTenant(event.getUser() != null ? event.getUser().getTenant() : null);
+            entity.setRecipientUserId(event.getUser() != null ? event.getUser().getUuid() : null);
             notificationRepository.save(entity);
 
             log.error("Failed to send WhatsApp message to {}: {}", destination, ex.getMessage());

@@ -37,7 +37,8 @@ public class DevEmailPreviewController {
         Map<String, Object> common = new LinkedHashMap<>();
         common.put("appName", "Anastasia");
         common.put("churchName", "St. Raphael Cathedral");
-        common.put("churchLogoUrl", "https://dummyimage.com/140x36/f6f7fb/3b5bff.png&text=Anastasia");
+        common.put("appLogoUrl", "https://dummyimage.com/120x32/3b5bff/ffffff.png&text=Anastasia");
+        common.put("churchLogoUrl", "https://dummyimage.com/140x36/f6f7fb/3b5bff.png&text=St.+Raphael");
         common.put("supportEmail", "support@anastasia.app");
         common.put("userName", "Mariam");
         common.put("memberName", "Mariam Salib");

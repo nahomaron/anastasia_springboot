@@ -16,7 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -89,21 +89,26 @@ public class SmsNotificationService {
         CompletableFuture<Void> result = smsService.sendSms(phoneNumber, templateType, payload);
         result.whenComplete((ignored, throwable) -> {
             NotificationEntity entity = new NotificationEntity();
-            entity.setRecipientEmail(phoneNumber);
+            Instant now = Instant.now();
+            entity.setRecipientAddress(phoneNumber);
             entity.setTitle("SMS Notification");
             entity.setMessage(renderedBody);
             entity.setChannel(NotificationChannelType.SMS);
             entity.setType(event.getType());
             entity.setTenant(event.getUser() != null ? event.getUser().getTenant() : null);
-            entity.setSent(throwable == null);
-            entity.setSentAt(throwable == null ? LocalDateTime.now() : null);
             entity.setDeliveryStatus(throwable == null ? NotificationDeliveryStatus.SENT : NotificationDeliveryStatus.FAILED);
+            entity.setProvider("SMS");
+            entity.setProviderStatus(throwable == null ? "DELIVERED" : "FAILED");
             entity.setErrorMessage(throwable == null ? null : throwable.getMessage());
             entity.setErrorCode(throwable == null ? null : "SMS_DELIVERY_FAILED");
             entity.setRecipientUserId(event.getUser() != null ? event.getUser().getUuid() : null);
             entity.setIdempotencyKey(idempotencyKey);
+            entity.setCorrelationId(idempotencyKey);
             entity.setRetryCount(throwable == null ? 0 : 1);
-            entity.setNextRetryAt(throwable == null ? null : LocalDateTime.now().plusMinutes(5));
+            entity.setLastAttemptAt(now);
+            entity.setDeliveredAt(throwable == null ? now : null);
+            entity.setFailedAt(throwable == null ? null : now);
+            entity.setNextRetryAt(throwable == null ? null : now.plusSeconds(300));
 
             notificationRepository.save(entity);
 

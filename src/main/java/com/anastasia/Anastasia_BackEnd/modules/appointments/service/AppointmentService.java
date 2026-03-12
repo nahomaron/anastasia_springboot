@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentParti
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentRescheduleRequest;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentStatusUpdateRequest;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.MemberAppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatus;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentType;
 
@@ -19,7 +20,11 @@ public interface AppointmentService {
 
     AppointmentResponse getAppointment(UUID appointmentId);
 
+    MemberAppointmentResponse getMyAppointment(UUID appointmentId, UUID userId);
+
     List<AppointmentResponse> listAppointments(Instant start, Instant end, AppointmentStatus status, AppointmentType type);
+
+    List<MemberAppointmentResponse> listMyAppointments(UUID userId, Instant start, Instant end, AppointmentStatus status, AppointmentType type);
 
     AppointmentResponse rescheduleAppointment(UUID appointmentId, AppointmentRescheduleRequest request, UUID userId);
 

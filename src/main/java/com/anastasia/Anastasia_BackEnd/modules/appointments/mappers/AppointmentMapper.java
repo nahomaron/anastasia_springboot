@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentAssig
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentParticipantResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentStatusHistoryResponse;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.MemberAppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentParticipantEntity;
@@ -34,12 +35,35 @@ public interface AppointmentMapper {
     @Mapping(target = "privateNotesExists", source = "privateNotesExists")
     @Mapping(target = "firstVisit", source = "firstVisit")
     @Mapping(target = "sacramentRelated", source = "sacramentRelated")
+    @Mapping(target = "contactPhone", source = "contactPhone")
+    @Mapping(target = "contactEmail", source = "contactEmail")
+    @Mapping(target = "contactPreference", source = "contactPreference")
+    @Mapping(target = "requestedAt", source = "requestedAt")
+    @Mapping(target = "confirmedAt", source = "confirmedAt")
+    @Mapping(target = "completedAt", source = "completedAt")
+    @Mapping(target = "canceledAt", source = "canceledAt")
+    @Mapping(target = "cancellationReason", source = "cancellationReason")
+    @Mapping(target = "outcomeNotes", source = "outcomeNotes")
     @Mapping(target = "participants", expression = "java(mapParticipants(entity))")
     @Mapping(target = "assignees", expression = "java(mapAssignees(entity))")
     @Mapping(target = "member", expression = "java(resolvePrimaryMember(entity))")
     @Mapping(target = "primaryAssignee", expression = "java(resolvePrimaryAssignee(entity))")
     @Mapping(target = "statusHistory", expression = "java(mapStatusHistory(entity))")
     AppointmentResponse toResponse(AppointmentEntity entity);
+
+    @Mapping(target = "startDateTime", source = "startAtUtc")
+    @Mapping(target = "endDateTime", source = "endAtUtc")
+    @Mapping(target = "timeZone", source = "timezone")
+    @Mapping(target = "firstVisit", source = "firstVisit")
+    @Mapping(target = "sacramentRelated", source = "sacramentRelated")
+    @Mapping(target = "contactPhone", source = "contactPhone")
+    @Mapping(target = "contactEmail", source = "contactEmail")
+    @Mapping(target = "contactPreference", source = "contactPreference")
+    @Mapping(target = "confirmedAt", source = "confirmedAt")
+    @Mapping(target = "canceledAt", source = "canceledAt")
+    @Mapping(target = "member", expression = "java(resolvePrimaryMember(entity))")
+    @Mapping(target = "primaryAssignee", expression = "java(resolvePrimaryAssignee(entity))")
+    MemberAppointmentResponse toMemberResponse(AppointmentEntity entity);
 
     default Set<AppointmentParticipantResponse> mapParticipants(AppointmentEntity entity) {
         if (entity.getParticipants() == null) {

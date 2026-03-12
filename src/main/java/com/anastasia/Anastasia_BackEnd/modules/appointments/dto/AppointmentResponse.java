@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.appointments.dto;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentSource;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatus;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentType;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.model.ContactPreference;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.LocationType;
 
 import java.time.Instant;
@@ -27,8 +28,17 @@ public record AppointmentResponse(
         Set<AppointmentAssigneeResponse> assignees,
         UUID linkedRequestId,
         String notesForMember,
+        String contactPhone,
+        String contactEmail,
+        ContactPreference contactPreference,
         Boolean privateNotesExists,
         Boolean firstVisit,
         Boolean sacramentRelated,
+        Instant requestedAt,
+        Instant confirmedAt,
+        Instant completedAt,
+        Instant canceledAt,
+        String cancellationReason,
+        String outcomeNotes,
         Set<AppointmentStatusHistoryResponse> statusHistory
 ) {}

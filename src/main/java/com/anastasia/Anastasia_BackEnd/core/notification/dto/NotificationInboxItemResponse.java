@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.core.notification.dto;
 
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record NotificationInboxItemResponse(
         Long id,
@@ -10,7 +10,7 @@ public record NotificationInboxItemResponse(
         String message,
         NotificationType type,
         boolean read,
-        LocalDateTime createdAt,
-        LocalDateTime readAt
+        Instant createdAt,
+        Instant readAt
 ) {
 }

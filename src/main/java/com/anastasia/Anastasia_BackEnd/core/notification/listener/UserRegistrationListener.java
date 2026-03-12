@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.core.notification.domain.events.UserRegis
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,8 @@ import java.util.Map;
 public class UserRegistrationListener {
 
     private final ApplicationEventPublisher publisher;
+    @Value("${app.public.frontend-base-url:http://192.168.1.79:4200}")
+    private String frontendBaseUrl;
 
     public UserRegistrationListener(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
@@ -27,11 +30,18 @@ public class UserRegistrationListener {
 
         Map<String, Object> props = Map.of(
                 "username", user.getFullName(),
-                "confirmation_url", "http://localhost:3000/auth/activate"
+                "confirmation_url", normalizeBaseUrl(frontendBaseUrl) + "/auth/activate"
         );
 
         publisher.publishEvent(
                 new NotificationEvent(this, NotificationType.ACCOUNT_ACTIVATION, user, props)
         );
+    }
+
+    private String normalizeBaseUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return "http://192.168.1.79:4200";
+        }
+        return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
     }
 }

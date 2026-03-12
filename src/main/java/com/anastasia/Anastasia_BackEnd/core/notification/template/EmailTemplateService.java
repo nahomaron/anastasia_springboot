@@ -21,6 +21,7 @@ public class EmailTemplateService {
 
     private final String appName;
     private final String defaultChurchName;
+    private final String appLogoUrl;
     private final String churchLogoUrl;
     private final String supportEmail;
     private final String footerAddress;
@@ -33,7 +34,8 @@ public class EmailTemplateService {
                                 EmailNotificationService emailNotificationService,
                                 @Value("${notification.email.template.app-name:Anastasia}") String appName,
                                 @Value("${notification.email.template.church-name:Your Church}") String defaultChurchName,
-                                @Value("${notification.email.template.church-logo-url:https://anastasia.app/logo.png}") String churchLogoUrl,
+                                @Value("${notification.email.template.app-logo-url:}") String appLogoUrl,
+                                @Value("${notification.email.template.church-logo-url:}") String churchLogoUrl,
                                 @Value("${notification.email.template.support-email:support@anastasia.app}") String supportEmail,
                                 @Value("${notification.email.template.footer-address:}") String footerAddress,
                                 @Value("${notification.email.template.primary-cta-url:https://app.anastasia.com}") String defaultPrimaryCtaUrl,
@@ -44,6 +46,7 @@ public class EmailTemplateService {
         this.emailNotificationService = emailNotificationService;
         this.appName = appName;
         this.defaultChurchName = defaultChurchName;
+        this.appLogoUrl = appLogoUrl;
         this.churchLogoUrl = churchLogoUrl;
         this.supportEmail = supportEmail;
         this.footerAddress = footerAddress;
@@ -99,6 +102,7 @@ public class EmailTemplateService {
 
         merged.putIfAbsent("appName", appName);
         merged.putIfAbsent("churchName", defaultChurchName);
+        merged.putIfAbsent("appLogoUrl", appLogoUrl);
         merged.putIfAbsent("churchLogoUrl", churchLogoUrl);
         merged.putIfAbsent("supportEmail", supportEmail);
         merged.putIfAbsent("primaryCtaUrl", defaultPrimaryCtaUrl);

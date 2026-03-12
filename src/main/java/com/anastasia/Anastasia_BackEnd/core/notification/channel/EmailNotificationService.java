@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -197,22 +197,29 @@ public class EmailNotificationService {
                                      String error,
                                      String idempotencyKey) {
         NotificationEntity entity = new NotificationEntity();
-        entity.setRecipientEmail(recipient);
+        Instant now = Instant.now();
+        entity.setRecipientAddress(recipient);
         entity.setTitle(subject);
         entity.setMessage(body);
         entity.setChannel(NotificationChannelType.EMAIL);
         entity.setType(resolveNotificationType(context, metadata));
-        entity.setSent(success);
-        entity.setSentAt(success ? LocalDateTime.now() : null);
         entity.setDeliveryStatus(success ? NotificationDeliveryStatus.SENT : NotificationDeliveryStatus.FAILED);
+        entity.setProvider("EMAIL");
+        entity.setProviderStatus(success ? "DELIVERED" : "FAILED");
         entity.setErrorMessage(success ? null : error);
         entity.setErrorCode(success ? null : "EMAIL_DELIVERY_FAILED");
         entity.setIdempotencyKey(idempotencyKey);
+        entity.setCorrelationId(metadata != null && StringUtils.hasText(metadata.correlationId())
+                ? metadata.correlationId()
+                : idempotencyKey);
         entity.setProviderMessageId(metadata != null && StringUtils.hasText(metadata.correlationId())
                 ? metadata.correlationId()
                 : null);
         entity.setRetryCount(success ? 0 : 1);
-        entity.setNextRetryAt(success ? null : LocalDateTime.now().plusMinutes(5));
+        entity.setLastAttemptAt(now);
+        entity.setDeliveredAt(success ? now : null);
+        entity.setFailedAt(success ? null : now);
+        entity.setNextRetryAt(success ? null : now.plusSeconds(300));
         if (context != null) {
             entity.setTenant(context.getUser() != null ? context.getUser().getTenant() : null);
             entity.setRecipientUserId(context.getUser() != null ? context.getUser().getUuid() : null);

@@ -5,31 +5,30 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentSta
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentType;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.ContactPreference;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.LocationType;
-import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarVisibility;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
-import java.util.Set;
 import java.util.UUID;
 
-public record AppointmentCreateRequest(
-        @NotBlank String title,
+public record MemberAppointmentResponse(
+        UUID id,
+        String title,
         String description,
-        @NotNull AppointmentType type,
-        @NotNull Instant startDateTime,
+        AppointmentType type,
+        Instant startDateTime,
         Instant endDateTime,
-        @NotBlank String timeZone,
-        @NotNull LocationType locationType,
-        @NotBlank String locationLabel,
+        String timeZone,
+        LocationType locationType,
+        String locationLabel,
         AppointmentStatus status,
         AppointmentSource source,
+        AppointmentParticipantResponse member,
+        AppointmentAssigneeResponse primaryAssignee,
         String notesForMember,
         String contactPhone,
         String contactEmail,
         ContactPreference contactPreference,
-        UUID linkedRequestId,
-        CalendarVisibility visibility,
-        Set<AppointmentParticipantRequest> participants,
-        Set<AppointmentAssigneeRequest> assignees
+        Boolean firstVisit,
+        Boolean sacramentRelated,
+        Instant confirmedAt,
+        Instant canceledAt
 ) {}

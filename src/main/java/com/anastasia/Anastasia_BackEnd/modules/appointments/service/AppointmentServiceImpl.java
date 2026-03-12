@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentParti
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentRescheduleRequest;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentStatusUpdateRequest;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.MemberAppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.mappers.AppointmentMapper;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentEntity;
@@ -14,21 +15,26 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentPar
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatus;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatusHistoryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentType;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.model.ContactPreference;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.ParticipantRole;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarEntryRequest;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarEntryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarCategory;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarSystem;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarVisibility;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.repository.CalendarEntryRepository;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.service.CalendarEntryService;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.repository.AppointmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.BaseMember;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -51,6 +57,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentMapper appointmentMapper;
     private final CalendarEntryService calendarEntryService;
+    private final CalendarEntryRepository calendarEntryRepository;
     private final ChurchRepository churchRepository;
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
@@ -84,10 +91,13 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .timezone(request.timeZone())
                 .notesForMember(request.notesForMember())
                 .privateNotesExists(false)
-                .contactInfo(request.contactInfo())
+                .contactPhone(trimToNull(request.contactPhone()))
+                .contactEmail(trimToNull(request.contactEmail()))
+                .contactPreference(resolveContactPreference(request))
                 .linkedRequestId(request.linkedRequestId())
                 .firstVisit(resolveFirstVisit(tenantId, request.participants()))
                 .sacramentRelated(isSacramentRelated(request.type()))
+                .requestedAt(Instant.now())
                 .build();
 
         Set<AppointmentParticipantEntity> participants = buildParticipants(request.participants(), appointment);
@@ -114,6 +124,17 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public MemberAppointmentResponse getMyAppointment(UUID appointmentId, UUID userId) {
+        UUID tenantId = requireTenantId();
+        Set<Long> visibleMemberIds = resolveVisibleMemberIds(userId, tenantId);
+        AppointmentEntity appointment = appointmentRepository.findMemberVisibleByIdAndTenantId(appointmentId, tenantId, visibleMemberIds)
+                .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+        enrichNames(appointment);
+        return appointmentMapper.toMemberResponse(appointment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<AppointmentResponse> listAppointments(Instant start, Instant end, AppointmentStatus status, AppointmentType type) {
         UUID tenantId = requireTenantId();
 
@@ -135,11 +156,31 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<MemberAppointmentResponse> listMyAppointments(UUID userId, Instant start, Instant end, AppointmentStatus status, AppointmentType type) {
+        UUID tenantId = requireTenantId();
+        Set<Long> visibleMemberIds = resolveVisibleMemberIds(userId, tenantId);
+        List<AppointmentEntity> appointments = appointmentRepository.findMemberVisibleAppointments(
+                tenantId,
+                visibleMemberIds,
+                start,
+                end,
+                status,
+                type
+        );
+        enrichNames(appointments);
+        return appointments.stream()
+                .map(appointmentMapper::toMemberResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public AppointmentResponse rescheduleAppointment(UUID appointmentId, AppointmentRescheduleRequest request, UUID userId) {
         validateReschedule(request);
         AppointmentEntity appointment = resolveAppointment(appointmentId);
         AppointmentStatus previous = appointment.getStatus();
+        Instant now = Instant.now();
 
         ensureNoConflicts(
                 appointment.getTenantId(),
@@ -152,6 +193,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setStartAtUtc(request.newStart());
         appointment.setEndAtUtc(request.newEnd());
         appointment.setStatus(AppointmentStatus.RESCHEDULED);
+        appointment.setConfirmedAt(null);
+        appointment.setCompletedAt(null);
+        appointment.setCanceledAt(null);
+        appointment.setCancellationReason(null);
+        appointment.setOutcomeNotes(null);
 
         if (request.reason() != null && !request.reason().isBlank()) {
             String reason = "Rescheduled: " + request.reason().trim();
@@ -159,6 +205,9 @@ public class AppointmentServiceImpl implements AppointmentService {
             appointment.setNotesForMember(existing == null || existing.isBlank()
                     ? reason
                     : existing + "\n" + reason);
+        }
+        if (appointment.getRequestedAt() == null) {
+            appointment.setRequestedAt(now);
         }
 
         updateCalendarEntry(appointment, request.newStart(), request.newEnd(), userId);
@@ -180,8 +229,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse updateStatus(UUID appointmentId, AppointmentStatusUpdateRequest request, UUID userId) {
         AppointmentEntity appointment = resolveAppointment(appointmentId);
         AppointmentStatus previous = appointment.getStatus();
+        Instant now = Instant.now();
 
         appointment.setStatus(request.status());
+        applyStatusLifecycle(appointment, request.status(), request.reason(), now);
         appointment.getStatusHistory().add(buildStatusHistory(
                 appointment,
                 previous,
@@ -295,6 +346,25 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
     }
 
+    private Set<Long> resolveVisibleMemberIds(UUID userId, UUID tenantId) {
+        UserEntity user = userRepository.findById(userId)
+                .filter(existing -> tenantId.equals(existing.getTenantId()))
+                .orElseThrow(() -> new IllegalStateException("Authenticated user is not in tenant scope"));
+
+        Adult_MemberEntity membership = user.getMembership();
+        if (membership == null || membership.getId() == null) {
+            throw new IllegalStateException("Authenticated member account is not linked to a membership");
+        }
+
+        Set<Long> visibleMemberIds = new HashSet<>();
+        visibleMemberIds.add(membership.getId());
+        childRepository.findByFatherIdOrMotherId(membership.getId(), membership.getId()).stream()
+                .filter(child -> tenantId.equals(child.getTenantId()))
+                .map(child -> child.getId())
+                .forEach(visibleMemberIds::add);
+        return visibleMemberIds;
+    }
+
     private CalendarEntryEntity createCalendarEntry(AppointmentCreateRequest request, UUID userId) {
         CalendarEntryRequest calendarRequest = new CalendarEntryRequest(
                 CalendarEntryType.APPOINTMENT,
@@ -311,7 +381,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 null,
                 null
         );
-        return calendarEntryService.createEntry(calendarRequest, userId);
+        CalendarEntryResponse created = calendarEntryService.createEntry(calendarRequest, userId);
+        return calendarEntryRepository.findById(created.entryId())
+                .orElseThrow(() -> new EntityNotFoundException("Created calendar entry not found"));
     }
 
     private void updateCalendarEntry(AppointmentEntity appointment, Instant start, Instant end, UUID userId) {
@@ -542,11 +614,112 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (request.endDateTime() != null && request.endDateTime().isBefore(request.startDateTime())) {
             throw new IllegalArgumentException("endDateTime must be after startDateTime");
         }
+        validateContactChannels(request.contactPhone(), request.contactEmail(), request.contactPreference());
     }
 
     private void validateReschedule(AppointmentRescheduleRequest request) {
         if (request.newEnd() != null && request.newEnd().isBefore(request.newStart())) {
             throw new IllegalArgumentException("newEnd must be after newStart");
         }
+    }
+
+    private ContactPreference resolveContactPreference(AppointmentCreateRequest request) {
+        if (request.contactPreference() != null) {
+            return request.contactPreference();
+        }
+        boolean hasPhone = trimToNull(request.contactPhone()) != null;
+        boolean hasEmail = trimToNull(request.contactEmail()) != null;
+        if (hasPhone && hasEmail) {
+            return ContactPreference.EITHER;
+        }
+        if (hasEmail) {
+            return ContactPreference.EMAIL;
+        }
+        return ContactPreference.PHONE;
+    }
+
+    private void validateContactChannels(String contactPhone, String contactEmail, ContactPreference preference) {
+        String normalizedPhone = trimToNull(contactPhone);
+        String normalizedEmail = trimToNull(contactEmail);
+        if (normalizedPhone == null && normalizedEmail == null) {
+            return;
+        }
+
+        ContactPreference effectivePreference = preference;
+        if (effectivePreference == null) {
+            effectivePreference = normalizedPhone != null && normalizedEmail != null
+                    ? ContactPreference.EITHER
+                    : normalizedEmail != null ? ContactPreference.EMAIL : ContactPreference.PHONE;
+        }
+
+        if (effectivePreference == ContactPreference.PHONE && normalizedPhone == null) {
+            throw new IllegalArgumentException("contactPhone is required when contactPreference is PHONE");
+        }
+        if (effectivePreference == ContactPreference.EMAIL && normalizedEmail == null) {
+            throw new IllegalArgumentException("contactEmail is required when contactPreference is EMAIL");
+        }
+        if (effectivePreference == ContactPreference.EITHER && normalizedPhone == null && normalizedEmail == null) {
+            throw new IllegalArgumentException("At least one contact channel is required");
+        }
+    }
+
+    private void applyStatusLifecycle(AppointmentEntity appointment,
+                                      AppointmentStatus status,
+                                      String reason,
+                                      Instant changedAt) {
+        switch (status) {
+            case REQUESTED, PENDING_CONFIRMATION, RESCHEDULED -> {
+                if (appointment.getRequestedAt() == null) {
+                    appointment.setRequestedAt(changedAt);
+                }
+                appointment.setConfirmedAt(null);
+                appointment.setCompletedAt(null);
+                appointment.setCanceledAt(null);
+                appointment.setCancellationReason(null);
+                appointment.setOutcomeNotes(null);
+            }
+            case CONFIRMED -> {
+                if (appointment.getRequestedAt() == null) {
+                    appointment.setRequestedAt(changedAt);
+                }
+                appointment.setConfirmedAt(changedAt);
+                appointment.setCompletedAt(null);
+                appointment.setCanceledAt(null);
+                appointment.setCancellationReason(null);
+                appointment.setOutcomeNotes(null);
+            }
+            case COMPLETED -> {
+                if (appointment.getConfirmedAt() == null) {
+                    appointment.setConfirmedAt(changedAt);
+                }
+                appointment.setCompletedAt(changedAt);
+                appointment.setCanceledAt(null);
+                appointment.setCancellationReason(null);
+                appointment.setOutcomeNotes(trimToNull(reason));
+            }
+            case CANCELLED -> {
+                appointment.setCanceledAt(changedAt);
+                appointment.setCompletedAt(null);
+                appointment.setCancellationReason(trimToNull(reason));
+                appointment.setOutcomeNotes(null);
+            }
+            case NO_SHOW -> {
+                if (appointment.getConfirmedAt() == null) {
+                    appointment.setConfirmedAt(changedAt);
+                }
+                appointment.setCompletedAt(changedAt);
+                appointment.setCanceledAt(null);
+                appointment.setCancellationReason(null);
+                appointment.setOutcomeNotes(trimToNull(reason));
+            }
+        }
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

@@ -12,8 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 public class InAppNotificationService {
@@ -50,17 +51,21 @@ public class InAppNotificationService {
             return;
         }
 
+        Instant now = Instant.now();
         NotificationEntity entity = new NotificationEntity();
-        entity.setRecipientEmail(recipient);
-        entity.setTitle("New Notification");
+        entity.setRecipientAddress(recipient);
+        entity.setTitle(resolveTitle(event));
         entity.setMessage(buildMessage(event));
         entity.setChannel(NotificationChannelType.IN_APP);
         entity.setType(event.getType());
-        entity.setSent(true);
-        entity.setSentAt(LocalDateTime.now());
         entity.setDeliveryStatus(NotificationDeliveryStatus.SENT);
+        entity.setProvider("IN_APP");
+        entity.setProviderStatus("DELIVERED");
+        entity.setDeliveredAt(now);
+        entity.setLastAttemptAt(now);
         entity.setRecipientUserId(event.getUser().getUuid());
         entity.setIdempotencyKey(idempotencyKey);
+        entity.setCorrelationId(idempotencyKey);
         entity.setRetryCount(0);
         entity.setTenant(event.getUser().getTenant());
         NotificationEntity saved = notificationRepository.save(entity);
@@ -82,6 +87,10 @@ public class InAppNotificationService {
     }
 
     private String buildMessage(NotificationEvent event) {
+        Object override = event.getProperties().get("message_content");
+        if (override != null && StringUtils.hasText(override.toString())) {
+            return override.toString();
+        }
         return switch (event.getType()) {
             case ACCOUNT_ACTIVATION -> "Welcome " + event.getUser().getFullName() + "!";
             case PASSWORD_RESET -> "Your password reset request was processed.";
@@ -92,5 +101,13 @@ public class InAppNotificationService {
                     "New child registration submitted: " + event.getProperties().getOrDefault("childName", "Unknown child");
             default -> "You have a new notification.";
         };
+    }
+
+    private String resolveTitle(NotificationEvent event) {
+        Object title = event.getProperties().get("title");
+        if (title != null && StringUtils.hasText(title.toString())) {
+            return title.toString();
+        }
+        return "New Notification";
     }
 }

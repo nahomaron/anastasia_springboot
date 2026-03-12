@@ -7,9 +7,12 @@ import com.anastasia.Anastasia_BackEnd.core.notification.channel.WhatsAppNotific
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
 import com.anastasia.Anastasia_BackEnd.core.notification.orchestrator.NotificationProcessor;
-import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsTemplateType;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailCategory;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,13 +42,45 @@ public class GenericNotificationProcessor implements NotificationProcessor {
 
     @Override
     public void process(NotificationEvent event) {
-        emailService.sendEmail(event, "Anastasia Notification", EmailTemplateName.NOTIFICATION);
-
         Map<String, Object> channelProps = new HashMap<>(event.getProperties());
-        channelProps.putIfAbsent("message_content", "You have a new notification from Anastasia.");
+        String title = readString(channelProps, "title", "New Notification");
+        String subject = readString(channelProps, "subject", title);
+        String message = readString(channelProps, "message_content", "You have a new notification from Anastasia.");
+        channelProps.put("message_content", message);
+        channelProps.putIfAbsent("username", event.getUser() != null ? event.getUser().getFullName() : "member");
 
-        smsService.send(event, SmsTemplateType.NOTIFICATION, channelProps);
+        if (event.requiresChannel(com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType.EMAIL)
+                && StringUtils.hasText(event.getTarget().email())) {
+            emailService.sendEmail(
+                    event.getTarget().email(),
+                    subject,
+                    buildHtml(title, message),
+                    buildText(title, message),
+                    EmailSendMetadata.of(EmailCategory.ADMIN_ALERT, "bulk-notification")
+            );
+        }
+
+        smsService.send(event, SmsTemplateType.CUSTOM, channelProps);
         whatsAppService.send(event, null, channelProps);
         inAppService.send(event);
+    }
+
+    private String readString(Map<String, Object> properties, String key, String fallback) {
+        Object value = properties.get(key);
+        if (value == null) {
+            return fallback;
+        }
+        String normalized = value.toString().trim();
+        return normalized.isEmpty() ? fallback : normalized;
+    }
+
+    private String buildHtml(String title, String message) {
+        String safeTitle = HtmlUtils.htmlEscape(title);
+        String safeMessage = HtmlUtils.htmlEscape(message).replace("\n", "<br/>");
+        return "<div><h2>" + safeTitle + "</h2><p>" + safeMessage + "</p></div>";
+    }
+
+    private String buildText(String title, String message) {
+        return title + System.lineSeparator() + System.lineSeparator() + message;
     }
 }

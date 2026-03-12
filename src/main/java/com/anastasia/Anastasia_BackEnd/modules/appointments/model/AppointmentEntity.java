@@ -18,7 +18,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -109,7 +111,13 @@ public class AppointmentEntity extends Auditable {
     @Column(nullable = false)
     private boolean privateNotesExists;
 
-    private String contactInfo;
+    private String contactPhone;
+
+    private String contactEmail;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private ContactPreference contactPreference;
 
     private UUID linkedRequestId;
 
@@ -118,6 +126,23 @@ public class AppointmentEntity extends Auditable {
 
     @Column(nullable = false)
     private boolean sacramentRelated;
+
+    @Column(nullable = false)
+    private Instant requestedAt;
+
+    private Instant confirmedAt;
+
+    private Instant completedAt;
+
+    private Instant canceledAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String cancellationReason;
+
+    @Column(columnDefinition = "TEXT")
+    private String outcomeNotes;
+
+    private Instant deletedAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -130,4 +155,18 @@ public class AppointmentEntity extends Auditable {
     @Builder.Default
     @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<AppointmentStatusHistoryEntity> statusHistory = new HashSet<>();
+
+    @Version
+    @Column(nullable = false)
+    private long version;
+
+    @PrePersist
+    protected void onCreate() {
+        if (requestedAt == null) {
+            requestedAt = Instant.now();
+        }
+        if (contactPreference == null) {
+            contactPreference = ContactPreference.EITHER;
+        }
+    }
 }

@@ -20,6 +20,20 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
     Optional<AppointmentEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 
     @EntityGraph(attributePaths = {"participants", "assignments"})
+    @Query("""
+            select distinct a from AppointmentEntity a
+            join a.participants p
+            where a.id = :appointmentId
+              and a.tenantId = :tenantId
+              and p.memberId in :memberIds
+            """)
+    Optional<AppointmentEntity> findMemberVisibleByIdAndTenantId(
+            @Param("appointmentId") UUID appointmentId,
+            @Param("tenantId") UUID tenantId,
+            @Param("memberIds") Set<Long> memberIds
+    );
+
+    @EntityGraph(attributePaths = {"participants", "assignments"})
     @Query("select a from AppointmentEntity a where a.tenantId = :tenantId and a.startAtUtc >= :start and a.startAtUtc <= :end")
     List<AppointmentEntity> findForRange(
             @Param("tenantId") UUID tenantId,
@@ -38,6 +52,27 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
 
     @EntityGraph(attributePaths = {"participants", "assignments"})
     List<AppointmentEntity> findByTenantId(UUID tenantId);
+
+    @EntityGraph(attributePaths = {"participants", "assignments"})
+    @Query("""
+            select distinct a from AppointmentEntity a
+            join a.participants p
+            where a.tenantId = :tenantId
+              and p.memberId in :memberIds
+              and (:start is null or a.startAtUtc >= :start)
+              and (:end is null or a.startAtUtc <= :end)
+              and (:status is null or a.status = :status)
+              and (:type is null or a.type = :type)
+            order by a.startAtUtc asc
+            """)
+    List<AppointmentEntity> findMemberVisibleAppointments(
+            @Param("tenantId") UUID tenantId,
+            @Param("memberIds") Set<Long> memberIds,
+            @Param("start") Instant start,
+            @Param("end") Instant end,
+            @Param("status") AppointmentStatus status,
+            @Param("type") AppointmentType type
+    );
 
     @Query("""
             select distinct a from AppointmentEntity a
