@@ -4,7 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MemberT
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -20,7 +20,7 @@ public class MemberTransferResponse {
     private String decisionNote;
     private UUID requestedByUserId;
     private UUID decidedByUserId;
-    private LocalDateTime requestedAt;
-    private LocalDateTime decidedAt;
-    private LocalDateTime executedAt;
+    private Instant requestedAt;
+    private Instant decidedAt;
+    private Instant executedAt;
 }

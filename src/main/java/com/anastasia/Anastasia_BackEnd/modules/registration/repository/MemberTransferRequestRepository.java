@@ -11,5 +11,12 @@ public interface MemberTransferRequestRepository extends JpaRepository<MemberTra
 
     Optional<MemberTransferRequestEntity> findByIdAndFromTenant_Id(UUID id, UUID fromTenantId);
 
+    Optional<MemberTransferRequestEntity> findByIdAndToTenant_Id(UUID id, UUID toTenantId);
+
     boolean existsByUserIdAndStatus(UUID userId, MemberTransferStatus status);
+
+    boolean existsByUserIdAndFromTenant_IdAndToTenant_IdAndStatus(UUID userId,
+                                                                  UUID fromTenantId,
+                                                                  UUID toTenantId,
+                                                                  MemberTransferStatus status);
 }

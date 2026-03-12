@@ -11,19 +11,19 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MemberT
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantUserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberTransferRequestRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantUserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +34,7 @@ public class MemberTransferServiceImpl implements MemberTransferService {
     private final MemberTransferRequestRepository memberTransferRequestRepository;
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
-    private final TenantUserRepository tenantUserRepository;
+    private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final MemberRepository memberRepository;
     private final ChildRepository childRepository;
     private final TokenRepository tokenRepository;
@@ -59,7 +59,12 @@ public class MemberTransferServiceImpl implements MemberTransferService {
             throw new EntityNotFoundException("User not found in current tenant");
         }
 
-        if (memberTransferRequestRepository.existsByUserIdAndStatus(userId, MemberTransferStatus.PENDING)) {
+        if (memberTransferRequestRepository.existsByUserIdAndFromTenant_IdAndToTenant_IdAndStatus(
+                userId,
+                actorTenantId,
+                targetTenantId,
+                MemberTransferStatus.PENDING
+        )) {
             throw new IllegalStateException("User already has a pending transfer request");
         }
 
@@ -84,7 +89,7 @@ public class MemberTransferServiceImpl implements MemberTransferService {
                                                               UUID transferRequestId,
                                                               UUID actorUserId,
                                                               String decisionNote) {
-        MemberTransferRequestEntity request = requireTransferRequest(actorTenantId, transferRequestId);
+        MemberTransferRequestEntity request = requireTransferRequestForDecision(actorTenantId, transferRequestId);
         if (request.getStatus() != MemberTransferStatus.PENDING) {
             throw new IllegalStateException("Only pending transfer requests can be approved");
         }
@@ -98,14 +103,14 @@ public class MemberTransferServiceImpl implements MemberTransferService {
             throw new IllegalStateException("User is no longer assigned to the source tenant");
         }
 
-        TenantUserEntity sourceTenantAssignment = tenantUserRepository.findByTenant_IdAndUserId(fromTenantId, userId)
+        TenantAdminAssignmentEntity sourceTenantAssignment = tenantAdminAssignmentRepository.findByTenant_IdAndUserId(fromTenantId, userId)
                 .orElseThrow(() -> new IllegalStateException("Source tenant assignment not found"));
         sourceTenantAssignment.setStatus(MembershipStatus.REMOVED);
         sourceTenantAssignment.setUpdatedByUserId(actorUserId);
-        tenantUserRepository.save(sourceTenantAssignment);
+        tenantAdminAssignmentRepository.save(sourceTenantAssignment);
 
-        TenantUserEntity targetTenantAssignment = tenantUserRepository.findByTenant_IdAndUserId(toTenantId, userId)
-                .orElseGet(() -> TenantUserEntity.builder()
+        TenantAdminAssignmentEntity targetTenantAssignment = tenantAdminAssignmentRepository.findByTenant_IdAndUserId(toTenantId, userId)
+                .orElseGet(() -> TenantAdminAssignmentEntity.builder()
                         .tenant(request.getToTenant())
                         .userId(userId)
                         .createdByUserId(actorUserId)
@@ -116,7 +121,7 @@ public class MemberTransferServiceImpl implements MemberTransferService {
         }
         targetTenantAssignment.setStatus(MembershipStatus.ACTIVE);
         targetTenantAssignment.setUpdatedByUserId(actorUserId);
-        tenantUserRepository.save(targetTenantAssignment);
+        tenantAdminAssignmentRepository.save(targetTenantAssignment);
 
         user.assignTenant(request.getToTenant());
         synchronizeMemberChurchAndTenant(user, request.getToTenant());
@@ -126,7 +131,7 @@ public class MemberTransferServiceImpl implements MemberTransferService {
         request.setStatus(MemberTransferStatus.APPROVED);
         request.setDecidedByUserId(actorUserId);
         request.setDecisionNote(trimToNull(decisionNote));
-        request.setDecidedAt(LocalDateTime.now());
+        request.setDecidedAt(Instant.now());
         request.setExecutedAt(request.getDecidedAt());
         return memberTransferRequestRepository.save(request);
     }
@@ -137,7 +142,7 @@ public class MemberTransferServiceImpl implements MemberTransferService {
                                                              UUID transferRequestId,
                                                              UUID actorUserId,
                                                              String decisionNote) {
-        MemberTransferRequestEntity request = requireTransferRequest(actorTenantId, transferRequestId);
+        MemberTransferRequestEntity request = requireTransferRequestForDecision(actorTenantId, transferRequestId);
         if (request.getStatus() != MemberTransferStatus.PENDING) {
             throw new IllegalStateException("Only pending transfer requests can be rejected");
         }
@@ -145,13 +150,13 @@ public class MemberTransferServiceImpl implements MemberTransferService {
         request.setStatus(MemberTransferStatus.REJECTED);
         request.setDecidedByUserId(actorUserId);
         request.setDecisionNote(trimToNull(decisionNote));
-        request.setDecidedAt(LocalDateTime.now());
+        request.setDecidedAt(Instant.now());
         return memberTransferRequestRepository.save(request);
     }
 
-    private MemberTransferRequestEntity requireTransferRequest(UUID actorTenantId, UUID transferRequestId) {
-        return memberTransferRequestRepository.findByIdAndFromTenant_Id(transferRequestId, actorTenantId)
-                .orElseThrow(() -> new EntityNotFoundException("Transfer request not found for current tenant"));
+    private MemberTransferRequestEntity requireTransferRequestForDecision(UUID actorTenantId, UUID transferRequestId) {
+        return memberTransferRequestRepository.findByIdAndToTenant_Id(transferRequestId, actorTenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Transfer request not found for destination tenant"));
     }
 
     private UserEntity requireUser(UUID userId) {

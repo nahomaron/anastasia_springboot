@@ -14,13 +14,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -71,13 +72,26 @@ public class MemberTransferRequestEntity {
     private String decisionNote;
 
     @Column(name = "requested_at", nullable = false, updatable = false)
-    private LocalDateTime requestedAt;
+    private Instant requestedAt;
 
     @Column(name = "decided_at")
-    private LocalDateTime decidedAt;
+    private Instant decidedAt;
 
     @Column(name = "executed_at")
-    private LocalDateTime executedAt;
+    private Instant executedAt;
+
+    @Column(name = "status_changed_at")
+    private Instant statusChangedAt;
+
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     @PrePersist
     public void onCreate() {
@@ -85,12 +99,16 @@ public class MemberTransferRequestEntity {
             this.status = MemberTransferStatus.PENDING;
         }
         if (this.requestedAt == null) {
-            this.requestedAt = LocalDateTime.now();
+            this.requestedAt = Instant.now();
+        }
+        if (this.statusChangedAt == null) {
+            this.statusChangedAt = this.requestedAt;
         }
     }
 
     @PreUpdate
     public void onUpdate() {
+        this.statusChangedAt = Instant.now();
         if (this.decidedAt != null && this.executedAt == null && this.status == MemberTransferStatus.APPROVED) {
             this.executedAt = this.decidedAt;
         }
