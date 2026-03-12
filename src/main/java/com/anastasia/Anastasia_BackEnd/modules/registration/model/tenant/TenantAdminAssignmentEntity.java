@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -77,7 +77,7 @@ public class TenantAdminAssignmentEntity extends LocalDateTimeAuditMetadata {
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         initializeAuditTimestamps(now);
         if (this.status == null) {
             this.status = MembershipStatus.INVITED;
@@ -89,6 +89,6 @@ public class TenantAdminAssignmentEntity extends LocalDateTimeAuditMetadata {
 
     @PreUpdate
     public void onUpdate() {
-        touchAuditTimestamps(LocalDateTime.now());
+        touchAuditTimestamps(Instant.now());
     }
 }

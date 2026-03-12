@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MarkAbsen
 import com.anastasia.Anastasia_BackEnd.modules.events.model.requests.AssignEventManagerRequest;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 /**
@@ -31,8 +32,8 @@ public final class EventDataFactory {
                 .title("Community Gathering " + System.currentTimeMillis())
                 .description("Quarterly community gathering for families.")
                 .location("Main Parish Hall")
-                .startAt(LocalDateTime.now().plusDays(7).withHour(10).withMinute(0).withSecond(0).withNano(0))
-                .endAt(LocalDateTime.now().plusDays(7).withHour(12).withMinute(0).withSecond(0).withNano(0))
+                .startAt(LocalDateTime.now().plusDays(7).withHour(10).withMinute(0).withSecond(0).withNano(0).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDateTime.now().plusDays(7).withHour(12).withMinute(0).withSecond(0).withNano(0).toInstant(ZoneOffset.UTC))
                 .visibility(EventVisibilityType.ALL)
                 .image("https://cdn.example.com/events/banner.png")
                 .build();

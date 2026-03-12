@@ -31,7 +31,9 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.LocalTime;
 import java.util.Set;
 import java.util.UUID;
@@ -220,8 +222,8 @@ class SimpleMappersUnitTest {
                 .title("Youth Retreat")
                 .description("Weekend retreat")
                 .location("Nazareth")
-                .startAt(LocalDateTime.of(2024, 10, 5, 10, 0))
-                .endAt(LocalDateTime.of(2024, 10, 5, 14, 0))
+                .startAt(LocalDateTime.of(2024, 10, 5, 10, 0).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDateTime.of(2024, 10, 5, 14, 0).toInstant(ZoneOffset.UTC))
                 .visibility(EventVisibilityType.ALL)
                 .repetition(Repetition.NONE)
                 .build();

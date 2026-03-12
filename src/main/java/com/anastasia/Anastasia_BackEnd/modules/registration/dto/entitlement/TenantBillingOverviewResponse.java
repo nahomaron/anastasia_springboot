@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,10 +21,10 @@ public class TenantBillingOverviewResponse {
     private SubscriptionPlan currentPlan;
     private SubscriptionStatus status;
     private BillingInterval billingInterval;
-    private LocalDateTime currentPeriodStartAt;
-    private LocalDateTime currentPeriodEndAt;
+    private Instant currentPeriodStartAt;
+    private Instant currentPeriodEndAt;
     private boolean cancelAtPeriodEnd;
     private SubscriptionPlan pendingPlan;
-    private LocalDateTime pendingPlanEffectiveAt;
+    private Instant pendingPlanEffectiveAt;
     private List<SubscriptionPlanHistoryItemResponse> recentPlanHistory;
 }

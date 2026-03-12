@@ -6,8 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,8 +28,8 @@ class AttendanceTimeValidatorTest {
     void isCheckInAllowed_whenWithinWindow_shouldReturnTrue() {
         LocalTime now = LocalTime.now();
         EventEntity event = EventEntity.builder()
-                .startAt(LocalDateTime.now().with(now.plusMinutes(10)))
-                .endAt(LocalDateTime.now().with(now.plusMinutes(30)))
+                .startAt(LocalDate.now().atTime(now.plusMinutes(10)).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDate.now().atTime(now.plusMinutes(30)).toInstant(ZoneOffset.UTC))
                 .build();
 
         assertThat(validator.isCheckInAllowed(event)).isTrue();
@@ -38,8 +39,8 @@ class AttendanceTimeValidatorTest {
     void isCheckInAllowed_whenDifferentDay_shouldReturnFalse() {
         LocalTime now = LocalTime.now();
         EventEntity event = EventEntity.builder()
-                .startAt(LocalDateTime.now().plusDays(1).with(now))
-                .endAt(LocalDateTime.now().plusDays(1).with(now.plusMinutes(30)))
+                .startAt(LocalDate.now().plusDays(1).atTime(now).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDate.now().plusDays(1).atTime(now.plusMinutes(30)).toInstant(ZoneOffset.UTC))
                 .build();
 
         assertThat(validator.isCheckInAllowed(event)).isFalse();
@@ -49,8 +50,8 @@ class AttendanceTimeValidatorTest {
     void isCheckInAllowed_whenOutsideWindow_shouldReturnFalse() {
         LocalTime now = LocalTime.now();
         EventEntity event = EventEntity.builder()
-                .startAt(LocalDateTime.now().with(now.plusHours(2)))
-                .endAt(LocalDateTime.now().with(now.plusHours(3)))
+                .startAt(LocalDate.now().atTime(now.plusHours(2)).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDate.now().atTime(now.plusHours(3)).toInstant(ZoneOffset.UTC))
                 .build();
 
         assertThat(validator.isCheckInAllowed(event)).isFalse();

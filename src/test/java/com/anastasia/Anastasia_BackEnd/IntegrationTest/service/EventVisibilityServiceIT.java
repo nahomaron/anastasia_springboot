@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
@@ -180,8 +181,8 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
                 .title(title)
                 .description("Integration visibility test")
                 .location("Integration Hall")
-                .startAt(LocalDateTime.now().plusDays(1).withHour(9).withMinute(0).withSecond(0).withNano(0))
-                .endAt(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0))
+                .startAt(LocalDateTime.now().plusDays(1).withHour(9).withMinute(0).withSecond(0).withNano(0).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0).toInstant(ZoneOffset.UTC))
                 .visibility(visibility)
                 .image("https://example.com/event.png");
 

@@ -11,7 +11,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.net.URI;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -116,10 +116,10 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
     private boolean churchProfileComplete;
 
     @Column(name = "activated_at")
-    private LocalDateTime activatedAt;
+    private Instant activatedAt;
 
     @Column(name = "deactivated_at")
-    private LocalDateTime deactivatedAt;
+    private Instant deactivatedAt;
 
     @Column(name = "created_by")
     private UUID createdBy;
@@ -128,7 +128,7 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
     private UUID updatedBy;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Version
     @Column(nullable = false)
@@ -150,7 +150,7 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     @PrePersist
     void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         initializeAuditTimestamps(now);
         if (status == null) {
             status = ChurchStatus.DRAFT;
@@ -165,7 +165,7 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     @PreUpdate
     void onUpdate() {
-        touchAuditTimestamps(LocalDateTime.now());
+        touchAuditTimestamps(Instant.now());
     }
 
     public boolean isComplete() {

@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
@@ -59,11 +59,11 @@ public class NotificationPreferenceEntity extends LocalDateTimeAuditMetadata {
 
     @jakarta.persistence.PrePersist
     public void onCreate() {
-        initializeAuditTimestamps(LocalDateTime.now());
+        initializeAuditTimestamps(Instant.now());
     }
 
     @jakarta.persistence.PreUpdate
     public void onUpdate() {
-        touchAuditTimestamps(LocalDateTime.now());
+        touchAuditTimestamps(Instant.now());
     }
 }

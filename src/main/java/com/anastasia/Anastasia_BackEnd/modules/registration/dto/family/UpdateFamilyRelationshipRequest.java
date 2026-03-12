@@ -4,7 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyRelationshipType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.RelationshipEndReason;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record UpdateFamilyRelationshipRequest(
         FamilyRelationshipType relationshipType,
@@ -16,8 +16,8 @@ public record UpdateFamilyRelationshipRequest(
         Boolean inHousehold,
         Boolean canManage,
         Boolean primaryGuardian,
-        LocalDateTime effectiveFrom,
-        LocalDateTime effectiveTo,
+        Instant effectiveFrom,
+        Instant effectiveTo,
         RelationshipEndReason endReason,
         Boolean active,
         Integer sortOrder

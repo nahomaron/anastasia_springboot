@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
@@ -132,12 +133,12 @@ public class MemberDashboardService {
         LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         return eventRepository.findVisibleForUser(tenantId, user.getUuid(), user.getEmail()).stream()
-                .filter(event -> event.getStartAt() != null && !event.getStartAt().toLocalDate().isBefore(today))
+                .filter(event -> event.getStartAt() != null && !toEventDate(event).isBefore(today))
                 .sorted(Comparator.comparing(EventEntity::getStartAt, Comparator.nullsLast(Comparator.naturalOrder())))
                 .limit(UPCOMING_LIMIT)
                 .map(event -> MemberUpcomingEventItem.builder()
                         .name(event.getTitle())
-                        .date(event.getStartAt().toLocalDate())
+                        .date(toEventDate(event))
                         .type(mapEventType(event))
                         .status(mapEventStatus(event, attendanceByEventId))
                         .build())
@@ -164,6 +165,16 @@ public class MemberDashboardService {
             return "REGISTERED";
         }
         return "UPCOMING";
+    }
+
+    private LocalDate toEventDate(EventEntity event) {
+        if (event == null || event.getStartAt() == null) {
+            return LocalDate.MIN;
+        }
+        ZoneId zoneId = event.getTimezone() == null || event.getTimezone().isBlank()
+                ? ZoneOffset.UTC
+                : ZoneId.of(event.getTimezone());
+        return event.getStartAt().atZone(zoneId).toLocalDate();
     }
 
     private MonthlyOffering buildMonthlyDonations(UUID tenantId, UUID userId) {

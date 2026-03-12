@@ -16,7 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -53,7 +53,7 @@ public class SubscriptionPlanHistoryEntity {
     private SubscriptionPlan newPlan;
 
     @Column(name = "effective_at", nullable = false)
-    private LocalDateTime effectiveAt;
+    private Instant effectiveAt;
 
     @Column(length = 512)
     private String reason;
@@ -65,13 +65,13 @@ public class SubscriptionPlanHistoryEntity {
     private String providerEventId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @PrePersist
     public void onCreate() {
         if (this.effectiveAt == null) {
-            this.effectiveAt = LocalDateTime.now();
+            this.effectiveAt = Instant.now();
         }
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 }

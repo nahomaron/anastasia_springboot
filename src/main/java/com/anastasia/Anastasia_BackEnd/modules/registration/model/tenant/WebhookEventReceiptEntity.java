@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -61,7 +61,7 @@ public class WebhookEventReceiptEntity extends LocalDateTimeAuditMetadata {
     private UUID tenantSubscriptionId;
 
     @Column(name = "event_created_at")
-    private LocalDateTime eventCreatedAt;
+    private Instant eventCreatedAt;
 
     @Lob
     @Column(name = "payload")
@@ -71,10 +71,10 @@ public class WebhookEventReceiptEntity extends LocalDateTimeAuditMetadata {
     private String signatureHeader;
 
     @Column(name = "received_at", nullable = false)
-    private LocalDateTime receivedAt;
+    private Instant receivedAt;
 
     @Column(name = "processed_at")
-    private LocalDateTime processedAt;
+    private Instant processedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "processing_result", nullable = false, length = 16)
@@ -85,7 +85,7 @@ public class WebhookEventReceiptEntity extends LocalDateTimeAuditMetadata {
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         if (this.receivedAt == null) {
             this.receivedAt = now;
         }

@@ -5,7 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Subscri
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlanHistoryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ public interface SubscriptionService {
     /**
      * Starts a trial for a tenant subscription.
      */
-    TenantSubscriptionEntity startTrial(UUID tenantId, SubscriptionPlan plan, LocalDateTime trialEnd, UUID actorUserId);
+    TenantSubscriptionEntity startTrial(UUID tenantId, SubscriptionPlan plan, Instant trialEnd, UUID actorUserId);
 
     /**
      * Changes subscription plan and records an audit event.
@@ -25,7 +25,7 @@ public interface SubscriptionService {
      * Records successful payment and updates subscription state.
      */
     TenantSubscriptionEntity recordPaymentSucceeded(UUID tenantId,
-                                                    LocalDateTime paymentAt,
+                                                    Instant paymentAt,
                                                     String providerCustomerId,
                                                     String providerSubscriptionId,
                                                     String paymentMethodLast4,
@@ -34,7 +34,7 @@ public interface SubscriptionService {
     /**
      * Records failed payment attempt and updates subscription state.
      */
-    TenantSubscriptionEntity recordPaymentFailed(UUID tenantId, LocalDateTime failedAt, UUID actorUserId);
+    TenantSubscriptionEntity recordPaymentFailed(UUID tenantId, Instant failedAt, UUID actorUserId);
 
     /**
      * Cancels subscription immediately or at period end.

@@ -5,7 +5,7 @@ import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
 public abstract class LocalDateTimeAuditMetadata {
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    protected void initializeAuditTimestamps(LocalDateTime now) {
+    protected void initializeAuditTimestamps(Instant now) {
         if (createdAt == null) {
             createdAt = now;
         }
@@ -27,7 +27,7 @@ public abstract class LocalDateTimeAuditMetadata {
         }
     }
 
-    protected void touchAuditTimestamps(LocalDateTime now) {
+    protected void touchAuditTimestamps(Instant now) {
         updatedAt = now;
     }
 }

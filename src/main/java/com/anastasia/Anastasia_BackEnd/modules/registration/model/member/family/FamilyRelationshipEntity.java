@@ -24,7 +24,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -77,10 +77,10 @@ public class FamilyRelationshipEntity extends LocalDateTimeAuditMetadata {
     private boolean active = true;
 
     @Column(name = "effective_from", nullable = false)
-    private LocalDateTime effectiveFrom;
+    private Instant effectiveFrom;
 
     @Column(name = "effective_to")
-    private LocalDateTime effectiveTo;
+    private Instant effectiveTo;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "end_reason", length = 32)
@@ -109,7 +109,7 @@ public class FamilyRelationshipEntity extends LocalDateTimeAuditMetadata {
     private UUID updatedBy;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Version
     @Column(nullable = false)
@@ -117,7 +117,7 @@ public class FamilyRelationshipEntity extends LocalDateTimeAuditMetadata {
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         if (effectiveFrom == null) {
             effectiveFrom = now;
         }
@@ -126,6 +126,6 @@ public class FamilyRelationshipEntity extends LocalDateTimeAuditMetadata {
 
     @PreUpdate
     public void onUpdate() {
-        touchAuditTimestamps(LocalDateTime.now());
+        touchAuditTimestamps(Instant.now());
     }
 }

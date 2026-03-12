@@ -5,7 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -62,7 +62,7 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
     private boolean phoneVerified = false;
 
     @Column(name = "phone_verified_at")
-    private LocalDateTime phoneVerifiedAt;
+    private Instant phoneVerifiedAt;
 
     @Builder.Default
     @Column(name = "default_timezone", nullable = false, length = 64)
@@ -85,16 +85,16 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
     private String sourceSystem;
 
     @Column(name = "activated_at")
-    private LocalDateTime activatedAt;
+    private Instant activatedAt;
 
     @Column(name = "suspended_at")
-    private LocalDateTime suspendedAt;
+    private Instant suspendedAt;
 
     @Column(name = "deactivated_at")
-    private LocalDateTime deactivatedAt;
+    private Instant deactivatedAt;
 
     @Column(name = "closed_at")
-    private LocalDateTime closedAt;
+    private Instant closedAt;
 
     @Column(name = "suspension_reason", length = 512)
     private String suspensionReason;
@@ -106,7 +106,7 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
     private UUID updatedBy;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Version
     @Column(nullable = false)
@@ -185,7 +185,7 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
         if (activeTenant) {
             this.status = TenantStatus.ACTIVE;
             if (this.activatedAt == null) {
-                this.activatedAt = LocalDateTime.now();
+                this.activatedAt = Instant.now();
             }
             return;
         }
@@ -193,14 +193,14 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
         if (TenantStatus.ACTIVE.equals(this.status)) {
             this.status = TenantStatus.DEACTIVATED;
             if (this.deactivatedAt == null) {
-                this.deactivatedAt = LocalDateTime.now();
+                this.deactivatedAt = Instant.now();
             }
         }
     }
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         initializeAuditTimestamps(now);
         if (this.status == null) {
             this.status = TenantStatus.DRAFT;
@@ -215,7 +215,7 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
 
     @PreUpdate
     public void onUpdate() {
-        touchAuditTimestamps(LocalDateTime.now());
+        touchAuditTimestamps(Instant.now());
     }
 
     public static class TenantEntityBuilder {

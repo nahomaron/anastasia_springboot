@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,7 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -45,7 +46,7 @@ import java.util.UUID;
                 )
         }
 )
-public class TenantSubscriptionProviderLinkEntity {
+public class TenantSubscriptionProviderLinkEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -81,17 +82,11 @@ public class TenantSubscriptionProviderLinkEntity {
     private String lastProviderEventType;
 
     @Column(name = "last_provider_event_at")
-    private LocalDateTime lastProviderEventAt;
+    private Instant lastProviderEventAt;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     @Version
     @Column(nullable = false)
@@ -99,17 +94,11 @@ public class TenantSubscriptionProviderLinkEntity {
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        if (createdAt == null) {
-            createdAt = now;
-        }
-        if (updatedAt == null) {
-            updatedAt = createdAt;
-        }
+        initializeAuditTimestamps(Instant.now());
     }
 
     @PreUpdate
     public void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        touchAuditTimestamps(Instant.now());
     }
 }

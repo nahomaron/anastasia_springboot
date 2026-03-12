@@ -189,7 +189,7 @@ public class OnboardingStripeWebhookService {
                 .build());
         receipt.setEventType(eventType);
         receipt.setOnboardingSessionId(onboardingSessionId);
-        receipt.setEventCreatedAt(toLocalDateTime(java.util.Objects.requireNonNullElse(eventCreatedAt, Instant.now())));
+        receipt.setEventCreatedAt(java.util.Objects.requireNonNullElse(eventCreatedAt, Instant.now()));
         if (receipt.getPayload() == null) {
             receipt.setPayload(payload);
         }
@@ -204,12 +204,12 @@ public class OnboardingStripeWebhookService {
         try {
             boolean handled = handler.get();
             receipt.setProcessingResult(WebhookProcessingResult.OK);
-            receipt.setProcessedAt(LocalDateTime.now());
+            receipt.setProcessedAt(Instant.now());
             webhookEventReceiptRepository.save(receipt);
             return handled;
         } catch (RuntimeException ex) {
             receipt.setProcessingResult(WebhookProcessingResult.FAILED);
-            receipt.setProcessedAt(LocalDateTime.now());
+            receipt.setProcessedAt(Instant.now());
             receipt.setErrorMessage(trimError(ex.getMessage()));
             webhookEventReceiptRepository.save(receipt);
             log.error("Failed to process Stripe onboarding webhook event {} ({})", eventId, eventType, ex);

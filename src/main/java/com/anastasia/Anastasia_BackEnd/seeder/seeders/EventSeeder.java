@@ -18,9 +18,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -112,8 +114,8 @@ public class EventSeeder {
                         .title(faker.company().buzzword() + " Gathering")
                         .description(faker.lorem().paragraph())
                         .location(faker.address().fullAddress())
-                        .startAt(LocalDateTime.of(eventDate, start))
-                        .endAt(LocalDateTime.of(eventDate, end))
+                        .startAt(LocalDateTime.of(eventDate, start).toInstant(ZoneOffset.UTC))
+                        .endAt(LocalDateTime.of(eventDate, end).toInstant(ZoneOffset.UTC))
                         .image("https://picsum.photos/seed/" + faker.number().numberBetween(1000, 9999) + "/600/400")
                         .latitude(parseDoubleSafe(faker.address().latitude()))
                         .longitude(parseDoubleSafe(faker.address().longitude()))

@@ -17,8 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,8 +51,8 @@ class EventReportServiceUnitTest {
         event = EventEntity.builder()
                 .eventId(1L)
                 .title("Sunday Service")
-                .startAt(LocalDateTime.now().withHour(9).withMinute(0).withSecond(0).withNano(0))
-                .endAt(LocalDateTime.now().withHour(11).withMinute(0).withSecond(0).withNano(0))
+                .startAt(LocalDate.now().atTime(9, 0).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDate.now().atTime(11, 0).toInstant(ZoneOffset.UTC))
                 .build();
 
         attendeeOne = UserEntity.builder()

@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -51,7 +49,7 @@ public class TenantSubscriptionStripeWebhookService {
         }
         return processEvent(eventId, "invoice.paid", occurredAt, payload, signatureHeader, providerLink, () -> {
             var subscription = providerLink.getTenantSubscription();
-            LocalDateTime occurredAtUtc = toUtc(occurredAt);
+            Instant occurredAtUtc = occurredAt != null ? occurredAt : Instant.now();
             if (isOlderThanLastProcessed(providerLink, eventId, occurredAtUtc)) {
                 return true;
             }
@@ -61,10 +59,10 @@ public class TenantSubscriptionStripeWebhookService {
                 providerLink.setProviderCustomerId(invoice.getCustomer());
             }
             if (invoice.getPeriodStart() != null) {
-                subscription.setCurrentPeriodStartAt(toUtc(Instant.ofEpochSecond(invoice.getPeriodStart())));
+                subscription.setCurrentPeriodStartAt(Instant.ofEpochSecond(invoice.getPeriodStart()));
             }
             if (invoice.getPeriodEnd() != null) {
-                subscription.setCurrentPeriodEndAt(toUtc(Instant.ofEpochSecond(invoice.getPeriodEnd())));
+                subscription.setCurrentPeriodEndAt(Instant.ofEpochSecond(invoice.getPeriodEnd()));
             }
 
             subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -99,7 +97,7 @@ public class TenantSubscriptionStripeWebhookService {
         }
         return processEvent(eventId, "customer.subscription.updated", occurredAt, payload, signatureHeader, providerLink, () -> {
             var subscription = providerLink.getTenantSubscription();
-            LocalDateTime occurredAtUtc = toUtc(occurredAt);
+            Instant occurredAtUtc = occurredAt != null ? occurredAt : Instant.now();
             if (isOlderThanLastProcessed(providerLink, eventId, occurredAtUtc)) {
                 return true;
             }
@@ -112,15 +110,15 @@ public class TenantSubscriptionStripeWebhookService {
             Long currentPeriodStart = resolveCurrentPeriodStart(stripeSubscription);
             Long currentPeriodEnd = resolveCurrentPeriodEnd(stripeSubscription);
             if (currentPeriodStart != null) {
-                subscription.setCurrentPeriodStartAt(toUtc(Instant.ofEpochSecond(currentPeriodStart)));
+                subscription.setCurrentPeriodStartAt(Instant.ofEpochSecond(currentPeriodStart));
             }
             if (currentPeriodEnd != null) {
-                subscription.setCurrentPeriodEndAt(toUtc(Instant.ofEpochSecond(currentPeriodEnd)));
+                subscription.setCurrentPeriodEndAt(Instant.ofEpochSecond(currentPeriodEnd));
             }
 
             subscription.setCancelAtPeriodEnd(Boolean.TRUE.equals(stripeSubscription.getCancelAtPeriodEnd()));
             if (stripeSubscription.getCanceledAt() != null) {
-                subscription.setCanceledAt(toUtc(Instant.ofEpochSecond(stripeSubscription.getCanceledAt())));
+                subscription.setCanceledAt(Instant.ofEpochSecond(stripeSubscription.getCanceledAt()));
             }
 
             subscription.setStatus(mapStatus(stripeSubscription.getStatus()));
@@ -159,7 +157,7 @@ public class TenantSubscriptionStripeWebhookService {
         receipt.setEventType(eventType);
         receipt.setTenantId(subscription.getTenant().getId());
         receipt.setTenantSubscriptionId(subscription.getId());
-        receipt.setEventCreatedAt(toUtc(occurredAt));
+        receipt.setEventCreatedAt(occurredAt != null ? occurredAt : Instant.now());
         if (receipt.getPayload() == null) {
             receipt.setPayload(payload);
         }
@@ -174,12 +172,12 @@ public class TenantSubscriptionStripeWebhookService {
         try {
             boolean handled = handler.get();
             receipt.setProcessingResult(WebhookProcessingResult.OK);
-            receipt.setProcessedAt(LocalDateTime.now());
+            receipt.setProcessedAt(Instant.now());
             webhookEventReceiptRepository.save(receipt);
             return handled;
         } catch (RuntimeException ex) {
             receipt.setProcessingResult(WebhookProcessingResult.FAILED);
-            receipt.setProcessedAt(LocalDateTime.now());
+            receipt.setProcessedAt(Instant.now());
             receipt.setErrorMessage(trimError(ex.getMessage()));
             webhookEventReceiptRepository.save(receipt);
             log.error("Failed to process Stripe tenant subscription webhook event {} ({})", eventId, eventType, ex);
@@ -189,7 +187,7 @@ public class TenantSubscriptionStripeWebhookService {
 
     private boolean isOlderThanLastProcessed(TenantSubscriptionProviderLinkEntity providerLink,
                                              String eventId,
-                                             LocalDateTime eventTimeUtc) {
+                                             Instant eventTimeUtc) {
         if (eventId != null && eventId.equals(providerLink.getLastProviderEventId())) {
             return true;
         }
@@ -197,13 +195,6 @@ public class TenantSubscriptionStripeWebhookService {
             return false;
         }
         return eventTimeUtc.isBefore(providerLink.getLastProviderEventAt());
-    }
-
-    private LocalDateTime toUtc(Instant instant) {
-        if (instant == null) {
-            return LocalDateTime.now(ZoneOffset.UTC);
-        }
-        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     private SubscriptionStatus mapStatus(String stripeStatus) {

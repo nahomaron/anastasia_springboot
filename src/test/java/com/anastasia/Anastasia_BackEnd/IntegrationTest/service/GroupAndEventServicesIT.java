@@ -42,6 +42,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -145,8 +146,8 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
                 .title("Integration Event")
                 .description("Full flow test")
                 .location("Main Hall")
-                .startAt(LocalDateTime.now().minusMinutes(10))
-                .endAt(LocalDateTime.now().plusMinutes(50))
+                .startAt(Instant.now().minusSeconds(10 * 60))
+                .endAt(Instant.now().plusSeconds(50 * 60))
                 .latitude(40.7128)
                 .longitude(-74.0060)
                 .build();

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,8 +17,8 @@ class EventDtoContractTest {
     @Test
     void writeValueAsString_serializesCanonicalDateTimesOnly() throws Exception {
         EventDTO dto = EventDTO.builder()
-                .startAt(LocalDateTime.of(2026, 3, 12, 9, 5))
-                .endAt(LocalDateTime.of(2026, 3, 12, 11, 30))
+                .startAt(Instant.parse("2026-03-12T09:05:00Z"))
+                .endAt(Instant.parse("2026-03-12T11:30:00Z"))
                 .build();
 
         JsonNode json = objectMapper.readTree(objectMapper.writeValueAsString(dto));
@@ -35,14 +35,14 @@ class EventDtoContractTest {
     void readValue_deserializesCanonicalDateTimes() throws Exception {
         String json = """
                 {
-                  "startAt": "2026-03-12T09:05:00",
-                  "endAt": "2026-03-12T11:30:00"
+                  "startAt": "2026-03-12T09:05:00Z",
+                  "endAt": "2026-03-12T11:30:00Z"
                 }
                 """;
 
         EventDTO dto = objectMapper.readValue(json, EventDTO.class);
 
-        assertThat(dto.getStartAt()).isEqualTo(LocalDateTime.of(2026, 3, 12, 9, 5));
-        assertThat(dto.getEndAt()).isEqualTo(LocalDateTime.of(2026, 3, 12, 11, 30));
+        assertThat(dto.getStartAt()).isEqualTo(Instant.parse("2026-03-12T09:05:00Z"));
+        assertThat(dto.getEndAt()).isEqualTo(Instant.parse("2026-03-12T11:30:00Z"));
     }
 }

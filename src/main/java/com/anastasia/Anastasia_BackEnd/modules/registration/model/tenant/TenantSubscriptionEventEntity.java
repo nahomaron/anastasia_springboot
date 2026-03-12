@@ -19,7 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -70,7 +70,7 @@ public class TenantSubscriptionEventEntity {
     private SubscriptionStatus newStatus;
 
     @Column(name = "occurred_at", nullable = false)
-    private LocalDateTime occurredAt;
+    private Instant occurredAt;
 
     @Column(name = "actor_user_id")
     private UUID actorUserId;
@@ -81,7 +81,7 @@ public class TenantSubscriptionEventEntity {
     @PrePersist
     public void onCreate() {
         if (this.occurredAt == null) {
-            this.occurredAt = LocalDateTime.now();
+            this.occurredAt = Instant.now();
         }
     }
 }

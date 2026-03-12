@@ -9,7 +9,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -24,7 +24,7 @@ import java.util.UUID;
 @Table(name = "events", indexes = {
         @Index(name = "idx_event_church", columnList = "church_id"),
         @Index(name = "idx_event_tenant", columnList = "tenantId"),
-        @Index(name = "idx_event_start_at", columnList = "startAt")
+        @Index(name = "idx_event_start_at", columnList = "start_at")
 })
 @EntityListeners(AuditingEntityListener.class)
 public class EventEntity extends Auditable {
@@ -51,9 +51,11 @@ public class EventEntity extends Auditable {
     @Column(length = 2048)
     private String gpsLocation;
 
-    private LocalDateTime startAt;
+    @Column(name = "start_at")
+    private Instant startAt;
 
-    private LocalDateTime endAt;
+    @Column(name = "end_at")
+    private Instant endAt;
 
     @Builder.Default
     @Column(nullable = false, length = 64)
@@ -71,9 +73,9 @@ public class EventEntity extends Auditable {
     @Column(nullable = false, length = 24)
     private EventStatus status = EventStatus.SCHEDULED;
 
-    private LocalDateTime canceledAt;
+    private Instant canceledAt;
 
-    private LocalDateTime statusChangedAt;
+    private Instant statusChangedAt;
 
     @Enumerated(EnumType.STRING)
     private EventType type;
@@ -92,9 +94,9 @@ public class EventEntity extends Auditable {
 
     private Integer geofenceRadiusMeters;
 
-    private LocalDateTime checkInOpensAt;
+    private Instant checkInOpensAt;
 
-    private LocalDateTime checkInClosesAt;
+    private Instant checkInClosesAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -141,7 +143,7 @@ public class EventEntity extends Auditable {
             status = EventStatus.SCHEDULED;
         }
         if (statusChangedAt == null) {
-            statusChangedAt = LocalDateTime.now();
+            statusChangedAt = Instant.now();
         }
     }
 

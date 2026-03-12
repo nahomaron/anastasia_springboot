@@ -21,8 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -72,8 +72,8 @@ class QrCheckInServiceUnitTest {
         event = EventEntity.builder()
                 .eventId(15L)
                 .title("Youth Fellowship")
-                .startAt(LocalDateTime.now().withHour(9).withMinute(0).withSecond(0).withNano(0))
-                .endAt(LocalDateTime.now().withHour(11).withMinute(0).withSecond(0).withNano(0))
+                .startAt(LocalDate.now().atTime(9, 0).toInstant(ZoneOffset.UTC))
+                .endAt(LocalDate.now().atTime(11, 0).toInstant(ZoneOffset.UTC))
                 .allowGeoCheckIn(true)
                 .latitude(8.9806)
                 .longitude(38.7578)

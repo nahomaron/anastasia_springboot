@@ -11,7 +11,9 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -62,7 +64,7 @@ public class EventReportService {
 
         return new EventReport.EventSummary(
                 event.getTitle(),
-                event.getStartAt() != null ? event.getStartAt().toLocalDate() : null,
+                toLocalDate(event.getStartAt(), event.getTimezone()),
                 invitedCount,
                 checkedInCount,
                 absentCount,
@@ -75,7 +77,8 @@ public class EventReportService {
 
         // Group attendance by event date
         Map<LocalDate, List<EventAttendance>> attendanceByDate = attendanceList.stream()
-                .collect(Collectors.groupingBy(attendance -> attendance.getEvent().getStartAt().toLocalDate()));
+                .collect(Collectors.groupingBy(attendance ->
+                        toLocalDate(attendance.getEvent().getStartAt(), attendance.getEvent().getTimezone())));
 
         // Generate the attendance over time
         return attendanceByDate.entrySet().stream()
@@ -136,5 +139,19 @@ public class EventReportService {
     private String generatePDFSummary(EventEntity event) {
         // Implementation for generating PDF summary
         return "PDF summary here...";
+    }
+
+    private LocalDate toLocalDate(Instant instant, String timezone) {
+        if (instant == null) {
+            return null;
+        }
+        return instant.atZone(resolveZone(timezone)).toLocalDate();
+    }
+
+    private ZoneId resolveZone(String timezone) {
+        if (timezone == null || timezone.isBlank()) {
+            return ZoneId.of("UTC");
+        }
+        return ZoneId.of(timezone);
     }
 }

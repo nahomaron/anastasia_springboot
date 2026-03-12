@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -33,9 +33,9 @@ public class EventDTO {
     @NotBlank(message = "{validation.events.location.required}")
     private String location;
 
-    private LocalDateTime startAt;
+    private Instant startAt;
 
-    private LocalDateTime endAt;
+    private Instant endAt;
 
     private String timezone;
 
@@ -45,7 +45,7 @@ public class EventDTO {
 
     private EventStatus status;
 
-    private LocalDateTime canceledAt;
+    private Instant canceledAt;
 
     private EventType type;
 
@@ -63,9 +63,9 @@ public class EventDTO {
 
     private Integer geofenceRadiusMeters;
 
-    private LocalDateTime checkInOpensAt;
+    private Instant checkInOpensAt;
 
-    private LocalDateTime checkInClosesAt;
+    private Instant checkInClosesAt;
 
     private Set<GroupEntity> invitedGroups;
 

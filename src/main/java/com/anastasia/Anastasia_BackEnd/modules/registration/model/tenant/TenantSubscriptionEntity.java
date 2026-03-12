@@ -24,7 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -62,16 +62,16 @@ public class TenantSubscriptionEntity extends LocalDateTimeAuditMetadata {
     private SubscriptionStatus status;
 
     @Column(name = "trial_start_at")
-    private LocalDateTime trialStartAt;
+    private Instant trialStartAt;
 
     @Column(name = "trial_end_at")
-    private LocalDateTime trialEndAt;
+    private Instant trialEndAt;
 
     @Column(name = "current_period_start_at")
-    private LocalDateTime currentPeriodStartAt;
+    private Instant currentPeriodStartAt;
 
     @Column(name = "current_period_end_at")
-    private LocalDateTime currentPeriodEndAt;
+    private Instant currentPeriodEndAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "billing_interval", nullable = false, length = 16)
@@ -82,39 +82,39 @@ public class TenantSubscriptionEntity extends LocalDateTimeAuditMetadata {
     private boolean cancelAtPeriodEnd = false;
 
     @Column(name = "canceled_at")
-    private LocalDateTime canceledAt;
+    private Instant canceledAt;
 
     @Column(name = "started_at")
-    private LocalDateTime startedAt;
+    private Instant startedAt;
 
     @Column(name = "ended_at")
-    private LocalDateTime endedAt;
+    private Instant endedAt;
 
     @Column(name = "paused_at")
-    private LocalDateTime pausedAt;
+    private Instant pausedAt;
 
     @Column(name = "resumed_at")
-    private LocalDateTime resumedAt;
+    private Instant resumedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 24)
     private BillingProvider provider;
 
     @Column(name = "last_payment_at")
-    private LocalDateTime lastPaymentAt;
+    private Instant lastPaymentAt;
 
     @Column(name = "grace_period_ends_at")
-    private LocalDateTime gracePeriodEndsAt;
+    private Instant gracePeriodEndsAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "pending_plan", length = 32)
     private SubscriptionPlan pendingPlan;
 
     @Column(name = "pending_plan_effective_at")
-    private LocalDateTime pendingPlanEffectiveAt;
+    private Instant pendingPlanEffectiveAt;
 
     @Column(name = "status_changed_at")
-    private LocalDateTime statusChangedAt;
+    private Instant statusChangedAt;
 
     @Column(name = "status_change_reason", length = 512)
     private String statusChangeReason;
@@ -126,7 +126,7 @@ public class TenantSubscriptionEntity extends LocalDateTimeAuditMetadata {
     private UUID updatedByUserId;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Version
     @Column(nullable = false)
@@ -154,7 +154,7 @@ public class TenantSubscriptionEntity extends LocalDateTimeAuditMetadata {
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         initializeAuditTimestamps(now);
         if (this.startedAt == null) {
             this.startedAt = now;
@@ -178,6 +178,6 @@ public class TenantSubscriptionEntity extends LocalDateTimeAuditMetadata {
 
     @PreUpdate
     public void onUpdate() {
-        touchAuditTimestamps(LocalDateTime.now());
+        touchAuditTimestamps(Instant.now());
     }
 }

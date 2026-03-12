@@ -5,7 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.RelationshipEndReason;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record UpsertFamilyRelationshipRequest(
         @NotNull FamilyRelationshipType relationshipType,
@@ -17,8 +17,8 @@ public record UpsertFamilyRelationshipRequest(
         Boolean inHousehold,
         Boolean canManage,
         Boolean primaryGuardian,
-        LocalDateTime effectiveFrom,
-        LocalDateTime effectiveTo,
+        Instant effectiveFrom,
+        Instant effectiveTo,
         RelationshipEndReason endReason,
         Boolean active,
         Integer sortOrder

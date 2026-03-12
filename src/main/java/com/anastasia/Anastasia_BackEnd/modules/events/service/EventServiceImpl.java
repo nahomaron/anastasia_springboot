@@ -29,7 +29,10 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -312,8 +315,9 @@ public class EventServiceImpl implements EventService {
     }
 
     private void normalizeDateTimes(EventEntity event) {
-        LocalDateTime startAt = event.getStartAt();
-        LocalDateTime endAt = event.getEndAt();
+        Instant startAt = event.getStartAt();
+        Instant endAt = event.getEndAt();
+        ZoneId zoneId = resolveZone(event.getTimezone());
 
         if (event.isAllDay()) {
             if (startAt == null) {
@@ -323,10 +327,12 @@ public class EventServiceImpl implements EventService {
                 ));
             }
             if (endAt == null) {
-                endAt = startAt.plusDays(1);
+                endAt = startAt.plusSeconds(24L * 60 * 60);
             }
-            startAt = startAt.toLocalDate().atStartOfDay();
-            endAt = endAt.toLocalDate().plusDays(1).atStartOfDay();
+            LocalDate startDate = ZonedDateTime.ofInstant(startAt, zoneId).toLocalDate();
+            LocalDate endDate = ZonedDateTime.ofInstant(endAt, zoneId).toLocalDate();
+            startAt = startDate.atStartOfDay(zoneId).toInstant();
+            endAt = endDate.plusDays(1).atStartOfDay(zoneId).toInstant();
             event.setStartAt(startAt);
             event.setEndAt(endAt);
             return;
@@ -458,8 +464,8 @@ public class EventServiceImpl implements EventService {
         props.put("username", email);
         props.put("event_title", event.getTitle());
         props.put("event_location", event.getLocation());
-        props.put("event_date", event.getStartAt() != null ? event.getStartAt().toLocalDate().toString() : "");
-        props.put("event_start_at", event.getStartAt() != null ? event.getStartAt().toString() : "");
+        props.put("event_date", formatEventDate(event));
+        props.put("event_start_at", formatEventStart(event));
         props.put("message_content",
                 messageService.get(
                         "events.invitation.message",
@@ -517,6 +523,29 @@ public class EventServiceImpl implements EventService {
             ));
         }
         return tenantId;
+    }
+
+    private String formatEventDate(EventEntity event) {
+        if (event.getStartAt() == null) {
+            return "";
+        }
+        return ZonedDateTime.ofInstant(event.getStartAt(), resolveZone(event.getTimezone()))
+                .toLocalDate()
+                .toString();
+    }
+
+    private String formatEventStart(EventEntity event) {
+        if (event.getStartAt() == null) {
+            return "";
+        }
+        return ZonedDateTime.ofInstant(event.getStartAt(), resolveZone(event.getTimezone())).toString();
+    }
+
+    private ZoneId resolveZone(String timezone) {
+        if (timezone == null || timezone.isBlank()) {
+            return ZoneId.of("UTC");
+        }
+        return ZoneId.of(timezone);
     }
 
     private String normalizeEmail(String email) {

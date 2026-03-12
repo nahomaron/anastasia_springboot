@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Component
 public class AttendanceTimeValidator {
@@ -29,20 +31,30 @@ public class AttendanceTimeValidator {
     }
 
     public boolean isCheckInAllowed(EventEntity event) {
-        LocalDateTime startAt = event.getStartAt();
-        LocalDateTime endAt = event.getEndAt();
+        Instant startAt = event.getStartAt();
+        Instant endAt = event.getEndAt();
         if (startAt == null || endAt == null) {
             return false;
         }
 
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
+        ZoneId zoneId = resolveZone(event.getTimezone());
+        ZonedDateTime startAtLocal = startAt.atZone(zoneId);
+        ZonedDateTime endAtLocal = endAt.atZone(zoneId);
+        LocalDate today = LocalDate.now(zoneId);
+        LocalTime now = LocalTime.now(zoneId);
 
-        if (!today.isEqual(startAt.toLocalDate())) return false;
+        if (!today.isEqual(startAtLocal.toLocalDate())) return false;
 
-        LocalTime allowedStart = startAt.toLocalTime().minus(graceBefore);
-        LocalTime allowedEnd = endAt.toLocalTime().plus(graceAfter);
+        LocalTime allowedStart = startAtLocal.toLocalTime().minus(graceBefore);
+        LocalTime allowedEnd = endAtLocal.toLocalTime().plus(graceAfter);
 
         return !now.isBefore(allowedStart) && !now.isAfter(allowedEnd);
+    }
+
+    private ZoneId resolveZone(String timezone) {
+        if (timezone == null || timezone.isBlank()) {
+            return ZoneId.of("UTC");
+        }
+        return ZoneId.of(timezone);
     }
 }

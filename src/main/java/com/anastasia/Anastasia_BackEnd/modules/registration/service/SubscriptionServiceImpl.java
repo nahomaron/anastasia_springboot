@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,8 +36,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
-    public TenantSubscriptionEntity startTrial(UUID tenantId, SubscriptionPlan plan, LocalDateTime trialEnd, UUID actorUserId) {
-        if (trialEnd != null && trialEnd.isBefore(LocalDateTime.now())) {
+    public TenantSubscriptionEntity startTrial(UUID tenantId, SubscriptionPlan plan, Instant trialEnd, UUID actorUserId) {
+        if (trialEnd != null && trialEnd.isBefore(Instant.now())) {
             throw new IllegalArgumentException("trialEnd cannot be in the past");
         }
 
@@ -48,9 +48,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         subscription.setPlan(plan != null ? plan : SubscriptionPlan.FREE);
         subscription.setStatus(SubscriptionStatus.TRIALING);
-        subscription.setTrialStartAt(LocalDateTime.now());
+        subscription.setTrialStartAt(Instant.now());
         subscription.setTrialEndAt(trialEnd);
-        subscription.setCurrentPeriodStartAt(LocalDateTime.now());
+        subscription.setCurrentPeriodStartAt(Instant.now());
         subscription.setCurrentPeriodEndAt(trialEnd);
         subscription.setCancelAtPeriodEnd(false);
         subscription.setCanceledAt(null);
@@ -82,7 +82,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Transactional
     public TenantSubscriptionEntity recordPaymentSucceeded(UUID tenantId,
-                                                           LocalDateTime paymentAt,
+                                                           Instant paymentAt,
                                                            String providerCustomerId,
                                                            String providerSubscriptionId,
                                                            String paymentMethodLast4,
@@ -91,13 +91,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         SubscriptionStatus oldStatus = subscription.getStatus();
 
         subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription.setLastPaymentAt(paymentAt != null ? paymentAt : LocalDateTime.now());
+        subscription.setLastPaymentAt(paymentAt != null ? paymentAt : Instant.now());
         if (providerSubscriptionId != null || providerCustomerId != null) {
             subscription.setProvider(BillingProvider.STRIPE);
             upsertProviderLink(subscription, BillingProvider.STRIPE, providerCustomerId, providerSubscriptionId, null, paymentMethodLast4);
         }
         if (subscription.getCurrentPeriodStartAt() == null) {
-            subscription.setCurrentPeriodStartAt(LocalDateTime.now());
+            subscription.setCurrentPeriodStartAt(Instant.now());
         }
         subscription.setCancelAtPeriodEnd(false);
         subscription.setCanceledAt(null);
@@ -110,7 +110,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
-    public TenantSubscriptionEntity recordPaymentFailed(UUID tenantId, LocalDateTime failedAt, UUID actorUserId) {
+    public TenantSubscriptionEntity recordPaymentFailed(UUID tenantId, Instant failedAt, UUID actorUserId) {
         TenantSubscriptionEntity subscription = requireByTenantId(tenantId);
         SubscriptionStatus oldStatus = subscription.getStatus();
 
@@ -118,7 +118,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscription.setUpdatedByUserId(actorUserId);
 
         TenantSubscriptionEntity saved = tenantSubscriptionRepository.save(subscription);
-        String idempotencyKey = "payment-failed-" + tenantId + "-" + (failedAt != null ? failedAt : LocalDateTime.now());
+        String idempotencyKey = "payment-failed-" + tenantId + "-" + (failedAt != null ? failedAt : Instant.now());
         recordEvent(saved, TenantSubscriptionEventType.PAYMENT_FAILED, saved.getPlan(), saved.getPlan(), oldStatus, saved.getStatus(), actorUserId, idempotencyKey);
         return saved;
     }
@@ -132,7 +132,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscription.setCancelAtPeriodEnd(cancelAtPeriodEnd);
         if (!cancelAtPeriodEnd) {
             subscription.setStatus(SubscriptionStatus.CANCELED);
-            subscription.setCanceledAt(LocalDateTime.now());
+            subscription.setCanceledAt(Instant.now());
         }
         subscription.setUpdatedByUserId(actorUserId);
 
@@ -187,13 +187,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             TenantSubscriptionEntity saved = tenantSubscriptionRepository.save(subscription);
             recordEvent(saved, TenantSubscriptionEventType.PLAN_CHANGED, oldPlan, targetPlan,
                     saved.getStatus(), saved.getStatus(), actorUserId, null);
-            recordPlanHistory(saved, oldPlan, targetPlan, LocalDateTime.now(), reason, actorUserId, null);
+            recordPlanHistory(saved, oldPlan, targetPlan, Instant.now(), reason, actorUserId, null);
             return saved;
         }
 
-        LocalDateTime scheduledAt = subscription.getCurrentPeriodEndAt() != null
+        Instant scheduledAt = subscription.getCurrentPeriodEndAt() != null
                 ? subscription.getCurrentPeriodEndAt()
-                : LocalDateTime.now().plusMonths(1);
+                : Instant.now().plusSeconds(30L * 24 * 60 * 60);
         subscription.setPendingPlan(targetPlan);
         subscription.setPendingPlanEffectiveAt(scheduledAt);
         subscription.setUpdatedByUserId(actorUserId);
@@ -211,7 +211,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         if (subscription.getPendingPlan() == null || subscription.getPendingPlanEffectiveAt() == null) {
             return subscription;
         }
-        if (subscription.getPendingPlanEffectiveAt().isAfter(LocalDateTime.now())) {
+        if (subscription.getPendingPlanEffectiveAt().isAfter(Instant.now())) {
             return subscription;
         }
 
@@ -225,7 +225,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         TenantSubscriptionEntity saved = tenantSubscriptionRepository.save(subscription);
         recordEvent(saved, TenantSubscriptionEventType.PLAN_CHANGED, oldPlan, newPlan,
                 saved.getStatus(), saved.getStatus(), actorUserId, null);
-        recordPlanHistory(saved, oldPlan, newPlan, LocalDateTime.now(), "Scheduled plan change applied", actorUserId, null);
+        recordPlanHistory(saved, oldPlan, newPlan, Instant.now(), "Scheduled plan change applied", actorUserId, null);
         return saved;
     }
 
@@ -283,7 +283,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private void recordPlanHistory(TenantSubscriptionEntity subscription,
                                    SubscriptionPlan oldPlan,
                                    SubscriptionPlan newPlan,
-                                   LocalDateTime effectiveAt,
+                                   Instant effectiveAt,
                                    String reason,
                                    UUID actorUserId,
                                    String providerEventId) {
@@ -292,7 +292,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .tenantSubscriptionId(subscription.getId())
                 .oldPlan(oldPlan)
                 .newPlan(newPlan)
-                .effectiveAt(effectiveAt != null ? effectiveAt : LocalDateTime.now())
+                .effectiveAt(effectiveAt != null ? effectiveAt : Instant.now())
                 .reason(reason)
                 .actorUserId(actorUserId)
                 .providerEventId(providerEventId)

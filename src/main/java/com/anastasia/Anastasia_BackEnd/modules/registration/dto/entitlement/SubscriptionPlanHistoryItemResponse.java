@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -17,7 +17,7 @@ public class SubscriptionPlanHistoryItemResponse {
     private UUID id;
     private SubscriptionPlan oldPlan;
     private SubscriptionPlan newPlan;
-    private LocalDateTime effectiveAt;
+    private Instant effectiveAt;
     private String reason;
     private UUID actorUserId;
 }
