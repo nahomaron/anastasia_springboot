@@ -5,6 +5,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.controller.AuthController;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ResetPasswordRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.OAuthLoginTicketService;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
@@ -31,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +46,10 @@ class AuthControllerUnitTest {
     private UserService userService;
     @Mock
     private RateLimiterConfig rateLimiterConfig;
+    @Mock
+    private OAuthLoginTicketService oauthLoginTicketService;
+    @Mock
+    private RefreshTokenCookieService refreshTokenCookieService;
 
     @InjectMocks
     private AuthController authController;
@@ -83,6 +90,7 @@ class AuthControllerUnitTest {
     @Test
     void login_shouldDelegateToAuthService() throws MessagingException {
         AuthenticationRequest request = new AuthenticationRequest("test@example.com", "secret");
+        HttpServletResponse httpResponse = mock(HttpServletResponse.class);
         AuthenticationResponse expected = AuthenticationResponse.builder()
                 .accessToken("access")
                 .refreshToken("refresh")
@@ -90,10 +98,13 @@ class AuthControllerUnitTest {
 
         when(authService.authenticate(request)).thenReturn(expected);
 
-        ResponseEntity<AuthenticationResponse> response = authController.login(request);
+        ResponseEntity<AuthenticationResponse> response = authController.login(request, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(expected);
+        assertThat(response.getBody()).isSameAs(expected);
+        assertThat(response.getBody().getAccessToken()).isEqualTo("access");
+        assertThat(response.getBody().getRefreshToken()).isNull();
+        verify(refreshTokenCookieService).addRefreshTokenCookie(httpResponse, "refresh");
     }
 
     @Test
@@ -101,15 +112,21 @@ class AuthControllerUnitTest {
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         HttpServletResponse httpResponse = mock(HttpServletResponse.class);
         Bucket bucket = mock(Bucket.class);
+        AuthenticationResponse expected = AuthenticationResponse.builder()
+                .accessToken("fresh-access")
+                .build();
 
         when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
         when(rateLimiterConfig.getBucket("127.0.0.1")).thenReturn(bucket);
         when(bucket.tryConsume(1)).thenReturn(true);
+        when(authService.refreshToken(httpRequest)).thenReturn(expected);
 
-        ResponseEntity<Map<String, String>> response = authController.refreshToken(httpRequest, httpResponse);
+        ResponseEntity<?> response = authController.refreshToken(httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(authService).refreshToken(httpRequest, httpResponse);
+        assertThat(response.getBody()).isEqualTo(expected);
+        verify(authService).refreshToken(httpRequest);
+        verify(refreshTokenCookieService, never()).addRefreshTokenCookie(any(), any());
     }
 
     @Test
@@ -122,26 +139,29 @@ class AuthControllerUnitTest {
         when(rateLimiterConfig.getBucket("127.0.0.1")).thenReturn(bucket);
         when(bucket.tryConsume(1)).thenReturn(false);
 
-        ResponseEntity<Map<String, String>> response = authController.refreshToken(httpRequest, httpResponse);
+        ResponseEntity<?> response = authController.refreshToken(httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
-        assertThat(response.getBody()).containsEntry("message", "Too many requests, try again later");
-        verify(authService, org.mockito.Mockito.never()).refreshToken(any(), any());
+        assertThat(response.getBody()).isEqualTo(Map.of("message", "Too many requests, try again later"));
+        verify(authService, never()).refreshToken(any());
     }
 
     @Test
     void confirm_shouldActivateAccount() {
+        HttpServletResponse httpResponse = mock(HttpServletResponse.class);
         AuthenticationResponse expected = AuthenticationResponse.builder()
                 .accessToken("access")
                 .refreshToken("refresh")
                 .build();
         when(authService.activateAccount("token-123")).thenReturn(expected);
 
-        ResponseEntity<?> response = authController.confirm("token-123");
+        ResponseEntity<?> response = authController.confirm("token-123", httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expected);
+        assertThat(expected.getRefreshToken()).isNull();
         verify(authService).activateAccount("token-123");
+        verify(refreshTokenCookieService).addRefreshTokenCookie(httpResponse, "refresh");
     }
 
     @Test

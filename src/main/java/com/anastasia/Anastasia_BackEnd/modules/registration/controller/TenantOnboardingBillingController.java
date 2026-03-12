@@ -3,8 +3,10 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.onboarding.OnboardingSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeReadinessService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantOnboardingBillingService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class TenantOnboardingBillingController {
 
     private final TenantOnboardingBillingService onboardingBillingService;
     private final StripeReadinessService stripeReadinessService;
+    private final RefreshTokenCookieService refreshTokenCookieService;
 
     @PostMapping("/sessions")
     public ResponseEntity<OnboardingSessionResponse> createOnboardingSession(
@@ -72,9 +75,15 @@ public class TenantOnboardingBillingController {
 
     @PostMapping("/sessions/{sessionId}/auto-login")
     public ResponseEntity<AuthenticationResponse> autoLogin(
-            @PathVariable UUID sessionId
+            @PathVariable UUID sessionId,
+            HttpServletResponse response
     ) {
-        AuthenticationResponse response = onboardingBillingService.autoLogin(sessionId);
-        return ResponseEntity.ok(response);
+        AuthenticationResponse authResponse = onboardingBillingService.autoLogin(sessionId);
+        String refreshToken = authResponse.getRefreshToken();
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenCookieService.addRefreshTokenCookie(response, refreshToken);
+            authResponse.setRefreshToken(null);
+        }
+        return ResponseEntity.ok(authResponse);
     }
 }

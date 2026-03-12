@@ -4,8 +4,8 @@ import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
@@ -14,18 +14,18 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.LogoutService;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RoleService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,12 +35,10 @@ import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -61,9 +59,7 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
     @Autowired private TokenRepository tokenRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private RoleRepository roleRepository;
-    @Autowired private AvatarRepository avatarRepository;
-    @Autowired private ObjectMapper objectMapper;
-
+    @Autowired private ImageAssetRepository avatarRepository;
     @MockitoBean private EmailNotificationService emailNotificationService;
     @Captor private ArgumentCaptor<Map<String, Object>> emailTemplateCaptor;
 
@@ -110,17 +106,14 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
 
         // Refresh token lifecycle
         MockHttpServletRequest refreshRequest = new MockHttpServletRequest();
-        refreshRequest.addHeader("Authorization", "Bearer " + loginResponse.getRefreshToken());
-        MockHttpServletResponse refreshResponse = new MockHttpServletResponse();
+        refreshRequest.setCookies(new jakarta.servlet.http.Cookie(
+                RefreshTokenCookieService.REFRESH_TOKEN_COOKIE_NAME,
+                loginResponse.getRefreshToken()
+        ));
 
-        authService.refreshToken(refreshRequest, refreshResponse);
-
-        AuthenticationResponse refreshed = objectMapper.readValue(
-                refreshResponse.getContentAsString(StandardCharsets.UTF_8),
-                AuthenticationResponse.class
-        );
+        AuthenticationResponse refreshed = authService.refreshToken(refreshRequest);
         assertThat(refreshed.getAccessToken()).isNotBlank();
-        assertThat(refreshed.getRefreshToken()).isEqualTo(loginResponse.getRefreshToken());
+        assertThat(refreshed.getRefreshToken()).isNull();
 
         Token storedAccessToken = tokenRepository.findTopByTokenOrderByIdDesc(loginResponse.getAccessToken())
                 .orElseThrow(() -> new AssertionError("Access token not found"));
@@ -128,7 +121,12 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
         MockHttpServletRequest logoutRequest = new MockHttpServletRequest();
         logoutRequest.addHeader("Authorization", "Bearer " + loginResponse.getAccessToken());
 
-        logoutService.logout(logoutRequest, new MockHttpServletResponse(), null);
+        logoutRequest.setCookies(new jakarta.servlet.http.Cookie(
+                RefreshTokenCookieService.REFRESH_TOKEN_COOKIE_NAME,
+                loginResponse.getRefreshToken()
+        ));
+
+        logoutService.logout(logoutRequest, new org.springframework.mock.web.MockHttpServletResponse(), null);
 
         Token revokedAccessToken = tokenRepository.findById(storedAccessToken.getId()).orElseThrow();
         assertThat(revokedAccessToken.isExpired()).isTrue();
@@ -222,11 +220,11 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
 
         // Avatar update uses SecurityContext
         authenticate(updatedUserEntity);
-        userService.updateProfileAvatar(new AvatarDTO("https://cdn.example.com/avatar.png", "21KB"));
+        userService.updateProfileAvatar(new ImageAssetDTO("https://cdn.example.com/avatar.png", "21KB"));
 
         var storedAvatar = avatarRepository.findByOwnerId(updatedDetails.uuid())
                 .orElseThrow(() -> new AssertionError("Avatar not persisted"));
         assertThat(storedAvatar.getImageUrl()).isEqualTo("https://cdn.example.com/avatar.png");
-        assertThat(storedAvatar.getAvatarType()).isEqualTo(AvatarType.USER);
+        assertThat(storedAvatar.getImageAssetType()).isEqualTo(ImageAssetType.USER);
     }
 }

@@ -1,7 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.security;
 
 import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.common.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,11 +11,11 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class SecurityConfigTest {
@@ -64,8 +63,6 @@ class SecurityConfigTest {
 
     @Test
     void oauth2UserService_shouldReturnNonNullService() {
-        UserRepository userRepository = mock(UserRepository.class);
-
-        assertThat(securityConfig.oauth2UserService(userRepository)).isNotNull();
+        assertThat(securityConfig.oauth2UserService()).isInstanceOf(DefaultOAuth2UserService.class);
     }
 }

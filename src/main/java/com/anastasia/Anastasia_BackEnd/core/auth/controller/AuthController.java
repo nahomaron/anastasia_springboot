@@ -5,6 +5,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ResetPasswordRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.VerifyLoginTwoFactorRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.OAuthLoginTicketService;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
@@ -31,6 +33,8 @@ public class AuthController {
     Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
+    private final OAuthLoginTicketService oauthLoginTicketService;
+    private final RefreshTokenCookieService refreshTokenCookieService;
     private final UserService userService;
     private final RateLimiterConfig rateLimiterConfig;
 
@@ -63,15 +67,32 @@ public class AuthController {
      * @throws MessagingException If there's an issue sending the activation email.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody AuthenticationRequest request) throws MessagingException {
-        return ResponseEntity.ok(authService.authenticate(request));
+    public ResponseEntity<AuthenticationResponse> login(
+            @Valid @RequestBody AuthenticationRequest request,
+            HttpServletResponse response
+    ) throws MessagingException {
+        return ResponseEntity.ok(withRefreshTokenCookie(authService.authenticate(request), response));
+    }
+
+    @GetMapping("/google")
+    public void googleLogin(HttpServletResponse response) throws java.io.IOException {
+        response.sendRedirect("/oauth2/authorization/google");
+    }
+
+    @GetMapping("/oauth/google/exchange")
+    public ResponseEntity<AuthenticationResponse> exchangeGoogleLoginTicket(
+            @RequestParam String ticket,
+            HttpServletResponse response
+    ) {
+        return ResponseEntity.ok(withRefreshTokenCookie(oauthLoginTicketService.consume(ticket), response));
     }
 
     @PostMapping("/login/2fa/verify")
     public ResponseEntity<AuthenticationResponse> verifyTwoFactorLogin(
-            @Valid @RequestBody VerifyLoginTwoFactorRequest request
+            @Valid @RequestBody VerifyLoginTwoFactorRequest request,
+            HttpServletResponse response
     ) {
-        return ResponseEntity.ok(authService.verifyLoginTwoFactor(request));
+        return ResponseEntity.ok(withRefreshTokenCookie(authService.verifyLoginTwoFactor(request), response));
     }
 
     /**
@@ -83,13 +104,13 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @PostMapping("/refresh-token")
-    public ResponseEntity<Map<String, String>> refreshToken(HttpServletRequest request, HttpServletResponse response){
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response){
         String clientIP = request.getRemoteAddr();
         Bucket bucket = rateLimiterConfig.getBucket(clientIP);
 
         if(bucket.tryConsume(1)){
-            authService.refreshToken(request, response);
-            return ResponseEntity.ok().build();
+            AuthenticationResponse authResponse = authService.refreshToken(request);
+            return ResponseEntity.ok(withRefreshTokenCookie(authResponse, response));
         }else{
             System.out.println("Rate limit exceeded, returning 429");
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
@@ -105,12 +126,12 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @GetMapping("/activate-account")
-    public ResponseEntity<?> confirm(@RequestParam String token) {
+    public ResponseEntity<?> confirm(@RequestParam String token, HttpServletResponse response) {
         long start = System.currentTimeMillis();
         try {
-            AuthenticationResponse response = authService.activateAccount(token);
+            AuthenticationResponse authResponse = withRefreshTokenCookie(authService.activateAccount(token), response);
             log.info("Activation took: {} ms", System.currentTimeMillis() - start);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(authResponse);
         } catch (RuntimeException ex) {
             log.warn("Activation failed: {}", ex.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message(ex.getMessage()));
@@ -192,5 +213,17 @@ public class AuthController {
 
     private Map<String, String> message(String value) {
         return Map.of("message", value);
+    }
+
+    private AuthenticationResponse withRefreshTokenCookie(
+            AuthenticationResponse authResponse,
+            HttpServletResponse response
+    ) {
+        String refreshToken = authResponse.getRefreshToken();
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenCookieService.addRefreshTokenCookie(response, refreshToken);
+            authResponse.setRefreshToken(null);
+        }
+        return authResponse;
     }
 }

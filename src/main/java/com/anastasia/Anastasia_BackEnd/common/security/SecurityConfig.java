@@ -1,10 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.common.security;
 
 import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
-import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,8 +32,10 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -45,9 +46,12 @@ public class SecurityConfig {
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
+    @Value("${app.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200,http://192.168.1.79:4200}")
+    private String allowedOrigins;
     private final String[] WHITE_LIST_ENDPOINTS = {
             "/api/v1/auth/**",
             "/oauth2/**",
+            "/login/oauth2/**",
             "/api/v1/tenant/**",
             "/api/v1/onboarding/**",
             "/webhooks/stripe",
@@ -66,7 +70,12 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService,
+            OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
+            OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler
+    ) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -78,7 +87,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied")))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .anonymous(AbstractHttpConfigurer::disable) // anonymous users are users who are not authenticated but still have a user context. Disabling anonymous access ensures that only authenticated users can access the application.
                 .headers(headers -> headers
                                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
@@ -92,9 +101,15 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
-                        .logoutSuccessUrl("/")
                         .addLogoutHandler(logoutHandler)
-                        .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()))
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            SecurityContextHolder.clearContext();
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        }))
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+                        .successHandler(oauth2AuthenticationSuccessHandler)
+                        .failureHandler(oauth2AuthenticationFailureHandler))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -118,26 +133,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService(UserRepository userRepository) {
-        return userRequest -> {
-            OAuth2User oauthUser = new DefaultOAuth2UserService().loadUser(userRequest);
-
-            String googleId = oauthUser.getAttribute("sub");
-            String name = oauthUser.getAttribute("name");
-            String email = oauthUser.getAttribute("email");
-            String picture = oauthUser.getAttribute("picture");
-
-            UserEntity user = UserEntity.builder()
-                    .googleId(googleId)
-                    .fullName(name)
-                    .email(email)
-                    .build();
-
-            userRepository.findByGoogleId(googleId)
-                    .orElseGet(() -> userRepository.save(user));
-
-            return oauthUser;
-        };
+    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
+        return new DefaultOAuth2UserService();
     }
 
 
@@ -146,7 +143,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 1. Allow frontend origin
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .collect(Collectors.toList()));
 
         // 2. Allow specific HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
