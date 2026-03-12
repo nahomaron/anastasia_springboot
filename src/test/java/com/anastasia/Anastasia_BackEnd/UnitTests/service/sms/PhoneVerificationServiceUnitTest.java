@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
@@ -47,10 +47,10 @@ class PhoneVerificationServiceUnitTest {
                 .id(1L)
                 .phone(PHONE)
                 .otpHash("old-hash")
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
+                .expiresAt(Instant.now().plusSeconds(5 * 60L))
                 .build();
 
-        when(otpRepository.findValid(eq(PHONE), any(LocalDateTime.class))).thenReturn(Optional.of(existing));
+        when(otpRepository.findValid(eq(PHONE), any(Instant.class))).thenReturn(Optional.of(existing));
 
         phoneVerificationService.startVerification(PHONE);
 
@@ -80,12 +80,12 @@ class PhoneVerificationServiceUnitTest {
         OtpEntity saved = savedCaptor.getValue();
         assertThat(saved.getPhone()).isEqualTo(PHONE);
         assertThat(saved.getOtpHash()).isEqualTo(expectedHash);
-        assertThat(saved.getExpiresAt()).isAfter(LocalDateTime.now());
+        assertThat(saved.getExpiresAt()).isAfter(Instant.now());
     }
 
     @Test
     void startVerification_whenNoExistingOtp_shouldSkipDeletion() {
-        when(otpRepository.findValid(eq(PHONE), any(LocalDateTime.class))).thenReturn(Optional.empty());
+        when(otpRepository.findValid(eq(PHONE), any(Instant.class))).thenReturn(Optional.empty());
 
         phoneVerificationService.startVerification(PHONE);
 
@@ -101,10 +101,10 @@ class PhoneVerificationServiceUnitTest {
         OtpEntity entity = OtpEntity.builder()
                 .phone(PHONE)
                 .otpHash(hash)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
+                .expiresAt(Instant.now().plusSeconds(5 * 60L))
                 .build();
 
-        when(otpRepository.findValid(eq(PHONE), any(LocalDateTime.class))).thenReturn(Optional.of(entity));
+        when(otpRepository.findValid(eq(PHONE), any(Instant.class))).thenReturn(Optional.of(entity));
 
         boolean result = phoneVerificationService.confirmOtp(PHONE, rawOtp);
 
@@ -119,10 +119,10 @@ class PhoneVerificationServiceUnitTest {
         OtpEntity entity = OtpEntity.builder()
                 .phone(PHONE)
                 .otpHash(hash)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
+                .expiresAt(Instant.now().plusSeconds(5 * 60L))
                 .build();
 
-        when(otpRepository.findValid(eq(PHONE), any(LocalDateTime.class))).thenReturn(Optional.of(entity));
+        when(otpRepository.findValid(eq(PHONE), any(Instant.class))).thenReturn(Optional.of(entity));
 
         boolean result = phoneVerificationService.confirmOtp(PHONE, rawOtp);
 
@@ -132,7 +132,7 @@ class PhoneVerificationServiceUnitTest {
 
     @Test
     void confirmOtp_whenNoActiveOtp_shouldReturnFalse() {
-        when(otpRepository.findValid(eq(PHONE), any(LocalDateTime.class))).thenReturn(Optional.empty());
+        when(otpRepository.findValid(eq(PHONE), any(Instant.class))).thenReturn(Optional.empty());
 
         boolean result = phoneVerificationService.confirmOtp(PHONE, "000000");
 

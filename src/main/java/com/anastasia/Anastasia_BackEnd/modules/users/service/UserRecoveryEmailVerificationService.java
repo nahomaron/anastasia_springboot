@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,6 +24,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class UserRecoveryEmailVerificationService {
 
     private static final int OTP_EXPIRY_MINUTES = 10;
+    private static final int MAX_ATTEMPTS = 5;
+    private static final int LOCKOUT_MINUTES = 10;
 
     private final UserRecoveryEmailVerificationCodeRepository repository;
     private final EmailTemplateService emailTemplateService;
@@ -34,13 +36,13 @@ public class UserRecoveryEmailVerificationService {
         String normalizedEmail = normalizeEmail(email);
         String code = String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));
         String hash = hash(code);
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         UserRecoveryEmailVerificationCodeEntity entity = repository.findByEmailIgnoreCase(normalizedEmail)
                 .orElseGet(UserRecoveryEmailVerificationCodeEntity::new);
         entity.setEmail(normalizedEmail);
         entity.setCodeHash(hash);
-        entity.setExpiresAt(now.plusMinutes(OTP_EXPIRY_MINUTES));
+        entity.setExpiresAt(now.plusSeconds(OTP_EXPIRY_MINUTES * 60L));
         entity.setVerifiedAt(null);
         entity.setAttemptCount(0);
         repository.save(entity);
@@ -70,7 +72,14 @@ public class UserRecoveryEmailVerificationService {
                         "No verification code found for this recovery email."
                 )));
 
-        if (entity.getExpiresAt() == null || entity.getExpiresAt().isBefore(LocalDateTime.now())) {
+        Instant now = Instant.now();
+        if (entity.getBlockedUntil() != null && entity.getBlockedUntil().isAfter(now)) {
+            throw new IllegalStateException(messageService.get(
+                    "auth.verificationCode.locked",
+                    "Too many invalid attempts. Please try again later."
+            ));
+        }
+        if (entity.getExpiresAt() == null || entity.getExpiresAt().isBefore(now)) {
             throw new IllegalStateException(messageService.get(
                     "auth.verificationCode.expired",
                     "Verification code has expired. Please request a new one."
@@ -78,13 +87,18 @@ public class UserRecoveryEmailVerificationService {
         }
 
         entity.setAttemptCount(entity.getAttemptCount() + 1);
+        entity.setLastAttemptAt(now);
         boolean valid = hash(normalizedCode).equals(entity.getCodeHash());
         if (!valid) {
+            if (entity.getAttemptCount() >= MAX_ATTEMPTS) {
+                entity.setBlockedUntil(now.plusSeconds(LOCKOUT_MINUTES * 60L));
+            }
             repository.save(entity);
             return false;
         }
 
-        entity.setVerifiedAt(LocalDateTime.now());
+        entity.setVerifiedAt(now);
+        entity.setBlockedUntil(null);
         repository.save(entity);
         return true;
     }

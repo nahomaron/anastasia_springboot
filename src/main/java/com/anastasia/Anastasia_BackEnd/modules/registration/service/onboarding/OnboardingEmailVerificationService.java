@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
 public class OnboardingEmailVerificationService {
 
     private static final int OTP_EXPIRY_MINUTES = 10;
+    private static final int MAX_ATTEMPTS = 5;
+    private static final int LOCKOUT_MINUTES = 10;
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
@@ -41,13 +43,13 @@ public class OnboardingEmailVerificationService {
         String email = normalizeEmail(rawEmail);
         String code = String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));
         String hash = hash(code);
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         OnboardingEmailVerificationCodeEntity entity = repository.findByEmailIgnoreCase(email)
                 .orElseGet(OnboardingEmailVerificationCodeEntity::new);
         entity.setEmail(email);
         entity.setCodeHash(hash);
-        entity.setExpiresAt(now.plusMinutes(OTP_EXPIRY_MINUTES));
+        entity.setExpiresAt(now.plusSeconds(OTP_EXPIRY_MINUTES * 60L));
         entity.setVerifiedAt(null);
         entity.setAttemptCount(0);
         repository.save(entity);
@@ -66,7 +68,14 @@ public class OnboardingEmailVerificationService {
                         "No verification code found for this email."
                 )));
 
-        if (entity.getExpiresAt() == null || entity.getExpiresAt().isBefore(LocalDateTime.now())) {
+        Instant now = Instant.now();
+        if (entity.getBlockedUntil() != null && entity.getBlockedUntil().isAfter(now)) {
+            throw new IllegalStateException(messageService.get(
+                    "auth.verificationCode.locked",
+                    "Too many invalid attempts. Please try again later."
+            ));
+        }
+        if (entity.getExpiresAt() == null || entity.getExpiresAt().isBefore(now)) {
             throw new IllegalStateException(messageService.get(
                     "auth.verificationCode.expiredNewCode",
                     "Verification code has expired. Please request a new code."
@@ -74,13 +83,18 @@ public class OnboardingEmailVerificationService {
         }
 
         entity.setAttemptCount(entity.getAttemptCount() + 1);
+        entity.setLastAttemptAt(now);
         boolean valid = hash(code).equals(entity.getCodeHash());
         if (!valid) {
+            if (entity.getAttemptCount() >= MAX_ATTEMPTS) {
+                entity.setBlockedUntil(now.plusSeconds(LOCKOUT_MINUTES * 60L));
+            }
             repository.save(entity);
             return false;
         }
 
-        entity.setVerifiedAt(LocalDateTime.now());
+        entity.setVerifiedAt(now);
+        entity.setBlockedUntil(null);
         repository.save(entity);
         return true;
     }

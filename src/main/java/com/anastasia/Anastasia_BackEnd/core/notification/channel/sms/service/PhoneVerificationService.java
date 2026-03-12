@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -42,7 +42,7 @@ public class PhoneVerificationService {
         log.info("Phone verification started for: {}", PhoneNumberUtils.mask(normalizedPhone));
         String otp = String.format("%06d", random.nextInt(1_000_000));
         String hash = hash(otp);
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         otpRepository.findValid(normalizedPhone, now)
                 .ifPresent(otpRepository::delete); // revoke previous
@@ -50,7 +50,7 @@ public class PhoneVerificationService {
         otpRepository.save(OtpEntity.builder()
                 .phone(normalizedPhone)
                 .otpHash(hash)
-                .expiresAt(now.plusMinutes(OTP_EXPIRY_MINUTES))
+                .expiresAt(now.plusSeconds(OTP_EXPIRY_MINUTES * 60L))
                 .failedAttempts(0)
                 .blockedUntil(null)
                 .build());
@@ -75,7 +75,7 @@ public class PhoneVerificationService {
     @Transactional
     public boolean confirmOtp(String phone, String rawOtp) {
         String normalizedPhone = PhoneNumberUtils.normalize(phone);
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         String hash = hash(rawOtp);
 
         OtpEntity otpEntity = otpRepository.findValid(normalizedPhone, now).orElse(null);
@@ -94,8 +94,9 @@ public class PhoneVerificationService {
 
         int failed = otpEntity.getFailedAttempts() + 1;
         otpEntity.setFailedAttempts(failed);
+        otpEntity.setLastAttemptAt(now);
         if (failed >= MAX_FAILED_ATTEMPTS) {
-            otpEntity.setBlockedUntil(now.plusMinutes(LOCKOUT_MINUTES));
+            otpEntity.setBlockedUntil(now.plusSeconds(LOCKOUT_MINUTES * 60L));
         }
         otpRepository.save(otpEntity);
         return false;
@@ -112,7 +113,7 @@ public class PhoneVerificationService {
     @Scheduled(cron = "0 */30 * * * *")
     @Transactional
     public void cleanupExpiredOtps() {
-        int deleted = otpRepository.deleteExpired(LocalDateTime.now());
+        int deleted = otpRepository.deleteExpired(Instant.now());
         if (deleted > 0) {
             log.debug("Deleted {} expired OTP entries", deleted);
         }

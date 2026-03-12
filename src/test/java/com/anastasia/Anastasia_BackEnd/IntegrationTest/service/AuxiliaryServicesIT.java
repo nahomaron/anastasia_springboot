@@ -1,14 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.service;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.AvatarRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
-import com.anastasia.Anastasia_BackEnd.modules.registration.service.AvatarService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.ImageAssetService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.TestSupport.TestSmsService;
 import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
@@ -30,8 +30,8 @@ class AuxiliaryServicesIT extends ServiceIntegrationTestBase {
     @Autowired private PhoneVerificationService phoneVerificationService;
     @Autowired private TestSmsService testSmsService;
     @Autowired private OtpRepository otpRepository;
-    @Autowired private AvatarService avatarService;
-    @Autowired private AvatarRepository avatarRepository;
+    @Autowired private ImageAssetService imageAssetService;
+    @Autowired private ImageAssetRepository imageAssetRepository;
 
     private UserEntity user;
 
@@ -56,7 +56,7 @@ class AuxiliaryServicesIT extends ServiceIntegrationTestBase {
 
         boolean valid = phoneVerificationService.confirmOtp(phone, issuedOtp);
         assertThat(valid).isTrue();
-        assertThat(otpRepository.findValid(phone, java.time.LocalDateTime.now())).isEmpty();
+        assertThat(otpRepository.findValid(phone, java.time.Instant.now())).isEmpty();
 
         phoneVerificationService.resendOtp(phone);
         String resentOtp = testSmsService.getLastOtpForPhone(phone)
@@ -65,20 +65,20 @@ class AuxiliaryServicesIT extends ServiceIntegrationTestBase {
     }
 
     @Test
-    void avatarService_returnsPresignedUrlAndRetrievesAvatar() {
-        var presigned = avatarService.requestPresignedUrl("profile.png");
-        assertThat(presigned.getObjectKey()).startsWith("test-avatars/");
+    void imageAssetService_returnsPresignedUrlAndRetrievesAvatar() {
+        var presigned = imageAssetService.requestPresignedUrl("profile.png");
+        assertThat(presigned.getObjectKey()).startsWith("test-imageAssets/");
         assertThat(presigned.getUploadUrl()).contains("mock-presigned-url");
 
-        AvatarEntity directAvatar = AvatarEntity.builder()
+        ImageAssetEntity directAvatar = ImageAssetEntity.builder()
                 .ownerId(user.getUuid())
-                .avatarType(AvatarType.USER)
+                .imageAssetType(ImageAssetType.USER)
                 .imageUrl("https://cdn.example.com/avatar.png")
                 .imageSize("15KB")
                 .build();
-        avatarRepository.save(directAvatar);
+        imageAssetRepository.save(directAvatar);
 
-        AvatarDTO fetched = avatarService.getAvatar("USER", user.getUuid());
+        ImageAssetDTO fetched = imageAssetService.getImageAsset("USER", user.getUuid());
         assertThat(fetched.getImageUrl()).isEqualTo("https://cdn.example.com/avatar.png");
         assertThat(fetched.getImageSize()).isEqualTo("15KB");
     }
