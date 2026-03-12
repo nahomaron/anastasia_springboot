@@ -3,11 +3,14 @@ package com.anastasia.Anastasia_BackEnd.modules.calendar.service;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarEntryRequest;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarEntryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarRecurrenceRequest;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.OccurrenceOverrideRequest;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarCategory;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryAudienceEntity;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryEntity;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntrySourceType;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryStatus;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarOccurrenceOverrideEntity;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarRecurrenceEntity;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarVisibility;
@@ -22,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.LocalDate;
@@ -41,7 +45,7 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
 
     @Override
     @Transactional
-    public CalendarEntryEntity createEntry(CalendarEntryRequest request, UUID ownerUserId) {
+    public CalendarEntryResponse createEntry(CalendarEntryRequest request, UUID ownerUserId) {
         validateRequest(request);
         ChurchEntity church = resolveChurch();
         UserEntity owner = resolveUser(ownerUserId);
@@ -59,18 +63,21 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
                 .timezone(request.timezone())
                 .allDay(request.allDay())
                 .visibility(request.visibility())
+                .status(CalendarEntryStatus.SCHEDULED)
+                .statusChangedAt(Instant.now())
+                .sourceEntityType(CalendarEntrySourceType.MANUAL)
                 .categories(normalizeCategories(request.categories()))
                 .build();
 
         applyRecurrence(entry, request.recurrence());
         applyAudience(entry, request.visibility(), request.audienceUserIds(), request.audienceGroupIds());
 
-        return entryRepository.save(entry);
+        return toResponse(entryRepository.save(entry));
     }
 
     @Override
     @Transactional
-    public CalendarEntryEntity updateEntry(UUID entryId, CalendarEntryRequest request, UUID ownerUserId) {
+    public CalendarEntryResponse updateEntry(UUID entryId, CalendarEntryRequest request, UUID ownerUserId) {
         validateRequest(request);
         CalendarEntryEntity entry = resolveEntry(entryId);
         ensureTenant(entry);
@@ -86,11 +93,17 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
         entry.setVisibility(request.visibility());
         entry.setCategories(normalizeCategories(request.categories()));
         entry.setOwnerUser(resolveUser(ownerUserId));
+        if (entry.getStatus() == null) {
+            entry.setStatus(CalendarEntryStatus.SCHEDULED);
+        }
+        if (entry.getSourceEntityType() == null) {
+            entry.setSourceEntityType(CalendarEntrySourceType.MANUAL);
+        }
 
         applyRecurrence(entry, request.recurrence());
         applyAudience(entry, request.visibility(), request.audienceUserIds(), request.audienceGroupIds());
 
-        return entryRepository.save(entry);
+        return toResponse(entryRepository.save(entry));
     }
 
     @Override
@@ -128,7 +141,7 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
 
     @Override
     @Transactional
-    public CalendarEntryEntity splitSeries(
+    public CalendarEntryResponse splitSeries(
             UUID entryId,
             LocalDate occurrenceDate,
             CalendarEntryRequest newSeriesRequest,
@@ -178,6 +191,7 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
             throw new IllegalArgumentException("endAtUtc must be after startAtUtc");
         }
         ZoneId.of(request.timezone());
+        validateRecurrence(request);
     }
 
     private ChurchEntity resolveChurch() {
@@ -210,8 +224,13 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
         if (userId == null) {
             throw new IllegalArgumentException("User ID is required");
         }
-        return userRepository.findById(userId)
+        UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        UUID tenantId = resolveTenantId();
+        if (!tenantId.equals(user.getTenantId())) {
+            throw new IllegalStateException("User does not belong to current tenant");
+        }
+        return user;
     }
 
     private Set<CalendarCategory> normalizeCategories(Set<CalendarCategory> categories) {
@@ -255,9 +274,16 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
 
         Set<UUID> userIds = audienceUserIds == null ? Set.of() : audienceUserIds;
         Set<Long> groupIds = audienceGroupIds == null ? Set.of() : audienceGroupIds;
+        if (userIds.isEmpty() && groupIds.isEmpty()) {
+            throw new IllegalArgumentException("Custom visibility requires at least one audience user or group");
+        }
+        UUID tenantId = resolveTenantId();
 
         if (!userIds.isEmpty()) {
             userRepository.findAllById(userIds).forEach(user -> {
+                if (!tenantId.equals(user.getTenantId())) {
+                    throw new IllegalStateException("Audience user does not belong to current tenant");
+                }
                 CalendarEntryAudienceEntity audience = CalendarEntryAudienceEntity.builder()
                         .entry(entry)
                         .user(user)
@@ -268,12 +294,62 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
 
         if (!groupIds.isEmpty()) {
             groupRepository.findAllById(groupIds).forEach(group -> {
+                if (!tenantId.equals(group.getTenantId())) {
+                    throw new IllegalStateException("Audience group does not belong to current tenant");
+                }
                 CalendarEntryAudienceEntity audience = CalendarEntryAudienceEntity.builder()
                         .entry(entry)
                         .group(group)
                         .build();
                 entry.getAudiences().add(audience);
             });
+        }
+    }
+
+    private CalendarEntryResponse toResponse(CalendarEntryEntity entry) {
+        return new CalendarEntryResponse(
+                entry.getId(),
+                entry.getType(),
+                entry.getTitle(),
+                entry.getDescription(),
+                entry.getCalendarSystem(),
+                entry.getStartAtUtc(),
+                entry.getEndAtUtc(),
+                entry.getTimezone(),
+                entry.isAllDay(),
+                entry.getVisibility(),
+                entry.getStatus(),
+                entry.getSourceEntityType(),
+                entry.getSourceEntityId(),
+                normalizeCategories(entry.getCategories()),
+                entry.getOwnerUserId()
+        );
+    }
+
+    private void validateRecurrence(CalendarEntryRequest request) {
+        CalendarRecurrenceRequest recurrence = request.recurrence();
+        if (recurrence == null || recurrence.frequency() == null || recurrence.frequency() == RecurrenceFrequency.NONE) {
+            return;
+        }
+        if (recurrence.interval() != null && recurrence.interval() < 1) {
+            throw new IllegalArgumentException("recurrence interval must be at least 1");
+        }
+        if (recurrence.count() != null && recurrence.count() < 1) {
+            throw new IllegalArgumentException("recurrence count must be at least 1");
+        }
+        if (recurrence.until() != null && recurrence.until().isBefore(request.startAtUtc())) {
+            throw new IllegalArgumentException("recurrence until must be after startAtUtc");
+        }
+        if (recurrence.frequency() == RecurrenceFrequency.WEEKLY
+                && (recurrence.byDay() == null || recurrence.byDay().isEmpty())) {
+            throw new IllegalArgumentException("weekly recurrence requires at least one weekday");
+        }
+        if (recurrence.byMonth() != null && recurrence.byMonth().stream().anyMatch(month -> month == null || month < 1 || month > 12)) {
+            throw new IllegalArgumentException("recurrence byMonth values must be between 1 and 12");
+        }
+        if (recurrence.byMonthDay() != null
+                && recurrence.byMonthDay().stream().anyMatch(day -> day == null || day < 1 || day > 31)) {
+            throw new IllegalArgumentException("recurrence byMonthDay values must be between 1 and 31");
         }
     }
 }

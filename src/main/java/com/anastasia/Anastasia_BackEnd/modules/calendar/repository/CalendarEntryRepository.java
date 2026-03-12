@@ -24,8 +24,13 @@ public interface CalendarEntryRepository extends JpaRepository<CalendarEntryEnti
         left join fetch a.group
         where e.tenantId = :tenantId
           and e.church.churchId = :churchId
-          and e.startAtUtc <= :rangeEnd
-          and (e.endAtUtc is null or e.endAtUtc >= :rangeStart)
+          and e.deletedAt is null
+          and e.status <> com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryStatus.ARCHIVED
+          and (
+                (r is null and e.startAtUtc <= :rangeEnd and (e.endAtUtc is null or e.endAtUtc >= :rangeStart))
+                or
+                (r is not null and e.startAtUtc <= :rangeEnd and (r.until is null or r.until >= :rangeStart))
+          )
     """)
     List<CalendarEntryEntity> findEntriesForRange(
             @Param("tenantId") UUID tenantId,
@@ -44,8 +49,13 @@ public interface CalendarEntryRepository extends JpaRepository<CalendarEntryEnti
         where e.tenantId = :tenantId
           and e.church.churchId = :churchId
           and e.type in :types
-          and e.startAtUtc <= :rangeEnd
-          and (e.endAtUtc is null or e.endAtUtc >= :rangeStart)
+          and e.deletedAt is null
+          and e.status <> com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryStatus.ARCHIVED
+          and (
+                (r is null and e.startAtUtc <= :rangeEnd and (e.endAtUtc is null or e.endAtUtc >= :rangeStart))
+                or
+                (r is not null and e.startAtUtc <= :rangeEnd and (r.until is null or r.until >= :rangeStart))
+          )
     """)
     List<CalendarEntryEntity> findEntriesForRangeAndTypes(
             @Param("tenantId") UUID tenantId,

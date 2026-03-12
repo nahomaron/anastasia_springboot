@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarOccurrenceRe
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarCategory;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryAudienceEntity;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryEntity;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryStatus;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarOccurrenceOverrideEntity;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarRecurrenceEntity;
@@ -47,6 +48,7 @@ import java.util.UUID;
 public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService {
 
     private static final int MAX_OCCURRENCES_PER_ENTRY = 5000;
+    private static final long MAX_RANGE_DAYS = 366;
 
     private final CalendarEntryRepository entryRepository;
     private final ChurchRepository churchRepository;
@@ -66,6 +68,9 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
         }
         if (rangeEnd.isBefore(rangeStart)) {
             throw new IllegalArgumentException("rangeEnd must be after rangeStart");
+        }
+        if (Duration.between(rangeStart, rangeEnd).toDays() > MAX_RANGE_DAYS) {
+            throw new IllegalArgumentException("Calendar occurrence range cannot exceed 366 days");
         }
         if (userId == null) {
             throw new IllegalArgumentException("User ID is required to resolve calendar visibility");
@@ -237,7 +242,8 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
 
         for (LocalDate date : dates) {
             CalendarOccurrenceOverrideEntity override = overrideMap.get(date);
-            boolean cancelled = override != null && override.isCancelled();
+            boolean cancelled = entry.getStatus() == CalendarEntryStatus.CANCELED
+                    || (override != null && override.isCancelled());
 
             String title = override != null && override.getTitleOverride() != null
                     ? override.getTitleOverride()
@@ -265,6 +271,9 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
                     entry.getTimezone(),
                     entry.isAllDay(),
                     entry.getVisibility(),
+                    entry.getStatus(),
+                    entry.getSourceEntityType(),
+                    entry.getSourceEntityId(),
                     date,
                     cancelled,
                     new HashSet<>(entry.getCategories()),

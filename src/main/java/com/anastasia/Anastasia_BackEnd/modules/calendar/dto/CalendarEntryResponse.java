@@ -8,11 +8,10 @@ import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarSystem;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarVisibility;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
-public record CalendarOccurrenceResponse(
+public record CalendarEntryResponse(
         UUID entryId,
         CalendarEntryType type,
         String title,
@@ -26,8 +25,6 @@ public record CalendarOccurrenceResponse(
         CalendarEntryStatus status,
         CalendarEntrySourceType sourceEntityType,
         UUID sourceEntityId,
-        LocalDate occurrenceDate,
-        boolean cancelled,
         Set<CalendarCategory> categories,
         UUID ownerUserId
 ) {}

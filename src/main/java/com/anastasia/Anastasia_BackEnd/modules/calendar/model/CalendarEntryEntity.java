@@ -21,6 +21,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -99,6 +100,28 @@ public class CalendarEntryEntity extends Auditable {
     @Column(nullable = false)
     private CalendarVisibility visibility;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 24)
+    @Builder.Default
+    private CalendarEntryStatus status = CalendarEntryStatus.SCHEDULED;
+
+    @Column(name = "canceled_at")
+    private Instant canceledAt;
+
+    @Column(name = "status_changed_at")
+    private Instant statusChangedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_entity_type", length = 24)
+    @Builder.Default
+    private CalendarEntrySourceType sourceEntityType = CalendarEntrySourceType.MANUAL;
+
+    @Column(name = "source_entity_id")
+    private UUID sourceEntityId;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "calendar_entry_categories", joinColumns = @JoinColumn(name = "entry_id"))
     @Enumerated(EnumType.STRING)
@@ -116,4 +139,8 @@ public class CalendarEntryEntity extends Auditable {
     @Builder.Default
     @OneToMany(mappedBy = "entry", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<CalendarEntryAudienceEntity> audiences = new HashSet<>();
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 }
