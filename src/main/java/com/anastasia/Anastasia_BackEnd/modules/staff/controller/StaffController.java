@@ -25,7 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/staff")
-@PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+@PreAuthorize(
+        "hasAnyRole('OWNER', 'PRIMARY_ADMIN') or " +
+        "(hasRole('ADMIN') and @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'manage_staff'))"
+)
 public class StaffController {
 
     private final StaffService staffService;

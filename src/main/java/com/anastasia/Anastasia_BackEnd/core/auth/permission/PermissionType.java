@@ -89,6 +89,7 @@ public enum PermissionType {
     STREAM_SERVICES("stream_services", "Can manage live-streaming of worship services"),
 
     // Volunteer & Staff Management
+    MANAGE_STAFF("manage_staff", "Can create, update, and manage staff accounts"),
     VIEW_VOLUNTEERS("view_volunteers", "Can view volunteer lists"),
     MANAGE_VOLUNTEERS("manage_volunteers", "Can assign and remove volunteers"),
     SCHEDULE_VOLUNTEERS("schedule_volunteers", "Can schedule volunteer tasks"),
