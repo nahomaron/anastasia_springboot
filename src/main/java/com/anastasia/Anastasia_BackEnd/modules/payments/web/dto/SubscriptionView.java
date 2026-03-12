@@ -17,7 +17,13 @@ public class SubscriptionView {
     private UUID userId;
     private String userEmail;
     private String fundId;
+    private String provider;
+    private String providerSubscriptionReference;
+    private String providerCheckoutReference;
     private Instant createdAt;
+    private Instant activatedAt;
+    private Instant canceledAt;
+    private Instant statusChangedAt;
 
     public static SubscriptionView fromEntity(PaymentSubscription s) {
         var v = new SubscriptionView();
@@ -30,7 +36,13 @@ public class SubscriptionView {
         v.setUserId(s.getUserId());
         v.setUserEmail(s.getUserEmail());
         v.setFundId(s.getFundId());
+        v.setProvider(s.getProvider());
+        v.setProviderSubscriptionReference(s.getProviderSubscriptionReference());
+        v.setProviderCheckoutReference(s.getProviderCheckoutReference());
         v.setCreatedAt(s.getCreatedAt());
+        v.setActivatedAt(s.getActivatedAt());
+        v.setCanceledAt(s.getCanceledAt());
+        v.setStatusChangedAt(s.getStatusChangedAt());
         return v;
     }
 }

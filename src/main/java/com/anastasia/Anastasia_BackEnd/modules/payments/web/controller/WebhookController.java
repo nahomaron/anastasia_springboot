@@ -94,7 +94,10 @@ public class WebhookController {
                 if (session.getSubscription() != null) {
                     subscriptionHandler.handleSubscriptionActivated(
                             UUID.fromString(subscriptionId),
-                            session.getSubscription());
+                            session.getSubscription(),
+                            event.getId(),
+                            event.getType(),
+                            occurredAt);
                 } else {
                     log.debug("Subscription checkout completed without subscription id yet; awaiting subscription.created event");
                 }
@@ -174,7 +177,10 @@ public class WebhookController {
             }
             subscriptionHandler.handleSubscriptionActivated(
                     UUID.fromString(metadata.get("subscriptionId")),
-                    subscription.getId());
+                    subscription.getId(),
+                    event.getId(),
+                    event.getType(),
+                    occurredAt);
         }
     }
 
@@ -197,7 +203,11 @@ public class WebhookController {
                 log.warn("Subscription canceled event missing subscriptionId metadata: {}", subscription.getId());
                 return;
             }
-            subscriptionHandler.handleSubscriptionCanceled(UUID.fromString(metadata.get("subscriptionId")));
+            subscriptionHandler.handleSubscriptionCanceled(
+                    UUID.fromString(metadata.get("subscriptionId")),
+                    event.getId(),
+                    event.getType(),
+                    occurredAt);
         }
     }
 
@@ -218,7 +228,11 @@ public class WebhookController {
             if ("canceled".equalsIgnoreCase(subscription.getStatus())) {
                 Map<String, String> metadata = subscription.getMetadata();
                 if (metadata != null && metadata.containsKey("subscriptionId")) {
-                    subscriptionHandler.handleSubscriptionCanceled(UUID.fromString(metadata.get("subscriptionId")));
+                    subscriptionHandler.handleSubscriptionCanceled(
+                            UUID.fromString(metadata.get("subscriptionId")),
+                            event.getId(),
+                            event.getType(),
+                            occurredAt);
                 }
             }
         }

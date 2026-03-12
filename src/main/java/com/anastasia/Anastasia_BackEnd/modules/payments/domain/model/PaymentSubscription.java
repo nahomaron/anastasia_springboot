@@ -11,7 +11,12 @@ import java.util.UUID;
 @Entity
 @Table(name = "payment_subscriptions",
         uniqueConstraints = @UniqueConstraint(name = "uk_payment_subscriptions_tenant_idempotency",
-                columnNames = {"tenant_id", "idempotency_key"}))
+                columnNames = {"tenant_id", "idempotency_key"}),
+        indexes = {
+                @Index(name = "idx_payment_subscription_tenant_status_created", columnList = "tenant_id,status,created_at"),
+                @Index(name = "idx_payment_subscription_provider_subscription_ref", columnList = "provider_subscription_reference"),
+                @Index(name = "idx_payment_subscription_provider_checkout_ref", columnList = "provider_checkout_reference")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -43,15 +48,48 @@ public class PaymentSubscription {
     private String fundId;
 
     private String provider;
-    private String providerRef; // Stripe subscription id
-    private String checkoutSessionId;
+
+    @Column(name = "provider_subscription_reference")
+    private String providerSubscriptionReference;
+
+    @Column(name = "provider_checkout_reference")
+    private String providerCheckoutReference;
+
     private String checkoutUrl;
 
     @Column(name = "idempotency_key", nullable = false)
     private String idempotencyKey;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "status_changed_at")
+    private Instant statusChangedAt;
+
+    @Column(name = "status_reason", length = 512)
+    private String statusReason;
+
+    private Instant activatedAt;
+    private Instant canceledAt;
+    private Instant deactivatedAt;
+
+    @Column(name = "provider_event_id")
+    private String lastProviderEventId;
+
+    @Column(name = "provider_event_type")
+    private String lastProviderEventType;
+
+    @Column(name = "provider_event_received_at")
+    private Instant lastProviderEventReceivedAt;
+
+    private Instant deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     public static PaymentSubscription newPending(UUID tenantId,
                                                  PaymentPurpose purpose,
@@ -75,29 +113,83 @@ public class PaymentSubscription {
         subscription.idempotencyKey = idempotencyKey;
         subscription.createdAt = Instant.now();
         subscription.updatedAt = subscription.createdAt;
+        subscription.statusChangedAt = subscription.createdAt;
         return subscription;
     }
 
     public void attachCheckoutSession(String sessionId, String checkoutUrl) {
-        this.checkoutSessionId = sessionId;
+        if (sessionId == null || sessionId.isBlank()) {
+            throw new IllegalArgumentException("checkoutReference must be provided");
+        }
+        if (this.providerCheckoutReference != null && !this.providerCheckoutReference.equals(sessionId)) {
+            throw new IllegalStateException("Subscription checkout reference mismatch");
+        }
+        this.providerCheckoutReference = sessionId;
         this.checkoutUrl = checkoutUrl;
-        this.updatedAt = Instant.now();
+        touch();
     }
 
-    public void markActive(String providerRef) {
-        if (providerRef == null || providerRef.isBlank()) {
-            throw new IllegalArgumentException("providerRef must be provided");
+    public void markActive(String providerSubscriptionReference) {
+        if (providerSubscriptionReference == null || providerSubscriptionReference.isBlank()) {
+            throw new IllegalArgumentException("providerSubscriptionReference must be provided");
         }
-        if (this.providerRef != null && !this.providerRef.equals(providerRef)) {
+        if (this.providerSubscriptionReference != null && !this.providerSubscriptionReference.equals(providerSubscriptionReference)) {
             throw new IllegalStateException("Subscription provider reference mismatch");
         }
-        this.providerRef = providerRef;
-        this.status = SubscriptionStatus.ACTIVE;
+        this.providerSubscriptionReference = providerSubscriptionReference;
+        transitionTo(SubscriptionStatus.ACTIVE, null, Instant.now());
+        this.activatedAt = Instant.now();
+        this.deactivatedAt = null;
+    }
+
+    public void markCanceled(String reason) {
+        Instant now = Instant.now();
+        transitionTo(SubscriptionStatus.CANCELED, reason, now);
+        this.canceledAt = now;
+        this.deactivatedAt = now;
+    }
+
+    public void markInactive(String reason) {
+        Instant now = Instant.now();
+        transitionTo(SubscriptionStatus.INACTIVE, reason, now);
+        this.deactivatedAt = now;
+    }
+
+    public void recordProviderEvent(String eventId, String eventType, Instant receivedAt) {
+        if (eventId != null && !eventId.isBlank()) {
+            this.lastProviderEventId = eventId;
+        }
+        if (eventType != null && !eventType.isBlank()) {
+            this.lastProviderEventType = eventType;
+        }
+        this.lastProviderEventReceivedAt = receivedAt != null ? receivedAt : Instant.now();
+        touch();
+    }
+
+    private void transitionTo(SubscriptionStatus nextStatus, String reason, Instant occurredAt) {
+        this.status = nextStatus;
+        this.statusReason = reason != null && !reason.isBlank() ? reason.trim() : null;
+        this.statusChangedAt = occurredAt != null ? occurredAt : Instant.now();
         this.updatedAt = Instant.now();
     }
 
-    public void markCanceled() {
-        this.status = SubscriptionStatus.CANCELED;
+    private void touch() {
         this.updatedAt = Instant.now();
+    }
+
+    public String getProviderRef() {
+        return providerSubscriptionReference;
+    }
+
+    public void setProviderRef(String providerRef) {
+        this.providerSubscriptionReference = providerRef;
+    }
+
+    public String getCheckoutSessionId() {
+        return providerCheckoutReference;
+    }
+
+    public void setCheckoutSessionId(String checkoutSessionId) {
+        this.providerCheckoutReference = checkoutSessionId;
     }
 }

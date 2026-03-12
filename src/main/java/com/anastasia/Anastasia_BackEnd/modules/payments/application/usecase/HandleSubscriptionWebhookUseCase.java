@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -24,6 +25,15 @@ public class HandleSubscriptionWebhookUseCase {
 
     @Transactional
     public void handleSubscriptionActivated(UUID subscriptionId, String providerSubscriptionId) {
+        handleSubscriptionActivated(subscriptionId, providerSubscriptionId, null, null, Instant.now());
+    }
+
+    @Transactional
+    public void handleSubscriptionActivated(UUID subscriptionId,
+                                            String providerSubscriptionId,
+                                            String providerEventId,
+                                            String providerEventType,
+                                            Instant occurredAt) {
         var subscription = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get(
                         "payments.subscription.unknown",
@@ -39,21 +49,24 @@ public class HandleSubscriptionWebhookUseCase {
             ));
         }
 
-        boolean alreadyActive = subscription.getProviderRef() != null
-                && subscription.getProviderRef().equals(providerSubscriptionId)
+        boolean alreadyActive = subscription.getProviderSubscriptionReference() != null
+                && subscription.getProviderSubscriptionReference().equals(providerSubscriptionId)
                 && subscription.getStatus() == SubscriptionStatus.ACTIVE;
         if (alreadyActive) {
             log.debug("Subscription {} already active with provider ref {}", subscriptionId, providerSubscriptionId);
             return;
         }
 
+        subscription.recordProviderEvent(providerEventId, providerEventType, occurredAt);
         subscription.markActive(providerSubscriptionId);
         subscriptionRepository.save(subscription);
 
         Map<String, Object> payload = new java.util.HashMap<>();
         payload.put("subscriptionId", subscription.getId().toString());
-        payload.put("providerRef", subscription.getProviderRef());
+        payload.put("providerSubscriptionReference", subscription.getProviderSubscriptionReference());
         payload.put("status", subscription.getStatus().name());
+        payload.put("providerEventId", subscription.getLastProviderEventId());
+        payload.put("providerEventType", subscription.getLastProviderEventType());
         payload.put("memberId", subscription.getMemberId());
         payload.put("userId", subscription.getUserId() != null ? subscription.getUserId().toString() : null);
         payload.put("userEmail", subscription.getUserEmail());
@@ -69,6 +82,14 @@ public class HandleSubscriptionWebhookUseCase {
 
     @Transactional
     public void handleSubscriptionCanceled(UUID subscriptionId) {
+        handleSubscriptionCanceled(subscriptionId, null, null, Instant.now());
+    }
+
+    @Transactional
+    public void handleSubscriptionCanceled(UUID subscriptionId,
+                                           String providerEventId,
+                                           String providerEventType,
+                                           Instant occurredAt) {
         var subscription = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get(
                         "payments.subscription.unknown",
@@ -89,12 +110,15 @@ public class HandleSubscriptionWebhookUseCase {
             return;
         }
 
-        subscription.markCanceled();
+        subscription.recordProviderEvent(providerEventId, providerEventType, occurredAt);
+        subscription.markCanceled(providerEventType);
         subscriptionRepository.save(subscription);
 
         Map<String, Object> payload = new java.util.HashMap<>();
         payload.put("subscriptionId", subscription.getId().toString());
         payload.put("status", subscription.getStatus().name());
+        payload.put("providerEventId", subscription.getLastProviderEventId());
+        payload.put("providerEventType", subscription.getLastProviderEventType());
         payload.put("memberId", subscription.getMemberId());
         payload.put("userId", subscription.getUserId() != null ? subscription.getUserId().toString() : null);
         payload.put("userEmail", subscription.getUserEmail());
