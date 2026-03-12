@@ -29,9 +29,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,27 +61,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventEntity convertToEntity(EventDTO eventDTO) {
-        EventEntity entity = eventMapper.eventDTOToEntity(eventDTO);
-        if (entity != null) {
-            entity.setEndDate(eventDTO.getEndDate());
-        }
-        return entity;
+        return eventMapper.eventDTOToEntity(eventDTO);
     }
 
     @Override
     public EventDTO convertToDTO(EventEntity eventEntity) {
-        EventDTO dto = eventMapper.eventEntityToDTO(eventEntity);
-        if (dto != null) {
-            LocalDate resolvedEndDate = eventEntity.getEndDate();
-            if (resolvedEndDate == null && eventEntity.getEndAt() != null) {
-                resolvedEndDate = eventEntity.getEndAt().toLocalDate();
-            }
-            if (resolvedEndDate == null && eventEntity.getDate() != null && eventEntity.getEndTime() != null) {
-                resolvedEndDate = eventEntity.getDate();
-            }
-            dto.setEndDate(resolvedEndDate);
-        }
-        return dto;
+        return eventMapper.eventEntityToDTO(eventEntity);
     }
 
     @Override
@@ -331,49 +314,29 @@ public class EventServiceImpl implements EventService {
     private void normalizeDateTimes(EventEntity event) {
         LocalDateTime startAt = event.getStartAt();
         LocalDateTime endAt = event.getEndAt();
-        LocalDate startDate = event.getDate();
-        LocalDate endDate = event.getEndDate();
 
         if (event.isAllDay()) {
-            if (startDate == null && startAt != null) {
-                startDate = startAt.toLocalDate();
-            }
-            if (startDate == null) {
+            if (startAt == null) {
                 throw new IllegalArgumentException(messageService.get(
                         "events.start.required",
-                        "Either startAt or date + startTime is required"
+                        "startAt is required"
                 ));
             }
-            if (endDate == null) {
-                endDate = startDate;
+            if (endAt == null) {
+                endAt = startAt.plusDays(1);
             }
-            startAt = LocalDateTime.of(startDate, LocalTime.MIN);
-            endAt = LocalDateTime.of(endDate.plusDays(1), LocalTime.MIN);
+            startAt = startAt.toLocalDate().atStartOfDay();
+            endAt = endAt.toLocalDate().plusDays(1).atStartOfDay();
             event.setStartAt(startAt);
             event.setEndAt(endAt);
-            event.setDate(startDate);
-            event.setEndDate(endDate);
-            event.setStartTime(LocalTime.MIN);
-            event.setEndTime(LocalTime.MIDNIGHT);
             return;
         }
 
         if (startAt == null) {
-            if (startDate == null || event.getStartTime() == null) {
-                throw new IllegalArgumentException(messageService.get(
-                        "events.start.required",
-                        "Either startAt or date + startTime is required"
-                ));
-            }
-            startAt = LocalDateTime.of(startDate, event.getStartTime());
-            event.setStartAt(startAt);
-        }
-
-        if (endAt == null && event.getEndTime() != null) {
-            LocalDate baseDate = endDate != null ? endDate : (startDate != null ? startDate : startAt.toLocalDate());
-            LocalDateTime candidate = LocalDateTime.of(baseDate, event.getEndTime());
-            endAt = candidate;
-            event.setEndAt(endAt);
+            throw new IllegalArgumentException(messageService.get(
+                    "events.start.required",
+                    "startAt is required"
+            ));
         }
 
         if (endAt != null && !endAt.isAfter(startAt)) {
@@ -381,19 +344,6 @@ public class EventServiceImpl implements EventService {
                     "events.end.afterStart",
                     "Event end must be after start"
             ));
-        }
-
-        if (event.getDate() == null) {
-            event.setDate(startAt.toLocalDate());
-        }
-        if (event.getEndDate() == null && endAt != null) {
-            event.setEndDate(endAt.toLocalDate());
-        }
-        if (event.getStartTime() == null) {
-            event.setStartTime(startAt.toLocalTime());
-        }
-        if (event.getEndTime() == null && endAt != null) {
-            event.setEndTime(endAt.toLocalTime());
         }
     }
 
@@ -508,7 +458,7 @@ public class EventServiceImpl implements EventService {
         props.put("username", email);
         props.put("event_title", event.getTitle());
         props.put("event_location", event.getLocation());
-        props.put("event_date", event.getDate() != null ? event.getDate().toString() : "");
+        props.put("event_date", event.getStartAt() != null ? event.getStartAt().toLocalDate().toString() : "");
         props.put("event_start_at", event.getStartAt() != null ? event.getStartAt().toString() : "");
         props.put("message_content",
                 messageService.get(
