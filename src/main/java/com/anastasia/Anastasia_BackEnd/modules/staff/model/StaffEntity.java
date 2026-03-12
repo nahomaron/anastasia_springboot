@@ -26,8 +26,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -94,19 +94,19 @@ public class StaffEntity extends Auditable {
     private String notes;
 
     @Column(name = "invited_at")
-    private LocalDateTime invitedAt;
+    private Instant invitedAt;
 
     @Column(name = "invite_accepted_at")
-    private LocalDateTime inviteAcceptedAt;
+    private Instant inviteAcceptedAt;
 
     @Column(name = "first_login_at")
-    private LocalDateTime firstLoginAt;
+    private Instant firstLoginAt;
 
     @Column(name = "last_credential_reset_at")
-    private LocalDateTime lastCredentialResetAt;
+    private Instant lastCredentialResetAt;
 
     @Column(name = "deactivated_at")
-    private LocalDateTime deactivatedAt;
+    private Instant deactivatedAt;
 
     @Version
     @Column(nullable = false)

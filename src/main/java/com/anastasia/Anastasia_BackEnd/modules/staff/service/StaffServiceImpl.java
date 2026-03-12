@@ -112,8 +112,8 @@ public class StaffServiceImpl implements StaffService {
                 .endDate(request.endDate())
                 .reportsTo(manager)
                 .notes(normalizeText(request.notes()))
-                .invitedAt(LocalDateTime.now())
-                .lastCredentialResetAt(LocalDateTime.now())
+                .invitedAt(Instant.now())
+                .lastCredentialResetAt(Instant.now())
                 .build();
         staff = staffRepository.save(staff);
 
@@ -173,7 +173,7 @@ public class StaffServiceImpl implements StaffService {
             staff.setEmploymentStatus(request.employmentStatus());
             if (request.employmentStatus() == StaffEmploymentStatus.TERMINATED
                     || request.employmentStatus() == StaffEmploymentStatus.INACTIVE) {
-                staff.setDeactivatedAt(LocalDateTime.now());
+                staff.setDeactivatedAt(Instant.now());
                 staff.getUser().setStatus(UserStatus.DISABLED);
             } else {
                 staff.setDeactivatedAt(null);
@@ -214,7 +214,7 @@ public class StaffServiceImpl implements StaffService {
     public StaffResponse deactivate(Long staffId) {
         StaffEntity staff = requireStaffInTenant(staffId);
         staff.setEmploymentStatus(StaffEmploymentStatus.TERMINATED);
-        staff.setDeactivatedAt(LocalDateTime.now());
+        staff.setDeactivatedAt(Instant.now());
         staff.getUser().setStatus(UserStatus.DISABLED);
         userRepository.save(staff.getUser());
         staffRepository.save(staff);
@@ -234,7 +234,7 @@ public class StaffServiceImpl implements StaffService {
         user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);
 
-        staff.setLastCredentialResetAt(LocalDateTime.now());
+        staff.setLastCredentialResetAt(Instant.now());
         staffRepository.save(staff);
 
         sendTemporaryCredentialEmail(user, staff.getTenant(), staff, temporaryPassword);
@@ -262,11 +262,11 @@ public class StaffServiceImpl implements StaffService {
                 staff.getReportsTo() == null ? null : staff.getReportsTo().getUser().getFullName(),
                 staff.getNotes(),
                 staff.getUser().isMustChangePassword(),
-                staff.getInvitedAt(),
-                staff.getInviteAcceptedAt(),
-                staff.getFirstLoginAt(),
-                staff.getLastCredentialResetAt(),
-                staff.getDeactivatedAt(),
+                toLocalDateTime(staff.getInvitedAt()),
+                toLocalDateTime(staff.getInviteAcceptedAt()),
+                toLocalDateTime(staff.getFirstLoginAt()),
+                toLocalDateTime(staff.getLastCredentialResetAt()),
+                toLocalDateTime(staff.getDeactivatedAt()),
                 staff.getCreatedDate(),
                 staff.getLastModifiedDate()
         );
@@ -326,6 +326,10 @@ public class StaffServiceImpl implements StaffService {
         if (hireDate != null && endDate != null && endDate.isBefore(hireDate)) {
             throw new IllegalArgumentException(messageService.get("staff.dates.invalid", "End date cannot be earlier than hire date"));
         }
+    }
+
+    private LocalDateTime toLocalDateTime(Instant instant) {
+        return instant == null ? null : LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
     }
 
     private String generateUniqueStaffNumber() {

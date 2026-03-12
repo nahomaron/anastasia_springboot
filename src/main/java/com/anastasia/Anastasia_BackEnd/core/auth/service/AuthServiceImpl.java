@@ -327,7 +327,7 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
 
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        Instant now = Instant.now();
         boolean changed = false;
 
         if (staffProfile.getInviteAcceptedAt() == null) {
