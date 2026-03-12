@@ -1,5 +1,5 @@
 # ========= Stage 1: Build =========
-FROM eclipse-temurin:23-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 # Copy Maven wrapper and project files
@@ -12,7 +12,7 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # ========= Stage 2: Runtime =========
-FROM eclipse-temurin:23-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Copy only the final jar from the build stage
