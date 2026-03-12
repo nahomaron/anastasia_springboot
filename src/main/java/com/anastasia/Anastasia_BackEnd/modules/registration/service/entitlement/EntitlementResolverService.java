@@ -13,7 +13,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSub
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +32,7 @@ public class EntitlementResolverService {
     private final PlanEntitlementCatalog catalog;
 
     public EntitlementSnapshotResponse resolve(UUID tenantId) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         SubscriptionPlan basePlan = tenantSubscriptionRepository.findByTenantId(tenantId)
                 .map(subscription -> subscription.getPlan())
                 .orElse(SubscriptionPlan.FREE);
@@ -107,16 +107,11 @@ public class EntitlementResolverService {
         return resolve(tenantId).getLimits().getOrDefault(PlanEntitlementCatalog.LIMIT_ACTIVE_MEMBERS, 0);
     }
 
-    private boolean isPromoEffective(PromoRedemptionEntity redemption, LocalDateTime now) {
-        if (!redemption.isActive() || redemption.getRevokedAt() != null) {
-            return false;
-        }
-        if (redemption.getExpiresAt() != null && !redemption.getExpiresAt().isAfter(now)) {
-            return false;
-        }
-        return redemption.getPromoCode() != null
-                && redemption.getPromoCode().isActive()
-                && (redemption.getPromoCode().getExpiresAt() == null || redemption.getPromoCode().getExpiresAt().isAfter(now));
+    private boolean isPromoEffective(PromoRedemptionEntity redemption, Instant now) {
+        return redemption != null
+                && redemption.isEffective(now)
+                && redemption.getPromoCode() != null
+                && redemption.getPromoCode().isRedeemableAt(now);
     }
 
     private Integer max(Integer left, Integer right) {

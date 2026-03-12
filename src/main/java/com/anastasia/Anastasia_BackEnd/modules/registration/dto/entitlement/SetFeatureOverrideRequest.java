@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -18,6 +18,6 @@ public class SetFeatureOverrideRequest {
     private TenantFeature feature;
     @NotNull
     private Boolean enabled;
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
     private String reason;
 }

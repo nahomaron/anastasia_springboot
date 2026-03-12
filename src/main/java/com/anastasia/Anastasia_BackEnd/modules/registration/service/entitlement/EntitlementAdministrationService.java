@@ -32,7 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -104,7 +104,7 @@ public class EntitlementAdministrationService {
                 .grantedPlan(planEntitlementCatalog.normalizePlan(request.getPlan()))
                 .source(GrantSource.MANUAL)
                 .activeMemberLimitOverride(request.getActiveMemberLimitOverride())
-                .startsAt(LocalDateTime.now())
+                .startsAt(Instant.now())
                 .expiresAt(request.getExpiresAt())
                 .reason(request.getReason())
                 .createdByUserId(actorUserId)
@@ -131,7 +131,8 @@ public class EntitlementAdministrationService {
             ));
         }
         grant.setActive(false);
-        grant.setExpiresAt(LocalDateTime.now());
+        grant.setRevokedAt(Instant.now());
+        grant.setExpiresAt(Instant.now());
         grant.setReason(reason);
         grant.setUpdatedByUserId(actorUserId);
         tenantPlanGrantRepository.save(grant);
@@ -150,7 +151,7 @@ public class EntitlementAdministrationService {
                 .enabled(Boolean.TRUE.equals(request.getEnabled()))
                 .source(GrantSource.MANUAL)
                 .active(true)
-                .startsAt(LocalDateTime.now())
+                .startsAt(Instant.now())
                 .expiresAt(request.getExpiresAt())
                 .reason(request.getReason())
                 .createdByUserId(actorUserId)
@@ -177,7 +178,8 @@ public class EntitlementAdministrationService {
             ));
         }
         override.setActive(false);
-        override.setExpiresAt(LocalDateTime.now());
+        override.setRevokedAt(Instant.now());
+        override.setExpiresAt(Instant.now());
         override.setReason(reason);
         override.setUpdatedByUserId(actorUserId);
         tenantFeatureOverrideRepository.save(override);
@@ -206,6 +208,7 @@ public class EntitlementAdministrationService {
                 .oneTimePerTenant(request.isOneTimePerTenant())
                 .expiresAt(request.getExpiresAt())
                 .active(true)
+                .activatedAt(Instant.now())
                 .createdByUserId(actorUserId)
                 .updatedByUserId(actorUserId)
                 .build();
@@ -222,17 +225,11 @@ public class EntitlementAdministrationService {
                         "Promo code not found"
                 )));
 
-        LocalDateTime now = LocalDateTime.now();
-        if (!promoCode.isActive()) {
+        Instant now = Instant.now();
+        if (!promoCode.isRedeemableAt(now)) {
             throw new IllegalStateException(messageService.get(
-                    "tenant.entitlement.promoCode.inactive",
-                    "Promo code is not active"
-            ));
-        }
-        if (promoCode.getExpiresAt() != null && !promoCode.getExpiresAt().isAfter(now)) {
-            throw new IllegalStateException(messageService.get(
-                    "tenant.entitlement.promoCode.expired",
-                    "Promo code has expired"
+                    "tenant.entitlement.promoCode.inactiveOrExpired",
+                    "Promo code is not active or has expired"
             ));
         }
         if (promoCode.getMaxRedemptions() != null && promoCode.getCurrentRedemptions() >= promoCode.getMaxRedemptions()) {
@@ -318,16 +315,17 @@ public class EntitlementAdministrationService {
             ));
         }
         redemption.setActive(false);
-        redemption.setRevokedAt(LocalDateTime.now());
+        redemption.setRevokedAt(Instant.now());
         redemption.setReason(reason);
         redemption.setUpdatedByUserId(actorUserId);
         promoRedemptionRepository.save(redemption);
 
         String promoCode = redemption.getPromoCode().getCode();
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         tenantPlanGrantRepository.findByTenant_IdAndPromoCodeIgnoreCase(tenantId, promoCode)
                 .forEach(grant -> {
                     grant.setActive(false);
+                    grant.setRevokedAt(now);
                     grant.setExpiresAt(now);
                     grant.setReason(reason);
                     grant.setUpdatedByUserId(actorUserId);
@@ -337,6 +335,7 @@ public class EntitlementAdministrationService {
         tenantFeatureOverrideRepository.findByTenant_IdAndPromoCodeIgnoreCase(tenantId, promoCode)
                 .forEach(override -> {
                     override.setActive(false);
+                    override.setRevokedAt(now);
                     override.setExpiresAt(now);
                     override.setReason(reason);
                     override.setUpdatedByUserId(actorUserId);

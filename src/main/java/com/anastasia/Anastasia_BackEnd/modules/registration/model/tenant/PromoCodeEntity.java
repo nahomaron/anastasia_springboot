@@ -15,13 +15,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -82,7 +83,13 @@ public class PromoCodeEntity {
     private boolean oneTimePerTenant = true;
 
     @Column(name = "expires_at")
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
+
+    @Column(name = "activated_at")
+    private Instant activatedAt;
+
+    @Column(name = "deactivated_at")
+    private Instant deactivatedAt;
 
     @Column(name = "created_by_user_id")
     private UUID createdByUserId;
@@ -91,20 +98,37 @@ public class PromoCodeEntity {
     private UUID updatedByUserId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.active && this.activatedAt == null) {
+            this.activatedAt = now;
+        }
     }
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
+    }
+
+    public boolean isRedeemableAt(Instant now) {
+        if (!active || deletedAt != null || deactivatedAt != null) {
+            return false;
+        }
+        return expiresAt == null || expiresAt.isAfter(now);
     }
 }

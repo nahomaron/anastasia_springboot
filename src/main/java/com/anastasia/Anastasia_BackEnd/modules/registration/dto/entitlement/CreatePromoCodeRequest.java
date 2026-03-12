@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 
 @Data
@@ -26,5 +26,5 @@ public class CreatePromoCodeRequest {
     private Integer activeMemberLimitOverride;
     private Integer maxRedemptions;
     private boolean oneTimePerTenant;
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 }

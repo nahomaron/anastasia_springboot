@@ -14,13 +14,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -63,10 +64,13 @@ public class TenantFeatureOverrideEntity {
     private boolean active = true;
 
     @Column(name = "starts_at", nullable = false)
-    private LocalDateTime startsAt;
+    private Instant startsAt;
 
     @Column(name = "expires_at")
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
+
+    @Column(name = "revoked_at")
+    private Instant revokedAt;
 
     @Column(name = "reason", length = 1024)
     private String reason;
@@ -78,14 +82,21 @@ public class TenantFeatureOverrideEntity {
     private UUID updatedByUserId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
         if (this.startsAt == null) {
@@ -95,11 +106,11 @@ public class TenantFeatureOverrideEntity {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
-    public boolean isEffective(LocalDateTime now) {
-        if (!active) {
+    public boolean isEffective(Instant now) {
+        if (!active || revokedAt != null || deletedAt != null) {
             return false;
         }
         if (startsAt != null && startsAt.isAfter(now)) {
