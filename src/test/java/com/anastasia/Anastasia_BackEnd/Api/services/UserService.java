@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.services;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import io.qameta.allure.Step;
@@ -65,7 +65,7 @@ public class UserService {
                 .response();
     }
 
-    public Response updateAvatar(RequestSpecification spec, AvatarDTO payload) {
+    public Response updateAvatar(RequestSpecification spec, ImageAssetDTO payload) {
         return given()
                 .spec(spec)
                 .body(payload)

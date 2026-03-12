@@ -2,8 +2,8 @@ package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -92,9 +92,9 @@ public class PriestSeeder {
                         .churchNumber(assignedChurch.getChurchNumber())
                         .tenant(null)
                         .status(faker.options().option(PriestStatus.ACTIVE, PriestStatus.PENDING, PriestStatus.INACTIVE))
-                        .avatar(AvatarEntity.builder()
+                        .avatar(ImageAssetEntity.builder()
                                 .ownerId(savedUser.getUuid())
-                                .avatarType(AvatarType.USER)
+                                .imageAssetType(ImageAssetType.USER)
                                 .imageUrl(faker.internet().url())
                                 .imageSize("original")
                                 .build())

@@ -22,13 +22,13 @@ public class DashboardController {
     private final PriestDashboardService priestDashboardService;
     private final MemberDashboardService memberDashboardService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
     @GetMapping("/tenant-admin/summary")
     public ResponseEntity<TenantAdminDashboardResponse> getTenantAdminSummary() {
         return ResponseEntity.ok(tenantAdminDashboardService.getSummary());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIEST')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST')")
     @GetMapping("/priest/summary")
     public ResponseEntity<PriestDashboardResponse> getPriestSummary() {
         return ResponseEntity.ok(priestDashboardService.getSummary());

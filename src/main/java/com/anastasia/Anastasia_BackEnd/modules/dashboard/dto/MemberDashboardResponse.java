@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class MemberDashboardResponse {
     private MemberDashboardStats stats;
+    private String churchDisplayName;
     private List<MemberFamilyItem> familyMembers;
     private List<MemberUpcomingEventItem> upcomingEvents;
 }

@@ -57,7 +57,7 @@ public class ChurchController {
     }
 
     @GetMapping("/{churchId}/profile")
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
     public ResponseEntity<ChurchResponse> findChurch(@PathVariable Long churchId){
         Optional<ChurchEntity> foundChurch = churchService.findOne(churchId);
 
@@ -68,7 +68,7 @@ public class ChurchController {
     }
 
     @PutMapping("/{churchId}")
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER')")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN')")
     public ResponseEntity<String> updateChurch(@PathVariable Long churchId, @Valid @RequestBody ChurchDTO churchDTO){
         ChurchEntity churchEntity = churchService.convertToEntity(churchDTO);
 

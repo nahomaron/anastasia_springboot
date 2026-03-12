@@ -6,7 +6,7 @@ import com.anastasia.Anastasia_BackEnd.Api.factories.AvatarDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.UserDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.UserService;
 import com.anastasia.Anastasia_BackEnd.Api.utils.SchemaValidator;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -47,7 +47,7 @@ class UserPositiveTests extends BaseApiTest {
     @Test
     @Story("User updates profile avatar")
     void userCanUpdateAvatar() {
-        AvatarDTO payload = AvatarDataFactory.newValidAvatar();
+        ImageAssetDTO payload = AvatarDataFactory.newValidAvatar();
         Response response = userService.updateAvatar(RequestSpecFactory.authenticatedSpec(), payload);
         assertThat(response.statusCode()).isEqualTo(200);
     }

@@ -2,7 +2,8 @@ package com.anastasia.Anastasia_BackEnd.Api.utils;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.UUID;
@@ -15,8 +16,9 @@ import static io.restassured.RestAssured.given;
  * Utility to assign roles to users through the secured /assign-roles endpoint.
  * Operates entirely via REST APIs (no repository access).
  */
-@Slf4j
 public final class RoleSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(RoleSeeder.class);
 
     private RoleSeeder() {}
 

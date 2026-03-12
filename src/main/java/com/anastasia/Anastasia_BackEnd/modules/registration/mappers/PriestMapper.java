@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
@@ -17,21 +17,21 @@ public interface PriestMapper {
 
     PriestEntity priestDTOToEntity(PriestDTO priestDTO);
 
-    default AvatarEntity map(AvatarDTO avatar) {
+    default ImageAssetEntity map(ImageAssetDTO avatar) {
         if (avatar == null) {
             return null;
         }
-        return AvatarEntity.builder()
+        return ImageAssetEntity.builder()
                 .imageUrl(avatar.getImageUrl())
                 .imageSize(avatar.getImageSize())
                 .build();
     }
 
-    default AvatarDTO map(AvatarEntity avatar) {
+    default ImageAssetDTO map(ImageAssetEntity avatar) {
         if (avatar == null) {
             return null;
         }
-        return AvatarDTO.builder()
+        return ImageAssetDTO.builder()
                 .imageUrl(avatar.getImageUrl())
                 .imageSize(avatar.getImageSize())
                 .build();

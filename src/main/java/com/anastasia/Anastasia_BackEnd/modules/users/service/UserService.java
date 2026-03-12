@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantInviteResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipAction;
@@ -86,7 +86,7 @@ public interface UserService {
 
     void deleteUser(UUID userId);
 
-    void updateProfileAvatar(@Valid AvatarDTO avatarDTO);
+    void updateProfileAvatar(@Valid ImageAssetDTO avatarDTO);
 
     UserMembershipsResponse getCurrentUserMemberships();
 

@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.factories;
 
 import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 
@@ -16,7 +16,7 @@ public final class MemberDataFactory {
     public static Adult_MemberDTO newValidMember() {
         return Adult_MemberDTO.builder()
                 .churchNumber(generateChurchNumber())
-                .avatar(new AvatarDTO("https://example.com/avatar.jpg", "200MB"))
+                .avatar(new ImageAssetDTO("https://example.com/avatar.jpg", "200MB"))
                 .deacon(false)
                 .title("Mr.")
                 .firstName(DataGenerator.randomName().split(" ")[0])

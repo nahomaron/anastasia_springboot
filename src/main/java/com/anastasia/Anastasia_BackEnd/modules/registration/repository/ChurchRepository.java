@@ -28,8 +28,12 @@ public interface ChurchRepository extends JpaRepository<ChurchEntity, Long> {
               AND (
                    :q IS NULL
                    OR LOWER(COALESCE(c.churchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                   OR LOWER(COALESCE(c.churchNameTigrinya, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.tChurchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.churchNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.prefix, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.tPrefix, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.neighborhood, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.tNeighborhood, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.diocese, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.denomination, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.address.city, '')) LIKE LOWER(CONCAT('%', :q, '%'))

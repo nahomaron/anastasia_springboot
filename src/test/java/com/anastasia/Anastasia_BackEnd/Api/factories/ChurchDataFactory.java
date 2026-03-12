@@ -17,8 +17,11 @@ public final class ChurchDataFactory {
     public static ChurchDTO newValidChurch() {
         return ChurchDTO.builder()
                 .prefix("St.")
+                .tPrefix("ቅዱስ")
                 .churchName("St. " + DataGenerator.randomName().split(" ")[0])
-                .churchNameTigrinya("ቤተ ክርስቲያን " + DataGenerator.randomName().split(" ")[0])
+                .tChurchName("ቤተ ክርስቲያን " + DataGenerator.randomName().split(" ")[0])
+                .neighborhood("Fairfax")
+                .tNeighborhood("ፌርፋክስ")
                 .diocese("North America Diocese")
                 .phone("+1-555-" + ThreadLocalRandom.current().nextInt(1000, 10000))
                 .denomination("Orthodox")

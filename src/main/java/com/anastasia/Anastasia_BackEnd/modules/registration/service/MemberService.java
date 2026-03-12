@@ -1,10 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.family.UpdateFamilyRelationshipRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.family.UpsertFamilyRelationshipRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyMemberSummaryResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.MyFamilyResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -52,4 +56,12 @@ public interface MemberService {
     Adult_MemberResponse approveByPriest(Long memberId);
 
     Page<Adult_MemberResponse> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable);
+
+    MyFamilyResponse getCurrentUserFamily();
+
+    FamilyMemberSummaryResponse createFamilyRelationship(UpsertFamilyRelationshipRequest request);
+
+    FamilyMemberSummaryResponse updateFamilyRelationship(Long relationshipId, UpdateFamilyRelationshipRequest request);
+
+    void deleteFamilyRelationship(Long relationshipId);
 }

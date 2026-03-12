@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -19,7 +20,17 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
 
     List<Child_MemberEntity> findByFatherIdOrMotherId(Long fatherId, Long motherId);
 
+    @Query("""
+            SELECT c FROM Child_MemberEntity c
+            WHERE c.tenantId = :tenantId
+              AND (c.father.id = :memberId OR c.mother.id = :memberId)
+            ORDER BY c.firstName ASC, c.fatherName ASC, c.grandFatherName ASC
+            """)
+    List<Child_MemberEntity> findFamilyChildren(@Param("tenantId") UUID tenantId, @Param("memberId") Long memberId);
+
     Optional<Child_MemberEntity> findByIdAndTenantId(Long id, UUID tenantId);
+
+    List<Child_MemberEntity> findAllByIdInAndTenantId(Set<Long> ids, UUID tenantId);
 
     Page<Child_MemberEntity> findByStatusNotAndTenantId(String status, UUID tenantId, Pageable pageable);
 

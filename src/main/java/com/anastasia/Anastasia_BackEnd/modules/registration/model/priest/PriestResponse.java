@@ -1,7 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.priest;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +27,7 @@ public class PriestResponse {
 
     private PriestStatus status;
 
-    private AvatarDTO avatar;
+    private ImageAssetDTO avatar;
 
     private int spiritualChildren;
 

@@ -9,7 +9,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Dynamically provisions users for each role (OWNER, ADMIN, PRIEST, MEMBER, USER)
  * using legitimate business flows. Fully black-box: interacts only with REST APIs.
  */
-@Slf4j
 public final class RoleContextFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(RoleContextFactory.class);
     private static final Map<String, RequestSpecification> specCache = new ConcurrentHashMap<>();
     private static final AuthService authService = new AuthService();
 

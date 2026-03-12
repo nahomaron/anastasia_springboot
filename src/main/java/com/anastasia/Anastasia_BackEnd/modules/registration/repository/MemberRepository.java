@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -24,6 +25,12 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
     Optional<Adult_MemberEntity> findByUserIdAndTenantId(UUID userId, UUID tenantId);
 
     Optional<Adult_MemberEntity> findByIdAndTenantId(Long id, UUID tenantId);
+
+    Optional<Adult_MemberEntity> findByMembershipNumberAndTenantId(String membershipNumber, UUID tenantId);
+
+    List<Adult_MemberEntity> findAllByIdInAndTenantId(Set<Long> ids, UUID tenantId);
+
+    Optional<Adult_MemberEntity> findFirstBySpouseIdNumberAndTenantId(String spouseIdNumber, UUID tenantId);
 
     Page<Adult_MemberEntity> findByStatusNotAndTenantId(String status, UUID tenantId, Pageable pageable);
 

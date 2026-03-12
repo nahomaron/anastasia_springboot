@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Billing
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -49,7 +50,7 @@ public class TestDataSeederConfig {
                 .tenantType(TenantType.CHURCH)
                 .ownerName("Test Church")
                 .phoneNumber("123456789")
-                .isActiveTenant(true)
+                .status(TenantStatus.ACTIVE)
                 .build();
         tenant.assignSubscription(
                 TenantSubscriptionEntity.builder()
@@ -69,9 +70,14 @@ public class TestDataSeederConfig {
 //                .churchId(11L)
                 .churchNumber("M1234")
                 .tenant(savedTenant)
+                .prefix("St.")
+                .tPrefix("ቅዱስ")
                 .churchName("Test Church")
-                .churchNameTigrinya("ቤተ ክርስቲያን ሙከራ")
+                .tChurchName("ቤተ ክርስቲያን ሙከራ")
+                .neighborhood("Test Neighborhood")
+                .tNeighborhood("መንደር ሙከራ")
                 .diocese("Test Diocese")
+                .email("seeded-church@example.com")
                 .build();
 
 

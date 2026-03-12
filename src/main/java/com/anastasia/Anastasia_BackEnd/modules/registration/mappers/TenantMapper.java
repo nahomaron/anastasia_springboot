@@ -13,7 +13,7 @@ public interface TenantMapper {
     TenantDTO tenantEntityToDTO(TenantEntity tenantEntity);
 
     @Mapping(target = "subscription", ignore = true)
-    @Mapping(target = "tenantUsers", ignore = true)
+    @Mapping(target = "adminAssignments", ignore = true)
     TenantEntity tenantDTOToEntity(TenantDTO tenantDTO);
 
 }

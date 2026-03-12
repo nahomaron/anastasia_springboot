@@ -34,7 +34,7 @@ public class ChildController {
 
     private final ChildService childService;
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'MEMBER') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST', 'MEMBER') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADD_MEMBERS')")
     @PostMapping("/register-child")
     public ResponseEntity<ChildResponse> registerChild(@Valid @RequestBody Child_MemberDTO childMemberDTO){
@@ -45,21 +45,21 @@ public class ChildController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
     public ResponseEntity<Page<Child_MemberSummaryResponse>> listOfChildren(Pageable pageable){
         return new ResponseEntity<>(childService.findAllSummary(pageable), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'ADMIN') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST', 'ADMIN') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/requests")
     public ResponseEntity<Page<Child_MemberResponse>> listPendingChildren(Pageable pageable){
         return new ResponseEntity<>(childService.findPending(pageable), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST', 'ADMIN') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST', 'ADMIN') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/count")
     public ResponseEntity<Long> countChildren() {
@@ -67,7 +67,7 @@ public class ChildController {
     }
 
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/search")
     public ResponseEntity<Page<Child_MemberSummaryResponse>> searchChildren(
@@ -77,7 +77,7 @@ public class ChildController {
         return new ResponseEntity<>(childService.searchNonPendingSummary(pageable, query), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{memberId}")
     public ResponseEntity<Child_MemberResponse> getChild(@PathVariable Long memberId){
@@ -88,7 +88,7 @@ public class ChildController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_CHILDREN')")
     @PatchMapping("/{memberId}")
     public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Child_MemberDTO request){
@@ -96,7 +96,7 @@ public class ChildController {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN') " +
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'APPROVE_MEMBERSHIP')")
     @PatchMapping("/{memberId}/church-approve")
     public ResponseEntity<Child_MemberResponse> approveByChurch(@PathVariable Long memberId){
@@ -112,7 +112,7 @@ public class ChildController {
     }
 
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') or " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'DELETE_CHILDREN')")
     @DeleteMapping("/{memberId}")
     public ResponseEntity<?> deleteMemberShip(@PathVariable Long memberId){
@@ -120,7 +120,7 @@ public class ChildController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIEST') OR " +
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST') OR " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADVANCED_SEARCH_MEMBERS')")
     @PostMapping("/advanced-search")
     public ResponseEntity<Page<Child_MemberResponse>> searchChildren(

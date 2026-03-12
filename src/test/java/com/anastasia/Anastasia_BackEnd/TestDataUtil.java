@@ -1,8 +1,8 @@
 package com.anastasia.Anastasia_BackEnd;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarDTO;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.avatar.AvatarType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
@@ -25,6 +25,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Subscri
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
@@ -85,8 +86,9 @@ public class TestDataUtil {
     public static ChurchEntity createTestChurchEntity(TenantEntity tenant) {
         return ChurchEntity.builder()
                 .prefix("St.")
+                .tPrefix("ቅዱስ")
                 .churchName("St. Michael Church")
-                .churchNameTigrinya("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
+                .tChurchName("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
                 .churchNumber("M" + uniqueSuffix())
                 .tenant(tenant)
                 .email("stmichael+" + uniqueSuffix() + "@church.org")
@@ -95,6 +97,8 @@ public class TestDataUtil {
                 .denomination("Orthodox")
                 .description("Test parish community")
                 .usesOurServices(true)
+                .neighborhood("Downtown")
+                .tNeighborhood("መሃል ከተማ")
                 .address(Address.builder()
                         .addressLine1("123 Test St")
                         .addressLine2("Suite 100")
@@ -113,8 +117,11 @@ public class TestDataUtil {
     public static ChurchDTO createTestChurchDTO() {
         return ChurchDTO.builder()
                 .prefix("St.")
+                .tPrefix("ቅዱስ")
                 .churchName("St. Michael Church")
-                .churchNameTigrinya("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
+                .tChurchName("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
+                .neighborhood("Downtown")
+                .tNeighborhood("መሃል ከተማ")
                 .email("stgebriel+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
                 .phone("+1555" + randomDigits(7))
@@ -138,8 +145,11 @@ public class TestDataUtil {
     public static ChurchDTO createTestChurchDTO_B() {
         return ChurchDTO.builder()
                 .prefix("St.")
+                .tPrefix("ቅድስት")
                 .churchName("St. Mary Church")
-                .churchNameTigrinya("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .tChurchName("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .neighborhood("Midtown")
+                .tNeighborhood("ማእከል ከተማ")
                 .email("stmary+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
                 .phone("+1555" + randomDigits(7))
@@ -180,7 +190,7 @@ public class TestDataUtil {
                 .tenantType(TenantType.CHURCH) // or PRIEST
                 .ownerName("St. Mary Church")
                 .phoneNumber("+1555000111")
-                .isActiveTenant(true)
+                .status(TenantStatus.ACTIVE)
                 .build();
         tenant.assignSubscription(
                 TenantSubscriptionEntity.builder()
@@ -195,7 +205,9 @@ public class TestDataUtil {
     public static TenantDTO createTestTenantDTO(){
         ChurchDTO church = ChurchDTO.builder()
                 .churchName("St. Mary Church")
-                .churchNameTigrinya("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .tChurchName("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .neighborhood("Midtown")
+                .tNeighborhood("ማእከል ከተማ")
                 .diocese("Addis Ababa")
                 .email(uniqueEmail("church", "example.com"))
                 .phone("+1555" + randomDigits(7))
@@ -283,8 +295,8 @@ public class TestDataUtil {
                 .motherFullNameT("ሩት ዮሓንስ")
                 .gender("Male")
                 .birthday(LocalDate.of(1990, Month.DECEMBER, 3))
-                .avatar(AvatarDTO.builder()
-                        .imageUrl("https://example.com/avatars/" + uniqueSuffix() + ".jpg")
+                .avatar(ImageAssetDTO.builder()
+                        .imageUrl("https://example.com/imageAssets/" + uniqueSuffix() + ".jpg")
                         .build())
                 .phone("+1234567890")
                 .maritalStatus("Single")
@@ -390,7 +402,7 @@ public class TestDataUtil {
         return PriestDTO.builder()
                 .churchNumber(churchNumber) // or provide a valid church number if needed
                 .tenantId(null)     // or UUID.randomUUID() for tenant priest
-                .avatar(AvatarDTO.builder()
+                .avatar(ImageAssetDTO.builder()
                         .imageUrl("https://example.com/photo.jpg")
                         .imageSize("original")
                         .build())
@@ -423,7 +435,7 @@ public class TestDataUtil {
         return PriestDTO.builder()
                 .churchNumber(churchNumber)
                 .tenantId(null)
-                .avatar(AvatarDTO.builder()
+                .avatar(ImageAssetDTO.builder()
                         .imageUrl("https://example.com/images/priest_b.jpg")
                         .imageSize("original")
                         .build())
@@ -460,9 +472,9 @@ public class TestDataUtil {
                 .churchNumber(church != null ? church.getChurchNumber() : null)
                 .tenant(tenant)
                 .status(PriestStatus.ACTIVE)
-                .avatar(AvatarEntity.builder()
+                .avatar(ImageAssetEntity.builder()
                         .ownerId(UUID.randomUUID())
-                        .avatarType(AvatarType.USER)
+                        .imageAssetType(ImageAssetType.USER)
                         .imageUrl("https://example.com/priest/profile.jpg")
                         .imageSize("original")
                         .build())

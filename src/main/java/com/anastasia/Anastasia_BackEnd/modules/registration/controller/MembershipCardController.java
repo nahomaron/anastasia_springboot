@@ -27,13 +27,13 @@ public class MembershipCardController {
 
     private final MembershipCardService membershipCardService;
 
-    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'ADMIN', 'PRIEST')")
+    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST')")
     @GetMapping("/me")
     public ResponseEntity<MembershipCardSummaryResponse> currentUserCard() {
         return ResponseEntity.ok(membershipCardService.getCurrentUserCardSummary());
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'ADMIN', 'PRIEST')")
+    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST')")
     @GetMapping("/me/download")
     public ResponseEntity<byte[]> downloadCurrentUserCard(
             @RequestParam(value = "format", required = false, defaultValue = "pdf") String format
@@ -42,7 +42,7 @@ public class MembershipCardController {
         return asAttachment(payload);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/members/{memberId}/download")
     public ResponseEntity<byte[]> downloadMemberCard(
             @PathVariable Long memberId,
@@ -57,19 +57,19 @@ public class MembershipCardController {
         return ResponseEntity.ok(membershipCardService.verifyToken(token));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS')")
     @GetMapping("/templates")
     public ResponseEntity<List<MembershipCardTemplateResponse>> listTemplates() {
         return ResponseEntity.ok(membershipCardService.listTemplatesForCurrentTenant());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS')")
     @PatchMapping("/templates/{templateId}/default")
     public ResponseEntity<MembershipCardTemplateResponse> setDefaultTemplate(@PathVariable Long templateId) {
         return ResponseEntity.ok(membershipCardService.setDefaultTemplateForCurrentTenant(templateId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'APPROVE_MEMBERSHIP')")
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'APPROVE_MEMBERSHIP')")
     @PatchMapping("/members/{memberId}/revoke")
     public ResponseEntity<Void> revokeCard(
             @PathVariable Long memberId,
