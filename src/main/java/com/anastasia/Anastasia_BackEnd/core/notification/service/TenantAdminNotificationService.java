@@ -6,9 +6,10 @@ import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEven
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantUserEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantUserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.services.model.BaptismRequestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class TenantAdminNotificationService {
             TenantRole.OWNER
     );
 
-    private final TenantUserRepository tenantUserRepository;
+    private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher publisher;
 
@@ -132,6 +133,52 @@ public class TenantAdminNotificationService {
         }
     }
 
+    public void notifyBaptismRequestSubmitted(BaptismRequestEntity request, UUID submittedByUserId) {
+        if (request == null || request.getTenantId() == null) {
+            return;
+        }
+
+        UUID tenantId = request.getTenantId();
+        Set<UUID> recipientIds = resolveRecipientIds(tenantId, submittedByUserId);
+
+        if (recipientIds.isEmpty()) {
+            log.debug("No tenant admin recipients found for baptism request notification tenantId={}", tenantId);
+            return;
+        }
+
+        Set<UserEntity> recipients = new HashSet<>(userRepository.findAllByUuidIn(recipientIds));
+
+        for (UserEntity recipient : recipients) {
+            try {
+                Map<String, Object> props = new HashMap<>();
+                props.put("requestId", request.getId());
+                props.put("requestNumber", request.getRequestNumber());
+                props.put("status", request.getStatus());
+                props.put("memberName", request.getEnglish() != null ? request.getEnglish().getFullName() : null);
+                props.put("churchNumber", request.getChurchNumber());
+                props.put("tenantId", tenantId);
+                props.put("submittedByUserId", submittedByUserId);
+                props.put("username", recipient.getFullName());
+
+                publisher.publishEvent(new NotificationEvent(
+                        this,
+                        NotificationType.BAPTISM_REQUEST_SUBMITTED,
+                        recipient,
+                        props,
+                        EnumSet.of(NotificationChannelType.IN_APP, NotificationChannelType.EMAIL)
+                ));
+            } catch (Exception ex) {
+                log.error(
+                        "Failed to publish baptism request notification to recipient={} tenant={} request={}",
+                        recipient.getUuid(),
+                        tenantId,
+                        request.getId(),
+                        ex
+                );
+            }
+        }
+    }
+
     private String buildMemberName(Adult_MemberEntity member) {
         String first = member.getFirstName() == null ? "" : member.getFirstName().trim();
         String father = member.getFatherName() == null ? "" : member.getFatherName().trim();
@@ -147,10 +194,10 @@ public class TenantAdminNotificationService {
     }
 
     private Set<UUID> resolveRecipientIds(UUID tenantId, UUID submittedByUserId) {
-        Set<UUID> primaryRecipients = tenantUserRepository
+        Set<UUID> primaryRecipients = tenantAdminAssignmentRepository
                 .findActiveUsersByTenantIdAndRoles(tenantId, MEMBER_REGISTRATION_NOTIFY_ROLES)
                 .stream()
-                .map(TenantUserEntity::getUserId)
+                .map(TenantAdminAssignmentEntity::getUserId)
                 .filter(userId -> submittedByUserId == null || !submittedByUserId.equals(userId))
                 .collect(Collectors.toSet());
 
@@ -158,10 +205,10 @@ public class TenantAdminNotificationService {
             return primaryRecipients;
         }
 
-        Set<UUID> fallbackRecipients = tenantUserRepository
+        Set<UUID> fallbackRecipients = tenantAdminAssignmentRepository
                 .findActiveUsersByTenantIdAndRoles(tenantId, MEMBER_REGISTRATION_FALLBACK_ROLES)
                 .stream()
-                .map(TenantUserEntity::getUserId)
+                .map(TenantAdminAssignmentEntity::getUserId)
                 .filter(userId -> submittedByUserId == null || !submittedByUserId.equals(userId))
                 .collect(Collectors.toSet());
 
