@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,7 +43,7 @@ import java.util.UUID;
                 @UniqueConstraint(name = "uk_tenant_admin_assignments_tenant_user", columnNames = {"tenant_id", "user_id"})
         }
 )
-public class TenantAdminAssignmentEntity {
+public class TenantAdminAssignmentEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -68,12 +69,6 @@ public class TenantAdminAssignmentEntity {
     @Column(name = "is_billing_contact", nullable = false)
     private boolean isBillingContact = false;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @Column(name = "created_by_user_id")
     private UUID createdByUserId;
 
@@ -83,8 +78,7 @@ public class TenantAdminAssignmentEntity {
     @PrePersist
     public void onCreate() {
         LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+        initializeAuditTimestamps(now);
         if (this.status == null) {
             this.status = MembershipStatus.INVITED;
         }
@@ -95,6 +89,6 @@ public class TenantAdminAssignmentEntity {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        touchAuditTimestamps(LocalDateTime.now());
     }
 }

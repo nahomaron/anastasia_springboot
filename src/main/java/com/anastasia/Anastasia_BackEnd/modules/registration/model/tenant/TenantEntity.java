@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,7 +27,7 @@ import java.util.UUID;
                 @UniqueConstraint(name = "uk_tenants_slug", columnNames = "slug")
         }
 )
-public class TenantEntity {
+public class TenantEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -97,12 +98,6 @@ public class TenantEntity {
 
     @Column(name = "suspension_reason", length = 512)
     private String suspensionReason;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     @Column(name = "created_by")
     private UUID createdBy;
@@ -206,12 +201,7 @@ public class TenantEntity {
     @PrePersist
     public void onCreate() {
         LocalDateTime now = LocalDateTime.now();
-        if (this.createdAt == null) {
-            this.createdAt = now;
-        }
-        if (this.updatedAt == null) {
-            this.updatedAt = this.createdAt;
-        }
+        initializeAuditTimestamps(now);
         if (this.status == null) {
             this.status = TenantStatus.DRAFT;
         }
@@ -225,7 +215,7 @@ public class TenantEntity {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        touchAuditTimestamps(LocalDateTime.now());
     }
 
     public static class TenantEntityBuilder {

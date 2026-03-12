@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.domain;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -29,7 +30,7 @@ import java.util.UUID;
                 @Index(name = "idx_notification_pref_tenant_user", columnList = "tenantId,userId")
         }
 )
-public class NotificationPreferenceEntity {
+public class NotificationPreferenceEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -56,21 +57,13 @@ public class NotificationPreferenceEntity {
     @Column(name = "notification_type", nullable = false, length = 64)
     private Set<NotificationType> mutedTypes = EnumSet.noneOf(NotificationType.class);
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
     @jakarta.persistence.PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+        initializeAuditTimestamps(LocalDateTime.now());
     }
 
     @jakarta.persistence.PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        touchAuditTimestamps(LocalDateTime.now());
     }
 }

@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.church;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
@@ -28,7 +29,7 @@ import java.util.UUID;
                 @Index(name = "idx_churches_uses_our_services", columnList = "uses_our_services")
         }
 )
-public class ChurchEntity {
+public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "church_seq")
@@ -120,12 +121,6 @@ public class ChurchEntity {
     @Column(name = "deactivated_at")
     private LocalDateTime deactivatedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @Column(name = "created_by")
     private UUID createdBy;
 
@@ -156,12 +151,7 @@ public class ChurchEntity {
     @PrePersist
     void onCreate() {
         LocalDateTime now = LocalDateTime.now();
-        if (createdAt == null) {
-            createdAt = now;
-        }
-        if (updatedAt == null) {
-            updatedAt = createdAt;
-        }
+        initializeAuditTimestamps(now);
         if (status == null) {
             status = ChurchStatus.DRAFT;
         }
@@ -175,7 +165,7 @@ public class ChurchEntity {
 
     @PreUpdate
     void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        touchAuditTimestamps(LocalDateTime.now());
     }
 
     public boolean isComplete() {

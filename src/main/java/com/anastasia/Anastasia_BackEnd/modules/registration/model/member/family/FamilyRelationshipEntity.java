@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import jakarta.persistence.Column;
@@ -36,7 +37,7 @@ import java.util.UUID;
         @Index(name = "idx_family_relationships_related_member", columnList = "related_member_id"),
         @Index(name = "idx_family_relationships_related_child", columnList = "related_child_id")
 })
-public class FamilyRelationshipEntity {
+public class FamilyRelationshipEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -101,12 +102,6 @@ public class FamilyRelationshipEntity {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @Column(name = "created_by")
     private UUID createdBy;
 
@@ -126,16 +121,11 @@ public class FamilyRelationshipEntity {
         if (effectiveFrom == null) {
             effectiveFrom = now;
         }
-        if (createdAt == null) {
-            createdAt = now;
-        }
-        if (updatedAt == null) {
-            updatedAt = createdAt;
-        }
+        initializeAuditTimestamps(now);
     }
 
     @PreUpdate
     public void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        touchAuditTimestamps(LocalDateTime.now());
     }
 }

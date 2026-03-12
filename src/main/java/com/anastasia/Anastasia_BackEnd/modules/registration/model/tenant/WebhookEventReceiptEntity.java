@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,7 +36,7 @@ import java.util.UUID;
                 @Index(name = "idx_webhook_event_receipts_subscription", columnList = "tenant_subscription_id")
         }
 )
-public class WebhookEventReceiptEntity {
+public class WebhookEventReceiptEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -82,17 +83,15 @@ public class WebhookEventReceiptEntity {
     @Column(name = "error_message")
     private String errorMessage;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     @PrePersist
     public void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
         if (this.receivedAt == null) {
-            this.receivedAt = LocalDateTime.now();
+            this.receivedAt = now;
         }
         if (this.processingResult == null) {
             this.processingResult = WebhookProcessingResult.RETRY;
         }
-        this.createdAt = LocalDateTime.now();
+        initializeAuditTimestamps(now);
     }
 }

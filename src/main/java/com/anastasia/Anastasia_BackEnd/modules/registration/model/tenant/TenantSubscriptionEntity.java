@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,7 +42,7 @@ import java.util.UUID;
                 @Index(name = "idx_tenant_subscriptions_status", columnList = "status")
         }
 )
-public class TenantSubscriptionEntity {
+public class TenantSubscriptionEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -118,12 +119,6 @@ public class TenantSubscriptionEntity {
     @Column(name = "status_change_reason", length = 512)
     private String statusChangeReason;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @Column(name = "created_by_user_id")
     private UUID createdByUserId;
 
@@ -160,8 +155,7 @@ public class TenantSubscriptionEntity {
     @PrePersist
     public void onCreate() {
         LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+        initializeAuditTimestamps(now);
         if (this.startedAt == null) {
             this.startedAt = now;
         }
@@ -184,6 +178,6 @@ public class TenantSubscriptionEntity {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        touchAuditTimestamps(LocalDateTime.now());
     }
 }
