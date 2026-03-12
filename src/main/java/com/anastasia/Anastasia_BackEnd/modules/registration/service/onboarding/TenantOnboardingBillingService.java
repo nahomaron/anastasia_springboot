@@ -23,7 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -108,7 +108,7 @@ public class TenantOnboardingBillingService {
         session.setCheckoutUrl(stripeSession.getUrl());
         session.setProviderCheckoutSessionId(stripeSession.getId());
         session.setStatus(OnboardingSessionStatus.CHECKOUT_CREATED);
-        session.setCheckoutCreatedAt(LocalDateTime.now());
+        session.setCheckoutCreatedAt(Instant.now());
 
         return toResponse(onboardingSessionRepository.save(session));
     }
@@ -198,14 +198,14 @@ public class TenantOnboardingBillingService {
                 .ownerEmail(tenantDTO.getEmail())
                 .ownerPhone(tenantDTO.getPhoneNumber())
                 .termsAccepted(true)
-                .termsAcceptedAt(LocalDateTime.now())
+                .termsAcceptedAt(Instant.now())
                 .termsVersion(tenantDTO.getTermsVersion().trim())
                 .draftPayloadJson(toSanitizedDraftPayload(tenantDTO))
                 .draftPasswordHash(passwordEncoder.encode(tenantDTO.getPassword()))
                 .paymentRequired(paymentRequired)
                 .currency(currency)
                 .expectedAmountMinor(expectedAmountMinor)
-                .expiresAt(LocalDateTime.now().plusHours(DEFAULT_EXPIRY_HOURS))
+                .expiresAt(Instant.now().plusSeconds(DEFAULT_EXPIRY_HOURS * 60L * 60L))
                 .build();
     }
 
@@ -287,7 +287,7 @@ public class TenantOnboardingBillingService {
             switch (stripeStatus) {
                 case "active", "trialing" -> {
                     if (session.getPaymentConfirmedAt() == null) {
-                        session.setPaymentConfirmedAt(LocalDateTime.now());
+                        session.setPaymentConfirmedAt(Instant.now());
                     }
                     session.setStatus(OnboardingSessionStatus.PAYMENT_CONFIRMED);
                     session.setFailureReason(null);

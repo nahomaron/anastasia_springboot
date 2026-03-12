@@ -6,7 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantT
 import lombok.Builder;
 import lombok.Value;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Value
@@ -24,5 +24,5 @@ public class OnboardingSessionResponse {
     UUID provisionedTenantId;
     UUID provisionedOwnerUserId;
     String failureReason;
-    LocalDateTime expiresAt;
+    Instant expiresAt;
 }

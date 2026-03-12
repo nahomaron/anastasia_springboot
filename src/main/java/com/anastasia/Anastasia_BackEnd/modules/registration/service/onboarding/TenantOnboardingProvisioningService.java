@@ -37,7 +37,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -82,7 +81,7 @@ public class TenantOnboardingProvisioningService {
             TenantEntity tenant = provisionTenant(session);
             session.setProvisionedTenantId(tenant.getId());
             session.setStatus(OnboardingSessionStatus.PROVISIONED);
-            session.setProvisionedAt(LocalDateTime.now());
+            session.setProvisionedAt(Instant.now());
             session.setFailureReason(null);
             onboardingSessionRepository.save(session);
         } catch (RuntimeException ex) {

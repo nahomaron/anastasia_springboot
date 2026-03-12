@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -70,7 +70,7 @@ public class TenantOnboardingSessionEntity {
     private boolean termsAccepted = false;
 
     @Column(name = "terms_accepted_at")
-    private LocalDateTime termsAcceptedAt;
+    private Instant termsAcceptedAt;
 
     @Column(name = "terms_version", length = 32)
     private String termsVersion;
@@ -106,10 +106,10 @@ public class TenantOnboardingSessionEntity {
     private String providerCustomerId;
 
     @Column(name = "checkout_created_at")
-    private LocalDateTime checkoutCreatedAt;
+    private Instant checkoutCreatedAt;
 
     @Column(name = "payment_confirmed_at")
-    private LocalDateTime paymentConfirmedAt;
+    private Instant paymentConfirmedAt;
 
     @Column(name = "provisioned_tenant_id")
     private UUID provisionedTenantId;
@@ -118,24 +118,24 @@ public class TenantOnboardingSessionEntity {
     private UUID provisionedOwnerUserId;
 
     @Column(name = "provisioned_at")
-    private LocalDateTime provisionedAt;
+    private Instant provisionedAt;
 
     @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 
     @Lob
     @Column(name = "failure_reason")
     private String failureReason;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @PrePersist
     public void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
         if (this.status == null) {
@@ -145,6 +145,6 @@ public class TenantOnboardingSessionEntity {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 }

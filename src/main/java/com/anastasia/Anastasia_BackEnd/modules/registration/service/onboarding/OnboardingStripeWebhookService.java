@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -65,7 +63,7 @@ public class OnboardingStripeWebhookService {
 
             onboardingSession.setStatus(OnboardingSessionStatus.PAYMENT_PENDING);
             if (onboardingSession.getCheckoutCreatedAt() == null) {
-                onboardingSession.setCheckoutCreatedAt(toLocalDateTime(eventCreatedAt));
+                onboardingSession.setCheckoutCreatedAt(eventCreatedAt != null ? eventCreatedAt : Instant.now());
             }
             onboardingSessionRepository.save(onboardingSession);
             return true;
@@ -97,7 +95,7 @@ public class OnboardingStripeWebhookService {
             if ("active".equals(stripeStatus) || "trialing".equals(stripeStatus)) {
                 onboardingSession.setStatus(OnboardingSessionStatus.PAYMENT_CONFIRMED);
                 if (onboardingSession.getPaymentConfirmedAt() == null) {
-                    onboardingSession.setPaymentConfirmedAt(toLocalDateTime(eventCreatedAt));
+                    onboardingSession.setPaymentConfirmedAt(eventCreatedAt != null ? eventCreatedAt : Instant.now());
                 }
             } else if ("canceled".equals(stripeStatus) || "unpaid".equals(stripeStatus)) {
                 onboardingSession.setStatus(OnboardingSessionStatus.CANCELED);
@@ -161,7 +159,7 @@ public class OnboardingStripeWebhookService {
             applySubscriptionRefs(onboardingSession, subscription);
             onboardingSession.setStatus(OnboardingSessionStatus.PAYMENT_CONFIRMED);
             if (onboardingSession.getPaymentConfirmedAt() == null) {
-                onboardingSession.setPaymentConfirmedAt(toLocalDateTime(eventCreatedAt));
+                onboardingSession.setPaymentConfirmedAt(eventCreatedAt != null ? eventCreatedAt : Instant.now());
             }
             onboardingSessionRepository.save(onboardingSession);
             onboardingProvisioningService.finalizeProvisioningIfReady(onboardingSession.getId());
@@ -277,13 +275,6 @@ public class OnboardingStripeWebhookService {
         return status == OnboardingSessionStatus.PROVISIONED
                 || status == OnboardingSessionStatus.CANCELED
                 || status == OnboardingSessionStatus.EXPIRED;
-    }
-
-    private LocalDateTime toLocalDateTime(Instant instant) {
-        if (instant == null) {
-            return LocalDateTime.now();
-        }
-        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     private String trimError(String message) {
