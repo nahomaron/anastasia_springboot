@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.services.marriage.model.MarriageCaseEntity;
 import com.anastasia.Anastasia_BackEnd.modules.services.model.BaptismRequestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
@@ -179,6 +180,14 @@ public class TenantAdminNotificationService {
         }
     }
 
+    public void notifyMarriageCaseSubmitted(MarriageCaseEntity marriageCase, UUID submittedByUserId) {
+        publishMarriageNotification(marriageCase, submittedByUserId, NotificationType.MARRIAGE_CASE_SUBMITTED, "Marriage case submitted");
+    }
+
+    public void notifyMarriageCaseBothSubmitted(MarriageCaseEntity marriageCase, UUID submittedByUserId) {
+        publishMarriageNotification(marriageCase, submittedByUserId, NotificationType.MARRIAGE_CASE_BOTH_SUBMITTED, "Both parties submitted");
+    }
+
     private String buildMemberName(Adult_MemberEntity member) {
         String first = member.getFirstName() == null ? "" : member.getFirstName().trim();
         String father = member.getFatherName() == null ? "" : member.getFatherName().trim();
@@ -219,5 +228,55 @@ public class TenantAdminNotificationService {
             );
         }
         return fallbackRecipients;
+    }
+
+    private void publishMarriageNotification(
+            MarriageCaseEntity marriageCase,
+            UUID submittedByUserId,
+            NotificationType notificationType,
+            String stageLabel
+    ) {
+        if (marriageCase == null || marriageCase.getTenantId() == null) {
+            return;
+        }
+
+        UUID tenantId = marriageCase.getTenantId();
+        Set<UUID> recipientIds = resolveRecipientIds(tenantId, submittedByUserId);
+        if (recipientIds.isEmpty()) {
+            log.debug("No tenant admin recipients found for marriage notification tenantId={}", tenantId);
+            return;
+        }
+
+        Set<UserEntity> recipients = new HashSet<>(userRepository.findAllByUuidIn(recipientIds));
+        for (UserEntity recipient : recipients) {
+            try {
+                Map<String, Object> props = new HashMap<>();
+                props.put("caseId", marriageCase.getId());
+                props.put("caseReference", marriageCase.getCaseReference());
+                props.put("status", marriageCase.getStatus());
+                props.put("churchId", marriageCase.getChurchId());
+                props.put("churchName", marriageCase.getChurch() == null ? null : marriageCase.getChurch().getChurchName());
+                props.put("tenantId", tenantId);
+                props.put("submittedByUserId", submittedByUserId);
+                props.put("stageLabel", stageLabel);
+                props.put("username", recipient.getFullName());
+
+                publisher.publishEvent(new NotificationEvent(
+                        this,
+                        notificationType,
+                        recipient,
+                        props,
+                        EnumSet.of(NotificationChannelType.IN_APP, NotificationChannelType.EMAIL)
+                ));
+            } catch (Exception ex) {
+                log.error(
+                        "Failed to publish marriage notification to recipient={} tenant={} case={}",
+                        recipient.getUuid(),
+                        tenantId,
+                        marriageCase.getId(),
+                        ex
+                );
+            }
+        }
     }
 }
