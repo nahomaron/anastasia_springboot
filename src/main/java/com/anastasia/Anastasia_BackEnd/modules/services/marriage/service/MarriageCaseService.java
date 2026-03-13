@@ -1,0 +1,64 @@
+package com.anastasia.Anastasia_BackEnd.modules.services.marriage.service;
+
+import com.anastasia.Anastasia_BackEnd.modules.services.marriage.dto.*;
+import com.anastasia.Anastasia_BackEnd.modules.services.marriage.model.MarriagePartyRole;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface MarriageCaseService {
+    MarriageCaseResponse startMemberInitiatedCase(MarriageMemberInitiationRequest request);
+    MarriageCaseResponse createAdminInitiatedCase(MarriageAdminInitiationRequest request);
+    List<MarriageCaseResponse> listMine();
+    List<MarriageCaseResponse> listAccessibleCases();
+    MarriageCaseResponse getCase(UUID caseId);
+    List<MarriageCaseNoteResponse> listNotes(UUID caseId);
+    MarriageCaseNoteResponse addNote(UUID caseId, MarriageCaseNoteRequest request);
+    List<MarriageStatusHistoryResponse> listStatusHistory(UUID caseId);
+    List<MarriageAuditEventResponse> listAuditEvents(UUID caseId);
+    List<MarriageReviewResponse> listReviews(UUID caseId);
+    MarriageCaseResponse createCounterpartPlaceholder(UUID caseId, MarriagePartyRole partyRole, MarriageCounterpartPlaceholderRequest request);
+    MarriagePairingTokenResponse createPairingToken(UUID caseId, MarriagePairingTokenCreateRequest request);
+    MarriageCaseResponse acceptPairing(MarriagePairingAcceptRequest request);
+    MarriagePartyApplicationResponse getPartyApplication(UUID caseId, MarriagePartyRole partyRole);
+    MarriagePartyApplicationResponse savePartyDraft(UUID caseId, MarriagePartyRole partyRole, MarriagePartyDraftRequest request);
+    MarriagePartyApplicationResponse submitPartyApplication(UUID caseId, MarriagePartyRole partyRole, MarriagePartyDraftRequest request);
+    List<MarriageDocumentResponse> listDocuments(UUID caseId);
+    MarriageDocumentResponse addDocument(UUID caseId, MarriageDocumentMetadataRequest request);
+    void deleteDocument(UUID caseId, UUID documentId);
+    MarriageCaseResponse secretaryReturnForCorrection(UUID caseId, MarriageReviewActionRequest request);
+    MarriageCaseResponse secretaryApproveCivilChecks(UUID caseId, MarriageReviewActionRequest request);
+    MarriageCaseResponse adminHold(UUID caseId, MarriageReviewActionRequest request);
+    MarriageCaseResponse adminReturnForCorrection(UUID caseId, MarriageReviewActionRequest request);
+    MarriageCaseResponse adminReject(UUID caseId, MarriageReviewActionRequest request);
+    MarriageCaseResponse adminApprove(UUID caseId, MarriageReviewActionRequest request);
+    List<MarriageConfessorApprovalResponse> listConfessorApprovals(UUID caseId);
+    MarriageConfessorApprovalResponse recordInAppConfessorApproval(UUID caseId, MarriageConfessorApprovalRequest request);
+    MarriageConfessorApprovalResponse recordExternalConfessorApproval(UUID caseId, MarriageExternalConfessorApprovalRequest request);
+    MarriageConfessorApprovalResponse recordConfessorBlock(UUID caseId, MarriageConfessorBlockRequest request);
+    MarriageConfessorApprovalResponse recordDioceseOverride(UUID caseId, MarriageDioceseOverrideRequest request);
+    List<MarriageImpedimentResponse> listImpediments(UUID caseId);
+    MarriageImpedimentResponse createImpediment(UUID caseId, MarriageImpedimentCreateRequest request);
+    MarriageImpedimentResponse resolveImpediment(UUID caseId, UUID impedimentId, MarriageImpedimentResolveRequest request);
+    List<MarriagePriestLookupResponse> listActivePriests(Long churchId, String query);
+    List<MarriageManualPaymentResponse> listPayments(UUID caseId);
+    MarriageManualPaymentResponse recordManualPayment(UUID caseId, MarriageManualPaymentRequest request);
+    MarriageManualPaymentResponse verifyManualPayment(UUID caseId, UUID paymentId, MarriageManualPaymentVerificationRequest request);
+    List<MarriageWitnessResponse> listWitnesses(UUID caseId);
+    MarriageWitnessResponse addWitness(UUID caseId, MarriageWitnessUpsertRequest request);
+    MarriageWitnessResponse updateWitness(UUID caseId, UUID witnessId, MarriageWitnessUpsertRequest request);
+    void deleteWitness(UUID caseId, UUID witnessId);
+    MarriagePriestAssignmentResponse assignPriest(UUID caseId, MarriagePriestAssignmentRequest request);
+    MarriageScheduleResponse proposeSchedule(UUID caseId, MarriageScheduleRequest request);
+    MarriageScheduleResponse confirmSchedule(UUID caseId, MarriageScheduleRequest request);
+    MarriageScheduleResponse reschedule(UUID caseId, MarriageScheduleRequest request);
+    MarriageScheduleResponse cancelSchedule(UUID caseId, MarriageScheduleCancellationRequest request);
+    MarriageCaseResponse completeCeremony(UUID caseId, MarriageCeremonyCompletionRequest request);
+    MarriageCertificateSequenceConfigResponse configureCertificateSequence(MarriageCertificateSequenceConfigRequest request);
+    MarriageCertificateSequenceConfigResponse getCertificateSequenceConfig(String churchNumber);
+    MarriageCertificateResponse prepareCertificate(UUID caseId, MarriageCertificatePrepareRequest request);
+    MarriageCertificateResponse issueCertificate(UUID caseId, MarriageCertificateIssueRequest request);
+    MarriageCertificateResponse getCertificate(UUID caseId);
+    java.util.List<MarriageCertificateResponse> listCertificateRegistry();
+    MarriageCertificateAmendmentResponse createCertificateAmendment(UUID certificateId, MarriageCertificateAmendmentRequest request);
+}
