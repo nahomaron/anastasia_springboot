@@ -39,7 +39,7 @@ public class MemberController {
     private final MemberService memberService;
 
     //
-    @PreAuthorize("hasAnyRole('USER', 'PRIMARY_ADMIN', 'ADMIN') or hasAuthority('ADD_MEMBERS')")
+    @PreAuthorize("isAuthenticated() or hasAuthority('ADD_MEMBERS')")
     @PostMapping("/register-member")
     public ResponseEntity<Adult_MemberResponse> registerMember(@Valid @RequestBody Adult_MemberDTO adultMemberDTO){
 
@@ -49,23 +49,20 @@ public class MemberController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping
     public ResponseEntity<Page<Adult_MemberSummaryResponse>> listOfMembers(Pageable pageable){
         Page<Adult_MemberSummaryResponse> members = memberService.findAllSummary(pageable);
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/requests")
     public ResponseEntity<Page<Adult_MemberResponse>> listPendingMembers(Pageable pageable){
         return new ResponseEntity<>(memberService.findPending(pageable), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/search")
     public ResponseEntity<Page<Adult_MemberSummaryResponse>> searchMembers(
             Pageable pageable,
@@ -74,8 +71,7 @@ public class MemberController {
         return new ResponseEntity<>(memberService.searchNonPendingSummary(pageable, query), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{memberId}")
     public ResponseEntity<Adult_MemberResponse> getMember(@PathVariable Long memberId){
         Optional<Adult_MemberResponse> foundMember = memberService.findMemberById(memberId);
@@ -86,13 +82,13 @@ public class MemberController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/my-family")
     public ResponseEntity<MyFamilyResponse> getCurrentUserFamily() {
         return ResponseEntity.ok(memberService.getCurrentUserFamily());
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/my-family/relationships")
     public ResponseEntity<FamilyMemberSummaryResponse> createFamilyRelationship(
             @Valid @RequestBody UpsertFamilyRelationshipRequest request
@@ -100,7 +96,7 @@ public class MemberController {
         return new ResponseEntity<>(memberService.createFamilyRelationship(request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @PatchMapping("/my-family/relationships/{relationshipId}")
     public ResponseEntity<FamilyMemberSummaryResponse> updateFamilyRelationship(
             @PathVariable Long relationshipId,
@@ -109,22 +105,20 @@ public class MemberController {
         return ResponseEntity.ok(memberService.updateFamilyRelationship(relationshipId, request));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/my-family/relationships/{relationshipId}")
     public ResponseEntity<Void> deleteFamilyRelationship(@PathVariable Long relationshipId) {
         memberService.deleteFamilyRelationship(relationshipId);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_MEMBERS')")
     @PatchMapping("/{memberId}")
     public ResponseEntity<Adult_MemberResponse> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Adult_MemberDTO request){
         return ResponseEntity.ok(memberService.updateMembershipDetails(memberId, request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'APPROVE_MEMBERSHIP')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'APPROVE_MEMBERSHIP')")
     @PatchMapping("/{memberId}/church-approve")
     public ResponseEntity<Adult_MemberResponse> approveByChurch(@PathVariable Long memberId){
         Adult_MemberResponse response = memberService.approveByChurch(memberId);
@@ -138,8 +132,7 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'DELETE_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'DELETE_MEMBERS')")
     @DeleteMapping("/{memberId}")
     public ResponseEntity<?> deleteMemberShip(@PathVariable Long memberId){
         memberService.deleteMembership(memberId);
@@ -173,16 +166,14 @@ public class MemberController {
 //        return productRepository.findAll(spec);
 //    }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/adult/count")
     public ResponseEntity<Long> countAdults() {
         return ResponseEntity.ok(memberService.countNonPending());
     }
 
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST', 'ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'ADVANCED_SEARCH_MEMBERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADVANCED_SEARCH_MEMBERS')")
     @PostMapping("/advanced-search")
     public ResponseEntity<Page<Adult_MemberResponse>> searchMembers(
             @RequestParam(defaultValue = "0") int page,

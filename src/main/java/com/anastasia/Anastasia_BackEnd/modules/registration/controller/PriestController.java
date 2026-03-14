@@ -55,14 +55,14 @@ public class PriestController {
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/church/{churchId}")
     public ResponseEntity<List<PriestResponse>> listPriestsByChurch(@PathVariable Long churchId) {
         List<PriestResponse> priests = priestService.findPriestsByChurchId(churchId);
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/church/{churchId}/active")
     public ResponseEntity<List<PriestResponse>> listActivePriestsByChurch(@PathVariable Long churchId) {
         List<PriestResponse> priests = priestService.findActivePriestsByChurchId(churchId);
@@ -97,8 +97,8 @@ public class PriestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("hasRole('PRIEST') or hasRole('PLATFORM_ADMIN') "
+            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{priestNumber}/members")
     public ResponseEntity<Page<Adult_MemberSummaryResponse>> listMembersByPriest(
             @PathVariable String priestNumber,
@@ -113,8 +113,8 @@ public class PriestController {
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
+    @PreAuthorize("hasRole('PRIEST') or hasRole('PLATFORM_ADMIN') "
+            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping("/{priestNumber}/members/pending")
     public ResponseEntity<Page<Adult_MemberResponse>> listPendingMembersByPriest(
             @PathVariable String priestNumber,
@@ -130,8 +130,8 @@ public class PriestController {
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
+    @PreAuthorize("hasRole('PRIEST') or hasRole('PLATFORM_ADMIN') "
+            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping("/{priestNumber}/children")
     public ResponseEntity<Page<Child_MemberSummaryResponse>> listChildrenByPriest(
             @PathVariable String priestNumber,
