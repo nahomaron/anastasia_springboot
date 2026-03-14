@@ -9,7 +9,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
@@ -108,12 +107,12 @@ public class MemberServiceUnitTest {
         when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
-        MemberResponse response = memberService.registerMember(member);
+        Adult_MemberResponse response = memberService.registerMember(member);
 
         // Assert
         assertThat(response).isNotNull();
         assertThat(response.getMembershipNumber()).isEqualTo("M123456");
-        assertThat(response.getName()).contains(member.getFirstName());
+        assertThat(response.getFirstName()).isEqualTo(member.getFirstName());
 
 
         verify(userRepository, times(1)).findById(user.getUuid());
@@ -172,9 +171,10 @@ public class MemberServiceUnitTest {
         request.setFirstName("Updated");
         when(memberRepository.findByIdAndTenantId(anyLong(), eq(tenantId))).thenReturn(Optional.of(member));
 
-        memberService.updateMembershipDetails(1L, request);
+        Adult_MemberResponse response = memberService.updateMembershipDetails(1L, request);
 
         verify(memberRepository).save(argThat(updated -> "Updated".equals(updated.getFirstName())));
+        assertThat(response.getFirstName()).isEqualTo("Updated");
     }
 
     @Test

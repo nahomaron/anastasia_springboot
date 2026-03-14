@@ -6,7 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
@@ -141,7 +141,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         Adult_MemberDTO adultMemberDTO = TestDataUtil.createTestMemberDTO(church);
         Adult_MemberEntity adultMemberEntity = memberService.convertToEntity(adultMemberDTO);
 
-        MemberResponse response = memberService.registerMember(adultMemberEntity);
+        Adult_MemberResponse response = memberService.registerMember(adultMemberEntity);
 
         assertThat(response.getMembershipNumber()).isNotBlank();
         assertThat(memberRepository.count()).isEqualTo(1);

@@ -98,8 +98,10 @@ public class ChildMapper {
                 .address(childMemberEntity.getAddress())
                 .userId(childMemberEntity.getUserId())
                 .churchId(childMemberEntity.getChurchId())
-                .createdDate(childMemberEntity.getCreatedDate())
-                .lastModifiedDate(childMemberEntity.getLastModifiedDate())
+                .createdAt(childMemberEntity.getCreatedAt())
+                .updatedAt(childMemberEntity.getUpdatedAt())
+                .registeredAt(childMemberEntity.getRegisteredAt())
+                .approvedAt(childMemberEntity.getApprovedAt())
                 .father(buildParentSummary(childMemberEntity.getFather()))
                 .mother(buildParentSummary(childMemberEntity.getMother()))
                 .build();
@@ -117,7 +119,7 @@ public class ChildMapper {
                 .grandFatherName(childMemberEntity.getGrandFatherName())
                 .email(childMemberEntity.getEmail())
                 .phone(childMemberEntity.getPhone())
-                .createdDate(childMemberEntity.getCreatedDate())
+                .createdAt(childMemberEntity.getCreatedAt())
                 .build();
     }
 

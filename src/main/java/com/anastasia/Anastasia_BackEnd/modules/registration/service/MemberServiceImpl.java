@@ -10,6 +10,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.family.UpdateFam
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.family.UpsertFamilyRelationshipRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.*;
@@ -45,9 +48,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -97,7 +102,7 @@ public class MemberServiceImpl implements MemberService {
            keyGenerator = "tenantAwareKeyGenerator",
            allEntries = true)
     @Override
-    public MemberResponse registerMember(Adult_MemberEntity adultMemberEntity) {
+    public Adult_MemberResponse registerMember(Adult_MemberEntity adultMemberEntity) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)){
@@ -113,11 +118,7 @@ public class MemberServiceImpl implements MemberService {
                 )));
 
 
-        ChurchEntity church = churchRepository.findByChurchNumber(adultMemberEntity.getChurchNumber())
-                .orElseThrow(() -> new IllegalStateException(messageService.get(
-                        "registration.churchNumber.invalid",
-                        "No valid church number provided"
-                )));
+        ChurchEntity church = resolveChurch(adultMemberEntity.getChurchNumber());
 
         // alternative
         // Set user reference **without fetching from DB**
@@ -130,6 +131,7 @@ public class MemberServiceImpl implements MemberService {
         adultMemberEntity.setChurch(church);
         Optional.ofNullable(church.getTenant())
                 .ifPresent(tenant -> adultMemberEntity.setTenantId(tenant.getId()));
+        stampAvatar(adultMemberEntity, user.getUuid());
         adultMemberEntity.setApprovedByChurch(false);
         adultMemberEntity.setApprovedByPriest(false);
         adultMemberEntity.setStatus(MemberStatus.PENDING.name());
@@ -155,13 +157,7 @@ public class MemberServiceImpl implements MemberService {
 
         tenantAdminNotificationService.notifyMemberRegistrationSubmitted(membership, user.getUuid());
 
-
-
-       return MemberResponse.builder()
-                .name(membership.getFirstName() + " " + membership.getFatherName() + " " + membership.getGrandFatherName())
-                .membershipNumber(membership.getMembershipNumber())
-                .fatherOfConfession(membership.getFatherOfConfession())
-                .build();
+       return convertToResponse(membership);
     }
 
 
@@ -323,10 +319,21 @@ public class MemberServiceImpl implements MemberService {
                     allEntries = true)}
     )
     @Override
-    public void updateMembershipDetails(Long memberId, Adult_MemberDTO request) {
-        memberRepository.findByIdAndTenantId(memberId, requireTenantId()).ifPresent(memberEntity -> {
+    public Adult_MemberResponse updateMembershipDetails(Long memberId, Adult_MemberDTO request) {
+        Adult_MemberEntity memberEntity = memberRepository.findByIdAndTenantId(memberId, requireTenantId())
+                .orElseThrow(() -> new UsernameNotFoundException(messageService.get(
+                        "registration.member.invalid",
+                        "Not valid member"
+                )));
 
-            Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
+            Optional.ofNullable(request.getChurchNumber()).ifPresent(churchNumber -> {
+                ChurchEntity church = resolveChurch(churchNumber);
+                memberEntity.setChurchNumber(church.getChurchNumber());
+                memberEntity.setChurch(church);
+                if (church.getTenant() != null) {
+                    memberEntity.setTenantId(church.getTenant().getId());
+                }
+            });
             Optional.ofNullable(request.getTitle()).ifPresent(memberEntity::setTitle);
             Optional.ofNullable(request.getFirstName()).ifPresent(memberEntity::setFirstName);
             Optional.ofNullable(request.getFatherName()).ifPresent(memberEntity::setFatherName);
@@ -362,14 +369,18 @@ public class MemberServiceImpl implements MemberService {
             Optional.ofNullable(request.getSpouseIdNumber()).ifPresent(memberEntity::setSpouseIdNumber);
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
+            Optional.ofNullable(request.getAvatar()).ifPresent(avatar -> {
+                memberEntity.setAvatar(mapAvatar(avatar));
+                stampAvatar(memberEntity, memberEntity.getUserId());
+            });
             Optional.ofNullable(request.getTermsVersion()).ifPresent(memberEntity::setTermsVersion);
             Optional.ofNullable(request.getTermsAcceptedAt()).ifPresent(memberEntity::setTermsAcceptedAt);
             if (request.isTermsAccepted()) {
                 memberEntity.setTermsAccepted(true);
             }
 
-            memberRepository.save(memberEntity);
-        });
+            Adult_MemberEntity saved = memberRepository.save(memberEntity);
+            return convertToResponse(saved);
     }
 
     @Caching(
@@ -606,11 +617,55 @@ public class MemberServiceImpl implements MemberService {
         boolean requiresPriestApproval = org.springframework.util.StringUtils.hasText(member.getPriestNumber());
         if (!requiresPriestApproval && member.isApprovedByChurch()) {
             member.setStatus(MemberStatus.ACTIVE.name());
+            if (member.getApprovedAt() == null) {
+                member.setApprovedAt(LocalDateTime.now());
+            }
             return;
         }
         if (requiresPriestApproval && member.isApprovedByChurch() && member.isApprovedByPriest()) {
             member.setStatus(MemberStatus.ACTIVE.name());
+            if (member.getApprovedAt() == null) {
+                member.setApprovedAt(LocalDateTime.now());
+            }
         }
+    }
+
+    private ChurchEntity resolveChurch(String churchNumber) {
+        if (!StringUtils.hasText(churchNumber)) {
+            throw new IllegalStateException(messageService.get(
+                    "registration.churchNumber.invalid",
+                    "No valid church number provided"
+            ));
+        }
+        return churchRepository.findByChurchNumber(churchNumber.trim())
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "registration.churchNumber.invalid",
+                        "No valid church number provided"
+                )));
+    }
+
+    private void stampAvatar(Adult_MemberEntity member, UUID uploadedByUserId) {
+        if (member.getAvatar() == null) {
+            return;
+        }
+        member.getAvatar().setImageAssetType(ImageAssetType.MEMBER);
+        member.getAvatar().setTenantId(member.getTenantId());
+        member.getAvatar().setUploadedByUserId(uploadedByUserId);
+        if (member.getUserId() != null) {
+            member.getAvatar().setOwnerId(member.getUserId());
+        } else if (member.getTenantId() != null) {
+            member.getAvatar().setOwnerId(member.getTenantId());
+        }
+    }
+
+    private ImageAssetEntity mapAvatar(ImageAssetDTO avatar) {
+        if (avatar == null) {
+            return null;
+        }
+        return ImageAssetEntity.builder()
+                .imageUrl(avatar.getImageUrl())
+                .imageSize(avatar.getImageSize())
+                .build();
     }
 
     private void assignMemberRoleIfApproved(Adult_MemberEntity member) {

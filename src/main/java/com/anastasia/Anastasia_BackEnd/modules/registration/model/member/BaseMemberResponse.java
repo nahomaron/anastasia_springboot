@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -56,6 +57,8 @@ public class BaseMemberResponse {
     private UUID userId;
     private Long churchId;
 
-    private LocalDateTime createdDate;
-    private LocalDateTime lastModifiedDate;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private LocalDateTime registeredAt;
+    private LocalDateTime approvedAt;
 }

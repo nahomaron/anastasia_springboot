@@ -124,12 +124,13 @@ class MemberControllerIT extends PostgresTestContainer {
 
     @Test
     void testRegisterMember() throws Exception {
-        mockMvc.perform(post("/api/v1/registrar/members/register-member")
+                mockMvc.perform(post("/api/v1/registrar/members/register-member")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(adultMemberDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.membershipNumber").exists());
+                .andExpect(jsonPath("$.membershipNumber").exists())
+                .andExpect(jsonPath("$.firstName", is(adultMemberDTO.getFirstName())));
     }
 
     @Test
@@ -148,7 +149,7 @@ class MemberControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(get("/api/v1/registrar/members/{id}", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isFound())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName", is(saved.getFirstName())));
     }
 
@@ -164,7 +165,8 @@ class MemberControllerIT extends PostgresTestContainer {
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedDTO)))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName", is("UpdatedName")));
     }
 
     @Test
@@ -173,7 +175,8 @@ class MemberControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}/church-approve", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvedByChurch", is(true)));
     }
 
     @Test
@@ -183,7 +186,8 @@ class MemberControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}/priest-approve", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvedByPriest", is(true)));
     }
 
     @Test

@@ -7,7 +7,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyMemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.MyFamilyResponse;
@@ -42,11 +41,11 @@ public class MemberController {
     //
     @PreAuthorize("hasAnyRole('USER', 'PRIMARY_ADMIN', 'ADMIN') or hasAuthority('ADD_MEMBERS')")
     @PostMapping("/register-member")
-    public ResponseEntity<MemberResponse> registerMember(@Valid @RequestBody Adult_MemberDTO adultMemberDTO){
+    public ResponseEntity<Adult_MemberResponse> registerMember(@Valid @RequestBody Adult_MemberDTO adultMemberDTO){
 
         Adult_MemberEntity adultMemberEntity = memberService.convertToEntity(adultMemberDTO);
         adultMemberEntity.setStatus(MemberStatus.PENDING.name());
-        MemberResponse response = memberService.registerMember(adultMemberEntity);
+        Adult_MemberResponse response = memberService.registerMember(adultMemberEntity);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -120,9 +119,8 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('PRIEST', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
             "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_MEMBERS')")
     @PatchMapping("/{memberId}")
-    public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Adult_MemberDTO request){
-        memberService.updateMembershipDetails(memberId, request);
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    public ResponseEntity<Adult_MemberResponse> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Adult_MemberDTO request){
+        return ResponseEntity.ok(memberService.updateMembershipDetails(memberId, request));
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
@@ -130,14 +128,14 @@ public class MemberController {
     @PatchMapping("/{memberId}/church-approve")
     public ResponseEntity<Adult_MemberResponse> approveByChurch(@PathVariable Long memberId){
         Adult_MemberResponse response = memberService.approveByChurch(memberId);
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('PRIEST')")
     @PatchMapping("/{memberId}/priest-approve")
     public ResponseEntity<Adult_MemberResponse> approveByPriest(@PathVariable Long memberId){
         Adult_MemberResponse response = memberService.approveByPriest(memberId);
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') " +

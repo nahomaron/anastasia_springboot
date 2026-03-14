@@ -6,7 +6,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyMemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.MyFamilyResponse;
 import org.springframework.data.domain.Page;
@@ -21,7 +20,7 @@ import java.util.UUID;
 public interface MemberService {
     Adult_MemberEntity convertToEntity(Adult_MemberDTO adultMemberDTO);
 
-    MemberResponse registerMember(Adult_MemberEntity adultMemberEntity);
+    Adult_MemberResponse registerMember(Adult_MemberEntity adultMemberEntity);
 
     Adult_MemberDTO convertToDTO(Adult_MemberEntity savedMember);
 
@@ -47,7 +46,7 @@ public interface MemberService {
 
     Optional<Adult_MemberResponse> findMemberById(Long memberId);
 
-    void updateMembershipDetails(Long memberId, Adult_MemberDTO request);
+    Adult_MemberResponse updateMembershipDetails(Long memberId, Adult_MemberDTO request);
 
     void deleteMembership(Long memberId);
 

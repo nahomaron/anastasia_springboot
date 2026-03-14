@@ -103,8 +103,10 @@ public class MemberMapper {
                 .address(adultMemberEntity.getAddress())
                 .userId(adultMemberEntity.getUserId())
                 .churchId(adultMemberEntity.getChurchId())
-                .createdDate(adultMemberEntity.getCreatedDate())
-                .lastModifiedDate(adultMemberEntity.getLastModifiedDate())
+                .createdAt(adultMemberEntity.getCreatedAt())
+                .updatedAt(adultMemberEntity.getUpdatedAt())
+                .registeredAt(adultMemberEntity.getRegisteredAt())
+                .approvedAt(adultMemberEntity.getApprovedAt())
                 .approvedByChurch(adultMemberEntity.isApprovedByChurch())
                 .approvedByPriest(adultMemberEntity.isApprovedByPriest())
                 .termsAccepted(adultMemberEntity.isTermsAccepted())
@@ -132,7 +134,7 @@ public class MemberMapper {
                 .grandFatherName(adultMemberEntity.getGrandFatherName())
                 .email(adultMemberEntity.getEmail())
                 .phone(adultMemberEntity.getPhone())
-                .createdDate(adultMemberEntity.getCreatedDate())
+                .createdAt(adultMemberEntity.getCreatedAt())
                 .build();
     }
 
@@ -154,6 +156,7 @@ public class MemberMapper {
                 .motherFullNameT(dto.getMotherFullNameT())
                 .gender(dto.getGender())
                 .birthday(dto.getBirthday())
+                .avatar(mapAvatar(dto.getAvatar()))
                 .nationality(dto.getNationality())
                 .placeOfBirth(dto.getPlaceOfBirth())
                 .village(dto.getVillage())
@@ -179,6 +182,16 @@ public class MemberMapper {
                 .termsVersion(dto.getTermsVersion())
                 .termsAcceptedAt(dto.getTermsAcceptedAt())
                 // .status(null) // optionally set default value
+                .build();
+    }
+
+    private ImageAssetEntity mapAvatar(ImageAssetDTO avatar) {
+        if (avatar == null) {
+            return null;
+        }
+        return ImageAssetEntity.builder()
+                .imageUrl(avatar.getImageUrl())
+                .imageSize(avatar.getImageSize())
                 .build();
     }
 
