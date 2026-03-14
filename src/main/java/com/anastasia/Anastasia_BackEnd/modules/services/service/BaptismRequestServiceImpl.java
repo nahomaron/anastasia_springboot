@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -80,7 +79,7 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
                 saved.getId(),
                 saved.getRequestNumber(),
                 saved.getStatus(),
-                saved.getCreatedDate() != null ? saved.getCreatedDate() : LocalDateTime.now()
+                saved.getCreatedAt() != null ? saved.getCreatedAt() : Instant.now()
         );
     }
 
@@ -96,8 +95,8 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
                         request.getRequestNumber(),
                         "BAPTISM",
                         request.getStatus(),
-                        request.getCreatedDate(),
-                        request.getReviewedAt() == null ? null : LocalDateTime.ofInstant(request.getReviewedAt(), java.time.ZoneId.systemDefault()),
+                        request.getCreatedAt(),
+                        request.getReviewedAt(),
                         request.getEnglish() != null ? request.getEnglish().getFullName() : null,
                         request.getChurch() != null ? request.getChurch().getChurchName() : request.getChurchNumber(),
                         request.getChurchNumber()

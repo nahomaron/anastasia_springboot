@@ -5,7 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.services.marriage.model.MarriageC
 import com.anastasia.Anastasia_BackEnd.modules.services.marriage.model.MarriageLanguageCode;
 import com.anastasia.Anastasia_BackEnd.modules.services.marriage.model.MarriagePairingMode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +28,7 @@ public record MarriageCaseResponse(
         boolean readyForScheduling,
         boolean ceremonyCompleted,
         boolean certificateIssued,
-        LocalDateTime createdAt,
+        Instant createdAt,
         List<MarriagePartySummaryResponse> parties
 ) {
 }

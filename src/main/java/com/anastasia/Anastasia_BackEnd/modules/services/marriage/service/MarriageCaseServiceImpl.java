@@ -1538,7 +1538,7 @@ public class MarriageCaseServiceImpl implements MarriageCaseService {
                 marriageCase.isReadyForScheduling(),
                 marriageCase.isCeremonyCompleted(),
                 marriageCase.isCertificateIssued(),
-                marriageCase.getCreatedDate(),
+                marriageCase.getCreatedAt(),
                 parties
         );
     }
@@ -1599,7 +1599,7 @@ public class MarriageCaseServiceImpl implements MarriageCaseService {
                 note.getNoteType(),
                 note.getVisibility(),
                 note.getContent(),
-                note.getCreatedDate()
+                note.getCreatedAt()
         );
     }
 

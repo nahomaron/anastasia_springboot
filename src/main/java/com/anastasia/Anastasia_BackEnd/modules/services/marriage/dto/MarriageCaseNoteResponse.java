@@ -2,7 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.services.marriage.dto;
 
 import com.anastasia.Anastasia_BackEnd.modules.services.marriage.model.MarriageNoteVisibility;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record MarriageCaseNoteResponse(
@@ -12,6 +12,6 @@ public record MarriageCaseNoteResponse(
         String noteType,
         MarriageNoteVisibility visibility,
         String content,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
 }
