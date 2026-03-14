@@ -151,7 +151,7 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
                 .latitude(40.7128)
                 .longitude(-74.0060)
                 .build();
-        event.setCreatedDate(LocalDateTime.now());
+        event.setCreatedAt(Instant.now());
 
         EventEntity savedEvent = eventService.createEvent(event);
         assertThat(savedEvent.getEventId()).isNotNull();

@@ -345,7 +345,7 @@ class GroupServiceUnitTest {
         when(groupJoinRequestRepository.save(any(GroupJoinRequestEntity.class))).thenAnswer(invocation -> {
             GroupJoinRequestEntity entity = invocation.getArgument(0);
             entity.setId(99L);
-            entity.setCreatedDate(java.time.LocalDateTime.now());
+            entity.setCreatedAt(java.time.Instant.now());
             return entity;
         });
 
