@@ -353,6 +353,9 @@ public class TenantOnboardingBillingService {
                 .status(session.getStatus())
                 .tenantType(session.getTenantType())
                 .selectedPlan(session.getSelectedPlan())
+                .ownerName(session.getOwnerName())
+                .ownerEmail(session.getOwnerEmail())
+                .ownerPhone(session.getOwnerPhone())
                 .paymentRequired(session.isPaymentRequired())
                 .currency(session.getCurrency())
                 .expectedAmountMinor(session.getExpectedAmountMinor())
@@ -361,6 +364,8 @@ public class TenantOnboardingBillingService {
                 .provisionedTenantId(session.getProvisionedTenantId())
                 .provisionedOwnerUserId(session.getProvisionedOwnerUserId())
                 .failureReason(session.getFailureReason())
+                .createdAt(session.getCreatedAt())
+                .updatedAt(session.getUpdatedAt())
                 .expiresAt(session.getExpiresAt())
                 .build();
     }

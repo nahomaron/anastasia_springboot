@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,7 +36,7 @@ import java.util.UUID;
                 @Index(name = "idx_tenant_onboarding_sessions_expires", columnList = "expires_at")
         }
 )
-public class TenantOnboardingSessionEntity {
+public class TenantOnboardingSessionEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -127,17 +128,10 @@ public class TenantOnboardingSessionEntity {
     @Column(name = "failure_reason")
     private String failureReason;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
     @PrePersist
     public void onCreate() {
         Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+        initializeAuditTimestamps(now);
         if (this.status == null) {
             this.status = OnboardingSessionStatus.DRAFT;
         }
@@ -145,6 +139,6 @@ public class TenantOnboardingSessionEntity {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = Instant.now();
+        touchAuditTimestamps(Instant.now());
     }
 }

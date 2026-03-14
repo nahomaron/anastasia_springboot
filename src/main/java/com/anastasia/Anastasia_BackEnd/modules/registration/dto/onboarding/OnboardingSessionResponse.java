@@ -16,6 +16,9 @@ public class OnboardingSessionResponse {
     OnboardingSessionStatus status;
     TenantType tenantType;
     SubscriptionPlan selectedPlan;
+    String ownerName;
+    String ownerEmail;
+    String ownerPhone;
     boolean paymentRequired;
     String currency;
     Long expectedAmountMinor;
@@ -24,5 +27,7 @@ public class OnboardingSessionResponse {
     UUID provisionedTenantId;
     UUID provisionedOwnerUserId;
     String failureReason;
+    Instant createdAt;
+    Instant updatedAt;
     Instant expiresAt;
 }

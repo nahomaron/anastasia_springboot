@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.LocalDateTimeAuditMetadata;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,7 +32,7 @@ import java.time.Instant;
                 @Index(name = "idx_onboarding_email_verification_expires", columnList = "expires_at")
         }
 )
-public class OnboardingEmailVerificationCodeEntity {
+public class OnboardingEmailVerificationCodeEntity extends LocalDateTimeAuditMetadata {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,12 +59,6 @@ public class OnboardingEmailVerificationCodeEntity {
     @Column(name = "blocked_until")
     private Instant blockedUntil;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
     @Version
     @Column(nullable = false)
     private long version;
@@ -71,12 +66,11 @@ public class OnboardingEmailVerificationCodeEntity {
     @PrePersist
     public void onCreate() {
         Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+        initializeAuditTimestamps(now);
     }
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = Instant.now();
+        touchAuditTimestamps(Instant.now());
     }
 }
