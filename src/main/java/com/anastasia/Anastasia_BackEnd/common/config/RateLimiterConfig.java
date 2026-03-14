@@ -21,8 +21,12 @@ public class RateLimiterConfig {
     }
 
     public Bucket getBucket(String key) {
+        return getBucket(key, 5, Duration.ofMinutes(1));
+    }
+
+    public Bucket getBucket(String key, long capacity, Duration refillPeriod) {
         return buckets.computeIfAbsent(key, k -> Bucket.builder()
-                .addLimit(Bandwidth.classic(5, Refill.greedy(5, Duration.ofMinutes(1)))) // 5 requests per minute
+                .addLimit(Bandwidth.classic(capacity, Refill.greedy(capacity, refillPeriod)))
                 .build());
     }
 
