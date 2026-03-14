@@ -8,6 +8,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
@@ -94,11 +95,14 @@ public class TestDataUtil {
                 .email("stmichael+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
                 .phone("+1555" + randomDigits(7))
+                .timezone("America/New_York")
+                .locale("en-US")
                 .denomination("Orthodox")
                 .description("Test parish community")
                 .usesOurServices(true)
                 .neighborhood("Downtown")
                 .tNeighborhood("መሃል ከተማ")
+                .status(ChurchStatus.ACTIVE)
                 .address(Address.builder()
                         .addressLine1("123 Test St")
                         .addressLine2("Suite 100")
@@ -107,10 +111,18 @@ public class TestDataUtil {
                         .country("USA")
                         .postalCode("22310")
                         .build())
-                .gpsLocation("38.8048,-77.0469")
+                .gpsLocation("https://maps.example.com/churches/" + uniqueSuffix().toLowerCase())
+                .website("https://stmichael.example.org/" + uniqueSuffix().toLowerCase())
                 .instagram("instagram.com/stmichael/" + uniqueSuffix())
                 .youtube("youtube.com/stmichael/" + uniqueSuffix())
                 .facebook("facebook.com/stmichael/" + uniqueSuffix())
+                .profilePicture(ImageAssetEntity.builder()
+                        .tenantId(tenant.getId())
+                        .ownerId(tenant.getId())
+                        .imageAssetType(ImageAssetType.CHURCH)
+                        .imageUrl("https://cdn.example.com/churches/" + uniqueSuffix().toLowerCase() + ".png")
+                        .imageSize("800x800")
+                        .build())
                 .build();
     }
 
@@ -125,6 +137,8 @@ public class TestDataUtil {
                 .email("stgebriel+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
                 .phone("+1555" + randomDigits(7))
+                .timezone("America/New_York")
+                .locale("en-US")
                 .denomination("Orthodox")
                 .description("Primary test parish DTO")
                 .usesOurServices(true)
@@ -136,10 +150,16 @@ public class TestDataUtil {
                         .country("USA")
                         .postalCode("20190")
                         .build())
-                .gpsLocation("38.9506,-77.4250")
+                .gpsLocation("https://maps.example.com/churches/" + uniqueSuffix().toLowerCase())
+                .website("https://stmichael.example.org/" + uniqueSuffix().toLowerCase())
                 .instagram("instagram.com/stmichael/" + uniqueSuffix())
                 .youtube("youtube.com/stmichael/" + uniqueSuffix())
                 .facebook("facebook.com/stmichael/" + uniqueSuffix())
+                .status(ChurchStatus.ACTIVE)
+                .profilePicture(ImageAssetDTO.builder()
+                        .imageUrl("https://cdn.example.com/churches/" + uniqueSuffix().toLowerCase() + ".png")
+                        .imageSize("800x800")
+                        .build())
                 .build();
     }
     public static ChurchDTO createTestChurchDTO_B() {
@@ -153,6 +173,8 @@ public class TestDataUtil {
                 .email("stmary+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
                 .phone("+1555" + randomDigits(7))
+                .timezone("America/New_York")
+                .locale("en-US")
                 .denomination("Catholic")
                 .description("Secondary test parish DTO")
                 .usesOurServices(false)
@@ -164,10 +186,16 @@ public class TestDataUtil {
                         .country("USA")
                         .postalCode("22202")
                         .build())
-                .gpsLocation("38.8577,-77.0510")
+                .gpsLocation("https://maps.example.com/churches/" + uniqueSuffix().toLowerCase())
+                .website("https://stmary.example.org/" + uniqueSuffix().toLowerCase())
                 .instagram("instagram.com/stmary/" + uniqueSuffix())
                 .youtube("youtube.com/stmary/" + uniqueSuffix())
                 .facebook("facebook.com/st.mary/" + uniqueSuffix())
+                .status(ChurchStatus.INACTIVE)
+                .profilePicture(ImageAssetDTO.builder()
+                        .imageUrl("https://cdn.example.com/churches/" + uniqueSuffix().toLowerCase() + ".png")
+                        .imageSize("800x800")
+                        .build())
                 .build();
     }
 

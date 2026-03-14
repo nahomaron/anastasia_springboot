@@ -2,10 +2,12 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -34,6 +36,7 @@ class ChurchServiceUnitTest {
     @Mock private ChurchMapper churchMapper;
     @Mock private TenantRepository tenantRepository;
     @Mock private SecurityUtils securityUtils;
+    @Mock private LocalizedMessageService messageService;
 
     @InjectMocks
     private ChurchServiceImpl churchService;
@@ -45,6 +48,22 @@ class ChurchServiceUnitTest {
     void setUp() {
         tenant = TestDataUtil.createTestTenantEntity();
         church = TestDataUtil.createTestChurchEntity(tenant);
+        lenient().when(messageService.get(eq("church.notFound"), anyString())).thenReturn("Church Not Found");
+        lenient().when(messageService.get(eq("tenant.context.missing"), anyString())).thenReturn("Tenant ID is not set in the context");
+        lenient().when(messageService.get(eq("tenant.invalid"), anyString())).thenReturn("No valid tenant found");
+        lenient().when(churchMapper.churchEntityToResponse(any(ChurchEntity.class))).thenAnswer(invocation -> {
+            ChurchEntity mappedChurch = invocation.getArgument(0);
+            return ChurchResponse.builder()
+                    .churchId(mappedChurch.getChurchId())
+                    .churchNumber(mappedChurch.getChurchNumber())
+                    .churchName(mappedChurch.getChurchName())
+                    .diocese(mappedChurch.getDiocese())
+                    .email(mappedChurch.getEmail())
+                    .phone(mappedChurch.getPhone())
+                    .status(mappedChurch.getStatus())
+                    .tenantId(mappedChurch.getTenant() != null ? mappedChurch.getTenant().getId() : null)
+                    .build();
+        });
     }
 
     @Test
@@ -75,13 +94,18 @@ class ChurchServiceUnitTest {
     @Test
     void testUpdateChurch_whenExists() {
         when(churchRepository.findById(1L)).thenReturn(Optional.of(church));
+        when(churchRepository.save(any(ChurchEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ChurchEntity update = TestDataUtil.createTestChurchEntity(tenant);
         update.setChurchName("Updated Church");
+        update.setStatus(ChurchStatus.ACTIVE);
 
-        churchService.updateChurch(1L, update);
+        ChurchResponse response = churchService.updateChurch(1L, update);
 
-        verify(churchRepository).save(update);
+        assertThat(response.getChurchName()).isEqualTo("Updated Church");
+        verify(churchRepository).save(church);
+        assertThat(church.getChurchName()).isEqualTo("Updated Church");
+        assertThat(church.getChurchNumber()).isNotBlank();
     }
 
     @Test
@@ -118,14 +142,15 @@ class ChurchServiceUnitTest {
         TenantContext.setTenantId(tenantId);
 
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(tenant));
-        when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("CH1234");
-        when(churchRepository.existsByChurchNumber("CH1234")).thenReturn(false);
+        when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("MI1234");
+        when(churchRepository.existsByChurchNumber("MI1234")).thenReturn(false);
         when(churchRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         ChurchEntity newChurch = TestDataUtil.createTestChurchEntity(tenant);
-        String result = churchService.createChurch(newChurch);
+        ChurchResponse result = churchService.createChurch(newChurch);
 
-        assertThat(result).isEqualTo("CH1234");
+        assertThat(result.getChurchNumber()).isEqualTo("MI1234");
+        assertThat(result.getTenantId()).isEqualTo(tenant.getId());
         verify(churchRepository).save(newChurch);
     }
 

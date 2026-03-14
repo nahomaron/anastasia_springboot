@@ -1,6 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Church Register Response",
-  "type": "string",
-  "minLength": 1
+  "type": "object",
+  "required": ["churchId", "churchNumber", "churchName", "status"],
+  "properties": {
+    "churchId": {
+      "type": "integer"
+    },
+    "churchNumber": {
+      "type": "string",
+      "minLength": 1
+    },
+    "churchName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
 }

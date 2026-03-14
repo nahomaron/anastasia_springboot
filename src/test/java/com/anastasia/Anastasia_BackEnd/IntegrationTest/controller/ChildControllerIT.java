@@ -81,7 +81,7 @@ class ChildControllerIT extends PostgresTestContainer {
         TenantEntity tenant = tenantRepository.save(TestDataUtil.createTestTenantEntity());
         TenantContext.setTenantId(tenant.getId());
 
-        String churchNumber = churchService.createChurch(TestDataUtil.createTestChurchEntity(tenant));
+        String churchNumber = churchService.createChurch(TestDataUtil.createTestChurchEntity(tenant)).getChurchNumber();
         church = churchRepository.findByChurchNumber(churchNumber).orElse(null);
 
 //        UserEntity user = TestDataUtil.createTestUserEntityA();

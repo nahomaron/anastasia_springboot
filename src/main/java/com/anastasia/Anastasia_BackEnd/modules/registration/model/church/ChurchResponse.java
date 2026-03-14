@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -69,5 +72,10 @@ public class ChurchResponse {
     private String facebook;
     private boolean churchProfileComplete;
     private ChurchStatus status;
+    private UUID tenantId;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant activatedAt;
+    private Instant deactivatedAt;
 
 }

@@ -23,14 +23,15 @@ public class ChurchController {
 
     private final ChurchService churchService;
 
-    @PostMapping("/register")
-    public ResponseEntity<String> createChurch(@Valid @RequestBody ChurchDTO churchDTO){
+    @PostMapping({"", "/register"})
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN')")
+    public ResponseEntity<ChurchResponse> createChurch(@Valid @RequestBody ChurchDTO churchDTO){
         ChurchEntity churchEntity = churchService.convertToEntity(churchDTO);
-        String churchNumber =  churchService.createChurch(churchEntity);
+        ChurchResponse churchResponse = churchService.createChurch(churchEntity);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("\"" + churchNumber + "\"");
+                .body(churchResponse);
     }
 
     @GetMapping
@@ -56,7 +57,7 @@ public class ChurchController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/{churchId}/profile")
+    @GetMapping({"/{churchId}", "/{churchId}/profile"})
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
     public ResponseEntity<ChurchResponse> findChurch(@PathVariable Long churchId){
         Optional<ChurchEntity> foundChurch = churchService.findOne(churchId);
@@ -69,7 +70,7 @@ public class ChurchController {
 
     @PutMapping("/{churchId}")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN')")
-    public ResponseEntity<String> updateChurch(@PathVariable Long churchId, @Valid @RequestBody ChurchDTO churchDTO){
+    public ResponseEntity<ChurchResponse> updateChurch(@PathVariable Long churchId, @Valid @RequestBody ChurchDTO churchDTO){
         ChurchEntity churchEntity = churchService.convertToEntity(churchDTO);
 
         boolean churchExits = churchService.exists(churchId);
@@ -78,9 +79,9 @@ public class ChurchController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        churchService.updateChurch(churchId, churchEntity);
+        ChurchResponse churchResponse = churchService.updateChurch(churchId, churchEntity);
 
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        return ResponseEntity.ok(churchResponse);
     }
 
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")

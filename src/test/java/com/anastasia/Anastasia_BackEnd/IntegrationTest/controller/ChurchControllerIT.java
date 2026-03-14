@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
@@ -122,7 +123,8 @@ class ChurchControllerIT extends PostgresTestContainer {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testChurch)))
                 .andExpect(status().isCreated())
-                .andExpect(content().string(notNullValue()));
+                .andExpect(jsonPath("$.churchNumber", notNullValue()))
+                .andExpect(jsonPath("$.churchName", is(testChurch.getChurchName())));
     }
 
     @Test
@@ -141,7 +143,7 @@ class ChurchControllerIT extends PostgresTestContainer {
     @WithMockUser(roles = "PLATFORM_ADMIN")
     void testFindChurchById() throws Exception {
         ChurchDTO churchDTO2 = TestDataUtil.createTestChurchDTO_B();
-        String churchNumber = churchService.createChurch(churchService.convertToEntity(churchDTO2));
+        String churchNumber = churchService.createChurch(churchService.convertToEntity(churchDTO2)).getChurchNumber();
         ChurchEntity church = churchRepository.findByChurchNumber(churchNumber).orElse(null);
 
         assert church != null;
@@ -156,7 +158,7 @@ class ChurchControllerIT extends PostgresTestContainer {
       ChurchDTO churchDTO1 = TestDataUtil.createTestChurchDTO();
       ChurchEntity churchEntity = churchService.convertToEntity(churchDTO1);
 
-      String churchNum = churchService.createChurch(churchEntity);
+      String churchNum = churchService.createChurch(churchEntity).getChurchNumber();
 
       ChurchEntity church01 = churchRepository.findByChurchNumber(churchNum).orElse(null);
       churchDTO1.setChurchName("Updated Church Name");
@@ -166,14 +168,15 @@ class ChurchControllerIT extends PostgresTestContainer {
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(churchDTO1)))
-              .andExpect(status().isAccepted());
+              .andExpect(status().isOk())
+              .andExpect(jsonPath("$.churchName", is("Updated Church Name")));
     }
 
     @Test
     @WithMockUser(roles = "PLATFORM_ADMIN")
     void testDeleteChurch() throws Exception {
         ChurchDTO churchDTO1 = TestDataUtil.createTestChurchDTO();
-        String churchNum = churchService.createChurch(churchService.convertToEntity(churchDTO1));
+        String churchNum = churchService.createChurch(churchService.convertToEntity(churchDTO1)).getChurchNumber();
         ChurchEntity church01 = churchRepository.findByChurchNumber(churchNum).orElse(null);
 
         assert church01 != null;

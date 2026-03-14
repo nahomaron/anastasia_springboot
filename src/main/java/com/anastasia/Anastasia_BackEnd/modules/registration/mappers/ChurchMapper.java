@@ -78,6 +78,11 @@ public interface ChurchMapper {
                 .facebook(churchEntity.getFacebook())
                 .churchProfileComplete(churchEntity.isChurchProfileComplete())
                 .status(churchEntity.getStatus())
+                .tenantId(churchEntity.getTenant() != null ? churchEntity.getTenant().getId() : null)
+                .createdAt(churchEntity.getCreatedAt())
+                .updatedAt(churchEntity.getUpdatedAt())
+                .activatedAt(churchEntity.getActivatedAt())
+                .deactivatedAt(churchEntity.getDeactivatedAt())
                 .build();
     }
 
@@ -109,7 +114,6 @@ public interface ChurchMapper {
                 .instagram(churchDTO.getInstagram())
                 .youtube(churchDTO.getYoutube())
                 .facebook(churchDTO.getFacebook())
-                .churchProfileComplete(churchDTO.isChurchProfileComplete())
                 .status(churchDTO.getStatus())
                 .profilePicture(map(churchDTO.getProfilePicture()))
                 .build();

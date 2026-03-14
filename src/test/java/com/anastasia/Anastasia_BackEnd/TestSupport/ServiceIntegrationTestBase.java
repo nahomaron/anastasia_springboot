@@ -73,7 +73,7 @@ public abstract class ServiceIntegrationTestBase {
         tenant = tenantRepository.save(TestDataUtil.createTestTenantEntity());
         TenantContext.setTenantId(tenant.getId());
 
-        String churchNumber = churchService.createChurch(TestDataUtil.createTestChurchEntity(tenant));
+        String churchNumber = churchService.createChurch(TestDataUtil.createTestChurchEntity(tenant)).getChurchNumber();
         church = churchRepository.findByChurchNumber(churchNumber)
                 .orElseThrow(() -> new IllegalStateException("Failed to persist default church"));
     }

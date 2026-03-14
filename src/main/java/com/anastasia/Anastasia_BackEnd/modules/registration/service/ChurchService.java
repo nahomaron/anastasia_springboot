@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface ChurchService {
     ChurchEntity convertToEntity(ChurchDTO churchDTO);
 
-    String createChurch(ChurchEntity churchEntity);
+    ChurchResponse createChurch(ChurchEntity churchEntity);
 
     ChurchDTO convertToDTO(ChurchEntity churchEntity);
 
@@ -23,7 +23,7 @@ public interface ChurchService {
 
     boolean exists(Long churchId);
 
-    void updateChurch(Long churchId, ChurchEntity churchEntity);
+    ChurchResponse updateChurch(Long churchId, ChurchEntity churchEntity);
 
     void deleteChurch(Long churchId);
 

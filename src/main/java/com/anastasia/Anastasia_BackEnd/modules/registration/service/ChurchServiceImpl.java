@@ -21,7 +21,9 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,8 +53,7 @@ public class ChurchServiceImpl implements ChurchService{
         }
 
         if (entity.getProfilePicture() != null && entity.getTenant() != null) {
-            entity.getProfilePicture().setImageAssetType(ImageAssetType.CHURCH);
-            entity.getProfilePicture().setOwnerId(entity.getTenant().getId());
+            stampProfilePicture(entity, entity.getProfilePicture());
         }
 
         return entity;
@@ -84,7 +85,7 @@ public class ChurchServiceImpl implements ChurchService{
 //            }
 //    )
     @Override
-    public String createChurch(ChurchEntity churchEntity) {
+    public ChurchResponse createChurch(ChurchEntity churchEntity) {
 
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
@@ -101,16 +102,19 @@ public class ChurchServiceImpl implements ChurchService{
                 )));
 
         churchEntity.setTenant(tenant);
-
+        applyStatusLifecycle(churchEntity, null);
 
         churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchName(), 5));
+        if (churchEntity.getProfilePicture() != null) {
+            stampProfilePicture(churchEntity, churchEntity.getProfilePicture());
+        }
         var savedChurch = churchRepository.save(churchEntity);
 
         // assign the church back to the tenant
         tenant.assignChurch(savedChurch);
         tenantRepository.save(tenant);
 
-        return savedChurch.getChurchNumber();
+        return convertToResponse(savedChurch);
     }
 
 //    @Cacheable(value = "churches_all", keyGenerator = "tenantAwareKeyGenerator")
@@ -160,17 +164,17 @@ public class ChurchServiceImpl implements ChurchService{
 //            }
 //    )
     @Override
-    public void updateChurch(Long churchId, ChurchEntity churchEntity) {
+    public ChurchResponse updateChurch(Long churchId, ChurchEntity churchEntity) {
         ChurchEntity existingChurch = churchRepository.findById(churchId)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get(
                         "church.notFound",
                         "Church Not Found"
                 )));
 
-        churchEntity.setChurchId(existingChurch.getChurchId());
-        churchEntity.setTenant(existingChurch.getTenant());
-        churchEntity.setChurchNumber(existingChurch.getChurchNumber()); // ✅ Fix here
-        churchRepository.save(churchEntity);
+        mergeChurch(existingChurch, churchEntity);
+        applyStatusLifecycle(existingChurch, churchEntity.getStatus());
+        ChurchEntity savedChurch = churchRepository.save(existingChurch);
+        return convertToResponse(savedChurch);
 
     }
 
@@ -196,17 +200,7 @@ public class ChurchServiceImpl implements ChurchService{
     }
 
     private String generateUniqueChurchNumber(String churchName, int length) {
-
-        String baseLetter = null;
-
-        // Ensure a valid church name is provided
-        if (churchName != null && !churchName.isBlank()) {
-            if (churchName.startsWith("st.")) {
-                baseLetter = churchName.substring(3, 5).toUpperCase();
-            } else {
-                baseLetter = churchName.substring(0, 2).toUpperCase();
-            }
-        }
+        String baseLetter = resolveChurchNumberPrefix(churchName);
 
         String churchNumber;
 
@@ -214,5 +208,106 @@ public class ChurchServiceImpl implements ChurchService{
             churchNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);
         } while (churchRepository.existsByChurchNumber(churchNumber)); // Keep generating if it already exists
         return churchNumber;
+    }
+
+    private void mergeChurch(ChurchEntity target, ChurchEntity incoming) {
+        target.setPrefix(incoming.getPrefix());
+        target.setTPrefix(incoming.getTPrefix());
+        target.setChurchName(incoming.getChurchName());
+        target.setTChurchName(incoming.getTChurchName());
+        target.setNeighborhood(incoming.getNeighborhood());
+        target.setTNeighborhood(incoming.getTNeighborhood());
+        target.setDiocese(incoming.getDiocese());
+        target.setAddress(incoming.getAddress());
+        target.setEmail(incoming.getEmail());
+        target.setPhone(incoming.getPhone());
+        target.setTimezone(defaultTimezone(incoming.getTimezone(), target.getTimezone()));
+        target.setLocale(defaultLocale(incoming.getLocale(), target.getLocale()));
+        target.setDenomination(incoming.getDenomination());
+        target.setDescription(incoming.getDescription());
+        target.setUsesOurServices(incoming.isUsesOurServices());
+        target.setGpsLocation(incoming.getGpsLocation());
+        target.setLatitude(incoming.getLatitude());
+        target.setLongitude(incoming.getLongitude());
+        target.setWebsite(incoming.getWebsite());
+        target.setInstagram(incoming.getInstagram());
+        target.setYoutube(incoming.getYoutube());
+        target.setFacebook(incoming.getFacebook());
+        target.setStatus(incoming.getStatus() != null ? incoming.getStatus() : target.getStatus());
+        target.setProfilePicture(incoming.getProfilePicture());
+
+        if (target.getProfilePicture() != null) {
+            stampProfilePicture(target, target.getProfilePicture());
+        }
+    }
+
+    private void applyStatusLifecycle(ChurchEntity church, com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus requestedStatus) {
+        var effectiveStatus = requestedStatus != null ? requestedStatus : church.getStatus();
+        if (effectiveStatus == null) {
+            effectiveStatus = com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus.DRAFT;
+        }
+
+        church.setStatus(effectiveStatus);
+
+        if (effectiveStatus == com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus.ACTIVE) {
+            if (church.getActivatedAt() == null) {
+                church.setActivatedAt(Instant.now());
+            }
+            church.setDeactivatedAt(null);
+            return;
+        }
+
+        if (effectiveStatus == com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus.INACTIVE
+                || effectiveStatus == com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus.ARCHIVED) {
+            if (church.getDeactivatedAt() == null) {
+                church.setDeactivatedAt(Instant.now());
+            }
+        }
+    }
+
+    private void stampProfilePicture(ChurchEntity church, com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity profilePicture) {
+        profilePicture.setImageAssetType(ImageAssetType.CHURCH);
+        profilePicture.setOwnerId(church.getTenant().getId());
+        profilePicture.setTenantId(church.getTenant().getId());
+    }
+
+    private String resolveChurchNumberPrefix(String churchName) {
+        if (!StringUtils.hasText(churchName)) {
+            return null;
+        }
+
+        String normalized = churchName.trim().toUpperCase();
+        if (normalized.startsWith("ST.") || normalized.startsWith("ST ")) {
+            normalized = normalized.substring(3).trim();
+        }
+
+        String lettersOnly = normalized.replaceAll("[^A-Z]", "");
+        if (!StringUtils.hasText(lettersOnly)) {
+            return "CH";
+        }
+        if (lettersOnly.length() == 1) {
+            return lettersOnly + "H";
+        }
+        return lettersOnly.substring(0, 2);
+    }
+
+    private String defaultTimezone(String candidate, String fallback) {
+        if (StringUtils.hasText(candidate)) {
+            return candidate.trim();
+        }
+        if (StringUtils.hasText(fallback)) {
+            return fallback;
+        }
+        return "UTC";
+    }
+
+    private String defaultLocale(String candidate, String fallback) {
+        if (StringUtils.hasText(candidate)) {
+            return candidate.trim();
+        }
+        if (StringUtils.hasText(fallback)) {
+            return fallback;
+        }
+        return "en-US";
     }
 }
