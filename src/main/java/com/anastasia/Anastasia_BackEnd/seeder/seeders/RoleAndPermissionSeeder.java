@@ -52,6 +52,10 @@ public class RoleAndPermissionSeeder {
 //            System.out.println("OWNER role created");
         }
 
+        if (!roleRepository.existsByRoleName("PRIMARY_ADMIN")) {
+            createRole(RoleType.PRIMARY_ADMIN);
+        }
+
         if (!roleRepository.existsByRoleName("ADMIN")) {
             createRole(RoleType.ADMIN);
 //            System.out.println("ADMIN role created");
