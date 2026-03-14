@@ -4,7 +4,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberSummaryResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,7 +19,7 @@ public interface ChildService {
     Child_MemberDTO convertToDTO(Child_MemberEntity childMemberEntity);
     Child_MemberResponse convertToResponse(Child_MemberEntity childMemberEntity);
 
-    ChildResponse registerChild(Child_MemberEntity childMemberEntity);
+    Child_MemberResponse registerChild(Child_MemberEntity childMemberEntity);
 
     Page<Child_MemberResponse> findAll(Pageable pageable);
     Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable);
@@ -37,7 +36,7 @@ public interface ChildService {
 
     Optional<Child_MemberResponse> findChildById(Long memberId);
 
-    void updateChildDetails(Long memberId, Child_MemberDTO request);
+    Child_MemberResponse updateChildDetails(Long memberId, Child_MemberDTO request);
 
     void deleteChildMembership(Long memberId);
 

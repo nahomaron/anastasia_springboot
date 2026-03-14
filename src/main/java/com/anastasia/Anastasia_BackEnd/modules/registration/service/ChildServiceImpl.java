@@ -13,7 +13,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberSummaryResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.ApprovalStatus;
@@ -81,7 +80,7 @@ public class ChildServiceImpl implements ChildService{
             }
     )
     @Override
-    public ChildResponse registerChild(Child_MemberEntity childMemberEntity) {
+    public Child_MemberResponse registerChild(Child_MemberEntity childMemberEntity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)){
             throw new IllegalStateException(messageService.get(
@@ -105,12 +104,7 @@ public class ChildServiceImpl implements ChildService{
         }
 
         childMemberEntity.setChurchNumber(churchNumber);
-        ChurchEntity church = churchRepository.findByChurchNumber(churchNumber)
-                .orElseThrow(() -> new IllegalStateException(messageService.get(
-                        "church.notFound.withNumber",
-                        "Church not found for number: {0}",
-                        churchNumber
-                )));
+        ChurchEntity church = resolveChurch(churchNumber);
         childMemberEntity.setChurch(church);
         childMemberEntity.setTenantId(church.getTenant().getId());
 
@@ -120,11 +114,7 @@ public class ChildServiceImpl implements ChildService{
         Child_MemberEntity membership = childRepository.save(childMemberEntity);
         tenantAdminNotificationService.notifyChildRegistrationSubmitted(membership, user.getUuid());
 
-        return ChildResponse.builder()
-                .name(membership.getFirstName() + " " + membership.getFatherName() + " " + membership.getGrandFatherName())
-                .membershipNumber(membership.getMembershipNumber())
-                .fatherOfConfession(membership.getFatherOfConfession())
-                .build();
+        return convertToResponse(membership);
     }
 
     private String normalizeChurchNumber(String rawChurchNumber) {
@@ -230,10 +220,21 @@ public class ChildServiceImpl implements ChildService{
                             key = "#childId")}
     )
     @Override
-    public void updateChildDetails(Long childId, Child_MemberDTO request) {
-        childRepository.findByIdAndTenantId(childId, requireTenantId()).ifPresent(memberEntity -> {
+    public Child_MemberResponse updateChildDetails(Long childId, Child_MemberDTO request) {
+        Child_MemberEntity memberEntity = childRepository.findByIdAndTenantId(childId, requireTenantId())
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "registration.child.notFound",
+                        "Child not found"
+                )));
 
-            Optional.ofNullable(request.getChurchNumber()).ifPresent(memberEntity::setChurchNumber);
+            Optional.ofNullable(request.getChurchNumber()).ifPresent(churchNumber -> {
+                ChurchEntity church = resolveChurch(normalizeChurchNumber(churchNumber));
+                memberEntity.setChurchNumber(church.getChurchNumber());
+                memberEntity.setChurch(church);
+                if (church.getTenant() != null) {
+                    memberEntity.setTenantId(church.getTenant().getId());
+                }
+            });
             Optional.ofNullable(request.getTitle()).ifPresent(memberEntity::setTitle);
             Optional.ofNullable(request.getFirstName()).ifPresent(memberEntity::setFirstName);
             Optional.ofNullable(request.getFatherName()).ifPresent(memberEntity::setFatherName);
@@ -270,8 +271,8 @@ public class ChildServiceImpl implements ChildService{
                 linkParent(memberEntity, request.getMother(), false);
             }
 
-            childRepository.save(memberEntity);
-        });
+            Child_MemberEntity saved = childRepository.save(memberEntity);
+            return convertToResponse(saved);
     }
 
     @Caching(
@@ -378,7 +379,7 @@ public class ChildServiceImpl implements ChildService{
             return;
         }
 
-        Adult_MemberEntity parent = memberRepository.findById(parentId)
+        Adult_MemberEntity parent = memberRepository.findByIdAndTenantId(parentId, requireTenantId())
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get(
                         "registration.parent.notFound.withId",
                         "Parent not found for id: {0}",
@@ -428,6 +429,15 @@ public class ChildServiceImpl implements ChildService{
             ));
         }
         return tenantId;
+    }
+
+    private ChurchEntity resolveChurch(String churchNumber) {
+        return churchRepository.findByChurchNumber(churchNumber)
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "church.notFound.withNumber",
+                        "Church not found for number: {0}",
+                        churchNumber
+                )));
     }
 
 }

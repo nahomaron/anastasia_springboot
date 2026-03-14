@@ -1,6 +1,5 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
@@ -37,11 +36,11 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST', 'MEMBER') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADD_MEMBERS')")
     @PostMapping("/register-child")
-    public ResponseEntity<ChildResponse> registerChild(@Valid @RequestBody Child_MemberDTO childMemberDTO){
+    public ResponseEntity<Child_MemberResponse> registerChild(@Valid @RequestBody Child_MemberDTO childMemberDTO){
 
         Child_MemberEntity childMemberEntity = childService.convertToEntity(childMemberDTO);
         childMemberEntity.setStatus(ChildStatus.PENDING.name());
-        ChildResponse response = childService.registerChild(childMemberEntity);
+        Child_MemberResponse response = childService.registerChild(childMemberEntity);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -82,7 +81,7 @@ public class ChildController {
     @GetMapping("/{memberId}")
     public ResponseEntity<Child_MemberResponse> getChild(@PathVariable Long memberId){
         return childService.findChildById(memberId).map(childMemberResponse ->
-                new ResponseEntity<>(childMemberResponse, HttpStatus.FOUND)
+                new ResponseEntity<>(childMemberResponse, HttpStatus.OK)
         ).orElse(
                 new ResponseEntity<>(HttpStatus.NOT_FOUND)
         );
@@ -91,9 +90,8 @@ public class ChildController {
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'PRIEST') or " +
             "@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'EDIT_CHILDREN')")
     @PatchMapping("/{memberId}")
-    public ResponseEntity<?> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Child_MemberDTO request){
-        childService.updateChildDetails(memberId, request);
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    public ResponseEntity<Child_MemberResponse> updateMembershipDetails(@PathVariable Long memberId, @RequestBody Child_MemberDTO request){
+        return ResponseEntity.ok(childService.updateChildDetails(memberId, request));
     }
 
     @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') " +
@@ -101,14 +99,14 @@ public class ChildController {
     @PatchMapping("/{memberId}/church-approve")
     public ResponseEntity<Child_MemberResponse> approveByChurch(@PathVariable Long memberId){
         Child_MemberResponse response = childService.approveByChurch(memberId);
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('PRIEST')")
     @PatchMapping("/{memberId}/priest-approve")
     public ResponseEntity<Child_MemberResponse> approveByPriest(@PathVariable Long memberId){
         Child_MemberResponse response = childService.approveByPriest(memberId);
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        return ResponseEntity.ok(response);
     }
 
 

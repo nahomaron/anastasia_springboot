@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.service;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
@@ -177,7 +177,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         Child_MemberDTO childMemberDTO = TestDataUtil.createTestChildDTO(church);
         Child_MemberEntity childMemberEntity = childService.convertToEntity(childMemberDTO);
 
-        ChildResponse response = childService.registerChild(childMemberEntity);
+        Child_MemberResponse response = childService.registerChild(childMemberEntity);
 
         assertThat(response.getMembershipNumber()).isNotBlank();
         assertThat(childRepository.count()).isEqualTo(1);

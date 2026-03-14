@@ -126,12 +126,13 @@ class ChildControllerIT extends PostgresTestContainer {
 
     @Test
     void testRegisterChild() throws Exception {
-        mockMvc.perform(post("/api/v1/registrar/children/register-child")
+                mockMvc.perform(post("/api/v1/registrar/children/register-child")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(childMemberDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.membershipNumber").exists());
+                .andExpect(jsonPath("$.membershipNumber").exists())
+                .andExpect(jsonPath("$.firstName", is(childMemberDTO.getFirstName())));
     }
 
     @Test
@@ -150,7 +151,7 @@ class ChildControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(get("/api/v1/registrar/children/{id}", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isFound())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName", is(saved.getFirstName())));
     }
 
@@ -165,7 +166,8 @@ class ChildControllerIT extends PostgresTestContainer {
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedDTO)))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName", is("UpdatedChild")));
     }
 
     @Test

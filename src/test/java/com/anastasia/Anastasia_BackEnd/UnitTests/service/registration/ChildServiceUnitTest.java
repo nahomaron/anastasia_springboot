@@ -5,7 +5,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
@@ -97,10 +96,10 @@ public class ChildServiceUnitTest {
         when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("C12345");
         when(childRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ChildResponse response = childService.registerChild(child);
+        Child_MemberResponse response = childService.registerChild(child);
 
         assertNotNull(response);
-        assertEquals("John Doe Smith", response.getName());
+        assertEquals("John", response.getFirstName());
         assertEquals("C12345", child.getMembershipNumber());
 
         verify(childRepository).save(any());
@@ -183,7 +182,7 @@ public class ChildServiceUnitTest {
         when(childRepository.findByIdAndTenantId(childId, tenantId)).thenReturn(Optional.of(existing));
 
         // When
-        childService.updateChildDetails(childId, updateRequest);
+        Child_MemberResponse response = childService.updateChildDetails(childId, updateRequest);
 
         // Then
         ArgumentCaptor<Child_MemberEntity> captor = ArgumentCaptor.forClass(Child_MemberEntity.class);
@@ -193,14 +192,14 @@ public class ChildServiceUnitTest {
         assertEquals("NEW_CH", updated.getChurchNumber());
         assertEquals("NewFirst", updated.getFirstName());
         assertEquals("0000", updated.getPhone()); // unchanged because null in request
+        assertEquals("NewFirst", response.getFirstName());
     }
 
     @Test
-    void updateChildDetails_shouldNotCallSave_whenChildNotFound() {
+    void updateChildDetails_shouldThrow_whenChildNotFound() {
         when(childRepository.findByIdAndTenantId(99L, tenantId)).thenReturn(Optional.empty());
 
-        childService.updateChildDetails(99L, Child_MemberDTO.builder().build());
-
+        assertThrows(IllegalArgumentException.class, () -> childService.updateChildDetails(99L, Child_MemberDTO.builder().build()));
         verify(childRepository, never()).save(any());
     }
 }
