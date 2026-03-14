@@ -106,7 +106,7 @@ public class TenantAdminDashboardService {
                 .getContent();
 
         return Stream.concat(adults.stream(), children.stream())
-                .sorted(Comparator.comparing(MemberOverviewItem::getRegisteredAt).reversed())
+                .sorted(Comparator.comparing(MemberOverviewItem::getRegisteredAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .limit(RECENT_LIMIT)
                 .toList();
     }
@@ -128,7 +128,7 @@ public class TenantAdminDashboardService {
                 .name(fullName(member.getFirstName(), member.getFatherName(), member.getGrandFatherName()))
                 .type("ADULT")
                 .status(member.getStatus())
-                .registeredAt(member.getCreatedDate())
+                .registeredAt(member.getCreatedAt())
                 .build();
     }
 
@@ -138,7 +138,7 @@ public class TenantAdminDashboardService {
                 .name(fullName(member.getFirstName(), member.getFatherName(), member.getGrandFatherName()))
                 .type("CHILD")
                 .status(member.getStatus())
-                .registeredAt(member.getCreatedDate())
+                .registeredAt(member.getCreatedAt())
                 .build();
     }
 

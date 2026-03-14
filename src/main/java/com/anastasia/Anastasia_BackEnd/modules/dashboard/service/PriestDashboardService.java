@@ -125,8 +125,8 @@ public class PriestDashboardService {
         if (appointment.getStartAtUtc() != null) {
             return appointment.getStartAtUtc();
         }
-        if (appointment.getCreatedDate() != null) {
-            return appointment.getCreatedDate().toInstant(java.time.ZoneOffset.UTC);
+        if (appointment.getCreatedAt() != null) {
+            return appointment.getCreatedAt();
         }
         return null;
     }
@@ -159,7 +159,7 @@ public class PriestDashboardService {
                 .name(fullName(member.getFirstName(), member.getFatherName(), member.getGrandFatherName()))
                 .type("ADULT")
                 .status(member.getStatus())
-                .registeredAt(member.getCreatedDate())
+                .registeredAt(member.getCreatedAt())
                 .build();
     }
 
@@ -169,7 +169,7 @@ public class PriestDashboardService {
                 .name(fullName(member.getFirstName(), member.getFatherName(), member.getGrandFatherName()))
                 .type("CHILD")
                 .status(member.getStatus())
-                .registeredAt(member.getCreatedDate())
+                .registeredAt(member.getCreatedAt())
                 .build();
     }
 
