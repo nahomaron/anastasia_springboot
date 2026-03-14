@@ -22,9 +22,13 @@ public class UserPrincipal implements UserDetails {
     private Set<Role> roles;
 
     public UserPrincipal(UserEntity user) {
+        this(user, user.getRoles());
+    }
+
+    public UserPrincipal(UserEntity user, Set<Role> roles) {
         this.user = user;
         this.tenantId = (user.getTenant() != null) ? user.getTenant().getId() : null; //  Safe handling
-        this.roles = user.getRoles();
+        this.roles = roles == null ? Set.of() : new LinkedHashSet<>(roles);
     }
 
 
@@ -32,7 +36,7 @@ public class UserPrincipal implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-        for (Role role : user.getRoles()) {
+        for (Role role : roles) {
             String roleName = role.getRoleName();
             String authority = roleName != null && roleName.startsWith("ROLE_")
                     ? roleName

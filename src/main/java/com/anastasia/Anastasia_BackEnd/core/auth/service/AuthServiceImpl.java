@@ -300,7 +300,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         touchStaffLoginAudit(user);
 
-        UserPrincipal userPrincipal = new UserPrincipal(user);
+        UserPrincipal userPrincipal = new UserPrincipal(user, resolveEffectiveRoles(user));
         AuthSessionResponse session = buildAuthSessionResponse(user);
         String sessionId = UUID.randomUUID().toString();
         String accessJwtId = UUID.randomUUID().toString();
@@ -313,7 +313,7 @@ public class AuthServiceImpl implements AuthService {
         saveUserToken(jwtToken, user, TokenType.BEARER, sessionId, accessJwtId);
         saveUserToken(refreshToken, user, TokenType.REFRESH, sessionId, refreshJwtId);
 
-        if (userPrincipal.getRoles().stream().anyMatch(role -> role.getRoleName().equals("ADMIN"))
+        if (userPrincipal.getRoles().stream().anyMatch(role -> "ADMIN".equals(role.getRoleName()) || "PRIMARY_ADMIN".equals(role.getRoleName()))
                 && user.getTenant() != null) {
             UUID tenantId = user.getTenant().getId();
             cacheWarmupService.warmUpTenantCache(tenantId);
@@ -374,7 +374,7 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
         }
 
-        UserPrincipal userPrincipal = new UserPrincipal(user);
+        UserPrincipal userPrincipal = new UserPrincipal(user, resolveEffectiveRoles(user));
 
         if (!jwtUtil.isTokenValid(refreshToken, userPrincipal)) {
             throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
@@ -646,7 +646,7 @@ public class AuthServiceImpl implements AuthService {
                 .ifPresent(role -> {
                     roleNames.remove("OWNER");
                     roleNames.remove("ADMIN");
-                    roleNames.add("PRIMARY-ADMIN");
+                    roleNames.add("PRIMARY_ADMIN");
                 });
 
         return roleNames;
@@ -678,6 +678,37 @@ public class AuthServiceImpl implements AuthService {
 
         return tenantAdminAssignmentRepository.findByTenant_IdAndUserId(user.getTenantId(), user.getUuid())
                 .filter(assignment -> assignment.getStatus() == MembershipStatus.ACTIVE);
+    }
+
+    private Set<Role> resolveEffectiveRoles(UserEntity user) {
+        Set<Role> roles = new LinkedHashSet<>(user.getRoles() == null ? Set.of() : user.getRoles());
+        Optional<TenantAdminAssignmentEntity> activeAssignment = resolveActiveTenantAdminAssignment(user);
+        if (activeAssignment.isEmpty()) {
+            return roles;
+        }
+
+        TenantRole tenantRole = activeAssignment.get().getRole();
+        if (tenantRole == TenantRole.PRIMARY_ADMIN) {
+            roles.removeIf(role -> "OWNER".equals(role.getRoleName()) || "ADMIN".equals(role.getRoleName()));
+        }
+
+        resolveRoleEntity(tenantRole).ifPresent(roles::add);
+        return roles;
+    }
+
+    private Optional<Role> resolveRoleEntity(TenantRole tenantRole) {
+        if (tenantRole == null) {
+            return Optional.empty();
+        }
+
+        String roleName = switch (tenantRole) {
+            case PRIMARY_ADMIN -> "PRIMARY_ADMIN";
+            case ADMIN -> "ADMIN";
+            case PRIMARY_OWNER, OWNER -> "OWNER";
+            case FINANCE, COMMITTEE -> null;
+        };
+
+        return roleName == null ? Optional.empty() : roleRepository.findByRoleName(roleName);
     }
 
     private Set<String> resolveTenantAdminPermissionKeys(TenantRole tenantRole) {

@@ -203,15 +203,10 @@ public class TenantOnboardingProvisioningService {
     }
 
     private UserEntity provisionOwner(TenantEntity tenant, TenantOnboardingSessionEntity session) {
-        Role ownerRole = roleRepository.findByRoleName("OWNER")
+        Role primaryAdminRole = roleRepository.findByRoleName("PRIMARY_ADMIN")
                 .orElseThrow(() -> new IllegalStateException(messageService.get(
-                        "role.owner.notFound",
-                        "Owner role not found"
-                )));
-        Role adminRole = roleRepository.findByRoleName("ADMIN")
-                .orElseThrow(() -> new IllegalStateException(messageService.get(
-                        "role.admin.notFound",
-                        "Admin role not found"
+                        "role.primaryAdmin.notFound",
+                        "Primary admin role not found"
                 )));
 
         UserEntity owner = UserEntity.builder()
@@ -219,7 +214,7 @@ public class TenantOnboardingProvisioningService {
                 .email(session.getOwnerEmail())
                 .password(session.getDraftPasswordHash())
                 .affiliatedTenant(tenant)
-                .roles(new HashSet<>(Set.of(ownerRole, adminRole)))
+                .roles(new HashSet<>(Set.of(primaryAdminRole)))
                 .userType(UserType.TENANT)
                 .emailVerifiedAt(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? Instant.now() : null)
                 .status(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION)
