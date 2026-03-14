@@ -3,13 +3,13 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.CreatePromoCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.EntitlementSnapshotResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.GrantPlanOverrideRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.PromoCodeResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.PromoRedemptionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.RedeemPromoCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SetFeatureOverrideRequest;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PromoCodeEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PromoRedemptionEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantFeatureOverrideResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantPlanGrantResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeatureOverrideEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantPlanGrantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementAdministrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,13 +41,17 @@ public class PlatformSubscriptionAdminController {
     }
 
     @GetMapping("/{tenantId}/plan-overrides")
-    public ResponseEntity<java.util.List<TenantPlanGrantEntity>> listPlanOverrides(@PathVariable UUID tenantId) {
-        return ResponseEntity.ok(entitlementAdministrationService.listPlanGrants(tenantId));
+    public ResponseEntity<java.util.List<TenantPlanGrantResponse>> listPlanOverrides(@PathVariable UUID tenantId) {
+        return ResponseEntity.ok(entitlementAdministrationService.listPlanGrants(tenantId).stream()
+                .map(this::toPlanGrantResponse)
+                .toList());
     }
 
     @GetMapping("/{tenantId}/feature-overrides")
-    public ResponseEntity<java.util.List<TenantFeatureOverrideEntity>> listFeatureOverrides(@PathVariable UUID tenantId) {
-        return ResponseEntity.ok(entitlementAdministrationService.listFeatureOverrides(tenantId));
+    public ResponseEntity<java.util.List<TenantFeatureOverrideResponse>> listFeatureOverrides(@PathVariable UUID tenantId) {
+        return ResponseEntity.ok(entitlementAdministrationService.listFeatureOverrides(tenantId).stream()
+                .map(this::toFeatureOverrideResponse)
+                .toList());
     }
 
     @PatchMapping("/{tenantId}/plan")
@@ -59,11 +63,11 @@ public class PlatformSubscriptionAdminController {
     }
 
     @PostMapping("/{tenantId}/plan-overrides")
-    public ResponseEntity<TenantPlanGrantEntity> grantPlanOverride(
+    public ResponseEntity<TenantPlanGrantResponse> grantPlanOverride(
             @PathVariable UUID tenantId,
             @Valid @RequestBody GrantPlanOverrideRequest request
     ) {
-        return ResponseEntity.ok(entitlementAdministrationService.grantPlanOverride(tenantId, request));
+        return ResponseEntity.ok(toPlanGrantResponse(entitlementAdministrationService.grantPlanOverride(tenantId, request)));
     }
 
     @DeleteMapping("/{tenantId}/plan-overrides/{grantId}")
@@ -77,11 +81,11 @@ public class PlatformSubscriptionAdminController {
     }
 
     @PostMapping("/{tenantId}/feature-overrides")
-    public ResponseEntity<TenantFeatureOverrideEntity> setFeatureOverride(
+    public ResponseEntity<TenantFeatureOverrideResponse> setFeatureOverride(
             @PathVariable UUID tenantId,
             @Valid @RequestBody SetFeatureOverrideRequest request
     ) {
-        return ResponseEntity.ok(entitlementAdministrationService.setFeatureOverride(tenantId, request));
+        return ResponseEntity.ok(toFeatureOverrideResponse(entitlementAdministrationService.setFeatureOverride(tenantId, request)));
     }
 
     @DeleteMapping("/{tenantId}/feature-overrides/{overrideId}")
@@ -95,18 +99,22 @@ public class PlatformSubscriptionAdminController {
     }
 
     @PostMapping("/promo-codes")
-    public ResponseEntity<PromoCodeEntity> createPromoCode(@Valid @RequestBody CreatePromoCodeRequest request) {
-        return ResponseEntity.ok(entitlementAdministrationService.createPromoCode(request));
+    public ResponseEntity<PromoCodeResponse> createPromoCode(@Valid @RequestBody CreatePromoCodeRequest request) {
+        return ResponseEntity.ok(toPromoCodeResponse(entitlementAdministrationService.createPromoCode(request)));
     }
 
     @GetMapping("/promo-codes")
-    public ResponseEntity<java.util.List<PromoCodeEntity>> listPromoCodes() {
-        return ResponseEntity.ok(entitlementAdministrationService.listPromoCodes());
+    public ResponseEntity<java.util.List<PromoCodeResponse>> listPromoCodes() {
+        return ResponseEntity.ok(entitlementAdministrationService.listPromoCodes().stream()
+                .map(this::toPromoCodeResponse)
+                .toList());
     }
 
     @GetMapping("/{tenantId}/promo-redemptions")
-    public ResponseEntity<java.util.List<PromoRedemptionEntity>> listPromoRedemptions(@PathVariable UUID tenantId) {
-        return ResponseEntity.ok(entitlementAdministrationService.listPromoRedemptions(tenantId));
+    public ResponseEntity<java.util.List<PromoRedemptionResponse>> listPromoRedemptions(@PathVariable UUID tenantId) {
+        return ResponseEntity.ok(entitlementAdministrationService.listPromoRedemptions(tenantId).stream()
+                .map(this::toPromoRedemptionResponse)
+                .toList());
     }
 
     @PostMapping("/{tenantId}/redeem-promo")
@@ -124,5 +132,86 @@ public class PlatformSubscriptionAdminController {
             @RequestParam(value = "reason", required = false) String reason
     ) {
         return ResponseEntity.ok(entitlementAdministrationService.revokePromoRedemption(tenantId, redemptionId, reason));
+    }
+
+    private TenantPlanGrantResponse toPlanGrantResponse(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantPlanGrantEntity entity) {
+        return TenantPlanGrantResponse.builder()
+                .id(entity.getId())
+                .tenantId(entity.getTenant() != null ? entity.getTenant().getId() : null)
+                .grantedPlan(entity.getGrantedPlan())
+                .source(entity.getSource())
+                .promoCode(entity.getPromoCode())
+                .activeMemberLimitOverride(entity.getActiveMemberLimitOverride())
+                .active(entity.isActive())
+                .startsAt(entity.getStartsAt())
+                .expiresAt(entity.getExpiresAt())
+                .revokedAt(entity.getRevokedAt())
+                .reason(entity.getReason())
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    private TenantFeatureOverrideResponse toFeatureOverrideResponse(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeatureOverrideEntity entity) {
+        return TenantFeatureOverrideResponse.builder()
+                .id(entity.getId())
+                .tenantId(entity.getTenant() != null ? entity.getTenant().getId() : null)
+                .feature(entity.getFeature())
+                .enabled(entity.isEnabled())
+                .source(entity.getSource())
+                .promoCode(entity.getPromoCode())
+                .active(entity.isActive())
+                .startsAt(entity.getStartsAt())
+                .expiresAt(entity.getExpiresAt())
+                .revokedAt(entity.getRevokedAt())
+                .reason(entity.getReason())
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    private PromoCodeResponse toPromoCodeResponse(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PromoCodeEntity entity) {
+        return PromoCodeResponse.builder()
+                .id(entity.getId())
+                .code(entity.getCode())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .grantedPlan(entity.getGrantedPlan())
+                .grantedFeatures(entity.getGrantedFeatures())
+                .activeMemberLimitOverride(entity.getActiveMemberLimitOverride())
+                .active(entity.isActive())
+                .maxRedemptions(entity.getMaxRedemptions())
+                .currentRedemptions(entity.getCurrentRedemptions())
+                .oneTimePerTenant(entity.isOneTimePerTenant())
+                .expiresAt(entity.getExpiresAt())
+                .activatedAt(entity.getActivatedAt())
+                .deactivatedAt(entity.getDeactivatedAt())
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    private PromoRedemptionResponse toPromoRedemptionResponse(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PromoRedemptionEntity entity) {
+        return PromoRedemptionResponse.builder()
+                .id(entity.getId())
+                .tenantId(entity.getTenant() != null ? entity.getTenant().getId() : null)
+                .promoCodeId(entity.getPromoCode() != null ? entity.getPromoCode().getId() : null)
+                .promoCode(entity.getPromoCode() != null ? entity.getPromoCode().getCode() : null)
+                .active(entity.isActive())
+                .redeemedAt(entity.getRedeemedAt())
+                .expiresAt(entity.getExpiresAt())
+                .revokedAt(entity.getRevokedAt())
+                .reason(entity.getReason())
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
     }
 }
