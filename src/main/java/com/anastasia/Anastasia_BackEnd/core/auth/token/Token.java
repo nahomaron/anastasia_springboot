@@ -25,6 +25,12 @@ public class Token {
     @Column(length = 500)
     private String token;
 
+    @Column(length = 64)
+    private String jwtId;
+
+    @Column(length = 64)
+    private String sessionId;
+
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
 

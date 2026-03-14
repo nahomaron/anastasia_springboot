@@ -43,8 +43,14 @@ public class JwtUtil {
 
 
     public String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long EXPIRATION_PERIOD) {
+        String jwtId = UUID.randomUUID().toString();
+        return buildToken(extraClaims, userDetails, EXPIRATION_PERIOD, jwtId);
+    }
+
+    public String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long EXPIRATION_PERIOD, String jwtId) {
         return Jwts.builder()
                 .claims(extraClaims)
+                .id(jwtId)
                 .subject(userDetails.getUsername())
                 .signWith(secretKey)
                 .issuedAt(new Date(System.currentTimeMillis()))
@@ -57,9 +63,21 @@ public class JwtUtil {
 
     }
 
+    public String generateAccessToken(UserDetails userDetails, String sessionId, String jwtId) {
+        Map<String, Object> claims = generateClaims(userDetails);
+        claims.put("sessionId", sessionId);
+        return buildToken(claims, userDetails, ACCESS_TOKEN_EXPIRATION_PERIOD, jwtId);
+    }
+
 
     public String generateRefreshToken(UserDetails userDetails) {
         return buildToken(generateClaims(userDetails), userDetails, REFRESH_TOKEN_EXPIRATION_PERIOD);
+    }
+
+    public String generateRefreshToken(UserDetails userDetails, String sessionId, String jwtId) {
+        Map<String, Object> claims = generateClaims(userDetails);
+        claims.put("sessionId", sessionId);
+        return buildToken(claims, userDetails, REFRESH_TOKEN_EXPIRATION_PERIOD, jwtId);
     }
 
     public Map<String, Object> generateClaims(UserDetails userDetails){
@@ -117,6 +135,14 @@ public class JwtUtil {
 
     public String extractTenantId(String token) {
         return extractClaim(token, claims -> claims.get("tenantId", String.class));
+    }
+
+    public String extractJwtId(String token) {
+        return extractClaim(token, Claims::getId);
+    }
+
+    public String extractSessionId(String token) {
+        return extractClaim(token, claims -> claims.get("sessionId", String.class));
     }
 
     public List<String> extractRoles(String token){

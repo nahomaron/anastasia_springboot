@@ -300,13 +300,16 @@ public class AuthServiceImpl implements AuthService {
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
         AuthSessionResponse session = buildAuthSessionResponse(user);
+        String sessionId = UUID.randomUUID().toString();
+        String accessJwtId = UUID.randomUUID().toString();
+        String refreshJwtId = UUID.randomUUID().toString();
 
-        var jwtToken = jwtUtil.generateAccessToken(userPrincipal);
-        var refreshToken = jwtUtil.generateRefreshToken(userPrincipal);
+        var jwtToken = jwtUtil.generateAccessToken(userPrincipal, sessionId, accessJwtId);
+        var refreshToken = jwtUtil.generateRefreshToken(userPrincipal, sessionId, refreshJwtId);
 
         revokeAllActiveUserTokens(user);
-        saveUserToken(jwtToken, user, TokenType.BEARER);
-        saveUserToken(refreshToken, user, TokenType.REFRESH);
+        saveUserToken(jwtToken, user, TokenType.BEARER, sessionId, accessJwtId);
+        saveUserToken(refreshToken, user, TokenType.REFRESH, sessionId, refreshJwtId);
 
         if (userPrincipal.getRoles().stream().anyMatch(role -> role.getRoleName().equals("ADMIN"))
                 && user.getTenant() != null) {
@@ -364,14 +367,23 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
         }
 
+        String refreshJwtId = jwtUtil.extractJwtId(refreshToken);
+        if (storedRefreshToken.getJwtId() == null || !storedRefreshToken.getJwtId().equals(refreshJwtId)) {
+            throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
+        }
+
         UserPrincipal userPrincipal = new UserPrincipal(user);
 
         if (!jwtUtil.isTokenValid(refreshToken, userPrincipal)) {
             throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
         }
 
-        var accessToken = jwtUtil.generateAccessToken(userPrincipal);
-        saveUserToken(accessToken, user, TokenType.BEARER);
+        String sessionId = storedRefreshToken.getSessionId();
+        revokeActiveSessionBearerTokens(user.getUuid(), sessionId);
+
+        String accessJwtId = UUID.randomUUID().toString();
+        var accessToken = jwtUtil.generateAccessToken(userPrincipal, sessionId, accessJwtId);
+        saveUserToken(accessToken, user, TokenType.BEARER, sessionId, accessJwtId);
 
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
@@ -498,7 +510,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // method to build and save refresh token into the database
-    public void saveUserToken(String theToken, UserEntity user, TokenType tokenType){
+    public void saveUserToken(String theToken, UserEntity user, TokenType tokenType, String sessionId, String jwtId){
         Instant expiry = null;
         try {
             expiry = jwtUtil.extractExpiration(theToken).toInstant();
@@ -507,6 +519,8 @@ public class AuthServiceImpl implements AuthService {
 
         var token = Token.builder()
                 .token(theToken)
+                .jwtId(jwtId)
+                .sessionId(sessionId)
                 .user(user)
                 .tokenType(tokenType)
                 .createdAt(Instant.now())
@@ -516,6 +530,24 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         tokenRepository.save(token);
+    }
+
+    private void revokeActiveSessionBearerTokens(UUID userId, String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return;
+        }
+
+        List<Token> sessionTokens = tokenRepository.findAllActiveTokensByUserUuidAndSessionId(userId, sessionId);
+        Instant now = Instant.now();
+        sessionTokens.stream()
+                .filter(token -> token.getTokenType() == TokenType.BEARER)
+                .forEach(token -> {
+                    token.setRevoked(true);
+                    token.setExpired(true);
+                    token.setRevokedAt(now);
+                    token.setExpiredAt(now);
+                });
+        tokenRepository.saveAll(sessionTokens);
     }
 
     // revoking the currently existing bearer tokens

@@ -483,10 +483,11 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getCurrentAuthenticatedUser();
         Token token = tokenRepository.findByIdAndUserUuid(sessionId, user.getUuid())
                 .orElseThrow(() -> new EntityNotFoundException("Session not found"));
-        revokeToken(token);
-        if (token.getTokenType() == TokenType.BEARER) {
-            revokeMatchingRefreshToken(user.getUuid(), token.getCreatedAt(), token.getExpiresAt());
+        if (token.getSessionId() != null && !token.getSessionId().isBlank()) {
+            revokeSessionFamily(user.getUuid(), token.getSessionId());
+            return;
         }
+        revokeToken(token);
     }
 
     @Transactional
@@ -494,26 +495,20 @@ public class UserServiceImpl implements UserService {
     public void revokeOtherCurrentUserSessions(String currentBearerToken) {
         UserEntity user = getCurrentAuthenticatedUser();
         List<Token> tokens = tokenRepository.findAllActiveTokensByUserUuid(user.getUuid());
+        Set<String> preservedSessionIds = new HashSet<>();
         for (Token token : tokens) {
             if (currentBearerToken != null && currentBearerToken.equals(token.getToken())) {
+                if (token.getSessionId() != null && !token.getSessionId().isBlank()) {
+                    preservedSessionIds.add(token.getSessionId());
+                }
+                continue;
+            }
+            if (token.getSessionId() != null && preservedSessionIds.contains(token.getSessionId())) {
                 continue;
             }
             revokeToken(token);
         }
         tokenRepository.saveAll(tokens);
-    }
-
-    private void revokeMatchingRefreshToken(UUID userId, Instant accessCreatedAt, Instant accessExpiresAt) {
-        List<Token> refreshTokens = tokenRepository.findByUserUuidAndTokenTypeOrderByIdDesc(userId, TokenType.REFRESH);
-        for (Token refreshToken : refreshTokens) {
-            if (refreshToken.isRevoked() || refreshToken.isExpired()) {
-                continue;
-            }
-            if (Objects.equals(refreshToken.getCreatedAt(), accessCreatedAt)
-                    || Objects.equals(refreshToken.getExpiresAt(), accessExpiresAt)) {
-                revokeToken(refreshToken);
-            }
-        }
     }
 
     private void revokeToken(Token token) {
@@ -522,6 +517,12 @@ public class UserServiceImpl implements UserService {
         token.setExpired(true);
         token.setRevokedAt(now);
         token.setExpiredAt(now);
+    }
+
+    private void revokeSessionFamily(UUID userId, String sessionFamilyId) {
+        List<Token> sessionTokens = tokenRepository.findAllActiveTokensByUserUuidAndSessionId(userId, sessionFamilyId);
+        sessionTokens.forEach(this::revokeToken);
+        tokenRepository.saveAll(sessionTokens);
     }
 
     @Caching(evict = {
