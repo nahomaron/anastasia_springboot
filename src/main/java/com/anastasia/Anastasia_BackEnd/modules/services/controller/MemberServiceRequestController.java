@@ -27,7 +27,7 @@ public class MemberServiceRequestController {
 
     private final BaptismRequestService baptismRequestService;
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/baptism")
     public ResponseEntity<BaptismServiceRequestResponse> createBaptismRequest(
             @Valid @RequestBody BaptismServiceRequestCreateRequest request
@@ -35,7 +35,7 @@ public class MemberServiceRequestController {
         return new ResponseEntity<>(baptismRequestService.create(request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/mine")
     public ResponseEntity<List<MemberServiceRequestListItemResponse>> listMyRequests() {
         return ResponseEntity.ok(baptismRequestService.listMine());

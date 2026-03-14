@@ -73,7 +73,7 @@ public class UserController {
      *
      * @return A map containing user attributes.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'MEMBER')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/dashboard")
     public String getDashboard(){
         return "bravo! You are logged in";
@@ -85,7 +85,7 @@ public class UserController {
      *
      * @return A ResponseEntity containing the UserDTO of the connected user.
      */
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_USERS', 'VIEW_ALL_DATA')")
     @GetMapping("/")
     public ResponseEntity<List<UUID>> listOfUsers(Pageable pageable){
         Page<UserResponseIDs> users = userService.findAllUsers(pageable);
@@ -102,7 +102,7 @@ public class UserController {
      * @param userId The UUID of the user to retrieve.
      * @return A ResponseEntity containing the UserDTO of the specified user, or NOT_FOUND if the user does not exist.
      */
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_USERS', 'VIEW_ALL_DATA')")
     @GetMapping("/{userId}")
     public ResponseEntity<SimpleUserDTO> getUser(@PathVariable UUID userId){
         return userService.findOne(userId).map(ResponseEntity::ok).orElse(
@@ -110,7 +110,7 @@ public class UserController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'MEMBER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/memberships")
     public ResponseEntity<UserMembershipsResponse> getMyMemberships() {
         return ResponseEntity.ok(userService.getCurrentUserMemberships());
