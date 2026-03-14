@@ -59,7 +59,7 @@ public class GroupMapper {
                 .managers(managers)
                 .users(users)
                 .createdBy(groupEntity.getCreatedBy())
-                .lastModifiedBy(groupEntity.getLastModifiedBy())
+                .lastModifiedBy(groupEntity.getUpdatedBy())
                 .createdAt(groupEntity.getCreatedAt())
                 .updatedAt(groupEntity.getUpdatedAt())
                 .build();

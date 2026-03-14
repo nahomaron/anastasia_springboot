@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -106,10 +106,10 @@ public class ChildSeeder {
 
                 UUID auditUserId = savedUser.getUuid();
                 childMember.setCreatedBy(auditUserId);
-                childMember.setLastModifiedBy(auditUserId);
-                LocalDateTime now = LocalDateTime.now();
-                childMember.setCreatedDate(now);
-                childMember.setLastModifiedDate(now);
+                childMember.setUpdatedBy(auditUserId);
+                Instant now = Instant.now();
+                childMember.setCreatedAt(now);
+                childMember.setUpdatedAt(now);
 
                 children.add(childMember);
             }

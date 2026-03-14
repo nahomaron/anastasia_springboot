@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Profile("!test")
 @Component
@@ -99,11 +99,11 @@ public class GroupSeeder {
 
                 if (auditUserId != null) {
                     group.setCreatedBy(auditUserId);
-                    group.setLastModifiedBy(auditUserId);
+                    group.setUpdatedBy(auditUserId);
                 }
-                LocalDateTime now = LocalDateTime.now();
-                group.setCreatedDate(now);
-                group.setLastModifiedDate(now);
+                Instant now = Instant.now();
+                group.setCreatedAt(now);
+                group.setUpdatedAt(now);
 
                 // Assign managers
                 for (UserEntity manager : managers) {

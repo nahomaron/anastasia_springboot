@@ -130,10 +130,10 @@ public class EventSeeder {
                         .orElseGet(() -> churchUsers.get(0))
                         .getUuid();
                 event.setCreatedBy(auditUserId);
-                event.setLastModifiedBy(auditUserId);
-                LocalDateTime now = LocalDateTime.now();
-                event.setCreatedDate(now);
-                event.setLastModifiedDate(now);
+                event.setUpdatedBy(auditUserId);
+                Instant now = Instant.now();
+                event.setCreatedAt(now);
+                event.setUpdatedAt(now);
 
                 Set<UserEntity> potentialManagers = invitedUsers.isEmpty()
                         ? selectUsers(churchUsers, 2)
