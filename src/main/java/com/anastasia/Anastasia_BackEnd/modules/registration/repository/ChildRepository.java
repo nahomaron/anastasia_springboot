@@ -24,7 +24,7 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
             SELECT c FROM Child_MemberEntity c
             WHERE c.tenantId = :tenantId
               AND (c.father.id = :memberId OR c.mother.id = :memberId)
-            ORDER BY c.firstName ASC, c.fatherName ASC, c.grandFatherName ASC
+            ORDER BY c.createdAt DESC, c.firstName ASC, c.fatherName ASC, c.grandFatherName ASC
             """)
     List<Child_MemberEntity> findFamilyChildren(@Param("tenantId") UUID tenantId, @Param("memberId") Long memberId);
 

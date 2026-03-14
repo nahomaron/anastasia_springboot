@@ -83,9 +83,7 @@ public class MemberDashboardService {
             return List.of();
         }
 
-        List<Child_MemberEntity> children = childRepository.findByFatherIdOrMotherId(self.getId(), self.getId()).stream()
-                .filter(child -> tenantId.equals(child.getTenantId()))
-                .toList();
+        List<Child_MemberEntity> children = childRepository.findFamilyChildren(tenantId, self.getId());
 
         Map<Long, Long> completedSacramentsByMember = buildSacramentCountsByMember(tenantId);
 
@@ -97,7 +95,6 @@ public class MemberDashboardService {
                 .build();
 
         List<MemberFamilyItem> childItems = children.stream()
-                .sorted(Comparator.comparing(Child_MemberEntity::getCreatedDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .map(child -> MemberFamilyItem.builder()
                         .name(fullName(child.getFirstName(), child.getFatherName(), child.getGrandFatherName()))
                         .relation("CHILD")
