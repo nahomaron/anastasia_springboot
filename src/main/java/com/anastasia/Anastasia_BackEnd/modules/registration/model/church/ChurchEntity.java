@@ -143,14 +143,9 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
     private List<EventEntity> events;
 
     @PrePersist
-    @PreUpdate
-    void syncProfileCompleteness() {
-        this.churchProfileComplete = isComplete();
-    }
-
-    @PrePersist
     void onCreate() {
         Instant now = Instant.now();
+        this.churchProfileComplete = isComplete();
         initializeAuditTimestamps(now);
         if (status == null) {
             status = ChurchStatus.DRAFT;
@@ -165,6 +160,7 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     @PreUpdate
     void onUpdate() {
+        this.churchProfileComplete = isComplete();
         touchAuditTimestamps(Instant.now());
     }
 
