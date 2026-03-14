@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.*;
 
 public class UserPrincipal implements UserDetails {
+    private static final long serialVersionUID = 4584858096297851104L;
 
     private final UserEntity user;
 
