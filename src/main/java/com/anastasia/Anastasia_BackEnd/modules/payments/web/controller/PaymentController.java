@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.CreateSubscriptionUseCase;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.saga.PaymentCheckoutSaga;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,13 +32,14 @@ public class PaymentController {
     private final EntitlementResolverService entitlementResolverService;
     private final LocalizedMessageService messageService;
 
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
+            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_DONATIONS')")
     @PostMapping("/intents")
     public ResponseEntity<PaymentResponse> create(
-            @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
             @Valid @RequestBody CreateIntentRequest req) {
 
-        UUID tenantUuid = parseTenantId(tenantId);
+        UUID tenantUuid = requireTenantId();
         ensureStewardshipEnabled(tenantUuid);
         var pi = checkoutSaga.startCheckout(
                 tenantUuid,
@@ -56,13 +59,14 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
+            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_DONATIONS')")
     @PostMapping("/subscriptions")
     public ResponseEntity<SubscriptionResponse> createSubscription(
-            @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
             @Valid @RequestBody CreateSubscriptionRequest req) {
 
-        UUID tenantUuid = parseTenantId(tenantId);
+        UUID tenantUuid = requireTenantId();
         ensureStewardshipEnabled(tenantUuid);
         var subscription = createSubscription.execute(
                 tenantUuid,
@@ -82,15 +86,15 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
-    private UUID parseTenantId(String headerValue) {
-        try {
-            return UUID.fromString(headerValue);
-        } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageService.get(
-                    "payments.tenantId.invalid",
-                    "Invalid tenant id"
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageService.get(
+                    "tenant.context.missing",
+                    "Tenant context is missing"
             ));
         }
+        return tenantId;
     }
 
     private void ensureStewardshipEnabled(UUID tenantId) {

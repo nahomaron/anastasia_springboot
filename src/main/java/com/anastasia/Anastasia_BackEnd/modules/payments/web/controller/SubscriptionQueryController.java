@@ -1,14 +1,16 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.query.SubscriptionQueryService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.web.dto.SubscriptionView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
@@ -20,19 +22,19 @@ public class SubscriptionQueryController {
     private final SubscriptionQueryService queryService;
     private final LocalizedMessageService messageService;
 
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
+            + "or @permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT')")
     @GetMapping
-    public ResponseEntity<Page<SubscriptionView>> findAll(
-            @RequestHeader("X-Tenant-Id") String tenantId,
-            Pageable pageable) {
-        UUID tenantUuid = parseTenantId(tenantId);
+    public ResponseEntity<Page<SubscriptionView>> findAll(Pageable pageable) {
+        UUID tenantUuid = requireTenantId();
         return ResponseEntity.ok(queryService.findAll(tenantUuid, pageable));
     }
 
+    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
+            + "or @permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT')")
     @GetMapping("/{id}")
-    public ResponseEntity<SubscriptionView> findById(
-            @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable UUID id) {
-        UUID tenantUuid = parseTenantId(tenantId);
+    public ResponseEntity<SubscriptionView> findById(@PathVariable UUID id) {
+        UUID tenantUuid = requireTenantId();
         return ResponseEntity.ok(queryService.findById(tenantUuid, id));
     }
 
@@ -48,14 +50,14 @@ public class SubscriptionQueryController {
 //        ));
 //    }
 
-    private UUID parseTenantId(String headerValue) {
-        try {
-            return UUID.fromString(headerValue);
-        } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageService.get(
-                    "payments.tenantId.invalid",
-                    "Invalid tenant id"
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageService.get(
+                    "tenant.context.missing",
+                    "Tenant context is missing"
             ));
         }
+        return tenantId;
     }
 }
