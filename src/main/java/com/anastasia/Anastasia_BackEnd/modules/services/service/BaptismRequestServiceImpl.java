@@ -89,7 +89,7 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
     public List<MemberServiceRequestListItemResponse> listMine() {
         UserEntity currentUser = getCurrentAuthenticatedUser();
 
-        return baptismRequestRepository.findByRequestedByUser_UuidOrderByCreatedDateDesc(currentUser.getUuid())
+        return baptismRequestRepository.findByRequestedByUser_UuidOrderByCreatedAtDesc(currentUser.getUuid())
                 .stream()
                 .map(request -> new MemberServiceRequestListItemResponse(
                         request.getId(),

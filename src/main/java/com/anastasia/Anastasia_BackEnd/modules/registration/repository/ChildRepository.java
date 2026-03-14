@@ -42,7 +42,7 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
 
     Page<Child_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
-    Page<Child_MemberEntity> findByTenantIdOrderByCreatedDateDesc(UUID tenantId, Pageable pageable);
+    Page<Child_MemberEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
 
     @Query("""
             SELECT c FROM Child_MemberEntity c

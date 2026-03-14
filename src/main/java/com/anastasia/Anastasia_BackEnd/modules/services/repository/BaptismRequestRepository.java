@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface BaptismRequestRepository extends JpaRepository<BaptismRequestEntity, Long> {
     boolean existsByRequestNumber(String requestNumber);
-    List<BaptismRequestEntity> findByRequestedByUser_UuidOrderByCreatedDateDesc(UUID userId);
+    List<BaptismRequestEntity> findByRequestedByUser_UuidOrderByCreatedAtDesc(UUID userId);
 }

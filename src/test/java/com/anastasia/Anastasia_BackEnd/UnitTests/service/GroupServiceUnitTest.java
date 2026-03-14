@@ -337,7 +337,7 @@ class GroupServiceUnitTest {
 
         when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
         when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
-        when(groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+        when(groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedAtDesc(
                 eq(existingGroup.getGroupId()),
                 eq(requesterId),
                 anyCollection()
@@ -409,7 +409,7 @@ class GroupServiceUnitTest {
         );
 
         when(groupRepository.findById(existingGroup.getGroupId())).thenReturn(Optional.of(existingGroup));
-        when(groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+        when(groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedAtDesc(
                 eq(existingGroup.getGroupId()),
                 eq(requesterId),
                 anyCollection()

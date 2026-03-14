@@ -98,10 +98,10 @@ public class TenantAdminDashboardService {
 
     private List<MemberOverviewItem> buildRecentMembers(UUID tenantId) {
         var page = PageRequest.of(0, RECENT_LIMIT);
-        List<MemberOverviewItem> adults = memberRepository.findByTenantIdOrderByCreatedDateDesc(tenantId, page)
+        List<MemberOverviewItem> adults = memberRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, page)
                 .map(this::toMemberOverview)
                 .getContent();
-        List<MemberOverviewItem> children = childRepository.findByTenantIdOrderByCreatedDateDesc(tenantId, page)
+        List<MemberOverviewItem> children = childRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, page)
                 .map(this::toMemberOverview)
                 .getContent();
 
