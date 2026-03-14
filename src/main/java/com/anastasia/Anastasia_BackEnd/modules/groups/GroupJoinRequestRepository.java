@@ -13,17 +13,17 @@ import java.util.UUID;
 @Repository
 public interface GroupJoinRequestRepository extends JpaRepository<GroupJoinRequestEntity, Long> {
 
-    Optional<GroupJoinRequestEntity> findFirstByGroup_GroupIdAndRequester_UuidOrderByCreatedDateDesc(Long groupId, UUID requesterId);
+    Optional<GroupJoinRequestEntity> findFirstByGroup_GroupIdAndRequester_UuidOrderByCreatedAtDesc(Long groupId, UUID requesterId);
 
-    Optional<GroupJoinRequestEntity> findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+    Optional<GroupJoinRequestEntity> findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedAtDesc(
             Long groupId,
             UUID requesterId,
             Collection<GroupJoinRequestStatus> statuses
     );
 
-    List<GroupJoinRequestEntity> findByGroup_GroupIdAndStatusOrderByCreatedDateAsc(Long groupId, GroupJoinRequestStatus status);
+    List<GroupJoinRequestEntity> findByGroup_GroupIdAndStatusOrderByCreatedAtAsc(Long groupId, GroupJoinRequestStatus status);
 
-    List<GroupJoinRequestEntity> findByRequester_UuidAndTenantIdAndStatusOrderByCreatedDateDesc(
+    List<GroupJoinRequestEntity> findByRequester_UuidAndTenantIdAndStatusOrderByCreatedAtDesc(
             UUID requesterId,
             UUID tenantId,
             GroupJoinRequestStatus status

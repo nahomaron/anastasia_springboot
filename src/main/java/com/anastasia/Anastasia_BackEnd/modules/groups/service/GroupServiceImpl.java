@@ -564,7 +564,7 @@ public class GroupServiceImpl implements GroupService {
         }
 
         Optional<GroupJoinRequestEntity> existingPending = groupJoinRequestRepository
-                .findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+                .findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedAtDesc(
                         groupId,
                         currentUserId,
                         List.of(GroupJoinRequestStatus.PENDING)
@@ -591,7 +591,7 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public List<GroupJoinRequestResponse> listJoinRequests(Long groupId) {
         loadGroupForTenant(groupId);
-        return groupJoinRequestRepository.findByGroup_GroupIdAndStatusOrderByCreatedDateAsc(groupId, GroupJoinRequestStatus.PENDING)
+        return groupJoinRequestRepository.findByGroup_GroupIdAndStatusOrderByCreatedAtAsc(groupId, GroupJoinRequestStatus.PENDING)
                 .stream()
                 .map(this::toJoinRequestResponse)
                 .toList();
@@ -601,7 +601,7 @@ public class GroupServiceImpl implements GroupService {
     public Optional<MyGroupJoinRequestResponse> getMyJoinRequestStatus(Long groupId) {
         loadGroupForTenant(groupId);
         UUID currentUserId = requireCurrentUserId();
-        return groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidOrderByCreatedDateDesc(groupId, currentUserId)
+        return groupJoinRequestRepository.findFirstByGroup_GroupIdAndRequester_UuidOrderByCreatedAtDesc(groupId, currentUserId)
                 .map(this::toMyJoinRequestResponse);
     }
 
@@ -609,7 +609,7 @@ public class GroupServiceImpl implements GroupService {
     public List<MyGroupJoinRequestResponse> listMyPendingJoinRequests() {
         UUID tenantId = requireTenantId();
         UUID currentUserId = requireCurrentUserId();
-        return groupJoinRequestRepository.findByRequester_UuidAndTenantIdAndStatusOrderByCreatedDateDesc(
+        return groupJoinRequestRepository.findByRequester_UuidAndTenantIdAndStatusOrderByCreatedAtDesc(
                         currentUserId,
                         tenantId,
                         GroupJoinRequestStatus.PENDING
@@ -623,7 +623,7 @@ public class GroupServiceImpl implements GroupService {
         loadGroupForTenant(groupId);
         UUID currentUserId = requireCurrentUserId();
         GroupJoinRequestEntity joinRequest = groupJoinRequestRepository
-                .findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedDateDesc(
+                .findFirstByGroup_GroupIdAndRequester_UuidAndStatusInOrderByCreatedAtDesc(
                         groupId,
                         currentUserId,
                         List.of(GroupJoinRequestStatus.PENDING)
