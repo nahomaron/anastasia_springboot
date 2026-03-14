@@ -992,18 +992,18 @@ public class UserServiceImpl implements UserService {
             return switch (normalized) {
                 case "ACTIVE" -> cb.and(
                         cb.equal(root.get("status"), UserStatus.ACTIVE),
-                        membershipJoin.get("status").in(MemberStatus.ACTIVE.name(), MemberStatus.APPROVED.name())
+                        membershipJoin.get("statusValue").in(MemberStatus.ACTIVE.name(), MemberStatus.APPROVED.name())
                 );
                 case "INVITED" -> cb.or(
                         cb.isNull(root.get("membershipId")),
                         cb.equal(root.get("status"), UserStatus.PENDING_VERIFICATION),
-                        cb.equal(membershipJoin.get("status"), MemberStatus.PENDING.name())
+                        cb.equal(membershipJoin.get("statusValue"), MemberStatus.PENDING.name())
                 );
                 case "DISABLED" -> cb.or(
                         cb.equal(root.get("status"), UserStatus.DISABLED),
                         cb.equal(root.get("status"), UserStatus.SUSPENDED),
                         cb.equal(root.get("status"), UserStatus.DELETED),
-                        membershipJoin.get("status").in(MemberStatus.NON_ACTIVE.name(), MemberStatus.DECEASED.name())
+                        membershipJoin.get("statusValue").in(MemberStatus.NON_ACTIVE.name(), MemberStatus.DECEASED.name())
                 );
                 case "LOCKED" -> cb.equal(root.get("status"), UserStatus.LOCKED);
                 default -> cb.conjunction();

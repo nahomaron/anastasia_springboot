@@ -18,7 +18,7 @@ public class ChildSpecifications {
     }
 
     public static Specification<Child_MemberEntity> hasStatus(String status){
-        return (root, query, cb) -> cb.equal(root.get("status"), status);
+        return (root, query, cb) -> cb.equal(root.get("statusValue"), status);
     }
 
     public static Specification<Child_MemberEntity> isDeacon(boolean deacon){

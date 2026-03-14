@@ -28,8 +28,8 @@ public class ActiveMemberLimitPolicy {
             throw new AccessDeniedException("Active member limit is not configured for current tenant plan.");
         }
 
-        long currentActive = memberRepository.countByTenantIdAndStatusIn(tenantId, ACTIVE_STATUSES)
-                + childRepository.countByTenantIdAndStatusIn(tenantId, ACTIVE_STATUSES);
+        long currentActive = memberRepository.countByTenantIdAndStatusValueIn(tenantId, ACTIVE_STATUSES)
+                + childRepository.countByTenantIdAndStatusValueIn(tenantId, ACTIVE_STATUSES);
         if (currentActive + additionalCount > limit) {
             throw new AccessDeniedException(
                     "Active member limit exceeded for current tenant plan. " +

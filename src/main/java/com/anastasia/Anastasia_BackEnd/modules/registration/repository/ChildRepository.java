@@ -32,13 +32,13 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
 
     List<Child_MemberEntity> findAllByIdInAndTenantId(Set<Long> ids, UUID tenantId);
 
-    Page<Child_MemberEntity> findByStatusNotAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Child_MemberEntity> findByStatusValueNotAndTenantId(String status, UUID tenantId, Pageable pageable);
 
-    Page<Child_MemberEntity> findByStatusAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Child_MemberEntity> findByStatusValueAndTenantId(String status, UUID tenantId, Pageable pageable);
 
-    long countByStatusNotAndTenantId(String status, UUID tenantId);
-    long countByTenantIdAndStatusIn(UUID tenantId, List<String> statuses);
-    long countByTenantIdAndPriestNumberAndStatusNot(UUID tenantId, String priestNumber, String status);
+    long countByStatusValueNotAndTenantId(String status, UUID tenantId);
+    long countByTenantIdAndStatusValueIn(UUID tenantId, List<String> statuses);
+    long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, String status);
 
     Page<Child_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
@@ -47,7 +47,7 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
     @Query("""
             SELECT c FROM Child_MemberEntity c
             WHERE c.tenantId = :tenantId
-              AND c.status <> :status
+              AND c.statusValue <> :status
               AND (
                 LOWER(COALESCE(c.firstName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR LOWER(COALESCE(c.fatherName, '')) LIKE LOWER(CONCAT('%', :q, '%'))

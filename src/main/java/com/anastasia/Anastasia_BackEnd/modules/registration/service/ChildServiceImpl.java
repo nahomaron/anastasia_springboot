@@ -126,7 +126,7 @@ public class ChildServiceImpl implements ChildService{
 
     @Override
     public Page<Child_MemberResponse> findAll(Pageable pageable) {
-        return childRepository.findByStatusNotAndTenantId(
+        return childRepository.findByStatusValueNotAndTenantId(
                 ChildStatus.PENDING.name(),
                 requireTenantId(),
                 pageable)
@@ -135,7 +135,7 @@ public class ChildServiceImpl implements ChildService{
 
     @Override
     public Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable) {
-        return childRepository.findByStatusNotAndTenantId(
+        return childRepository.findByStatusValueNotAndTenantId(
                 ChildStatus.PENDING.name(),
                 requireTenantId(),
                 pageable)
@@ -144,7 +144,7 @@ public class ChildServiceImpl implements ChildService{
 
     @Override
     public long countNonPending() {
-        return childRepository.countByStatusNotAndTenantId(
+        return childRepository.countByStatusValueNotAndTenantId(
                 ChildStatus.PENDING.name(),
                 requireTenantId());
     }
@@ -165,7 +165,7 @@ public class ChildServiceImpl implements ChildService{
 
     @Override
     public Page<Child_MemberResponse> findPending(Pageable pageable) {
-        return childRepository.findByStatusAndTenantId(
+        return childRepository.findByStatusValueAndTenantId(
                 ChildStatus.PENDING.name(),
                 requireTenantId(),
                 pageable)
@@ -175,7 +175,7 @@ public class ChildServiceImpl implements ChildService{
     @Override
     public Page<Child_MemberResponse> searchNonPending(Pageable pageable, String query) {
         if (query == null || query.isBlank()) {
-            return childRepository.findByStatusNotAndTenantId(
+            return childRepository.findByStatusValueNotAndTenantId(
                     ChildStatus.PENDING.name(),
                     requireTenantId(),
                     pageable)
@@ -192,7 +192,7 @@ public class ChildServiceImpl implements ChildService{
     @Override
     public Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query) {
         if (query == null || query.isBlank()) {
-            return childRepository.findByStatusNotAndTenantId(
+            return childRepository.findByStatusValueNotAndTenantId(
                     ChildStatus.PENDING.name(),
                     requireTenantId(),
                     pageable)

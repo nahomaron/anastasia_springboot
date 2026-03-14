@@ -51,10 +51,10 @@ public class PriestDashboardService {
         long childrenCount = 0;
         List<MemberOverviewItem> recentMembers = List.of();
         if (priestNumber != null && !priestNumber.isBlank()) {
-            adultsCount = memberRepository.countByTenantIdAndPriestNumberAndStatusNot(
+            adultsCount = memberRepository.countByTenantIdAndPriestNumberAndStatusValueNot(
                     tenantId, priestNumber, MemberStatus.PENDING.name()
             );
-            childrenCount = childRepository.countByTenantIdAndPriestNumberAndStatusNot(
+            childrenCount = childRepository.countByTenantIdAndPriestNumberAndStatusValueNot(
                     tenantId, priestNumber, MemberStatus.PENDING.name()
             );
             recentMembers = buildRecentMembers(tenantId, priestNumber);

@@ -18,7 +18,7 @@ public class MemberSpecifications {
     }
 
     public static Specification<Adult_MemberEntity> hasStatus(String status){
-        return (root, query, cb) -> cb.equal(root.get("status"), status);
+        return (root, query, cb) -> cb.equal(root.get("statusValue"), status);
     }
     // todo -> implement for approvedByChurch and approvedByPriest
 

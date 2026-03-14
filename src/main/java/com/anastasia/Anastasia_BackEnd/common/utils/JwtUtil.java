@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class JwtUtil {
     private static final Long ACCESS_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24;
     private static final Long REFRESH_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24 * 7;
 
+    @Autowired
     public JwtUtil(
             @Value("${app.auth.jwt-current-secret}") String currentBase64Key,
             @Value("${app.auth.jwt-previous-secret:}") String previousBase64Key

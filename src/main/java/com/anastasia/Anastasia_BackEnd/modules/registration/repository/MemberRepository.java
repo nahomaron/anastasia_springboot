@@ -32,24 +32,24 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
 
     Optional<Adult_MemberEntity> findFirstBySpouseIdNumberAndTenantId(String spouseIdNumber, UUID tenantId);
 
-    Page<Adult_MemberEntity> findByStatusNotAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Adult_MemberEntity> findByStatusValueNotAndTenantId(String status, UUID tenantId, Pageable pageable);
 
-    Page<Adult_MemberEntity> findByStatusAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Adult_MemberEntity> findByStatusValueAndTenantId(String status, UUID tenantId, Pageable pageable);
 
-    long countByStatusNotAndTenantId(String status, UUID tenantId);
-    long countByTenantIdAndStatusIn(UUID tenantId, List<String> statuses);
-    long countByTenantIdAndPriestNumberAndStatusNot(UUID tenantId, String priestNumber, String status);
+    long countByStatusValueNotAndTenantId(String status, UUID tenantId);
+    long countByTenantIdAndStatusValueIn(UUID tenantId, List<String> statuses);
+    long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, String status);
 
     Page<Adult_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
-    Page<Adult_MemberEntity> findByTenantIdAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable);
+    Page<Adult_MemberEntity> findByTenantIdAndPriestNumberAndStatusValue(UUID tenantId, String priestNumber, String status, Pageable pageable);
 
     Page<Adult_MemberEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
 
     @Query("""
             SELECT m FROM Adult_MemberEntity m
             WHERE m.tenantId = :tenantId
-              AND m.status <> :status
+              AND m.statusValue <> :status
               AND (
                 LOWER(COALESCE(m.firstName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR LOWER(COALESCE(m.fatherName, '')) LIKE LOWER(CONCAT('%', :q, '%'))

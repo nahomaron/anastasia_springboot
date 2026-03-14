@@ -45,8 +45,8 @@ public class TenantAdminDashboardService {
     public TenantAdminDashboardResponse getSummary() {
         UUID tenantId = requireTenantId();
 
-        long adultCount = memberRepository.countByStatusNotAndTenantId(MemberStatus.PENDING.name(), tenantId);
-        long childCount = childRepository.countByStatusNotAndTenantId(MemberStatus.PENDING.name(), tenantId);
+        long adultCount = memberRepository.countByStatusValueNotAndTenantId(MemberStatus.PENDING.name(), tenantId);
+        long childCount = childRepository.countByStatusValueNotAndTenantId(MemberStatus.PENDING.name(), tenantId);
         long priestsCount = priestRepository.countByChurch_Tenant_Id(tenantId);
 
         MonthlyOffering offering = buildMonthlyOffering(tenantId);

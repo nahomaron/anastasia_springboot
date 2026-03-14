@@ -163,7 +163,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public Page<Adult_MemberResponse> findAll(Pageable pageable) {
-        return memberRepository.findByStatusNotAndTenantId(
+        return memberRepository.findByStatusValueNotAndTenantId(
                         MemberStatus.PENDING.name(),
                         requireTenantId(),
                         pageable)
@@ -172,7 +172,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public Page<Adult_MemberSummaryResponse> findAllSummary(Pageable pageable) {
-        return memberRepository.findByStatusNotAndTenantId(
+        return memberRepository.findByStatusValueNotAndTenantId(
                         MemberStatus.PENDING.name(),
                         requireTenantId(),
                         pageable)
@@ -181,7 +181,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public long countNonPending() {
-        return memberRepository.countByStatusNotAndTenantId(
+        return memberRepository.countByStatusValueNotAndTenantId(
                 MemberStatus.PENDING.name(),
                 requireTenantId());
     }
@@ -203,20 +203,20 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumberAndStatus(effectiveTenantId, priestNumber, status, pageable)
+        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(effectiveTenantId, priestNumber, status, pageable)
                 .map(memberMapper::memberEntityToResponse);
     }
 
     @Override
     public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberAndStatusSummary(UUID tenantId, String priestNumber, String status, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumberAndStatus(effectiveTenantId, priestNumber, status, pageable)
+        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(effectiveTenantId, priestNumber, status, pageable)
                 .map(memberMapper::memberEntityToSummaryResponse);
     }
 
     @Override
     public Page<Adult_MemberResponse> findPending(Pageable pageable) {
-        return memberRepository.findByStatusAndTenantId(
+        return memberRepository.findByStatusValueAndTenantId(
                 MemberStatus.PENDING.name(),
                 requireTenantId(),
                 pageable)
@@ -226,7 +226,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Page<Adult_MemberResponse> findPendingByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumberAndStatus(
+        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
                         effectiveTenantId,
                         priestNumber,
                         MemberStatus.PENDING.name(),
@@ -243,7 +243,7 @@ public class MemberServiceImpl implements MemberService {
         Specification<Adult_MemberEntity> scopeSpec = (root, cq, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("tenantId"), tenantId));
-            predicates.add(cb.notEqual(root.get("status"), MemberStatus.PENDING.name()));
+            predicates.add(cb.notEqual(root.get("statusValue"), MemberStatus.PENDING.name()));
             if (churchId != null) {
                 predicates.add(cb.equal(root.get("churchId"), churchId));
             }
@@ -277,7 +277,7 @@ public class MemberServiceImpl implements MemberService {
         Specification<Adult_MemberEntity> scopeSpec = (root, cq, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("tenantId"), tenantId));
-            predicates.add(cb.notEqual(root.get("status"), MemberStatus.PENDING.name()));
+            predicates.add(cb.notEqual(root.get("statusValue"), MemberStatus.PENDING.name()));
             if (churchId != null) {
                 predicates.add(cb.equal(root.get("churchId"), churchId));
             }

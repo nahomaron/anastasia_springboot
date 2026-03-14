@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.config.EventsModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.groups.config.GroupsModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.payments.config.PaymentsModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.registration.config.RegistrationModuleConfig;
+import com.anastasia.Anastasia_BackEnd.modules.staff.config.StaffModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.users.config.UsersModuleConfig;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.Import;
         GroupsModuleConfig.class,
         PaymentsModuleConfig.class,
         RegistrationModuleConfig.class,
+        StaffModuleConfig.class,
         UsersModuleConfig.class,
         NotificationModuleConfig.class
 })

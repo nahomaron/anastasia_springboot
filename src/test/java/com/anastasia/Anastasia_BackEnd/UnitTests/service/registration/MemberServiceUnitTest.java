@@ -145,7 +145,7 @@ public class MemberServiceUnitTest {
     void testFindAll() {
         Adult_MemberResponse response = new Adult_MemberResponse();
         Page<Adult_MemberEntity> page = new PageImpl<>(List.of(member));
-        when(memberRepository.findByStatusNotAndTenantId(
+        when(memberRepository.findByStatusValueNotAndTenantId(
                 eq(MemberStatus.PENDING.name()),
                 eq(tenantId),
                 any(PageRequest.class)))

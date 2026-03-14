@@ -136,7 +136,7 @@ public class ChildServiceUnitTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Child_MemberEntity> page = new PageImpl<>(List.of(child));
         Child_MemberResponse response = Child_MemberResponse.builder().id(1L).build();
-        when(childRepository.findByStatusNotAndTenantId(
+        when(childRepository.findByStatusValueNotAndTenantId(
                 eq(ChildStatus.PENDING.name()),
                 eq(tenantId),
                 eq(pageable)))
