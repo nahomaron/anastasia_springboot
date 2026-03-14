@@ -22,13 +22,13 @@ public class MarriageOperationsController {
 
     private final MarriageCaseService marriageCaseService;
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/{caseId}/payments")
     public ResponseEntity<List<MarriageManualPaymentResponse>> listPayments(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.listPayments(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/payments/manual")
     public ResponseEntity<MarriageManualPaymentResponse> recordManualPayment(
             @PathVariable UUID caseId,
@@ -37,7 +37,7 @@ public class MarriageOperationsController {
         return new ResponseEntity<>(marriageCaseService.recordManualPayment(caseId, request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/payments/{paymentId}/verify")
     public ResponseEntity<MarriageManualPaymentResponse> verifyManualPayment(
             @PathVariable UUID caseId,
@@ -47,13 +47,13 @@ public class MarriageOperationsController {
         return ResponseEntity.ok(marriageCaseService.verifyManualPayment(caseId, paymentId, request));
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/{caseId}/witnesses")
     public ResponseEntity<List<MarriageWitnessResponse>> listWitnesses(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.listWitnesses(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/witnesses")
     public ResponseEntity<MarriageWitnessResponse> addWitness(
             @PathVariable UUID caseId,
@@ -62,7 +62,7 @@ public class MarriageOperationsController {
         return new ResponseEntity<>(marriageCaseService.addWitness(caseId, request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PutMapping("/{caseId}/witnesses/{witnessId}")
     public ResponseEntity<MarriageWitnessResponse> updateWitness(
             @PathVariable UUID caseId,
@@ -72,14 +72,14 @@ public class MarriageOperationsController {
         return ResponseEntity.ok(marriageCaseService.updateWitness(caseId, witnessId, request));
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @DeleteMapping("/{caseId}/witnesses/{witnessId}")
     public ResponseEntity<Void> deleteWitness(@PathVariable UUID caseId, @PathVariable UUID witnessId) {
         marriageCaseService.deleteWitness(caseId, witnessId);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/priest-assignment")
     public ResponseEntity<MarriagePriestAssignmentResponse> assignPriest(
             @PathVariable UUID caseId,
@@ -88,7 +88,7 @@ public class MarriageOperationsController {
         return new ResponseEntity<>(marriageCaseService.assignPriest(caseId, request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/schedule/propose")
     public ResponseEntity<MarriageScheduleResponse> proposeSchedule(
             @PathVariable UUID caseId,
@@ -97,7 +97,7 @@ public class MarriageOperationsController {
         return ResponseEntity.ok(marriageCaseService.proposeSchedule(caseId, request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/schedule/confirm")
     public ResponseEntity<MarriageScheduleResponse> confirmSchedule(
             @PathVariable UUID caseId,
@@ -106,7 +106,7 @@ public class MarriageOperationsController {
         return ResponseEntity.ok(marriageCaseService.confirmSchedule(caseId, request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/schedule/reschedule")
     public ResponseEntity<MarriageScheduleResponse> reschedule(
             @PathVariable UUID caseId,
@@ -115,7 +115,7 @@ public class MarriageOperationsController {
         return ResponseEntity.ok(marriageCaseService.reschedule(caseId, request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/{caseId}/schedule/cancel")
     public ResponseEntity<MarriageScheduleResponse> cancelSchedule(
             @PathVariable UUID caseId,

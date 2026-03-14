@@ -22,7 +22,7 @@ public class MarriageLookupController {
 
     private final MarriageCaseService marriageCaseService;
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/priests/active")
     public ResponseEntity<List<MarriagePriestLookupResponse>> listActivePriests(
             @RequestParam(value = "churchId", required = false) Long churchId,

@@ -22,7 +22,7 @@ public class MarriageCertificateController {
 
     private final MarriageCaseService marriageCaseService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/marriage-cases/{caseId}/ceremony/complete")
     public ResponseEntity<MarriageCaseResponse> completeCeremony(
             @PathVariable UUID caseId,
@@ -31,7 +31,7 @@ public class MarriageCertificateController {
         return ResponseEntity.ok(marriageCaseService.completeCeremony(caseId, request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PutMapping("/marriage-config/certificate-sequence")
     public ResponseEntity<MarriageCertificateSequenceConfigResponse> configureCertificateSequence(
             @Valid @RequestBody MarriageCertificateSequenceConfigRequest request
@@ -39,7 +39,7 @@ public class MarriageCertificateController {
         return ResponseEntity.ok(marriageCaseService.configureCertificateSequence(request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'STAFF') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/marriage-config/certificate-sequence")
     public ResponseEntity<MarriageCertificateSequenceConfigResponse> getCertificateSequenceConfig(
             @RequestParam("churchNumber") String churchNumber
@@ -47,7 +47,7 @@ public class MarriageCertificateController {
         return ResponseEntity.ok(marriageCaseService.getCertificateSequenceConfig(churchNumber));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/marriage-cases/{caseId}/certificate/prepare")
     public ResponseEntity<MarriageCertificateResponse> prepareCertificate(
             @PathVariable UUID caseId,
@@ -57,7 +57,7 @@ public class MarriageCertificateController {
         return ResponseEntity.ok(marriageCaseService.prepareCertificate(caseId, payload));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/marriage-cases/{caseId}/certificate/issue")
     public ResponseEntity<MarriageCertificateResponse> issueCertificate(
             @PathVariable UUID caseId,
@@ -67,19 +67,19 @@ public class MarriageCertificateController {
         return ResponseEntity.ok(marriageCaseService.issueCertificate(caseId, payload));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'STAFF') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/marriage-cases/{caseId}/certificate")
     public ResponseEntity<MarriageCertificateResponse> getCertificate(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.getCertificate(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'STAFF') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/marriage-certificates/registry")
     public ResponseEntity<List<MarriageCertificateResponse>> listCertificateRegistry() {
         return ResponseEntity.ok(marriageCaseService.listCertificateRegistry());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping("/marriage-certificates/{certificateId}/amendments")
     public ResponseEntity<MarriageCertificateAmendmentResponse> createCertificateAmendment(
             @PathVariable UUID certificateId,

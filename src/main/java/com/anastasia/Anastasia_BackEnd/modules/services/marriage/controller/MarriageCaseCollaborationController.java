@@ -26,13 +26,13 @@ public class MarriageCaseCollaborationController {
 
     private final MarriageCaseService marriageCaseService;
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{caseId}/notes")
     public ResponseEntity<List<MarriageCaseNoteResponse>> listNotes(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.listNotes(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{caseId}/notes")
     public ResponseEntity<MarriageCaseNoteResponse> addNote(
             @PathVariable UUID caseId,
@@ -41,19 +41,19 @@ public class MarriageCaseCollaborationController {
         return new ResponseEntity<>(marriageCaseService.addNote(caseId, request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{caseId}/history")
     public ResponseEntity<List<MarriageStatusHistoryResponse>> listStatusHistory(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.listStatusHistory(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/{caseId}/audit-events")
     public ResponseEntity<List<MarriageAuditEventResponse>> listAuditEvents(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.listAuditEvents(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/{caseId}/reviews")
     public ResponseEntity<List<MarriageReviewResponse>> listReviews(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.listReviews(caseId));

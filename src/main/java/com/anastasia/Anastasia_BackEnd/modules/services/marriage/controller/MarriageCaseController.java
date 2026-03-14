@@ -40,7 +40,7 @@ public class MarriageCaseController {
 
     private final MarriageCaseService marriageCaseService;
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/member-initiation")
     public ResponseEntity<MarriageCaseResponse> startMemberInitiatedCase(
             @Valid @RequestBody MarriageMemberInitiationRequest request
@@ -48,7 +48,7 @@ public class MarriageCaseController {
         return new ResponseEntity<>(marriageCaseService.startMemberInitiatedCase(request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @PostMapping
     public ResponseEntity<MarriageCaseResponse> createAdminInitiatedCase(
             @Valid @RequestBody MarriageAdminInitiationRequest request
@@ -56,25 +56,25 @@ public class MarriageCaseController {
         return new ResponseEntity<>(marriageCaseService.createAdminInitiatedCase(request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/mine")
     public ResponseEntity<List<MarriageCaseResponse>> listMine() {
         return ResponseEntity.ok(marriageCaseService.listMine());
     }
 
-    @PreAuthorize("hasAnyRole('STAFF', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
     @GetMapping("/access")
     public ResponseEntity<List<MarriageCaseResponse>> listAccessibleCases() {
         return ResponseEntity.ok(marriageCaseService.listAccessibleCases());
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{caseId}")
     public ResponseEntity<MarriageCaseResponse> getCase(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.getCase(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{caseId}/counterpart-placeholder/{partyRole}")
     public ResponseEntity<MarriageCaseResponse> createCounterpartPlaceholder(
             @PathVariable UUID caseId,
@@ -84,7 +84,7 @@ public class MarriageCaseController {
         return ResponseEntity.ok(marriageCaseService.createCounterpartPlaceholder(caseId, partyRole, request));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{caseId}/pairing-token")
     public ResponseEntity<MarriagePairingTokenResponse> createPairingToken(
             @PathVariable UUID caseId,
@@ -93,13 +93,13 @@ public class MarriageCaseController {
         return new ResponseEntity<>(marriageCaseService.createPairingToken(caseId, request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/pairing/accept")
     public ResponseEntity<MarriageCaseResponse> acceptPairing(@Valid @RequestBody MarriagePairingAcceptRequest request) {
         return ResponseEntity.ok(marriageCaseService.acceptPairing(request));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{caseId}/parties/{partyRole}")
     public ResponseEntity<MarriagePartyApplicationResponse> getPartyApplication(
             @PathVariable UUID caseId,
@@ -108,7 +108,7 @@ public class MarriageCaseController {
         return ResponseEntity.ok(marriageCaseService.getPartyApplication(caseId, partyRole));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{caseId}/parties/{partyRole}/draft")
     public ResponseEntity<MarriagePartyApplicationResponse> savePartyDraft(
             @PathVariable UUID caseId,
@@ -118,7 +118,7 @@ public class MarriageCaseController {
         return ResponseEntity.ok(marriageCaseService.savePartyDraft(caseId, partyRole, request));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{caseId}/parties/{partyRole}/submit")
     public ResponseEntity<MarriagePartyApplicationResponse> submitPartyApplication(
             @PathVariable UUID caseId,
@@ -128,13 +128,13 @@ public class MarriageCaseController {
         return ResponseEntity.ok(marriageCaseService.submitPartyApplication(caseId, partyRole, request));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{caseId}/documents")
     public ResponseEntity<List<MarriageDocumentResponse>> listDocuments(@PathVariable UUID caseId) {
         return ResponseEntity.ok(marriageCaseService.listDocuments(caseId));
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{caseId}/documents")
     public ResponseEntity<MarriageDocumentResponse> addDocument(
             @PathVariable UUID caseId,
@@ -143,7 +143,7 @@ public class MarriageCaseController {
         return new ResponseEntity<>(marriageCaseService.addDocument(caseId, request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER', 'USER', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_SERVICES')")
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{caseId}/documents/{documentId}")
     public ResponseEntity<Void> deleteDocument(@PathVariable UUID caseId, @PathVariable UUID documentId) {
         marriageCaseService.deleteDocument(caseId, documentId);

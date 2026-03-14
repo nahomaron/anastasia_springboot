@@ -43,8 +43,7 @@ public class CalendarController {
     private final CalendarOccurrenceService occurrenceService;
     private final CalendarEntryService entryService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'VIEW_EVENTS', 'MANAGE_EVENTS', 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_EVENTS', 'MANAGE_EVENTS', 'MANAGE_APPOINTMENT')")
     @GetMapping("/occurrences")
     public ResponseEntity<List<CalendarOccurrenceResponse>> getOccurrences(
             @RequestParam("start")
@@ -68,16 +67,14 @@ public class CalendarController {
         return ResponseEntity.ok(occurrences);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
     @PostMapping("/entries")
     public ResponseEntity<CalendarEntryResponse> createEntry(@Valid @RequestBody CalendarEntryRequest request) {
         UUID userId = resolveCurrentUserId();
         return ResponseEntity.ok(entryService.createEntry(request, userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
     @PutMapping("/entries/{entryId}")
     public ResponseEntity<CalendarEntryResponse> updateEntry(
             @PathVariable UUID entryId,
@@ -87,8 +84,7 @@ public class CalendarController {
         return ResponseEntity.ok(entryService.updateEntry(entryId, request, userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
     @PatchMapping(value = "/entries/{entryId}", params = "scope=SERIES")
     public ResponseEntity<CalendarEntryResponse> patchSeries(
             @PathVariable UUID entryId,
@@ -98,8 +94,7 @@ public class CalendarController {
         return ResponseEntity.ok(entryService.updateEntry(entryId, request, userId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
     @PatchMapping(value = "/entries/{entryId}", params = "scope=THIS")
     public ResponseEntity<?> patchSingleOccurrence(
             @PathVariable UUID entryId,
@@ -110,8 +105,7 @@ public class CalendarController {
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CREATE_EDIT_EVENTS', 'MANAGE_APPOINTMENT')")
     @PatchMapping(value = "/entries/{entryId}", params = "scope=THIS_AND_FUTURE")
     public ResponseEntity<CalendarEntryResponse> patchThisAndFuture(
             @PathVariable UUID entryId,
