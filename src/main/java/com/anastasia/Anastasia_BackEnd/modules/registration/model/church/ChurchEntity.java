@@ -56,7 +56,7 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     private String tPrefix;
 
-    @Column(name = "church_name_tigrinya", nullable = false)
+    @Column(name = "church_name_local", nullable = false)
     private String tChurchName;
 
     @OneToOne(cascade = CascadeType.ALL)
