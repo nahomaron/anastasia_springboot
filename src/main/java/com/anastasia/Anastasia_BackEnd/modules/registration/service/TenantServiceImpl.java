@@ -19,6 +19,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantT
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
@@ -179,6 +180,7 @@ public class TenantServiceImpl implements TenantService {
                 .affiliatedTenant(savedTenant)
                 .roles(new HashSet<>(Set.of(ownerRole, adminRole)))
                 .userType(UserType.TENANT)
+                .status(UserStatus.PENDING_VERIFICATION)
                 .build();
 
         authService.createUser(adminUser);
