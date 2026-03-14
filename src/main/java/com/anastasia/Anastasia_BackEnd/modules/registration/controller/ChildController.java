@@ -94,7 +94,7 @@ public class ChildController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasRole('PRIEST')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'APPROVE_MEMBERSHIP_AS_PRIEST')")
     @PatchMapping("/{memberId}/priest-approve")
     public ResponseEntity<Child_MemberResponse> approveByPriest(@PathVariable Long memberId){
         Child_MemberResponse response = childService.approveByPriest(memberId);

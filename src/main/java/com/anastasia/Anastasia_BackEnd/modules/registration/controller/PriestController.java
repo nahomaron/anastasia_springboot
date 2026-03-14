@@ -35,7 +35,7 @@ public class PriestController {
     private final ChildService childService;
     private final LocalizedMessageService messageService;
 
-    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'MANAGE_PRIESTS')")
     @PostMapping("/register")
     public ResponseEntity<?> registerPriest(@Valid @RequestBody PriestDTO priestDTO){
 
@@ -49,7 +49,7 @@ public class PriestController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'VIEW_ALL_DATA', 'VIEW_PRIESTS')")
     @GetMapping
     public ResponseEntity<Page<PriestResponse>> listOfPriests(Pageable pageable){
         Page<PriestResponse> priests = priestService.findAllPriests(pageable);
@@ -70,7 +70,7 @@ public class PriestController {
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'VIEW_ALL_DATA')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'VIEW_ALL_DATA', 'VIEW_PRIESTS')")
     @GetMapping("/{priestId}")
     public ResponseEntity<PriestResponse> getPriest(@PathVariable Long priestId){
         Optional<PriestResponse> foundPriest = priestService.findPriestById(priestId);
@@ -82,7 +82,7 @@ public class PriestController {
         );
     }
 
-    @PreAuthorize("hasRole('PRIEST') or hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'MANAGE_PRIESTS')")
     @PatchMapping("/{priestId}")
     public ResponseEntity<PriestResponse> updatePriestDetails(@PathVariable Long priestId,
                                                          @RequestBody PriestDTO priestDTO){
@@ -91,15 +91,14 @@ public class PriestController {
         return new ResponseEntity<>(updatedPriest, HttpStatus.ACCEPTED);
     }
 
-    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'MANAGE_PRIESTS')")
     @PostMapping("/delete/{priestId}")
     public ResponseEntity<?> deletePriest(@PathVariable Long priestId){
         priestService.deletePriest(priestId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('PRIEST') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'VIEW_ALL_DATA')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_PRIEST_ASSIGNMENTS', 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'VIEW_ALL_DATA')")
     @GetMapping("/{priestNumber}/members")
     public ResponseEntity<Page<Adult_MemberSummaryResponse>> listMembersByPriest(
             @PathVariable String priestNumber,
@@ -114,8 +113,7 @@ public class PriestController {
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('PRIEST') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'VIEW_ALL_DATA')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_PRIEST_ASSIGNMENTS', 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'VIEW_ALL_DATA')")
     @GetMapping("/{priestNumber}/members/pending")
     public ResponseEntity<Page<Adult_MemberResponse>> listPendingMembersByPriest(
             @PathVariable String priestNumber,
@@ -131,8 +129,7 @@ public class PriestController {
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('PRIEST') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN', 'VIEW_ALL_DATA')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_PRIEST_ASSIGNMENTS', 'MANAGE_MEMBERS', 'VIEW_CHILDREN', 'VIEW_ALL_DATA')")
     @GetMapping("/{priestNumber}/children")
     public ResponseEntity<Page<Child_MemberSummaryResponse>> listChildrenByPriest(
             @PathVariable String priestNumber,

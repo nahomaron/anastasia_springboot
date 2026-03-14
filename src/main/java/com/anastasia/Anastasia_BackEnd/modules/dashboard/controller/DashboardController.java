@@ -28,7 +28,7 @@ public class DashboardController {
         return ResponseEntity.ok(tenantAdminDashboardService.getSummary());
     }
 
-    @PreAuthorize("hasRole('PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'MANAGE_EVENTS', 'VIEW_EVENTS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_PRIEST_DASHBOARD', 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'MANAGE_EVENTS', 'VIEW_EVENTS')")
     @GetMapping("/priest/summary")
     public ResponseEntity<PriestDashboardResponse> getPriestSummary() {
         return ResponseEntity.ok(priestDashboardService.getSummary());

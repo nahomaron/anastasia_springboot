@@ -125,7 +125,7 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasRole('PRIEST')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'APPROVE_MEMBERSHIP_AS_PRIEST')")
     @PatchMapping("/{memberId}/priest-approve")
     public ResponseEntity<Adult_MemberResponse> approveByPriest(@PathVariable Long memberId){
         Adult_MemberResponse response = memberService.approveByPriest(memberId);
