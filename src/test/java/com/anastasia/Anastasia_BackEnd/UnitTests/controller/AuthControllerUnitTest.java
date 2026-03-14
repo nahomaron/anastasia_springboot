@@ -90,15 +90,21 @@ class AuthControllerUnitTest {
     @Test
     void login_shouldDelegateToAuthService() throws MessagingException {
         AuthenticationRequest request = new AuthenticationRequest("test@example.com", "secret");
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         HttpServletResponse httpResponse = mock(HttpServletResponse.class);
+        Bucket bucket = mock(Bucket.class);
         AuthenticationResponse expected = AuthenticationResponse.builder()
                 .accessToken("access")
                 .refreshToken("refresh")
                 .build();
 
+        when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(rateLimiterConfig.getBucket(eq("auth:login:127.0.0.1:test@example.com"), eq(10L), eq(java.time.Duration.ofMinutes(10))))
+                .thenReturn(bucket);
+        when(bucket.tryConsume(1)).thenReturn(true);
         when(authService.authenticate(request)).thenReturn(expected);
 
-        ResponseEntity<AuthenticationResponse> response = authController.login(request, httpResponse);
+        ResponseEntity<AuthenticationResponse> response = authController.login(request, httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isSameAs(expected);
@@ -198,7 +204,8 @@ class AuthControllerUnitTest {
 
     @Test
     void forgotPassword_whenEmailMissing_shouldReturnBadRequest() throws MessagingException {
-        ResponseEntity<Map<String, String>> response = authController.forgotPassword(Map.of());
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
+        ResponseEntity<Map<String, String>> response = authController.forgotPassword(Map.of(), httpRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).containsEntry("message", "Email is required for password reset.");
@@ -207,7 +214,14 @@ class AuthControllerUnitTest {
 
     @Test
     void forgotPassword_whenEmailProvided_shouldInitiateReset() throws MessagingException {
-        ResponseEntity<Map<String, String>> response = authController.forgotPassword(Map.of("email", "user@mail.com"));
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
+        Bucket bucket = mock(Bucket.class);
+        when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(rateLimiterConfig.getBucket(eq("auth:forgot-password:127.0.0.1:user@mail.com"), eq(3L), eq(java.time.Duration.ofMinutes(15))))
+                .thenReturn(bucket);
+        when(bucket.tryConsume(1)).thenReturn(true);
+
+        ResponseEntity<Map<String, String>> response = authController.forgotPassword(Map.of("email", "user@mail.com"), httpRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(authService).initiatePasswordReset("user@mail.com");
@@ -215,13 +229,14 @@ class AuthControllerUnitTest {
 
     @Test
     void resetPassword_whenPasswordsMismatch_shouldReturnBadRequest() {
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         ResetPasswordRequest request = ResetPasswordRequest.builder()
                 .token("token")
                 .newPassword("Password1!")
                 .confirmNewPassword("Mismatch1!")
                 .build();
 
-        ResponseEntity<Map<String, String>> response = authController.resetPassword(request);
+        ResponseEntity<Map<String, String>> response = authController.resetPassword(request, httpRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         verify(authService, org.mockito.Mockito.never()).resetPassword(any(), any());
@@ -229,13 +244,20 @@ class AuthControllerUnitTest {
 
     @Test
     void resetPassword_whenValid_shouldInvokeService() {
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
+        Bucket bucket = mock(Bucket.class);
         ResetPasswordRequest request = ResetPasswordRequest.builder()
                 .token("token")
                 .newPassword("Password1!")
                 .confirmNewPassword("Password1!")
                 .build();
 
-        ResponseEntity<Map<String, String>> response = authController.resetPassword(request);
+        when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(rateLimiterConfig.getBucket(eq("auth:reset-password:127.0.0.1:token"), eq(5L), eq(java.time.Duration.ofMinutes(15))))
+                .thenReturn(bucket);
+        when(bucket.tryConsume(1)).thenReturn(true);
+
+        ResponseEntity<Map<String, String>> response = authController.resetPassword(request, httpRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(authService).resetPassword("token", "Password1!");

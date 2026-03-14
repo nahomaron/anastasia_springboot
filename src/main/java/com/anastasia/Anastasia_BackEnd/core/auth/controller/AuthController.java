@@ -22,7 +22,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.Duration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @RestController
@@ -69,8 +71,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(
             @Valid @RequestBody AuthenticationRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) throws MessagingException {
+        if (!consumeRateLimit("auth:login", httpRequest, normalizeKeyComponent(request.getEmail()), 10, Duration.ofMinutes(10))) {
+            return tooManyAuthenticationRequests();
+        }
         return ResponseEntity.ok(withRefreshTokenCookie(authService.authenticate(request), response));
     }
 
@@ -90,8 +96,19 @@ public class AuthController {
     @PostMapping("/login/2fa/verify")
     public ResponseEntity<AuthenticationResponse> verifyTwoFactorLogin(
             @Valid @RequestBody VerifyLoginTwoFactorRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
+        if (!consumeRateLimit(
+                "auth:login-2fa",
+                httpRequest,
+                normalizeKeyComponent(request.getChallengeToken()),
+                5,
+                Duration.ofMinutes(10))
+        ) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(AuthenticationResponse.builder().message("Too many requests, try again later").build());
+        }
         return ResponseEntity.ok(withRefreshTokenCookie(authService.verifyLoginTwoFactor(request), response));
     }
 
@@ -147,6 +164,9 @@ public class AuthController {
      */
     @PostMapping("/resend-activation")
     public ResponseEntity<Map<String, String>> resendActivation(@RequestParam String email) {
+        if (!consumeRateLimit("auth:resend-activation", null, normalizeKeyComponent(email), 3, Duration.ofMinutes(15))) {
+            return tooManyRequests();
+        }
         try {
             authService.resendActivationEmail(email);
             return ResponseEntity.ok(message("Activation email resent successfully"));
@@ -169,11 +189,17 @@ public class AuthController {
      * @throws MessagingException If there's an issue sending the email.
      */
     @PostMapping("/forgot-password")
-    public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody Map<String, String> request) throws MessagingException {
+    public ResponseEntity<Map<String, String>> forgotPassword(
+            @RequestBody Map<String, String> request,
+            HttpServletRequest httpRequest
+    ) throws MessagingException {
         String email = request.get("email");
         if (email == null || email.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(message("Email is required for password reset."));
+        }
+        if (!consumeRateLimit("auth:forgot-password", httpRequest, normalizeKeyComponent(email), 3, Duration.ofMinutes(15))) {
+            return tooManyRequests();
         }
         authService.initiatePasswordReset(email);
         return ResponseEntity.ok(message("If an account exists with that email, a password reset link has been sent."));
@@ -187,9 +213,15 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @PostMapping("/reset-password")
-    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) {
         if(!request.isPasswordMatch()){
             return ResponseEntity.badRequest().body(message("Passwords do not match"));
+        }
+        if (!consumeRateLimit("auth:reset-password", httpRequest, normalizeKeyComponent(request.getToken()), 5, Duration.ofMinutes(15))) {
+            return tooManyRequests();
         }
         authService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(message("Your password has been successfully reset. You can now log in with your new password."));
@@ -213,6 +245,35 @@ public class AuthController {
 
     private Map<String, String> message(String value) {
         return Map.of("message", value);
+    }
+
+    private ResponseEntity<Map<String, String>> tooManyRequests() {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(message("Too many requests, try again later"));
+    }
+
+    private ResponseEntity<AuthenticationResponse> tooManyAuthenticationRequests() {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(AuthenticationResponse.builder()
+                        .message("Too many requests, try again later")
+                        .build());
+    }
+
+    private boolean consumeRateLimit(
+            String scope,
+            HttpServletRequest request,
+            String subject,
+            long capacity,
+            Duration period
+    ) {
+        String clientIp = request != null ? normalizeKeyComponent(request.getRemoteAddr()) : "n/a";
+        String effectiveSubject = subject == null || subject.isBlank() ? "anonymous" : subject;
+        String bucketKey = scope + ":" + clientIp + ":" + effectiveSubject;
+        return rateLimiterConfig.getBucket(bucketKey, capacity, period).tryConsume(1);
+    }
+
+    private String normalizeKeyComponent(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 
     private AuthenticationResponse withRefreshTokenCookie(
