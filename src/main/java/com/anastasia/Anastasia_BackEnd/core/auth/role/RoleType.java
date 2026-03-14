@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -17,21 +18,27 @@ public enum RoleType {
 
     PLATFORM_ADMIN(
             Set.of(
-                    MANAGE_USERS, MANAGE_ROLES, MANAGE_TENANTS, VIEW_ALL_DATA
+                    MANAGE_USERS, VIEW_TENANT_USERS, INVITE_TENANT_USERS, MANAGE_TENANT_USERS,
+                    MANAGE_ROLES, MANAGE_TENANTS, MANAGE_TENANT_BILLING, VIEW_ALL_DATA,
+                    VIEW_STAFF, MANAGE_STAFF, RESET_STAFF_CREDENTIALS
             ), "Developer with full platform access"
     ),
 
     OWNER(
             Set.of(
-                    OWN_SUBSCRIPTION
+                    OWN_SUBSCRIPTION, MANAGE_TENANT_BILLING
             ), "Owns the subscription"
     ),
 
     PRIMARY_ADMIN(
             Set.of(
-                    MANAGE_USERS, MANAGE_ROLES, MANAGE_MEMBERS, MANAGE_GROUPS,
-                    MANAGE_EVENTS, MANAGE_FOLLOWUPS, MANAGE_APPOINTMENT, MANAGE_FINANCE
-            ), "Primary tenant admin manages everything under the tenant"
+                    MANAGE_USERS, VIEW_TENANT_USERS, INVITE_TENANT_USERS, MANAGE_TENANT_USERS,
+                    MANAGE_ROLES, MANAGE_TENANT_BILLING, MANAGE_MEMBERS, MANAGE_GROUPS,
+                    MANAGE_EVENTS, MANAGE_FOLLOWUPS, MANAGE_APPOINTMENT, MANAGE_FINANCE,
+                    VIEW_ACCOUNTS, MANAGE_ACCOUNTS, VIEW_FUNDS, MANAGE_FUNDS, RECORD_TRANSACTIONS,
+                    RECONCILE_ACCOUNTS, IMPORT_FINANCIAL_DATA, EXPORT_FINANCIAL_DATA,
+                    VIEW_STAFF, MANAGE_STAFF, RESET_STAFF_CREDENTIALS
+            ), "Primary tenant admin has full tenant-level permissions except platform-only capabilities"
     ),
 
     USER(
@@ -49,13 +56,13 @@ public enum RoleType {
 
     ADMIN(
             Set.of(
-                    MANAGE_USERS, MANAGE_ROLES, MANAGE_MEMBERS, MANAGE_GROUPS,
-                    MANAGE_EVENTS, MANAGE_FOLLOWUPS, MANAGE_APPOINTMENT, MANAGE_FINANCE
-            ), "Admin manages everything under the tenant"
+                    VIEW_TENANT_USERS
+            ), "Admin starts with limited default access and should be granted explicit permissions as needed"
     ),
     PRIEST(
             Set.of(
-                    VIEW_MEMBERS,ADD_MEMBERS, EDIT_MEMBERS, DELETE_MEMBERS, SMS_MEMBERS
+                    VIEW_MEMBERS, ADD_MEMBERS, EDIT_MEMBERS, DELETE_MEMBERS, SMS_MEMBERS,
+                    VIEW_GROUPS, MANAGE_REQUESTS, VIEW_STAFF
             ), "Priest has role of pastoring members"
     )
 
@@ -65,8 +72,9 @@ public enum RoleType {
     private final String description;
 
     public List<SimpleGrantedAuthority> getAuthorities(){
-        var authorities = getPermissions().stream()
-                .map(permissionType -> new SimpleGrantedAuthority(permissionType.name())).toList();
+        var authorities = new ArrayList<>(getPermissions().stream()
+                .map(permissionType -> new SimpleGrantedAuthority(permissionType.name()))
+                .toList());
 
         authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
 

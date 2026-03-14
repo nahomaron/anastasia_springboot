@@ -6,6 +6,7 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -35,6 +36,20 @@ class UserSecurityTests extends BaseApiTest {
                 .spec(getSpecForRole("USER"))
                 .when()
                 .get("/users/")
+                .then()
+                .extract()
+                .response();
+
+        assertThat(response.statusCode()).isEqualTo(403);
+    }
+
+    @Test
+    void anonymousCannotUpdateUserDetails() {
+        var response = given()
+                .contentType(ContentType.JSON)
+                .body("{}")
+                .when()
+                .patch("/users/update-user-details")
                 .then()
                 .extract()
                 .response();

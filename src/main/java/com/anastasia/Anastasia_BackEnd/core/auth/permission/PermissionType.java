@@ -14,8 +14,12 @@ public enum PermissionType {
     OWN_SUBSCRIPTION("own_subscription", "can configure or delete the subscription"),
     // User & Role Management
     MANAGE_USERS("manage_users", "Can create, update, and delete users"),
+    VIEW_TENANT_USERS("view_tenant_users", "Can view users within the current tenant"),
+    INVITE_TENANT_USERS("invite_tenant_users", "Can invite users into the current tenant"),
+    MANAGE_TENANT_USERS("manage_tenant_users", "Can change tenant membership, roles, and transfers"),
     MANAGE_ROLES("manage_roles", "Can create, update, and delete roles"),
     MANAGE_TENANTS("manage_tenants", "Can do everything to the software"),
+    MANAGE_TENANT_BILLING("manage_tenant_billing", "Can manage tenant billing and plan changes"),
     VIEW_ALL_DATA("view_all_data", "Can view everything in the software"),
 
     // Member Management
@@ -77,6 +81,14 @@ public enum PermissionType {
 
     // Finance Management
     MANAGE_FINANCE("manage_finance", "can do everything with finance"),
+    VIEW_ACCOUNTS("view_accounts", "Can view chart of accounts and account details"),
+    MANAGE_ACCOUNTS("manage_accounts", "Can create, update, and delete accounts"),
+    VIEW_FUNDS("view_funds", "Can view funds"),
+    MANAGE_FUNDS("manage_funds", "Can create and update funds"),
+    RECORD_TRANSACTIONS("record_transactions", "Can record accounting transactions"),
+    RECONCILE_ACCOUNTS("reconcile_accounts", "Can reconcile bank statements and ledgers"),
+    IMPORT_FINANCIAL_DATA("import_financial_data", "Can import accounting data"),
+    EXPORT_FINANCIAL_DATA("export_financial_data", "Can export accounting data"),
     VIEW_FINANCE_REPORT("view_finance_report", "Can view financial reports"),
     GENERATE_FINANCE_REPORT("generate_finance_report", "Can generate financial reports"),
     MANAGE_DONATIONS("manage_donations", "Can record, edit, and delete donations"),
@@ -89,7 +101,9 @@ public enum PermissionType {
     STREAM_SERVICES("stream_services", "Can manage live-streaming of worship services"),
 
     // Volunteer & Staff Management
+    VIEW_STAFF("view_staff", "Can view staff records"),
     MANAGE_STAFF("manage_staff", "Can create, update, and manage staff accounts"),
+    RESET_STAFF_CREDENTIALS("reset_staff_credentials", "Can reset staff credentials"),
     VIEW_VOLUNTEERS("view_volunteers", "Can view volunteer lists"),
     MANAGE_VOLUNTEERS("manage_volunteers", "Can assign and remove volunteers"),
     SCHEDULE_VOLUNTEERS("schedule_volunteers", "Can schedule volunteer tasks"),

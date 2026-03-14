@@ -1,12 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.modules.groups;
 
-import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.common.PagedResponse;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.*;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.groups.service.GroupService;
+import com.anastasia.Anastasia_BackEnd.modules.groups.support.GroupSecuritySupport;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
@@ -22,7 +22,6 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +41,7 @@ public class GroupController {
 
     private final GroupService groupService;
     private final UserService userService;
-    private final LocalizedMessageService messageService;
+    private final GroupSecuritySupport groupSecuritySupport;
 
     // Creating the group
     @PostMapping
@@ -136,24 +135,13 @@ public class GroupController {
         return ResponseEntity.ok(candidates);
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@groupSecuritySupport.canManageGroup(authentication, #groupId)")
     @GetMapping("/{groupId}/users/candidates/search")
     public ResponseEntity<List<GroupUserCandidateDTO>> searchCandidatesForGroup(
             @PathVariable Long groupId,
             @RequestParam("q") String query,
             Authentication authentication
     ) {
-        boolean privileged = hasAnyRole(authentication, "OWNER", "PRIMARY_ADMIN", "ADMIN", "PRIEST")
-                || hasAnyAuthority(authentication, "MANAGE_GROUPS", "CREATE_GROUPS", "EDIT_GROUPS", "ADD_MEMBERS_TO_GROUPS");
-
-        UUID currentUserId = resolveCurrentUserId();
-        if (!privileged && !groupService.canManageGroup(groupId, currentUserId)) {
-            throw new AccessDeniedException(messageService.get(
-                    "groups.candidates.search.accessDenied",
-                    "You do not have permission to search group candidates."
-            ));
-        }
-
         return ResponseEntity.ok(groupService.searchGroupUserCandidates(groupId, query));
     }
 
@@ -183,17 +171,16 @@ public class GroupController {
         return ResponseEntity.ok(groupService.cancelMyJoinRequest(groupId));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@groupSecuritySupport.canManageGroup(authentication, #groupId)")
     @GetMapping("/{groupId}/join-requests")
     public ResponseEntity<List<GroupJoinRequestResponse>> listJoinRequests(
             @PathVariable Long groupId,
             Authentication authentication
     ) {
-        ensureCanReviewJoinRequests(groupId, authentication);
         return ResponseEntity.ok(groupService.listJoinRequests(groupId));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@groupSecuritySupport.canManageGroup(authentication, #groupId)")
     @PostMapping("/{groupId}/join-requests/{requestId}/approve")
     public ResponseEntity<GroupJoinRequestResponse> approveJoinRequest(
             @PathVariable Long groupId,
@@ -201,11 +188,10 @@ public class GroupController {
             @RequestBody(required = false) GroupJoinRequestDecisionRequest request,
             Authentication authentication
     ) {
-        ensureCanReviewJoinRequests(groupId, authentication);
         return ResponseEntity.ok(groupService.approveJoinRequest(groupId, requestId, request));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@groupSecuritySupport.canManageGroup(authentication, #groupId)")
     @PostMapping("/{groupId}/join-requests/{requestId}/reject")
     public ResponseEntity<GroupJoinRequestResponse> rejectJoinRequest(
             @PathVariable Long groupId,
@@ -213,7 +199,6 @@ public class GroupController {
             @RequestBody(required = false) GroupJoinRequestDecisionRequest request,
             Authentication authentication
     ) {
-        ensureCanReviewJoinRequests(groupId, authentication);
         return ResponseEntity.ok(groupService.rejectJoinRequest(groupId, requestId, request));
     }
 
@@ -332,20 +317,6 @@ public class GroupController {
         }
         return false;
     }
-
-    private void ensureCanReviewJoinRequests(Long groupId, Authentication authentication) {
-        boolean privileged = hasAnyRole(authentication, "OWNER", "PRIMARY_ADMIN", "ADMIN", "PRIEST")
-                || hasAnyAuthority(authentication, "MANAGE_GROUPS", "CREATE_GROUPS", "EDIT_GROUPS", "ADD_MEMBERS_TO_GROUPS");
-
-        UUID currentUserId = resolveCurrentUserId();
-        if (!privileged && !groupService.canManageGroup(groupId, currentUserId)) {
-            throw new AccessDeniedException(messageService.get(
-                    "groups.joinRequests.manage.accessDenied",
-                    "You do not have permission to manage group join requests."
-            ));
-        }
-    }
-
 
     // Get group managers
     @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +

@@ -64,4 +64,16 @@ class GroupSecurityTests extends BaseApiTest {
 
         assertThat(response.statusCode()).isEqualTo(403);
     }
+
+    @Test
+    void anonymousCannotReviewJoinRequests() {
+        var response = given()
+                .when()
+                .get("/groups/1/join-requests")
+                .then()
+                .extract()
+                .response();
+
+        assertThat(response.statusCode()).isEqualTo(403);
+    }
 }
