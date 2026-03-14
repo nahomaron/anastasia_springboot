@@ -22,19 +22,19 @@ public class DashboardController {
     private final PriestDashboardService priestDashboardService;
     private final MemberDashboardService memberDashboardService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANTS', 'VIEW_ALL_DATA', 'MANAGE_USERS', 'MANAGE_MEMBERS', 'MANAGE_EVENTS', 'MANAGE_FINANCE', 'MANAGE_APPOINTMENT')")
     @GetMapping("/tenant-admin/summary")
     public ResponseEntity<TenantAdminDashboardResponse> getTenantAdminSummary() {
         return ResponseEntity.ok(tenantAdminDashboardService.getSummary());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST')")
+    @PreAuthorize("hasRole('PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'MANAGE_EVENTS', 'VIEW_EVENTS')")
     @GetMapping("/priest/summary")
     public ResponseEntity<PriestDashboardResponse> getPriestSummary() {
         return ResponseEntity.ok(priestDashboardService.getSummary());
     }
 
-    @PreAuthorize("hasAnyRole('MEMBER')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/member/summary")
     public ResponseEntity<MemberDashboardResponse> getMemberSummary() {
         return ResponseEntity.ok(memberDashboardService.getSummary());

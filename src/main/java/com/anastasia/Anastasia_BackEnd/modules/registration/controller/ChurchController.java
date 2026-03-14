@@ -24,7 +24,7 @@ public class ChurchController {
     private final ChurchService churchService;
 
     @PostMapping({"", "/register"})
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_TENANT_BILLING', 'OWN_SUBSCRIPTION')")
     public ResponseEntity<ChurchResponse> createChurch(@Valid @RequestBody ChurchDTO churchDTO){
         ChurchEntity churchEntity = churchService.convertToEntity(churchDTO);
         ChurchResponse churchResponse = churchService.createChurch(churchEntity);
@@ -58,7 +58,7 @@ public class ChurchController {
     }
 
     @GetMapping({"/{churchId}", "/{churchId}/profile"})
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'VIEW_ALL_DATA', 'MANAGE_TENANT_BILLING', 'OWN_SUBSCRIPTION')")
     public ResponseEntity<ChurchResponse> findChurch(@PathVariable Long churchId){
         Optional<ChurchEntity> foundChurch = churchService.findOne(churchId);
 
@@ -69,7 +69,7 @@ public class ChurchController {
     }
 
     @PutMapping("/{churchId}")
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'OWNER', 'PRIMARY_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_TENANT_BILLING', 'OWN_SUBSCRIPTION')")
     public ResponseEntity<ChurchResponse> updateChurch(@PathVariable Long churchId, @Valid @RequestBody ChurchDTO churchDTO){
         ChurchEntity churchEntity = churchService.convertToEntity(churchDTO);
 

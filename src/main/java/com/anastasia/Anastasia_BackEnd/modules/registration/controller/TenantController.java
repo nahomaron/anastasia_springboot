@@ -163,7 +163,7 @@ public class TenantController {
      * @param pageable Pagination information.
      * @return ResponseEntity containing a page of TenantDTO objects.
      */
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'VIEW_ALL_DATA')")
     @GetMapping
     public ResponseEntity<Page<TenantDTO>> listOfTenants(Pageable pageable){
         return new ResponseEntity<>(tenantService.findAll(pageable), HttpStatus.OK);
@@ -175,7 +175,7 @@ public class TenantController {
      * @param tenantId  The ID of the tenant to retrieve.
      * @return  tenantDTO that is converted from entity
      */
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'VIEW_ALL_DATA')")
     @GetMapping("/{tenantId}")
     public ResponseEntity<TenantDTO> getTenant(@PathVariable UUID tenantId){
         Optional<TenantDTO> foundTenant = tenantService.findTenantDtoById(tenantId);
@@ -194,7 +194,7 @@ public class TenantController {
      * @param tenantId The ID of the tenant to unsubscribe.
      * @return ResponseEntity indicating success or failure of the un-subscription.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_TENANT_BILLING', 'OWN_SUBSCRIPTION')")
     @PostMapping("/unsubscribe/{tenantId}")
     public ResponseEntity<?> unsubscribeTenant(@PathVariable UUID tenantId){
         tenantService.unsubscribeTenant(tenantId);
@@ -209,7 +209,7 @@ public class TenantController {
      * @param tenantDTO The data transfer object containing updated tenant details.
      * @return ResponseEntity indicating success or failure of the update operation.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_TENANT_BILLING', 'OWN_SUBSCRIPTION')")
     @PatchMapping("/update/{tenantId}")
     public ResponseEntity<?> updateTenant(@PathVariable UUID tenantId, @Valid @RequestBody TenantDTO tenantDTO) {
         if(tenantDTO.getPassword() != null && !tenantDTO.isPasswordMatch()){
