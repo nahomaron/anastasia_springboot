@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,7 +35,7 @@ public class GroupResponse {
 
     private UUID lastModifiedBy;
 
-    private LocalDateTime createdDate;
+    private Instant createdAt;
 
-    private LocalDateTime lastModifiedDate;
+    private Instant updatedAt;
 }

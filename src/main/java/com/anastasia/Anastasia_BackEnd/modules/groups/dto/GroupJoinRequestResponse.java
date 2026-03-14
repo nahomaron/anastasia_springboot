@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -20,7 +20,7 @@ public class GroupJoinRequestResponse {
     private String requesterEmail;
     private String status;
     private String decisionNote;
-    private LocalDateTime requestedAt;
-    private LocalDateTime decidedAt;
+    private Instant requestedAt;
+    private Instant decidedAt;
     private UUID decidedBy;
 }

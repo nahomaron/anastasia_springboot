@@ -917,8 +917,8 @@ public class GroupServiceImpl implements GroupService {
                 .requesterEmail(joinRequest.getRequester().getEmail())
                 .status(joinRequest.getStatus().name())
                 .decisionNote(joinRequest.getDecisionNote())
-                .requestedAt(joinRequest.getCreatedDate())
-                .decidedAt(joinRequest.getDecidedAt() == null ? null : LocalDateTime.ofInstant(joinRequest.getDecidedAt(), java.time.ZoneId.systemDefault()))
+                .requestedAt(joinRequest.getCreatedAt())
+                .decidedAt(joinRequest.getDecidedAt())
                 .decidedBy(joinRequest.getDecidedBy())
                 .build();
     }
