@@ -526,10 +526,13 @@ public class UserServiceImpl implements UserService {
         tokenRepository.saveAll(sessionTokens);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
-            @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
-    })
+    @Caching(
+            put = {@CachePut(value = "users", key = "#result.uuid()")},
+            evict = {
+                    @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
+                    @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
+            }
+    )
     @Override
     public SimpleUserDTO updateUserDetails(UserEntity userEntity, Principal connectedUser) {
 //        var currentUser = (UserEntity) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
@@ -557,10 +560,8 @@ public class UserServiceImpl implements UserService {
 
     @Caching(
             evict = {
-                    // Assuming the UserPrincipal object has a consistent key with the cache, or fetch the user first:
                     @CacheEvict(value = "users",
-                            key = "#user.uuid" // Needs SpEL access to the 'user' variable.
-//                            keyGenerator = "tenantAwareKeyGenerator"
+                            key = "#root.target.getCurrentUserId()"
                     )
             }
     )
@@ -603,9 +604,10 @@ public class UserServiceImpl implements UserService {
     @Caching(
             evict = {
                     @CacheEvict(value = "users", key = "#userId"
-//                            keyGenerator = "tenantAwareKeyGenerator"
                     ),
                     @CacheEvict(value = "users_all",
+                            keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
+                    @CacheEvict(value = "users_all_list",
                             keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
             }
     )
@@ -826,7 +828,6 @@ public class UserServiceImpl implements UserService {
     @Caching(
             evict = {
                     @CacheEvict(value = "users", key = "#userId"
-//                            keyGenerator = "tenantAwareKeyGenerator"
                     ),
                     @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
                     @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
@@ -848,9 +849,12 @@ public class UserServiceImpl implements UserService {
         throw new RuntimeException(messageService.get("auth.user.notAuthenticated", "No authenticated user found."));
     }
 
-    @CachePut(value = "users",
-            key = "#result.uuid" // Use the ID of the returned (saved) entity
-//            keyGenerator = "tenantAwareKeyGenerator"
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "users", key = "#root.target.getCurrentUserId()"),
+                    @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
+                    @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
+            }
     )
     @Override
     public void updateProfileAvatar(ImageAssetDTO imageAssetDTO) {

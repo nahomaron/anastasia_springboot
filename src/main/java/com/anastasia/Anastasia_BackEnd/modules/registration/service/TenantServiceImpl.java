@@ -233,7 +233,7 @@ public class TenantServiceImpl implements TenantService {
     }
 
     @Caching(evict = {
-            @CacheEvict(value = "tenants_by_phone", key = "#phone"),
+            @CacheEvict(value = "tenants_by_phone", key = "#root.target.normalizeTenantPhoneCacheKey(#phone)"),
             @CacheEvict(value = "tenants", allEntries = true),
             @CacheEvict(value = "tenants_page", allEntries = true),
             @CacheEvict(value = "tenants_all", allEntries = true)
@@ -288,10 +288,14 @@ public class TenantServiceImpl implements TenantService {
         return tenantRepository.findByPhoneNumber(PhoneNumberUtils.normalize(phone));
     }
 
-    @Cacheable(value = "tenants_by_phone", key = "#phone")
+    @Cacheable(value = "tenants_by_phone", key = "#root.target.normalizeTenantPhoneCacheKey(#phone)")
     @Override
     public Optional<TenantDTO> findTenantDtoByPhoneNumber(String phone) {
         return tenantRepository.findByPhoneNumber(PhoneNumberUtils.normalize(phone)).map(this::convertTenantToDTO);
+    }
+
+    public String normalizeTenantPhoneCacheKey(String phone) {
+        return PhoneNumberUtils.normalize(phone);
     }
 
     @Caching(evict = {

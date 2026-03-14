@@ -206,7 +206,7 @@ public class ChildServiceImpl implements ChildService{
                 .map(childMapper::childEntityToSummaryResponse);
     }
 
-    @Cacheable(value = "children", key = "#childId")
+    @Cacheable(value = "children", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<Child_MemberResponse> findChildById(Long childId) {
         return childRepository.findByIdAndTenantId(childId, requireTenantId())
@@ -217,7 +217,7 @@ public class ChildServiceImpl implements ChildService{
             evict = {@CacheEvict( value = "children_all",
                         keyGenerator = "tenantAwareKeyGenerator",  allEntries = true),
                     @CacheEvict(value = "children",
-                            key = "#childId")}
+                            key = "#root.target.childCacheKey(#childId)")}
     )
     @Override
     public Child_MemberResponse updateChildDetails(Long childId, Child_MemberDTO request) {
@@ -278,7 +278,7 @@ public class ChildServiceImpl implements ChildService{
     @Caching(
             evict = {
                     @CacheEvict(value = "children",
-                            key ="#childId"
+                            key = "#root.target.childCacheKey(#childId)"
                     ),
                     @CacheEvict(value = "children_all",
                             keyGenerator = "tenantAwareKeyGenerator",
@@ -303,7 +303,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Caching(
-            put = {@CachePut(value = "children", key = "#childId")},
+            put = {@CachePut(value = "children", keyGenerator = "tenantAwareKeyGenerator")},
             evict = {@CacheEvict(value = "children_all",
                     keyGenerator = "tenantAwareKeyGenerator",
                     allEntries = true)}
@@ -327,7 +327,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Caching(
-            put = {@CachePut(value = "children", key = "#childId")},
+            put = {@CachePut(value = "children", keyGenerator = "tenantAwareKeyGenerator")},
             evict = {@CacheEvict(value = "children_all",
                     keyGenerator = "tenantAwareKeyGenerator",
                     allEntries = true)}
@@ -348,6 +348,10 @@ public class ChildServiceImpl implements ChildService{
         child.setStatus(ChildStatus.APPROVED.name());
         Child_MemberEntity saved = childRepository.save(child);
         return convertToResponse(saved);
+    }
+
+    public String childCacheKey(Long childId) {
+        return "tenant:" + requireTenantId() + ":" + childId;
     }
 
     private String generateUniqueChildMembershipNumber(int length, boolean isDeacon) {

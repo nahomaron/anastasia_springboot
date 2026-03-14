@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -28,8 +26,6 @@ public class CacheWarmupService {
     private final MemberService memberService;
     private final CacheManager cacheManager;
     private final ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider;
-    private static final Object LOCK = new Object();
-    private static final Set<UUID> WARMED_TENANTS = new HashSet<>();
     private static final String CACHE_KEY_PREFIX = "cache:warmup:tenant:";
 
     /**
@@ -37,15 +33,6 @@ public class CacheWarmupService {
      */
     @Async("cacheExecutor")
     public void warmUpTenantCache(UUID tenantId) {
-        synchronized (LOCK) {
-            // prevent duplicate warm-up if already done recently
-            if (WARMED_TENANTS.contains(tenantId)) {
-                log.info("⚡ Cache for tenant {} already warmed recently. Skipping.", tenantId);
-                return;
-            }
-            WARMED_TENANTS.add(tenantId);
-        }
-
         String redisKey = CACHE_KEY_PREFIX + tenantId;
         RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
 
@@ -92,13 +79,25 @@ public class CacheWarmupService {
      * Optional — clear all caches for this tenant
      */
     public void clearTenantCaches(UUID tenantId) {
-        TenantContext.setTenantId(tenantId);
-        log.warn("🧹 Clearing all caches for tenant {}", tenantId);
-        cacheManager.getCacheNames().forEach(name -> {
-            cacheManager.getCache(name).clear();
-            log.info("Cleared cache '{}'", name);
-        });
-        TenantContext.clear();
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisTemplate == null) {
+            log.warn("RedisTemplate unavailable, skipping tenant cache clear for {}", tenantId);
+            return;
+        }
+
+        log.warn("🧹 Clearing caches for tenant {}", tenantId);
+        cacheManager.getCacheNames().forEach(name -> clearTenantEntries(redisTemplate, name, tenantId));
+    }
+
+    private void clearTenantEntries(RedisTemplate<String, Object> redisTemplate, String cacheName, UUID tenantId) {
+        String keyPattern = cacheName + "::tenant:" + tenantId + "*";
+        var keys = redisTemplate.keys(keyPattern);
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        redisTemplate.delete(keys);
+        log.info("Cleared {} entries from cache '{}'", keys.size(), cacheName);
     }
 
     private Instant parseLastWarmed(Object rawValue) {

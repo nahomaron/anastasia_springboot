@@ -310,12 +310,9 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Caching(
-//            put = {@CachePut(value = "members",
-//                    key = "#memberId",
-//                    keyGenerator = "tenantAwareKeyGenerator")},
-            evict = {@CacheEvict( value = "members_all",
-                    key = "#memberId",
-//                    keyGenerator = "tenantAwareKeyGenerator",
+            put = {@CachePut(value = "members", key = "#root.target.memberCacheKey(#memberId)")},
+            evict = {@CacheEvict(value = "members_all",
+                    keyGenerator = "tenantAwareKeyGenerator",
                     allEntries = true)}
     )
     @Override
@@ -386,8 +383,7 @@ public class MemberServiceImpl implements MemberService {
     @Caching(
             evict = {
                     @CacheEvict(value = "members",
-                            key = "#memberId"
-//                            keyGenerator = "tenantAwareKeyGenerator"
+                            key = "#root.target.memberCacheKey(#memberId)"
                     ),
                     @CacheEvict(value = "members_all",
                             keyGenerator = "tenantAwareKeyGenerator",
@@ -401,8 +397,13 @@ public class MemberServiceImpl implements MemberService {
                 .ifPresent(memberRepository::delete);
     }
 
-    @CachePut(value = "members", key = "#memberId"
-//            , keyGenerator = "tenantAwareKeyGenerator"
+    public String memberCacheKey(Long memberId) {
+        return "tenant:" + requireTenantId() + ":" + memberId;
+    }
+
+    @Caching(
+            put = {@CachePut(value = "members", keyGenerator = "tenantAwareKeyGenerator")},
+            evict = {@CacheEvict(value = "members_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)}
     )
     @Override
     public Adult_MemberResponse approveByChurch(Long memberId) {
@@ -430,8 +431,9 @@ public class MemberServiceImpl implements MemberService {
         return convertToResponse(saved);
     }
 
-    @CachePut(value = "members", key = "#memberId"
-//            , keyGenerator = "tenantAwareKeyGenerator"
+    @Caching(
+            put = {@CachePut(value = "members", keyGenerator = "tenantAwareKeyGenerator")},
+            evict = {@CacheEvict(value = "members_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)}
     )
     @Override
     public Adult_MemberResponse approveByPriest(Long memberId) {

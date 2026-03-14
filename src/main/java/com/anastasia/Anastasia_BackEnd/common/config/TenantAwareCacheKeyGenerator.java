@@ -21,9 +21,6 @@ public class TenantAwareCacheKeyGenerator implements KeyGenerator {
         StringBuilder key = new StringBuilder("tenant:")
                 .append(tenantId != null ? tenantId : "unknown");
 
-        // Append method name for extra isolation (optional but helps debugging)
-        key.append(":").append(method.getName());
-
         // Append all method parameters
         for (Object param : params) {
             if (param == null) continue;

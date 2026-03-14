@@ -1,7 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.common.config;
 
+import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.interceptor.SimpleKeyGenerator;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -18,6 +19,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Configuration class for Redis caching.
@@ -44,14 +47,30 @@ public class RedisCacheConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30)) // default TTL: 30 min
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(redisSerializer()));
 
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        cacheConfigurations.put("imageAssets", defaultConfig.entryTtl(Duration.ofHours(6)));
+        cacheConfigurations.put("members", defaultConfig.entryTtl(Duration.ofMinutes(15)));
+        cacheConfigurations.put("members_all", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("children", defaultConfig.entryTtl(Duration.ofMinutes(15)));
+        cacheConfigurations.put("children_all", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("users", defaultConfig.entryTtl(Duration.ofMinutes(15)));
+        cacheConfigurations.put("users_all", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("users_all_list", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("tenants", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        cacheConfigurations.put("tenants_page", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        cacheConfigurations.put("tenants_by_phone", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        cacheConfigurations.put("events_visible", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("event_managers", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+
         return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(config)
+                .cacheDefaults(defaultConfig)
+                .withInitialCacheConfigurations(cacheConfigurations)
                 .build();
     }
 
@@ -63,6 +82,31 @@ public class RedisCacheConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(redisSerializer());
         return template;
+    }
+
+    @Bean
+    public CacheErrorHandler cacheErrorHandler() {
+        return new CacheErrorHandler() {
+            @Override
+            public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
+                throw exception;
+            }
+
+            @Override
+            public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
+                throw exception;
+            }
+
+            @Override
+            public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
+                throw exception;
+            }
+
+            @Override
+            public void handleCacheClearError(RuntimeException exception, Cache cache) {
+                throw exception;
+            }
+        };
     }
 
 }
