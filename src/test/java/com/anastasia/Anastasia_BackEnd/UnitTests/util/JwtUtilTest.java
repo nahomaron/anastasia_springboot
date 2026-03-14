@@ -26,13 +26,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtUtilTest {
+    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
 
     private JwtUtil jwtUtil;
     private UserPrincipal userPrincipal;
 
     @BeforeEach
     void setUp() {
-        jwtUtil = new JwtUtil();
+        jwtUtil = new JwtUtil(TEST_JWT_SECRET);
 
         TenantEntity tenant = TenantEntity.builder()
                 .id(UUID.randomUUID())

@@ -16,6 +16,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JwtUtilTest {
+    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
 
     private JwtUtil jwtUtil;
     private UserPrincipal userPrincipal;
@@ -28,7 +29,7 @@ public class JwtUtilTest {
                 .id(tenantId)
                 .build();
 
-        jwtUtil = new JwtUtil();
+        jwtUtil = new JwtUtil(TEST_JWT_SECRET);
 
         Role role = Role.builder()
                 .roleName("ADMIN")

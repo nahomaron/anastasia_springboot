@@ -46,10 +46,11 @@ import java.util.UUID;
 @Feature("External REST Layer")
 @ExtendWith(TestFailureWatcher.class)
 public class BaseApiTest {
+    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
 
     private static final Logger log = LoggerFactory.getLogger(BaseApiTest.class);
 
-    private static final JwtUtil jwtUtil = new JwtUtil();
+    private static final JwtUtil jwtUtil = new JwtUtil(TEST_JWT_SECRET);
     // The static AuthService field was removed as it was not being initialized by Spring (it was null).
 
     static {

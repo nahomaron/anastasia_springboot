@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.model;
 
+import com.anastasia.Anastasia_BackEnd.modules.common.Auditable;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
@@ -12,12 +13,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,12 +26,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@EntityListeners(AuditingEntityListener.class)
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_membership", columnList = "membership_id"),
         @Index(name = "idx_user_affiliated_tenant", columnList = "affiliated_tenant_id")
 })
-public class UserEntity{
+public class UserEntity extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
@@ -141,14 +137,6 @@ public class UserEntity{
     @Builder.Default
     private Set<GroupEntity> groups = new HashSet<>();
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-
-    @LastModifiedDate
-    @Column(insertable = false)
-    private LocalDateTime lastModifiedDate;
-
     @Version
     @Column(nullable = false)
     private long version;
@@ -229,7 +217,8 @@ public class UserEntity{
         this.setAffiliatedTenant(tenant);
     }
 
-    public abstract static class UserEntityBuilder<C extends UserEntity, B extends UserEntityBuilder<C, B>> {
+    public abstract static class UserEntityBuilder<C extends UserEntity, B extends UserEntityBuilder<C, B>>
+            extends Auditable.AuditableBuilder<C, B> {
         public B tenant(TenantEntity tenant) {
             this.affiliatedTenant = tenant;
             return self();

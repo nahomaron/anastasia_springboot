@@ -21,7 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,7 +56,7 @@ public class AuthServiceUnitTest {
                 .fullName("Test User")
                 .userType(UserType.GUEST)
                 .verified(false)
-                .createdDate(LocalDateTime.now().minusDays(1))
+                .createdAt(Instant.now().minusSeconds(24L * 60L * 60L))
                 .build();
     }
 
@@ -106,7 +106,7 @@ public class AuthServiceUnitTest {
 
     @Test
     void testSaveUserToken_ShouldCallRepo() {
-        authService.saveUserToken("abc123", user, TokenType.BEARER);
+        authService.saveUserToken("abc123", user, TokenType.BEARER, "session-1", "jwt-1");
         verify(tokenRepository).save(any(Token.class));
     }
 

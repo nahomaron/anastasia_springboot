@@ -19,10 +19,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import static io.restassured.RestAssured.given;
 
 public final class SubscriptionFlowHelper {
+    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
 
     private static final TenantService tenantService = new TenantService();
     private static final AuthService authService = new AuthService();
-    private static final JwtUtil jwtUtil = new JwtUtil();
+    private static final JwtUtil jwtUtil = new JwtUtil(TEST_JWT_SECRET);
     private static final Map<String, TenantDTO> tenantCache = new ConcurrentHashMap<>();
 
     private SubscriptionFlowHelper() {

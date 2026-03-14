@@ -3,7 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.users.dto;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +18,7 @@ public class TenantUserRowResponse {
     private List<String> groups;
     private String membershipId;
     private TenantUserStatus status;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private boolean protectedAccount;
     private String protectedReason;
 }
