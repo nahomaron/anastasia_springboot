@@ -215,7 +215,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Other sessions revoked."));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT', 'VIEW_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_APPOINTMENT', 'VIEW_TENANT_USERS')")
     @GetMapping("/search")
     public ResponseEntity<List<SimpleUserDTO>> searchUsers(
             @RequestParam("q") String query,
@@ -224,7 +224,7 @@ public class UserController {
         return ResponseEntity.ok(userService.searchUsers(query, roles));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'VIEW_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'VIEW_TENANT_USERS')")
     @GetMapping("/tenant-access")
     public ResponseEntity<TenantUsersPageResponse> listTenantUsers(
             @RequestParam(value = "q", required = false) String query,
@@ -236,13 +236,13 @@ public class UserController {
         return ResponseEntity.ok(userService.listTenantUsers(query, status, role, page, size));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'INVITE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'INVITE_TENANT_USERS')")
     @PostMapping("/tenant-access/invitations")
     public ResponseEntity<TenantInviteResponse> inviteTenantUser(@Valid @RequestBody TenantInviteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.inviteUserToTenant(request.getEmail()));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
     @PatchMapping("/tenant-access/{userId}/membership")
     public ResponseEntity<TenantUserRowResponse> applyMembershipAction(
             @PathVariable UUID userId,
@@ -251,7 +251,7 @@ public class UserController {
         return ResponseEntity.ok(userService.applyMembershipAction(userId, request.getAction()));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
     @PostMapping("/tenant-access/{userId}/transfer-requests")
     public ResponseEntity<MemberTransferResponse> requestMemberTransfer(
             @PathVariable UUID userId,
@@ -265,7 +265,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
     @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/approve")
     public ResponseEntity<MemberTransferResponse> approveMemberTransfer(
             @PathVariable UUID transferRequestId,
@@ -275,7 +275,7 @@ public class UserController {
         return ResponseEntity.ok(userService.approveMemberTransferRequest(transferRequestId, note));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
     @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/reject")
     public ResponseEntity<MemberTransferResponse> rejectMemberTransfer(
             @PathVariable UUID transferRequestId,
@@ -317,7 +317,7 @@ public class UserController {
      * @param request The AssignRolesRequest containing the roles to be assigned.
      * @return  ResponseEntity indicating the success of the operation.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_ROLES')")
     @PutMapping("/{userId}/assign-roles")
     public ResponseEntity<?> assignRolesToUser(@PathVariable UUID userId, @RequestBody AssignRolesRequest request){
         userService.assignRolesToUser(userId, request);
@@ -352,7 +352,7 @@ public class UserController {
      * @param userId The UUID of the user to be deleted.
      * @return ResponseEntity indicating the success of the deletion operation.
      */
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID userId){
         userService.deleteUser(userId);

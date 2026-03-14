@@ -2,13 +2,9 @@ package com.anastasia.Anastasia_BackEnd.core.auth.permission;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 
-@Getter
-@RequiredArgsConstructor
 public enum PermissionType {
 
     OWN_SUBSCRIPTION("own_subscription", "can configure or delete the subscription"),
@@ -128,6 +124,19 @@ public enum PermissionType {
 
     private final String name;
     private final String description;
+
+    PermissionType(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 
     @JsonValue
     public String toJson() {

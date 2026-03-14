@@ -9,6 +9,9 @@ import io.qameta.allure.SeverityLevel;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+import java.util.UUID;
+
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,6 +53,21 @@ class UserSecurityTests extends BaseApiTest {
                 .body("{}")
                 .when()
                 .patch("/users/update-user-details")
+                .then()
+                .extract()
+                .response();
+
+        assertThat(response.statusCode()).isEqualTo(403);
+    }
+
+    @Test
+    void adminCannotAssignRolesWithoutPermissionGrant() {
+        var response = given()
+                .spec(getSpecForRole("ADMIN"))
+                .contentType(ContentType.JSON)
+                .body(Map.of("roles", java.util.List.of()))
+                .when()
+                .put("/users/" + UUID.randomUUID() + "/assign-roles")
                 .then()
                 .extract()
                 .response();

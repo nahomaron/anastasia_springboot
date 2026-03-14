@@ -22,16 +22,14 @@ public class SubscriptionQueryController {
     private final SubscriptionQueryService queryService;
     private final LocalizedMessageService messageService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT')")
     @GetMapping
     public ResponseEntity<Page<SubscriptionView>> findAll(Pageable pageable) {
         UUID tenantUuid = requireTenantId();
         return ResponseEntity.ok(queryService.findAll(tenantUuid, pageable));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT')")
     @GetMapping("/{id}")
     public ResponseEntity<SubscriptionView> findById(@PathVariable UUID id) {
         UUID tenantUuid = requireTenantId();

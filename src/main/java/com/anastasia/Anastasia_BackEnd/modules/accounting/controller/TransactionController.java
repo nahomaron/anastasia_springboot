@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/accounting/transactions")
 @RequiredArgsConstructor
 @RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
-@PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE')")
+@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS')")
 public class TransactionController {
 
     private final TransactionService transactionService;

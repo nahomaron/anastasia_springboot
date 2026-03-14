@@ -28,7 +28,7 @@ class ReconciliationRequest {
 @RestController
 @RequestMapping("/api/v1/accounting/reconciliation")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE')")
+@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECONCILE_ACCOUNTS')")
 public class ReconciliationController {
 
     private final ReconciliationService reconciliationService;

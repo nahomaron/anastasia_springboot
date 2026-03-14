@@ -33,7 +33,7 @@ public class TenantAdminAssignmentController {
 
     private final TenantAdminAssignmentService tenantAdminAssignmentService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'VIEW_TENANT_USERS')")
     @GetMapping
     public ResponseEntity<List<TenantAdminAssignmentResponse>> listAssignments() {
         UUID tenantId = requireTenantId();
@@ -43,7 +43,7 @@ public class TenantAdminAssignmentController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
     @PostMapping
     public ResponseEntity<TenantAdminAssignmentResponse> inviteAssignment(
             @Valid @RequestBody InviteTenantAdminRequest request
@@ -63,7 +63,7 @@ public class TenantAdminAssignmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
     @PatchMapping("/{userId}/activate")
     public ResponseEntity<TenantAdminAssignmentResponse> activateAssignment(@PathVariable UUID userId) {
         UUID tenantId = requireTenantId();
@@ -71,7 +71,7 @@ public class TenantAdminAssignmentController {
         return ResponseEntity.ok(toResponse(saved));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
     @PatchMapping("/{userId}/role")
     public ResponseEntity<TenantAdminAssignmentResponse> changeRole(
             @PathVariable UUID userId,
@@ -87,7 +87,7 @@ public class TenantAdminAssignmentController {
         return ResponseEntity.ok(toResponse(saved));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_BILLING')")
     @PatchMapping("/{userId}/billing-contact")
     public ResponseEntity<TenantAdminAssignmentResponse> setBillingContact(
             @PathVariable UUID userId,

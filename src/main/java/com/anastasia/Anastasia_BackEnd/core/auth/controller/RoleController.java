@@ -27,19 +27,16 @@ public class RoleController {
 
     private final RoleService roleService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @GetMapping("/roles")
     public ResponseEntity<List<RoleResponse>> listRoles() {
         return ResponseEntity.ok(roleService.listRoles());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @PostMapping("/roles")
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(roleService.createRole(request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @PutMapping("/roles/{roleId}")
     public ResponseEntity<RoleResponse> updateRole(
             @PathVariable Long roleId,
@@ -48,7 +45,6 @@ public class RoleController {
         return ResponseEntity.ok(roleService.updateRole(roleId, request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PLATFORM_ADMIN')")
     @DeleteMapping("/roles/{roleId}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long roleId) {
         roleService.deleteRole(roleId);

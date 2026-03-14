@@ -18,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/accounting/io")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE')")
+@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'IMPORT_FINANCIAL_DATA', 'EXPORT_FINANCIAL_DATA')")
 public class ImportExportController {
 
     private final ImportExportService importExportService;

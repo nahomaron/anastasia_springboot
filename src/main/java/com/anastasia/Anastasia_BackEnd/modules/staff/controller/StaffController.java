@@ -25,21 +25,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/staff")
-@PreAuthorize(
-        "hasAnyRole('OWNER', 'PRIMARY_ADMIN') or " +
-        "(hasRole('ADMIN') and @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'VIEW_STAFF'))"
-)
+@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'VIEW_STAFF', 'RESET_STAFF_CREDENTIALS')")
 public class StaffController {
 
     private final StaffService staffService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF')")
     @PostMapping
     public ResponseEntity<StaffResponse> create(@Valid @RequestBody CreateStaffRequest request) {
         return new ResponseEntity<>(staffService.create(request), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'VIEW_STAFF')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'VIEW_STAFF')")
     @GetMapping
     public ResponseEntity<Page<StaffResponse>> list(
             @RequestParam(required = false) String q,
@@ -49,13 +46,13 @@ public class StaffController {
         return ResponseEntity.ok(staffService.list(q, status, pageable));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'VIEW_STAFF')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'VIEW_STAFF')")
     @GetMapping("/{staffId}")
     public ResponseEntity<StaffResponse> getById(@PathVariable Long staffId) {
         return ResponseEntity.ok(staffService.getById(staffId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF')")
     @PatchMapping("/{staffId}")
     public ResponseEntity<StaffResponse> update(
             @PathVariable Long staffId,
@@ -64,13 +61,13 @@ public class StaffController {
         return ResponseEntity.ok(staffService.update(staffId, request));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF')")
     @DeleteMapping("/{staffId}")
     public ResponseEntity<StaffResponse> deactivate(@PathVariable Long staffId) {
         return ResponseEntity.ok(staffService.deactivate(staffId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'RESET_STAFF_CREDENTIALS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_STAFF', 'RESET_STAFF_CREDENTIALS')")
     @PostMapping("/{staffId}/reset-credentials")
     public ResponseEntity<Void> resetCredentials(@PathVariable Long staffId) {
         staffService.resetCredentials(staffId);

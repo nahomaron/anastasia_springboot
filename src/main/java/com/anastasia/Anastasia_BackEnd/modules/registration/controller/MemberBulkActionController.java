@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/registrar/members/bulk")
 @RequiresTenantFeature(TenantFeature.MEMBER_MANAGEMENT)
-@PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS')")
+@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS')")
 public class MemberBulkActionController {
 
     private final MemberBulkActionService memberBulkActionService;

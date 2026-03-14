@@ -20,7 +20,7 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'GENERATE_FINANCE_REPORT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'GENERATE_FINANCE_REPORT')")
     @PostMapping("/generate")
     public ResponseEntity<ReportResponseDto> generateReport(@Valid @RequestBody GenerateReportRequest request) {
         ReportResponseDto report = reportService.generateReport(request);

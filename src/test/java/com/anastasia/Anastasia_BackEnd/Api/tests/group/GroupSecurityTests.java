@@ -76,4 +76,19 @@ class GroupSecurityTests extends BaseApiTest {
 
         assertThat(response.statusCode()).isEqualTo(403);
     }
+
+    @Test
+    void adminCannotCreateGroupWithoutExplicitGroupPermission() {
+        var response = given()
+                .spec(getSpecForRole("ADMIN"))
+                .contentType(ContentType.JSON)
+                .body(GroupDataFactory.newGroup("admin-no-group-access"))
+                .when()
+                .post("/groups")
+                .then()
+                .extract()
+                .response();
+
+        assertThat(response.statusCode()).isEqualTo(403);
+    }
 }

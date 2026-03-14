@@ -45,8 +45,7 @@ public class GroupController {
 
     // Creating the group
     @PostMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST', 'MEMBER') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS')")
     public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupDTO groupDTO){
         GroupResponse groupResponse = groupService.createGroup(groupDTO);
         return new ResponseEntity<>(groupResponse, HttpStatus.CREATED);
@@ -54,8 +53,7 @@ public class GroupController {
 
     // Get list of Groups
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST', 'MEMBER') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PagedModel<EntityModel<GroupResponse>>> listOfGroups(
             Pageable pageable,
             PagedResourcesAssembler<GroupResponse> assembler,
@@ -63,7 +61,7 @@ public class GroupController {
             @RequestParam(value = "createdBy", required = false) String createdBy
     ){
         Page<GroupResponse> groupResponses;
-        boolean privileged = hasAnyRole(authentication, "OWNER", "PRIMARY_ADMIN", "ADMIN");
+        boolean privileged = hasAnyAuthority(authentication, "MANAGE_GROUPS", "VIEW_GROUPS");
         if (!privileged && authentication != null) {
             UUID currentUserId = resolveCurrentUserId();
             if (currentUserId == null) {
@@ -88,11 +86,10 @@ public class GroupController {
     }
 
     // Get specific group by ID
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST', 'MEMBER') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{groupId}")
     public ResponseEntity<GroupResponse> getGroup(@PathVariable Long groupId, Authentication authentication){
-        boolean privileged = hasAnyRole(authentication, "OWNER", "PRIMARY_ADMIN", "ADMIN");
+        boolean privileged = hasAnyAuthority(authentication, "MANAGE_GROUPS", "VIEW_GROUPS");
         Optional<GroupEntity> foundGroup;
         if (!privileged && authentication != null) {
             foundGroup = groupService.findOneVisibleForUser(groupId, resolveCurrentUserId());
@@ -106,8 +103,7 @@ public class GroupController {
     }
 
     // Update a specific group
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'EDIT_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'EDIT_GROUPS')")
     @PutMapping("/{groupId}")
     public ResponseEntity<GroupResponse> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDTO){
         boolean groupExists = groupService.exists(groupId);
@@ -121,8 +117,7 @@ public class GroupController {
     }
 
     // Get list of church members as candidates for group
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
     @GetMapping("/{groupId}/users/candidates")
     public ResponseEntity<List<GroupUserCandidateDTO>> listCandidatesForGroup(
             @PathVariable Long groupId,
@@ -145,19 +140,19 @@ public class GroupController {
         return ResponseEntity.ok(groupService.searchGroupUserCandidates(groupId, query));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST', 'MEMBER')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{groupId}/join-requests")
     public ResponseEntity<GroupJoinRequestResponse> submitJoinRequest(@PathVariable Long groupId) {
         return ResponseEntity.status(HttpStatus.CREATED).body(groupService.submitJoinRequest(groupId));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST', 'MEMBER')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/join-requests/mine")
     public ResponseEntity<List<MyGroupJoinRequestResponse>> listMyJoinRequests() {
         return ResponseEntity.ok(groupService.listMyPendingJoinRequests());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST', 'MEMBER')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{groupId}/join-requests/mine")
     public ResponseEntity<MyGroupJoinRequestResponse> getMyJoinRequestStatus(@PathVariable Long groupId) {
         return groupService.getMyJoinRequestStatus(groupId)
@@ -165,7 +160,7 @@ public class GroupController {
                 .orElse(ResponseEntity.noContent().build());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN', 'PRIEST', 'MEMBER')")
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{groupId}/join-requests/mine")
     public ResponseEntity<MyGroupJoinRequestResponse> cancelMyJoinRequest(@PathVariable Long groupId) {
         return ResponseEntity.ok(groupService.cancelMyJoinRequest(groupId));
@@ -203,8 +198,7 @@ public class GroupController {
     }
 
     // Add users to group
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS', 'ADD_MEMBERS_TO_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS', 'ADD_MEMBERS_TO_GROUPS')")
     @PostMapping("/{groupId}/users")
     public ResponseEntity<AddUsersToGroupResponse> addUsersToGroup(@PathVariable Long groupId,
                                                                    @Valid @RequestBody AddUsersToGroupRequest request){
@@ -213,8 +207,7 @@ public class GroupController {
     }
 
     // Get all list of Group members
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     @GetMapping("/group/{groupId}/members")
     public ResponseEntity<PagedModel<EntityModel<SimpleUserDTO>>> listGroupMembers(
             @PathVariable Long groupId,
@@ -238,8 +231,7 @@ public class GroupController {
     }
 
     // Get a single group member
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
     @GetMapping("/group/members/{userId}")
     public ResponseEntity<SimpleUserDTO> getGroupMember(@PathVariable UUID userId) {
         // Fetch user logic here
@@ -256,8 +248,7 @@ public class GroupController {
     }
 
     // Remove members from group
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'REMOVE_MEMBERS_FROM_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'REMOVE_MEMBERS_FROM_GROUPS')")
     @DeleteMapping("/{groupId}/members")
     public ResponseEntity<RemoveUsersFromGroupResponse> removeMembersFromGroup(
             @PathVariable Long groupId,
@@ -267,8 +258,7 @@ public class GroupController {
     }
 
     // Delete group
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'DELETE_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'DELETE_GROUPS')")
     @DeleteMapping("/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId){
         groupService.delete(groupId);
@@ -289,21 +279,6 @@ public class GroupController {
         return null;
     }
 
-    private boolean hasAnyRole(Authentication authentication, String... roles) {
-        if (authentication == null || authentication.getAuthorities() == null) {
-            return false;
-        }
-        for (String role : roles) {
-            String expected = "ROLE_" + role;
-            boolean found = authentication.getAuthorities().stream()
-                    .anyMatch(a -> expected.equals(a.getAuthority()));
-            if (found) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean hasAnyAuthority(Authentication authentication, String... authorities) {
         if (authentication == null || authentication.getAuthorities() == null) {
             return false;
@@ -319,16 +294,14 @@ public class GroupController {
     }
 
     // Get group managers
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'VIEW_GROUPS')")
      @GetMapping("/{groupId}/managers")
      public ResponseEntity<List<SimpleUserDTO>> getGroupManagers(@PathVariable Long groupId) {
          List<SimpleUserDTO> managers = groupService.getGroupManagers(groupId);
          return new ResponseEntity<>(managers, HttpStatus.OK);
      }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
     @PostMapping("/{groupId}/managers")
     public ResponseEntity<AddManagersResponse> addManagersToGroup(@PathVariable Long groupId,
                                                                   @Valid @RequestBody GroupManagerRequest request) {
@@ -336,8 +309,7 @@ public class GroupController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'REMOVE_MEMBERS_FROM_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'REMOVE_MEMBERS_FROM_GROUPS')")
     @DeleteMapping("/{groupId}/managers")
     public ResponseEntity<RemoveManagersResponse> removeManagersFromGroup(@PathVariable Long groupId,
                                                                           @Valid @RequestBody GroupManagerRequest request) {
@@ -347,8 +319,7 @@ public class GroupController {
 
     // Add batch invites with email or UUID instead of user ID
     @PostMapping("/{groupId}/batch-invite")
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'PRIEST') " +
-            "or @permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_GROUPS', 'CREATE_GROUPS', 'EDIT_GROUPS')")
     public ResponseEntity<BatchInviteResponse> batchInviteUsersToGroup(
             @PathVariable Long groupId,
             @Valid @RequestBody BatchInviteRequest request) {

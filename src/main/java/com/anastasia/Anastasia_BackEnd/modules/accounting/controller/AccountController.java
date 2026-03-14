@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/accounting/accounts")
 @RequiredArgsConstructor
 @RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
-@PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE')")
+@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_ACCOUNTS', 'MANAGE_ACCOUNTS')")
 public class AccountController {
 
     private final AccountService accountService;

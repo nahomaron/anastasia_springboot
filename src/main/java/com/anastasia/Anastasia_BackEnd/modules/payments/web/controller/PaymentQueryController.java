@@ -25,16 +25,14 @@ public class PaymentQueryController {
     private final PaymentQueryService queryService;
     private final LocalizedMessageService messageService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT', 'VIEW_DONATION_REPORTS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT', 'VIEW_DONATION_REPORTS')")
     @GetMapping
     public ResponseEntity<Page<PaymentView>> findAll(Pageable pageable) {
         UUID tenantUuid = requireTenantId();
         return ResponseEntity.ok(queryService.findAll(tenantUuid, pageable));
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT', 'VIEW_DONATION_REPORTS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT', 'VIEW_DONATION_REPORTS')")
     @GetMapping("/{id}")
     public ResponseEntity<PaymentView> findById(@PathVariable UUID id) {
         UUID tenantUuid = requireTenantId();
@@ -53,8 +51,7 @@ public class PaymentQueryController {
 //        ));
 //    }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT', 'VIEW_DONATION_REPORTS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FINANCE_REPORT', 'VIEW_DONATION_REPORTS')")
     @GetMapping("/summary/funds")
     public ResponseEntity<List<Map<String, Object>>> totalPerFund() {
         UUID tenantUuid = requireTenantId();

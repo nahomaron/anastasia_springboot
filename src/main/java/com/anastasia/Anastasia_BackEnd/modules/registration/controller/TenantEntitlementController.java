@@ -33,8 +33,7 @@ public class TenantEntitlementController {
     private final EntitlementAdministrationService entitlementAdministrationService;
     private final SubscriptionService subscriptionService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_FINANCE')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
     @GetMapping("/me/entitlements")
     public ResponseEntity<EntitlementSnapshotResponse> getMyEntitlements() {
         UUID tenantId = requireTenantId();
@@ -42,8 +41,7 @@ public class TenantEntitlementController {
         return ResponseEntity.ok(entitlementAdministrationService.resolveCurrentTenant());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_FINANCE')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
     @GetMapping("/me/billing")
     public ResponseEntity<TenantBillingOverviewResponse> getMyBillingOverview() {
         UUID tenantId = requireTenantId();
@@ -68,8 +66,7 @@ public class TenantEntitlementController {
                 .build());
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_FINANCE')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
     @PostMapping("/me/plan-change")
     public ResponseEntity<TenantBillingOverviewResponse> requestPlanChange(
             @Valid @RequestBody RequestPlanChangeRequest request

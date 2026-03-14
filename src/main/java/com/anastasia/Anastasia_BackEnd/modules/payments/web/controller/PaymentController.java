@@ -32,8 +32,7 @@ public class PaymentController {
     private final EntitlementResolverService entitlementResolverService;
     private final LocalizedMessageService messageService;
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_DONATIONS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_DONATIONS', 'RECORD_TRANSACTIONS')")
     @PostMapping("/intents")
     public ResponseEntity<PaymentResponse> create(
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
@@ -59,8 +58,7 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
-    @PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') "
-            + "or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_DONATIONS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
     @PostMapping("/subscriptions")
     public ResponseEntity<SubscriptionResponse> createSubscription(
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
