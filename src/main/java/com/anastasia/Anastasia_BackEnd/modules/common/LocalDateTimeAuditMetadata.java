@@ -7,6 +7,13 @@ import lombok.Setter;
 
 import java.time.Instant;
 
+/**
+ * Lightweight timestamp-only audit base for entities that manage lifecycle
+ * timestamps explicitly instead of using Spring Data auditing callbacks.
+ * <p>
+ * Even here, the canonical persisted property names remain {@code createdAt}
+ * and {@code updatedAt}.
+ */
 @Getter
 @Setter
 @MappedSuperclass

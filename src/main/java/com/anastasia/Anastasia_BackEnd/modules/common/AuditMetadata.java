@@ -19,6 +19,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Canonical audit base for persisted entities.
+ * <p>
+ * The persisted audit property names are {@code createdAt}, {@code updatedAt},
+ * {@code createdBy}, and {@code updatedBy}. Repositories, JPQL, criteria
+ * queries, and sort clauses should always target those names directly.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -9,7 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Abstract base class for all entities to provide common auditing fields.
+ * Accounting base entity with a generated numeric identifier and the canonical
+ * shared audit fields from {@link AuditMetadata}.
  */
 @Getter
 @Setter
