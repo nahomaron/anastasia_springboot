@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.outbox.OutboxPublisher;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
@@ -146,7 +147,7 @@ public class MemberServiceUnitTest {
         Adult_MemberResponse response = new Adult_MemberResponse();
         Page<Adult_MemberEntity> page = new PageImpl<>(List.of(member));
         when(memberRepository.findByStatusValueNotAndTenantId(
-                eq(MemberStatus.PENDING.name()),
+                eq(MemberLifecycleStatus.PENDING),
                 eq(tenantId),
                 any(PageRequest.class)))
                 .thenReturn(page);

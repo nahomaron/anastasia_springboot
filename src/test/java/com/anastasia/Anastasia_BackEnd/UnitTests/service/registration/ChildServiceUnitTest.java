@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
@@ -137,7 +138,7 @@ public class ChildServiceUnitTest {
         Page<Child_MemberEntity> page = new PageImpl<>(List.of(child));
         Child_MemberResponse response = Child_MemberResponse.builder().id(1L).build();
         when(childRepository.findByStatusValueNotAndTenantId(
-                eq(ChildStatus.PENDING.name()),
+                eq(MemberLifecycleStatus.PENDING),
                 eq(tenantId),
                 eq(pageable)))
                 .thenReturn(page);
