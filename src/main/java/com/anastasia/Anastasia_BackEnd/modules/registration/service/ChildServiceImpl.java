@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNoti
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
@@ -127,7 +128,7 @@ public class ChildServiceImpl implements ChildService{
     @Override
     public Page<Child_MemberResponse> findAll(Pageable pageable) {
         return childRepository.findByStatusValueNotAndTenantId(
-                ChildStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
                 .map(childMapper::childEntityToResponse);
@@ -136,7 +137,7 @@ public class ChildServiceImpl implements ChildService{
     @Override
     public Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable) {
         return childRepository.findByStatusValueNotAndTenantId(
-                ChildStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
                 .map(childMapper::childEntityToSummaryResponse);
@@ -145,7 +146,7 @@ public class ChildServiceImpl implements ChildService{
     @Override
     public long countNonPending() {
         return childRepository.countByStatusValueNotAndTenantId(
-                ChildStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId());
     }
 
@@ -166,7 +167,7 @@ public class ChildServiceImpl implements ChildService{
     @Override
     public Page<Child_MemberResponse> findPending(Pageable pageable) {
         return childRepository.findByStatusValueAndTenantId(
-                ChildStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
                 .map(childMapper::childEntityToResponse);
@@ -176,14 +177,14 @@ public class ChildServiceImpl implements ChildService{
     public Page<Child_MemberResponse> searchNonPending(Pageable pageable, String query) {
         if (query == null || query.isBlank()) {
             return childRepository.findByStatusValueNotAndTenantId(
-                    ChildStatus.PENDING.name(),
+                    MemberLifecycleStatus.PENDING,
                     requireTenantId(),
                     pageable)
                     .map(childMapper::childEntityToResponse);
         }
         return childRepository.searchNonPending(
                 query.trim(),
-                ChildStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
                 .map(childMapper::childEntityToResponse);
@@ -193,14 +194,14 @@ public class ChildServiceImpl implements ChildService{
     public Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query) {
         if (query == null || query.isBlank()) {
             return childRepository.findByStatusValueNotAndTenantId(
-                    ChildStatus.PENDING.name(),
+                    MemberLifecycleStatus.PENDING,
                     requireTenantId(),
                     pageable)
                     .map(childMapper::childEntityToSummaryResponse);
         }
         return childRepository.searchNonPending(
                 query.trim(),
-                ChildStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
                 .map(childMapper::childEntityToSummaryResponse);

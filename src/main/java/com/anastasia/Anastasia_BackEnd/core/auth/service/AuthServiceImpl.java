@@ -7,10 +7,12 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthSessionResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.VerifyLoginTwoFactorRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.core.auth.model.LoginTwoFactorChallengeEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.LoginTwoFactorChallengeRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -585,18 +587,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private AuthSessionResponse buildAuthSessionResponse(UserEntity user) {
-        Set<String> roleNames = resolveSessionRoles(user);
-
-        Set<String> permissionKeys = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(permission -> {
-                    if (permission == null || permission.getName() == null) {
-                        return null;
-                    }
-                    return permission.getName().getName();
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Optional<TenantAdminAssignmentEntity> activeTenantAdminAssignment = resolveActiveTenantAdminAssignment(user);
+        Set<String> roleNames = resolveSessionRoles(user, activeTenantAdminAssignment);
+        Set<String> permissionKeys = resolveSessionPermissions(user, activeTenantAdminAssignment);
 
         Long churchId = null;
         String churchNumber = null;
@@ -641,18 +634,13 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    private Set<String> resolveSessionRoles(UserEntity user) {
+    private Set<String> resolveSessionRoles(UserEntity user, Optional<TenantAdminAssignmentEntity> activeTenantAdminAssignment) {
         Set<String> roleNames = user.getRoles().stream()
                 .map(Role::getRoleName)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        if (user.getTenantId() == null || user.getUuid() == null) {
-            return roleNames;
-        }
-
-        tenantAdminAssignmentRepository.findByTenant_IdAndUserId(user.getTenantId(), user.getUuid())
-                .filter(assignment -> assignment.getStatus() == MembershipStatus.ACTIVE)
+        activeTenantAdminAssignment
                 .map(TenantAdminAssignmentEntity::getRole)
                 .filter(TenantRole.PRIMARY_ADMIN::equals)
                 .ifPresent(role -> {
@@ -662,6 +650,55 @@ public class AuthServiceImpl implements AuthService {
                 });
 
         return roleNames;
+    }
+
+    private Set<String> resolveSessionPermissions(UserEntity user, Optional<TenantAdminAssignmentEntity> activeTenantAdminAssignment) {
+        Set<String> permissionKeys = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> {
+                    if (permission == null || permission.getName() == null) {
+                        return null;
+                    }
+                    return permission.getName().getName();
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        activeTenantAdminAssignment
+                .map(TenantAdminAssignmentEntity::getRole)
+                .ifPresent(role -> permissionKeys.addAll(resolveTenantAdminPermissionKeys(role)));
+
+        return permissionKeys;
+    }
+
+    private Optional<TenantAdminAssignmentEntity> resolveActiveTenantAdminAssignment(UserEntity user) {
+        if (user.getTenantId() == null || user.getUuid() == null) {
+            return Optional.empty();
+        }
+
+        return tenantAdminAssignmentRepository.findByTenant_IdAndUserId(user.getTenantId(), user.getUuid())
+                .filter(assignment -> assignment.getStatus() == MembershipStatus.ACTIVE);
+    }
+
+    private Set<String> resolveTenantAdminPermissionKeys(TenantRole tenantRole) {
+        if (tenantRole == null) {
+            return Set.of();
+        }
+
+        RoleType effectiveRoleType = switch (tenantRole) {
+            case PRIMARY_OWNER, OWNER -> RoleType.OWNER;
+            case PRIMARY_ADMIN -> RoleType.PRIMARY_ADMIN;
+            case ADMIN -> RoleType.ADMIN;
+            case FINANCE, COMMITTEE -> null;
+        };
+
+        if (effectiveRoleType == null) {
+            return Set.of();
+        }
+
+        return effectiveRoleType.getPermissions().stream()
+                .map(PermissionType::getName)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private boolean isTwoFactorRequired(UserEntity user) {

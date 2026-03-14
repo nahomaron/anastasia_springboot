@@ -12,7 +12,7 @@ import com.anastasia.Anastasia_BackEnd.modules.dashboard.dto.PriestDashboardResp
 import com.anastasia.Anastasia_BackEnd.modules.dashboard.dto.PriestDashboardStats;
 import com.anastasia.Anastasia_BackEnd.modules.dashboard.dto.PriestRequestItem;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
@@ -52,10 +52,10 @@ public class PriestDashboardService {
         List<MemberOverviewItem> recentMembers = List.of();
         if (priestNumber != null && !priestNumber.isBlank()) {
             adultsCount = memberRepository.countByTenantIdAndPriestNumberAndStatusValueNot(
-                    tenantId, priestNumber, MemberStatus.PENDING.name()
+                    tenantId, priestNumber, MemberLifecycleStatus.PENDING
             );
             childrenCount = childRepository.countByTenantIdAndPriestNumberAndStatusValueNot(
-                    tenantId, priestNumber, MemberStatus.PENDING.name()
+                    tenantId, priestNumber, MemberLifecycleStatus.PENDING
             );
             recentMembers = buildRecentMembers(tenantId, priestNumber);
         }

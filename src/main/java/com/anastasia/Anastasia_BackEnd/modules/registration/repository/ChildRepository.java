@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.repository;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,13 +33,13 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
 
     List<Child_MemberEntity> findAllByIdInAndTenantId(Set<Long> ids, UUID tenantId);
 
-    Page<Child_MemberEntity> findByStatusValueNotAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Child_MemberEntity> findByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId, Pageable pageable);
 
-    Page<Child_MemberEntity> findByStatusValueAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Child_MemberEntity> findByStatusValueAndTenantId(MemberLifecycleStatus status, UUID tenantId, Pageable pageable);
 
-    long countByStatusValueNotAndTenantId(String status, UUID tenantId);
+    long countByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId);
     long countByTenantIdAndStatusValueIn(UUID tenantId, List<String> statuses);
-    long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, String status);
+    long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, MemberLifecycleStatus status);
 
     Page<Child_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
@@ -60,7 +61,7 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
               )
             """)
     Page<Child_MemberEntity> searchNonPending(@Param("q") String query,
-                                              @Param("status") String status,
+                                              @Param("status") MemberLifecycleStatus status,
                                               @Param("tenantId") UUID tenantId,
                                               Pageable pageable);
 }

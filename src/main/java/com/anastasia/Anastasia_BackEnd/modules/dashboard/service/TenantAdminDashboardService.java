@@ -12,7 +12,7 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentStat
 import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
@@ -45,8 +45,8 @@ public class TenantAdminDashboardService {
     public TenantAdminDashboardResponse getSummary() {
         UUID tenantId = requireTenantId();
 
-        long adultCount = memberRepository.countByStatusValueNotAndTenantId(MemberStatus.PENDING.name(), tenantId);
-        long childCount = childRepository.countByStatusValueNotAndTenantId(MemberStatus.PENDING.name(), tenantId);
+        long adultCount = memberRepository.countByStatusValueNotAndTenantId(MemberLifecycleStatus.PENDING, tenantId);
+        long childCount = childRepository.countByStatusValueNotAndTenantId(MemberLifecycleStatus.PENDING, tenantId);
         long priestsCount = priestRepository.countByChurch_Tenant_Id(tenantId);
 
         MonthlyOffering offering = buildMonthlyOffering(tenantId);

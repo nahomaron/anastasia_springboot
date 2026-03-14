@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.repository;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,17 +33,17 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
 
     Optional<Adult_MemberEntity> findFirstBySpouseIdNumberAndTenantId(String spouseIdNumber, UUID tenantId);
 
-    Page<Adult_MemberEntity> findByStatusValueNotAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Adult_MemberEntity> findByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId, Pageable pageable);
 
-    Page<Adult_MemberEntity> findByStatusValueAndTenantId(String status, UUID tenantId, Pageable pageable);
+    Page<Adult_MemberEntity> findByStatusValueAndTenantId(MemberLifecycleStatus status, UUID tenantId, Pageable pageable);
 
-    long countByStatusValueNotAndTenantId(String status, UUID tenantId);
+    long countByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId);
     long countByTenantIdAndStatusValueIn(UUID tenantId, List<String> statuses);
-    long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, String status);
+    long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, MemberLifecycleStatus status);
 
     Page<Adult_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
 
-    Page<Adult_MemberEntity> findByTenantIdAndPriestNumberAndStatusValue(UUID tenantId, String priestNumber, String status, Pageable pageable);
+    Page<Adult_MemberEntity> findByTenantIdAndPriestNumberAndStatusValue(UUID tenantId, String priestNumber, MemberLifecycleStatus status, Pageable pageable);
 
     Page<Adult_MemberEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
 
@@ -63,7 +64,7 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
               )
             """)
     Page<Adult_MemberEntity> searchNonPending(@Param("q") String query,
-                                              @Param("status") String status,
+                                              @Param("status") MemberLifecycleStatus status,
                                               @Param("tenantId") UUID tenantId,
                                               Pageable pageable);
 }

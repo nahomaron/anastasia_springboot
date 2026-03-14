@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.family.UpdateFamilyRelationshipRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.family.UpsertFamilyRelationshipRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
@@ -164,7 +165,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Page<Adult_MemberResponse> findAll(Pageable pageable) {
         return memberRepository.findByStatusValueNotAndTenantId(
-                        MemberStatus.PENDING.name(),
+                        MemberLifecycleStatus.PENDING,
                         requireTenantId(),
                         pageable)
                 .map(memberMapper::memberEntityToResponse);
@@ -173,7 +174,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Page<Adult_MemberSummaryResponse> findAllSummary(Pageable pageable) {
         return memberRepository.findByStatusValueNotAndTenantId(
-                        MemberStatus.PENDING.name(),
+                        MemberLifecycleStatus.PENDING,
                         requireTenantId(),
                         pageable)
                 .map(memberMapper::memberEntityToSummaryResponse);
@@ -182,7 +183,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public long countNonPending() {
         return memberRepository.countByStatusValueNotAndTenantId(
-                MemberStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId());
     }
 
@@ -203,21 +204,29 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(effectiveTenantId, priestNumber, status, pageable)
+        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
+                        effectiveTenantId,
+                        priestNumber,
+                        MemberLifecycleStatus.from(status),
+                        pageable)
                 .map(memberMapper::memberEntityToResponse);
     }
 
     @Override
     public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberAndStatusSummary(UUID tenantId, String priestNumber, String status, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(effectiveTenantId, priestNumber, status, pageable)
+        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
+                        effectiveTenantId,
+                        priestNumber,
+                        MemberLifecycleStatus.from(status),
+                        pageable)
                 .map(memberMapper::memberEntityToSummaryResponse);
     }
 
     @Override
     public Page<Adult_MemberResponse> findPending(Pageable pageable) {
         return memberRepository.findByStatusValueAndTenantId(
-                MemberStatus.PENDING.name(),
+                MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
                 .map(memberMapper::memberEntityToResponse);
@@ -229,7 +238,7 @@ public class MemberServiceImpl implements MemberService {
         return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
                         effectiveTenantId,
                         priestNumber,
-                        MemberStatus.PENDING.name(),
+                        MemberLifecycleStatus.PENDING,
                         pageable)
                 .map(memberMapper::memberEntityToResponse);
     }
@@ -243,7 +252,7 @@ public class MemberServiceImpl implements MemberService {
         Specification<Adult_MemberEntity> scopeSpec = (root, cq, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("tenantId"), tenantId));
-            predicates.add(cb.notEqual(root.get("statusValue"), MemberStatus.PENDING.name()));
+            predicates.add(cb.notEqual(root.get("statusValue"), MemberLifecycleStatus.PENDING));
             if (churchId != null) {
                 predicates.add(cb.equal(root.get("churchId"), churchId));
             }
@@ -277,7 +286,7 @@ public class MemberServiceImpl implements MemberService {
         Specification<Adult_MemberEntity> scopeSpec = (root, cq, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("tenantId"), tenantId));
-            predicates.add(cb.notEqual(root.get("statusValue"), MemberStatus.PENDING.name()));
+            predicates.add(cb.notEqual(root.get("statusValue"), MemberLifecycleStatus.PENDING));
             if (churchId != null) {
                 predicates.add(cb.equal(root.get("churchId"), churchId));
             }
