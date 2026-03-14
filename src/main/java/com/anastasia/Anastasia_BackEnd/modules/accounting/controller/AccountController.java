@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/accounting/accounts")
 @RequiredArgsConstructor
 @RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
+@PreAuthorize("hasAnyRole('OWNER', 'PRIMARY_ADMIN', 'ADMIN') or @permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE')")
 public class AccountController {
 
     private final AccountService accountService;

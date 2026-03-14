@@ -34,7 +34,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -48,15 +47,12 @@ public class SecurityConfig {
     private final LogoutHandler logoutHandler;
     @Value("${app.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200,http://192.168.1.79:4200}")
     private String allowedOrigins;
-    private final String[] WHITE_LIST_ENDPOINTS = {
+    private static final String[] WHITE_LIST_ENDPOINTS = {
             "/api/v1/auth/**",
             "/oauth2/**",
             "/login/oauth2/**",
-            "/api/v1/tenant/**",
-            "/api/v1/onboarding/**",
             "/webhooks/stripe",
             "/api/v1/priests/register",
-            "/actuator/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v2/api-docs/**",
@@ -81,7 +77,23 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(WHITE_LIST_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/tenant/subscription",
+                                "/api/v1/tenant/verify-phone",
+                                "/api/v1/tenant/resend-phone-otp",
+                                "/api/v1/onboarding/email-verification/send-code",
+                                "/api/v1/onboarding/email-verification/verify-code",
+                                "/api/v1/onboarding/billing/sessions",
+                                "/api/v1/onboarding/billing/sessions/*/checkout",
+                                "/api/v1/onboarding/billing/sessions/*/finalize",
+                                "/api/v1/onboarding/billing/sessions/*/auto-login"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/onboarding/billing/sessions/*",
+                                "/api/v1/membership-cards/verify/*"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .exceptionHandling(ex -> ex
