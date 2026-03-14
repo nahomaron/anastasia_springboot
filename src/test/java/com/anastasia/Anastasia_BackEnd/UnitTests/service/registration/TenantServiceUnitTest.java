@@ -158,7 +158,7 @@ public class TenantServiceUnitTest {
 
         tenantService.unsubscribeTenant(entity.getId());
 
-        assertThat(entity.isActiveTenant()).isFalse();
+        assertThat(entity.getStatus()).isEqualTo(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus.DEACTIVATED);
         verify(tenantRepository).save(entity);
     }
 

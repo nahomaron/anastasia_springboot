@@ -33,10 +33,12 @@ public final class TenantDataFactory {
                 .build();
 
         return TenantDTO.builder()
+                .displayName(church.getChurchName())
+                .slug("tenant-" + UUID.randomUUID().toString().substring(0, 8))
                 .tenantType(TenantType.CHURCH)
                 .subscriptionPlan(SubscriptionPlan.MONTHLY)
-                .ownerName("St. " + DataGenerator.randomName() + " Church")
-                .email("tenant_" + UUID.randomUUID() + "@mail.com")
+                .ownerName(church.getChurchName())
+                .ownerEmail("tenant_" + UUID.randomUUID() + "@mail.com")
                 .phoneNumber("+1408555" + (1000 + (int)(Math.random() * 8999)))
                 .password(DEFAULT_PASSWORD)
                 .confirmPassword(DEFAULT_PASSWORD)
@@ -47,10 +49,12 @@ public final class TenantDataFactory {
     /** Priest tenant variant */
     public static TenantDTO newPriestTenant() {
         return TenantDTO.builder()
+                .displayName("Fr. " + DataGenerator.randomName())
+                .slug("tenant-" + UUID.randomUUID().toString().substring(0, 8))
                 .tenantType(TenantType.PRIEST)
                 .subscriptionPlan(SubscriptionPlan.ANNUAL)
                 .ownerName("Fr. " + DataGenerator.randomName())
-                .email("priest_" + UUID.randomUUID() + "@mail.com")
+                .ownerEmail("priest_" + UUID.randomUUID() + "@mail.com")
                 .phoneNumber("+1408666" + (1000 + (int)(Math.random() * 8999)))
                 .password(DEFAULT_PASSWORD)
                 .confirmPassword(DEFAULT_PASSWORD)
@@ -60,7 +64,7 @@ public final class TenantDataFactory {
     /** Invalid email variant for negative testing */
     public static TenantDTO invalidEmailTenant() {
         TenantDTO dto = newValidTenant();
-        dto.setEmail("not-an-email");
+        dto.setOwnerEmail("not-an-email");
         return dto;
     }
 

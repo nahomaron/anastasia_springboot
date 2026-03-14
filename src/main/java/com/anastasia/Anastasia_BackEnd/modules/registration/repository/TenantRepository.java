@@ -13,4 +13,6 @@ public interface TenantRepository extends JpaRepository<TenantEntity, UUID> {
     Optional<TenantEntity> findByPhoneNumber(String phone);
 
     boolean existsByPhoneNumber(String phoneNumber);
+
+    boolean existsBySlug(String slug);
 }

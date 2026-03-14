@@ -12,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Members
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
@@ -39,6 +40,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.text.Normalizer;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -83,6 +86,7 @@ public class TenantServiceImpl implements TenantService {
     public TenantEntity subscribeTenant(TenantDTO tenantDTO) throws MessagingException {
         String normalizedPhone = PhoneNumberUtils.normalize(tenantDTO.getPhoneNumber());
         tenantDTO.setPhoneNumber(normalizedPhone);
+        tenantDTO.setOwnerEmail(normalizeOwnerEmail(tenantDTO.getOwnerEmail()));
 
         TenantEntity existingTenantForRetry = findExistingTenantForRetry(tenantDTO);
         if (existingTenantForRetry != null) {
@@ -99,17 +103,28 @@ public class TenantServiceImpl implements TenantService {
         }
 
         // 2. Add Email Duplication check (Good Practice)
-        if (userRepository.existsByEmail(tenantDTO.getEmail())) {
+        if (userRepository.existsByEmail(tenantDTO.getOwnerEmail())) {
             throw new DuplicateKeyException(messageService.get(
                     "tenant.email.duplicate",
                     "Email address already in use."
             ));
         }
 
+        String resolvedDisplayName = resolveDisplayName(tenantDTO);
+        String resolvedSlug = resolveUniqueSlug(tenantDTO.getSlug(), resolvedDisplayName);
+
         TenantEntity tenantEntity = TenantEntity.builder()
+                .displayName(resolvedDisplayName)
+                .slug(resolvedSlug)
                 .tenantType(tenantDTO.getTenantType())
+                .status(TenantStatus.DRAFT)
                 .ownerName(tenantDTO.getOwnerName())
+                .ownerEmail(tenantDTO.getOwnerEmail())
                 .phoneNumber(tenantDTO.getPhoneNumber())
+                .phoneVerified(Boolean.TRUE.equals(tenantDTO.getPhoneVerified()))
+                .billingEmail(firstNonBlank(tenantDTO.getBillingEmail(), tenantDTO.getOwnerEmail()))
+                .defaultTimezone(firstNonBlank(tenantDTO.getDefaultTimezone(), "UTC"))
+                .defaultLocale(firstNonBlank(tenantDTO.getDefaultLocale(), "en"))
                 .build();
 
         TenantSubscriptionEntity subscription = TenantSubscriptionEntity.builder()
@@ -159,7 +174,7 @@ public class TenantServiceImpl implements TenantService {
 
         UserEntity adminUser = UserEntity.builder()
                 .fullName(tenantDTO.getOwnerName())
-                .email(tenantDTO.getEmail())
+                .email(tenantDTO.getOwnerEmail())
                 .password(tenantDTO.getPassword())
                 .tenant(savedTenant)
                 .roles(new HashSet<>(Set.of(ownerRole, adminRole)))
@@ -193,11 +208,11 @@ public class TenantServiceImpl implements TenantService {
      * This lets the client safely retry onboarding requests after network timeouts.
      */
     private TenantEntity findExistingTenantForRetry(TenantDTO tenantDTO) {
-        if (!StringUtils.hasText(tenantDTO.getEmail()) || !StringUtils.hasText(tenantDTO.getPhoneNumber())) {
+        if (!StringUtils.hasText(tenantDTO.getOwnerEmail()) || !StringUtils.hasText(tenantDTO.getPhoneNumber())) {
             return null;
         }
 
-        Optional<UserEntity> existingUser = userRepository.findByEmail(tenantDTO.getEmail());
+        Optional<UserEntity> existingUser = userRepository.findByEmail(tenantDTO.getOwnerEmail());
         Optional<TenantEntity> existingTenantByPhone = tenantRepository.findByPhoneNumber(tenantDTO.getPhoneNumber());
 
         if (existingUser.isEmpty() || existingTenantByPhone.isEmpty()) {
@@ -235,23 +250,17 @@ public class TenantServiceImpl implements TenantService {
                 .or(() -> tenantRepository.findByPhoneNumber(phone))
                 .ifPresent(tenant -> {
             tenant.setPhoneVerified(true);
-            tenantRepository.save(tenant);  // Save verification update
-//            checkAndActivateTenant(tenant); // Centralized logic
+            tenant.setPhoneVerifiedAt(Instant.now());
+            if (tenant.getStatus() == TenantStatus.DRAFT) {
+                tenant.setStatus(TenantStatus.ACTIVE);
+                if (tenant.getActivatedAt() == null) {
+                    tenant.setActivatedAt(Instant.now());
+                }
+            }
+            tenantRepository.save(tenant);
         });
-        // update verified flag
         return true;
     }
-
-//    public void checkAndActivateTenant(TenantEntity tenant) {
-//        if (!tenant.isPhoneVerified()) return;
-//
-//        userRepository.findTenantAdmin(tenant.getId())
-//                .filter(UserEntity::isVerified)  // email is verified
-//                .ifPresent(user -> {
-//                    tenant.setActiveTenant(true);
-//                    tenantRepository.save(tenant);
-//                });
-//    }
 
     @Cacheable(value = "tenants_page", keyGenerator = "tenantAwareKeyGenerator")
     @Override
@@ -296,7 +305,12 @@ public class TenantServiceImpl implements TenantService {
         TenantEntity tenantToBeUnsubscribed = tenantRepository.findById(tenantId)
                 .orElseThrow(SecurityException::new);
 
-        tenantToBeUnsubscribed.setActiveTenant(false);
+        if (tenantToBeUnsubscribed.getStatus() == TenantStatus.ACTIVE) {
+            tenantToBeUnsubscribed.setStatus(TenantStatus.DEACTIVATED);
+        }
+        if (tenantToBeUnsubscribed.getDeactivatedAt() == null) {
+            tenantToBeUnsubscribed.setDeactivatedAt(Instant.now());
+        }
         tenantRepository.save(tenantToBeUnsubscribed);
     }
 
@@ -310,10 +324,23 @@ public class TenantServiceImpl implements TenantService {
     public void updateTenant(UUID tenantId, TenantDTO tenantDTO) {
         tenantRepository.findById(tenantId).ifPresent(tenantEntity -> {
            Optional.ofNullable(tenantDTO.getOwnerName()).ifPresent(tenantEntity::setOwnerName);
+           Optional.ofNullable(tenantDTO.getDisplayName()).filter(StringUtils::hasText).map(String::trim).ifPresent(tenantEntity::setDisplayName);
+           Optional.ofNullable(tenantDTO.getSlug())
+                   .filter(StringUtils::hasText)
+                   .map(slug -> resolveUniqueSlug(slug, tenantEntity.getDisplayName()))
+                   .ifPresent(tenantEntity::setSlug);
            Optional.ofNullable(tenantDTO.getTenantType()).ifPresent(tenantEntity::setTenantType);
+           Optional.ofNullable(tenantDTO.getOwnerEmail())
+                   .filter(StringUtils::hasText)
+                   .map(this::normalizeOwnerEmail)
+                   .ifPresent(tenantEntity::setOwnerEmail);
            Optional.ofNullable(tenantDTO.getPhoneNumber())
                    .map(PhoneNumberUtils::normalize)
                    .ifPresent(tenantEntity::setPhoneNumber);
+           Optional.ofNullable(tenantDTO.getDefaultTimezone()).filter(StringUtils::hasText).ifPresent(tenantEntity::setDefaultTimezone);
+           Optional.ofNullable(tenantDTO.getDefaultLocale()).filter(StringUtils::hasText).ifPresent(tenantEntity::setDefaultLocale);
+           Optional.ofNullable(tenantDTO.getBillingEmail()).filter(StringUtils::hasText).map(this::normalizeOwnerEmail).ifPresent(tenantEntity::setBillingEmail);
+           Optional.ofNullable(tenantDTO.getStatus()).ifPresent(tenantEntity::setStatus);
 
            tenantRepository.save(tenantEntity);
         }
@@ -341,6 +368,51 @@ public class TenantServiceImpl implements TenantService {
         } while (churchRepository.existsByChurchNumber(churchNumber));
 
         return churchNumber;
+    }
+
+    private String resolveDisplayName(TenantDTO tenantDTO) {
+        if (StringUtils.hasText(tenantDTO.getDisplayName())) {
+            return tenantDTO.getDisplayName().trim();
+        }
+        if (tenantDTO.getTenantType() == TenantType.CHURCH && tenantDTO.getChurch() != null
+                && StringUtils.hasText(tenantDTO.getChurch().getChurchName())) {
+            return tenantDTO.getChurch().getChurchName().trim();
+        }
+        return tenantDTO.getOwnerName().trim();
+    }
+
+    private String resolveUniqueSlug(String requestedSlug, String displayName) {
+        String base = StringUtils.hasText(requestedSlug) ? requestedSlug : displayName;
+        String normalized = slugify(base);
+        String candidate = normalized;
+        int suffix = 2;
+        while (tenantRepository.existsBySlug(candidate)) {
+            candidate = normalized + "-" + suffix++;
+        }
+        return candidate;
+    }
+
+    private String slugify(String value) {
+        String normalized = Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-+|-+$", "");
+        if (!StringUtils.hasText(normalized)) {
+            return "tenant-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+        return normalized;
+    }
+
+    private String normalizeOwnerEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
+    private String firstNonBlank(String preferred, String fallback) {
+        if (StringUtils.hasText(preferred)) {
+            return preferred.trim();
+        }
+        return fallback;
     }
 
 }

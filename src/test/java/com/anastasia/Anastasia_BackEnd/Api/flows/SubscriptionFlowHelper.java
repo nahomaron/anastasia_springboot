@@ -59,7 +59,7 @@ public final class SubscriptionFlowHelper {
                 "Phone verification failed: " + verifyResponse.asString());
 
         // 4️ Activate account
-        String activationToken = fetchActivationToken(tenantRequest.getEmail());
+        String activationToken = fetchActivationToken(tenantRequest.getOwnerEmail());
         Response activationResponse = authService.activateAccount(activationToken);
         Assertions.assertEquals(200, activationResponse.statusCode(),
                 "Account activation failed: " + activationResponse.asString());
@@ -141,7 +141,7 @@ public final class SubscriptionFlowHelper {
     private static AuthenticationResponse authenticateOwner(TenantDTO tenant) {
         Assertions.assertNotNull(tenant, "Tenant details are required for authentication");
         AuthenticationRequest loginRequest =
-                new AuthenticationRequest(tenant.getEmail(), tenant.getPassword());
+                new AuthenticationRequest(tenant.getOwnerEmail(), tenant.getPassword());
         AuthenticationResponse authentication = authService.loginAndExtractToken(loginRequest);
 
         Assertions.assertNotNull(authentication, "Authentication response must not be null");
@@ -167,10 +167,13 @@ public final class SubscriptionFlowHelper {
             return null;
         }
         return TenantDTO.builder()
+                .displayName(source.getDisplayName())
+                .slug(source.getSlug())
+                .status(source.getStatus())
                 .tenantType(source.getTenantType())
                 .subscriptionPlan(source.getSubscriptionPlan())
                 .ownerName(source.getOwnerName())
-                .email(source.getEmail())
+                .ownerEmail(source.getOwnerEmail())
                 .phoneNumber(source.getPhoneNumber())
                 .password(source.getPassword())
                 .confirmPassword(source.getConfirmPassword())

@@ -55,7 +55,7 @@ class TenantPositiveTests extends BaseApiTest {
 
         String activationEndpoint = ConfigManager.get("test.activation.endpoint");
         String token = given()
-                .queryParam("email", tenant.getEmail())
+                .queryParam("email", tenant.getOwnerEmail())
                 .when()
                 .get(activationEndpoint != null ? activationEndpoint : "/auth/test/activation-token")
                 .then()
@@ -68,7 +68,7 @@ class TenantPositiveTests extends BaseApiTest {
         assertThat(activationResponse.statusCode()).isEqualTo(200);
 
         AuthenticationResponse login = authService.loginAndExtractToken(new AuthenticationRequest(
-                tenant.getEmail(), tenant.getPassword()));
+                tenant.getOwnerEmail(), tenant.getPassword()));
         assertThat(login).isNotNull();
         assertThat(login.getAccessToken()).isNotBlank();
         assertThat(login.getRefreshToken()).isNotBlank();

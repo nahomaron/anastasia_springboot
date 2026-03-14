@@ -74,7 +74,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
     @Test
     void subscribeTenant_andVerifyPhone_success() throws MessagingException {
         TenantDTO tenantDTO = TestDataUtil.createTestTenantDTO();
-        tenantDTO.setEmail("owner+" + UUID.randomUUID() + "@example.com");
+        tenantDTO.setOwnerEmail("owner+" + UUID.randomUUID() + "@example.com");
         tenantDTO.setPhoneNumber("+1555" + UUID.randomUUID().toString().substring(0, 8));
         tenantDTO.setPassword(TestDataUtil.TEST_PASSWORD);
         tenantDTO.setConfirmPassword(TestDataUtil.TEST_PASSWORD);
@@ -82,7 +82,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         tenantService.subscribeTenant(tenantDTO);
 
         verify(emailNotificationService).sendEmail(
-                eq(tenantDTO.getEmail()),
+                eq(tenantDTO.getOwnerEmail()),
                 eq("Account Activation for Anastasia"),
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
                 emailTemplateCaptor.capture()
@@ -96,7 +96,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
                 .orElseThrow(() -> new AssertionError("Tenant not created"));
         assertThat(savedTenant.isPhoneVerified()).isFalse();
 
-        UserEntity adminUser = userRepository.findByEmail(tenantDTO.getEmail())
+        UserEntity adminUser = userRepository.findByEmail(tenantDTO.getOwnerEmail())
                 .orElseThrow(() -> new AssertionError("Admin user not created"));
         assertThat(adminUser.getTenant().getId()).isEqualTo(savedTenant.getId());
 

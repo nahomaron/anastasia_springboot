@@ -53,17 +53,22 @@ class SimpleMappersUnitTest {
     @Test
     void tenantMapper_roundTrip_shouldPreserveCoreFields() {
         TenantDTO dto = TenantDTO.builder()
+                .displayName("St. Anastasia")
+                .slug("st-anastasia")
                 .tenantType(TenantType.CHURCH)
                 .subscriptionPlan(SubscriptionPlan.PREMIUM)
                 .ownerName("St. Anastasia")
-                .email("owner@example.com")
+                .ownerEmail("owner@example.com")
                 .phoneNumber("+251900000000")
                 .password("Password1!")
                 .confirmPassword("Password1!")
                 .build();
 
         TenantEntity entity = tenantMapper.tenantDTOToEntity(dto);
+        assertThat(entity.getDisplayName()).isEqualTo("St. Anastasia");
+        assertThat(entity.getSlug()).isEqualTo("st-anastasia");
         assertThat(entity.getOwnerName()).isEqualTo("St. Anastasia");
+        assertThat(entity.getOwnerEmail()).isEqualTo("owner@example.com");
         assertThat(entity.getPhoneNumber()).isEqualTo("+251900000000");
         assertThat(entity.getTenantType()).isEqualTo(TenantType.CHURCH);
         entity.assignSubscription(
@@ -75,7 +80,10 @@ class SimpleMappersUnitTest {
         );
 
         TenantDTO mappedBack = tenantMapper.tenantEntityToDTO(entity);
+        assertThat(mappedBack.getDisplayName()).isEqualTo("St. Anastasia");
+        assertThat(mappedBack.getSlug()).isEqualTo("st-anastasia");
         assertThat(mappedBack.getOwnerName()).isEqualTo("St. Anastasia");
+        assertThat(mappedBack.getOwnerEmail()).isEqualTo("owner@example.com");
         assertThat(mappedBack.getPhoneNumber()).isEqualTo("+251900000000");
         assertThat(mappedBack.getTenantType()).isEqualTo(TenantType.CHURCH);
         assertThat(mappedBack.getSubscriptionPlan()).isEqualTo(SubscriptionPlan.PREMIUM);

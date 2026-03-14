@@ -35,7 +35,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.text.Normalizer;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
@@ -106,11 +108,17 @@ public class TenantOnboardingProvisioningService {
             return resolveExistingOrFail(session, existingUser, existingTenantByPhone);
         }
 
+        String displayName = resolveDisplayName(session);
         TenantEntity tenant = TenantEntity.builder()
+                .displayName(displayName)
+                .slug(resolveUniqueSlug(displayName))
                 .tenantType(session.getTenantType())
                 .ownerName(session.getOwnerName())
+                .ownerEmail(session.getOwnerEmail())
                 .phoneNumber(session.getOwnerPhone())
                 .status(TenantStatus.ACTIVE)
+                .activatedAt(Instant.now())
+                .billingEmail(session.getOwnerEmail())
                 .build();
 
         boolean paidFlow = session.isPaymentRequired();
@@ -245,6 +253,32 @@ public class TenantOnboardingProvisioningService {
             return billingCatalog.resolve(plan).getPriceId();
         }
         return null;
+    }
+
+    private String resolveDisplayName(TenantOnboardingSessionEntity session) {
+        DraftTenantPayload draft = parseDraft(session);
+        ChurchDTO church = draft.church();
+        if (session.getTenantType() == TenantType.CHURCH && church != null && StringUtils.hasText(church.getChurchName())) {
+            return church.getChurchName().trim();
+        }
+        return session.getOwnerName().trim();
+    }
+
+    private String resolveUniqueSlug(String displayName) {
+        String normalized = Normalizer.normalize(displayName == null ? "" : displayName, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-+|-+$", "");
+        if (!StringUtils.hasText(normalized)) {
+            normalized = "tenant-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+        String candidate = normalized;
+        int suffix = 2;
+        while (tenantRepository.existsBySlug(candidate)) {
+            candidate = normalized + "-" + suffix++;
+        }
+        return candidate;
     }
 
     private String generateUniqueChurchNumber(String churchName, int length) {

@@ -10,9 +10,11 @@ import org.mapstruct.ReportingPolicy;
 public interface TenantMapper {
 
     @Mapping(target = "subscriptionPlan", source = "subscription.plan")
+    @Mapping(target = "ownerEmail", source = "ownerEmail")
     TenantDTO tenantEntityToDTO(TenantEntity tenantEntity);
 
     @Mapping(target = "subscription", ignore = true)
+    @Mapping(target = "church", ignore = true)
     @Mapping(target = "adminAssignments", ignore = true)
     TenantEntity tenantDTOToEntity(TenantDTO tenantDTO);
 

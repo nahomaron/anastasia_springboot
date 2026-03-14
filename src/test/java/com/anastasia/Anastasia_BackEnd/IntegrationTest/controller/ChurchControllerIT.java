@@ -80,7 +80,7 @@ class ChurchControllerIT extends PostgresTestContainer {
         tenantService.subscribeTenant(tenantDTO);
 
         verify(emailNotificationService).sendEmail(
-                eq(tenantDTO.getEmail()),
+                eq(tenantDTO.getOwnerEmail()),
                 eq("Account Activation for Anastasia"), // Subject
                 eq(EmailTemplateName.ACTIVATE_ACCOUNT),
                 templatePropertiesCaptor.capture() // Capture the entire properties map
@@ -99,7 +99,7 @@ class ChurchControllerIT extends PostgresTestContainer {
 
         AuthenticationResponse auth = authService.authenticate(
                 AuthenticationRequest.builder()
-                        .email(tenantDTO.getEmail())
+                        .email(tenantDTO.getOwnerEmail())
                         .password(tenantDTO.getPassword())
                 .build());
 

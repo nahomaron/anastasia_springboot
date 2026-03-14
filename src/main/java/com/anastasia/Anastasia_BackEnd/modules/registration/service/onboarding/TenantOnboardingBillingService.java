@@ -195,7 +195,7 @@ public class TenantOnboardingBillingService {
                 .tenantType(tenantDTO.getTenantType())
                 .selectedPlan(tenantDTO.getSubscriptionPlan())
                 .ownerName(tenantDTO.getOwnerName())
-                .ownerEmail(tenantDTO.getEmail())
+                .ownerEmail(tenantDTO.getOwnerEmail())
                 .ownerPhone(tenantDTO.getPhoneNumber())
                 .termsAccepted(true)
                 .termsAcceptedAt(Instant.now())

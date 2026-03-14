@@ -150,54 +150,6 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
         adminAssignment.setTenant(null);
     }
 
-    // Temporary compatibility layer while callers move to admin-assignment naming.
-    public Set<TenantAdminAssignmentEntity> getTenantUsers() {
-        return adminAssignments;
-    }
-
-    public void setTenantUsers(Set<TenantAdminAssignmentEntity> tenantUsers) {
-        this.adminAssignments = tenantUsers == null ? new HashSet<>() : tenantUsers;
-    }
-
-    public void addTenantUser(TenantAdminAssignmentEntity tenantUser) {
-        addAdminAssignment(tenantUser);
-    }
-
-    public void removeTenantUser(TenantAdminAssignmentEntity tenantUser) {
-        removeAdminAssignment(tenantUser);
-    }
-
-    // Temporary compatibility layer while services, repos, and DTOs are hardened.
-    public String getOwnerPhone() {
-        return phoneNumber;
-    }
-
-    public void setOwnerPhone(String ownerPhone) {
-        this.phoneNumber = ownerPhone;
-    }
-
-    // Temporary compatibility layer while callers move from boolean lifecycle to TenantStatus.
-    public boolean isActiveTenant() {
-        return TenantStatus.ACTIVE.equals(this.status);
-    }
-
-    public void setActiveTenant(boolean activeTenant) {
-        if (activeTenant) {
-            this.status = TenantStatus.ACTIVE;
-            if (this.activatedAt == null) {
-                this.activatedAt = Instant.now();
-            }
-            return;
-        }
-
-        if (TenantStatus.ACTIVE.equals(this.status)) {
-            this.status = TenantStatus.DEACTIVATED;
-            if (this.deactivatedAt == null) {
-                this.deactivatedAt = Instant.now();
-            }
-        }
-    }
-
     @PrePersist
     public void onCreate() {
         Instant now = Instant.now();
@@ -216,14 +168,6 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
     @PreUpdate
     public void onUpdate() {
         touchAuditTimestamps(Instant.now());
-    }
-
-    public static class TenantEntityBuilder {
-        public TenantEntityBuilder ownerPhone(String ownerPhone) {
-            this.phoneNumber = ownerPhone;
-            return this;
-        }
-
     }
 
 }

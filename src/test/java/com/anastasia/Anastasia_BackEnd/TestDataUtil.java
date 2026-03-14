@@ -187,10 +187,14 @@ public class TestDataUtil {
 
     public static TenantEntity createTestTenantEntity() {
         TenantEntity tenant = TenantEntity.builder()
+                .displayName("St. Mary Church")
+                .slug("st-mary-church-" + uniqueSuffix().toLowerCase())
                 .tenantType(TenantType.CHURCH) // or PRIEST
                 .ownerName("St. Mary Church")
+                .ownerEmail(uniqueEmail("tenant.owner", "example.com"))
                 .phoneNumber("+1555000111")
                 .status(TenantStatus.ACTIVE)
+                .billingEmail(uniqueEmail("billing", "example.com"))
                 .build();
         tenant.assignSubscription(
                 TenantSubscriptionEntity.builder()
@@ -214,13 +218,16 @@ public class TestDataUtil {
                 .build();
 
         return TenantDTO.builder()
+                .displayName("St. Mary Church")
+                .slug("st-mary-church-" + uniqueSuffix().toLowerCase())
+                .status(TenantStatus.DRAFT)
                 .tenantType(TenantType.CHURCH) // or PRIEST
                 .ownerName("St. Mary Church")
+                .ownerEmail(uniqueEmail("tenant.owner", "example.com"))
                 .phoneNumber("+1555" + randomDigits(7))
                 .subscriptionPlan(SubscriptionPlan.PREMIUM) // or BASIC, PRO, etc.
                 .password(TEST_PASSWORD)
                 .confirmPassword(TEST_PASSWORD)
-                .email(uniqueEmail("tenant.owner", "example.com"))
                 .church(church)
                 .build();
     }
