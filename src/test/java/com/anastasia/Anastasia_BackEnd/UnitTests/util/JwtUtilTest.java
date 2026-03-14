@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtUtilTest {
     private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
+    private static final String PREVIOUS_JWT_SECRET = "REDACTED_PREVIOUS_TEST_JWT_SECRET=";
 
     private JwtUtil jwtUtil;
     private UserPrincipal userPrincipal;
@@ -98,5 +100,23 @@ class JwtUtilTest {
         String token = jwtUtil.buildToken(Map.of(), userPrincipal, -1000L);
 
         assertThat(jwtUtil.isTokenExpired(token)).isTrue();
+    }
+
+    @Test
+    void extractAllClaims_shouldAcceptTokenSignedWithPreviousSecret() {
+        JwtUtil previousSigner = new JwtUtil(PREVIOUS_JWT_SECRET);
+        JwtUtil rotatingVerifier = new JwtUtil(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
+
+        String token = previousSigner.generateAccessToken(userPrincipal);
+
+        assertThat(rotatingVerifier.extractUsername(token)).isEqualTo(userPrincipal.getUsername());
+        assertThat(rotatingVerifier.extractTenantId(token)).isEqualTo(userPrincipal.getTenantId().toString());
+    }
+
+    @Test
+    void generateBase64Secret_shouldReturnUsableSecret() {
+        String generated = JwtUtil.generateBase64Secret();
+
+        assertThat(Base64.getDecoder().decode(generated)).hasSize(32);
     }
 }

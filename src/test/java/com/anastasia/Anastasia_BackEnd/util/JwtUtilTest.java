@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class JwtUtilTest {
     private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
+    private static final String PREVIOUS_JWT_SECRET = "REDACTED_PREVIOUS_TEST_JWT_SECRET=";
 
     private JwtUtil jwtUtil;
     private UserPrincipal userPrincipal;
@@ -92,5 +93,23 @@ public class JwtUtilTest {
         String expiredToken = jwtUtil.buildToken(jwtUtil.generateClaims(userPrincipal), userPrincipal, 1); // 1 ms
         Thread.sleep(10);
         assertTrue(jwtUtil.isTokenExpired(expiredToken));
+    }
+
+    @Test
+    void testValidationWithPreviousSecret() {
+        JwtUtil previousSigner = new JwtUtil(PREVIOUS_JWT_SECRET);
+        JwtUtil rotatingVerifier = new JwtUtil(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
+
+        String token = previousSigner.generateAccessToken(userPrincipal);
+
+        assertEquals(username, rotatingVerifier.extractUsername(token));
+        assertEquals(tenantId.toString(), rotatingVerifier.extractTenantId(token));
+    }
+
+    @Test
+    void testGenerateBase64Secret() {
+        String generated = JwtUtil.generateBase64Secret();
+
+        assertEquals(32, java.util.Base64.getDecoder().decode(generated).length);
     }
 }

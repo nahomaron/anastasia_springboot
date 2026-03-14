@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.common.utils;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -17,28 +19,30 @@ import java.util.stream.Collectors;
 @Service
 public class JwtUtil {
 
-    private final SecretKey secretKey;
+    private final SecretKey signingKey;
+    private final List<SecretKey> verificationKeys;
 
     private static final Long ACCESS_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24;
     private static final Long REFRESH_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24 * 7;
 
-    public JwtUtil(@Value("${app.auth.jwt-secret}") String base64Key) {
-        if (base64Key == null || base64Key.isBlank()) {
-            throw new IllegalStateException("app.auth.jwt-secret must be configured");
-        }
+    public JwtUtil(
+            @Value("${app.auth.jwt-current-secret}") String currentBase64Key,
+            @Value("${app.auth.jwt-previous-secret:}") String previousBase64Key
+    ) {
+        this(currentBase64Key, previousBase64Key, "app.auth.jwt-current-secret", "app.auth.jwt-previous-secret");
+    }
 
-        byte[] keyByte;
-        try {
-            keyByte = Base64.getDecoder().decode(base64Key);
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalStateException("app.auth.jwt-secret must be a valid Base64-encoded key", ex);
-        }
+    public JwtUtil(String currentBase64Key) {
+        this(currentBase64Key, null, "jwt current secret", "jwt previous secret");
+    }
 
-        if (keyByte.length < 32) {
-            throw new IllegalStateException("app.auth.jwt-secret must decode to at least 32 bytes");
-        }
+    public JwtUtil(String currentBase64Key, String previousBase64Key) {
+        this(currentBase64Key, previousBase64Key, "jwt current secret", "jwt previous secret");
+    }
 
-        secretKey = Keys.hmacShaKeyFor(keyByte);
+    private JwtUtil(String currentBase64Key, String previousBase64Key, String currentPropertyName, String previousPropertyName) {
+        this.signingKey = decodeSecretKey(currentBase64Key, currentPropertyName);
+        this.verificationKeys = buildVerificationKeys(signingKey, previousBase64Key, previousPropertyName);
     }
 
 
@@ -52,7 +56,7 @@ public class JwtUtil {
                 .claims(extraClaims)
                 .id(jwtId)
                 .subject(userDetails.getUsername())
-                .signWith(secretKey)
+                .signWith(signingKey)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_PERIOD))
                 .compact();
@@ -103,12 +107,31 @@ public class JwtUtil {
 
 
     public Claims extractAllClaims(String token){
-        return Jwts.parser()
-                .clockSkewSeconds(5)
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        JwtException lastJwtException = null;
+        IllegalArgumentException lastArgumentException = null;
+
+        for (SecretKey verificationKey : verificationKeys) {
+            try {
+                return Jwts.parser()
+                        .clockSkewSeconds(5)
+                        .verifyWith(verificationKey)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
+            } catch (JwtException ex) {
+                lastJwtException = ex;
+            } catch (IllegalArgumentException ex) {
+                lastArgumentException = ex;
+            }
+        }
+
+        if (lastJwtException != null) {
+            throw lastJwtException;
+        }
+        if (lastArgumentException != null) {
+            throw lastArgumentException;
+        }
+        throw new IllegalStateException("No JWT verification keys configured");
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimResolver){
@@ -148,6 +171,40 @@ public class JwtUtil {
     public List<String> extractRoles(String token){
         return extractClaim(token, claims -> (List<String>) claims.get("roles"));
 
+    }
+
+    public static String generateBase64Secret() {
+        byte[] key = new byte[32];
+        new SecureRandom().nextBytes(key);
+        return Base64.getEncoder().encodeToString(key);
+    }
+
+    private static SecretKey decodeSecretKey(String base64Key, String propertyName) {
+        if (base64Key == null || base64Key.isBlank()) {
+            throw new IllegalStateException(propertyName + " must be configured");
+        }
+
+        byte[] keyByte;
+        try {
+            keyByte = Base64.getDecoder().decode(base64Key);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException(propertyName + " must be a valid Base64-encoded key", ex);
+        }
+
+        if (keyByte.length < 32) {
+            throw new IllegalStateException(propertyName + " must decode to at least 32 bytes");
+        }
+
+        return Keys.hmacShaKeyFor(keyByte);
+    }
+
+    private static List<SecretKey> buildVerificationKeys(SecretKey currentKey, String previousBase64Key, String previousPropertyName) {
+        List<SecretKey> keys = new ArrayList<>();
+        keys.add(currentKey);
+        if (previousBase64Key != null && !previousBase64Key.isBlank()) {
+            keys.add(decodeSecretKey(previousBase64Key, previousPropertyName));
+        }
+        return List.copyOf(keys);
     }
 
 }
