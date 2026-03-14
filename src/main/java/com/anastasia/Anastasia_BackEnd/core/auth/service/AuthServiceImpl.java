@@ -166,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
 
 
         if(!user.isVerified()){
-            if (user.getCreatedDate().isBefore(java.time.LocalDateTime.now().minusHours(24))) {
+            if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(Instant.now().minusSeconds(24L * 60L * 60L))) {
                 // The user was created more than 24 hours ago
                 sendValidationEmail(user);
                 throw new RuntimeException(messageService.get(
@@ -304,7 +304,7 @@ public class AuthServiceImpl implements AuthService {
         var jwtToken = jwtUtil.generateAccessToken(userPrincipal);
         var refreshToken = jwtUtil.generateRefreshToken(userPrincipal);
 
-        revokeAllValidUserTokens(user);
+        revokeAllActiveUserTokens(user);
         saveUserToken(jwtToken, user, TokenType.BEARER);
         saveUserToken(refreshToken, user, TokenType.REFRESH);
 
@@ -348,10 +348,21 @@ public class AuthServiceImpl implements AuthService {
     public AuthenticationResponse refreshToken(HttpServletRequest request) {
         String refreshToken = refreshTokenCookieService.extractRefreshToken(request)
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get("auth.refreshToken.missing", "Refresh token cookie is missing.")));
+        Token storedRefreshToken = tokenRepository.findActiveTokensByValueAndType(refreshToken, TokenType.REFRESH).stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "auth.refreshToken.invalid",
+                        "Refresh token is invalid or expired."
+                )));
+
         String username = jwtUtil.extractUsername(refreshToken);
 
         UserEntity user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid, User doesn't exist"));
+
+        if (!storedRefreshToken.getUser().getUuid().equals(user.getUuid())) {
+            throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
+        }
 
         UserPrincipal userPrincipal = new UserPrincipal(user);
 
@@ -463,6 +474,7 @@ public class AuthServiceImpl implements AuthService {
         // Hash the new password and save it
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        revokeAllActiveUserTokens(user);
 
         // Invalidate the reset token after use
         savedToken.setValidatedAt(Instant.now());
@@ -506,7 +518,7 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(token);
     }
 
-    // revoking the currently existing refreshTokens
+    // revoking the currently existing bearer tokens
     public void revokeAllValidUserTokens(UserEntity user){
         var validUserTokens = tokenRepository.findAllValidUserTokens(user.getUuid());
 
@@ -521,6 +533,23 @@ public class AuthServiceImpl implements AuthService {
             }
         });
         tokenRepository.saveAll(validUserTokens);
+    }
+
+    public void revokeAllActiveUserTokens(UserEntity user) {
+        var activeTokens = tokenRepository.findAllActiveTokensByUserUuid(user.getUuid());
+
+        if (activeTokens.isEmpty()) {
+            return;
+        }
+
+        Instant now = Instant.now();
+        activeTokens.forEach(token -> {
+            token.setRevoked(true);
+            token.setExpired(true);
+            token.setRevokedAt(now);
+            token.setExpiredAt(now);
+        });
+        tokenRepository.saveAll(activeTokens);
     }
 
     private AuthSessionResponse buildAuthSessionResponse(UserEntity user) {

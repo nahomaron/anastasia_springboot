@@ -5,7 +5,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +22,22 @@ public class JwtUtil {
     private static final Long ACCESS_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24;
     private static final Long REFRESH_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24 * 7;
 
-    @Autowired
-    public JwtUtil() {
-        String base64key = "1d8nU4bfO1i+6NDAQ3t5w9cI0D7+x1FFDrcc+P2NJGU=";
-        byte[] keyByte = Base64.getDecoder().decode(base64key);
+    public JwtUtil(@Value("${app.auth.jwt-secret}") String base64Key) {
+        if (base64Key == null || base64Key.isBlank()) {
+            throw new IllegalStateException("app.auth.jwt-secret must be configured");
+        }
+
+        byte[] keyByte;
+        try {
+            keyByte = Base64.getDecoder().decode(base64Key);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("app.auth.jwt-secret must be a valid Base64-encoded key", ex);
+        }
+
+        if (keyByte.length < 32) {
+            throw new IllegalStateException("app.auth.jwt-secret must decode to at least 32 bytes");
+        }
+
         secretKey = Keys.hmacShaKeyFor(keyByte);
     }
 

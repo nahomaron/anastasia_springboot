@@ -86,14 +86,13 @@ import java.security.Principal;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -469,8 +468,8 @@ public class UserServiceImpl implements UserService {
                 .map(token -> UserSessionResponse.builder()
                         .sessionId(token.getId())
                         .tokenType(token.getTokenType().name())
-                        .createdAt(token.getCreatedAt() == null ? null : LocalDateTime.ofInstant(token.getCreatedAt(), ZoneId.systemDefault()))
-                        .expiresAt(token.getExpiresAt() == null ? null : LocalDateTime.ofInstant(token.getExpiresAt(), ZoneId.systemDefault()))
+                        .createdAt(token.getCreatedAt())
+                        .expiresAt(token.getExpiresAt())
                         .revoked(token.isRevoked())
                         .expired(token.isExpired())
                         .current(currentBearerToken != null && currentBearerToken.equals(token.getToken()))
@@ -484,28 +483,45 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getCurrentAuthenticatedUser();
         Token token = tokenRepository.findByIdAndUserUuid(sessionId, user.getUuid())
                 .orElseThrow(() -> new EntityNotFoundException("Session not found"));
-        token.setRevoked(true);
-        token.setExpired(true);
-        token.setRevokedAt(Instant.now());
-        token.setExpiredAt(Instant.now());
-        tokenRepository.save(token);
+        revokeToken(token);
+        if (token.getTokenType() == TokenType.BEARER) {
+            revokeMatchingRefreshToken(user.getUuid(), token.getCreatedAt(), token.getExpiresAt());
+        }
     }
 
     @Transactional
     @Override
     public void revokeOtherCurrentUserSessions(String currentBearerToken) {
         UserEntity user = getCurrentAuthenticatedUser();
-        List<Token> tokens = tokenRepository.findByUserUuidAndTokenTypeOrderByIdDesc(user.getUuid(), TokenType.BEARER);
+        List<Token> tokens = tokenRepository.findAllActiveTokensByUserUuid(user.getUuid());
         for (Token token : tokens) {
             if (currentBearerToken != null && currentBearerToken.equals(token.getToken())) {
                 continue;
             }
-            token.setRevoked(true);
-            token.setExpired(true);
-            token.setRevokedAt(Instant.now());
-            token.setExpiredAt(Instant.now());
+            revokeToken(token);
         }
         tokenRepository.saveAll(tokens);
+    }
+
+    private void revokeMatchingRefreshToken(UUID userId, Instant accessCreatedAt, Instant accessExpiresAt) {
+        List<Token> refreshTokens = tokenRepository.findByUserUuidAndTokenTypeOrderByIdDesc(userId, TokenType.REFRESH);
+        for (Token refreshToken : refreshTokens) {
+            if (refreshToken.isRevoked() || refreshToken.isExpired()) {
+                continue;
+            }
+            if (Objects.equals(refreshToken.getCreatedAt(), accessCreatedAt)
+                    || Objects.equals(refreshToken.getExpiresAt(), accessExpiresAt)) {
+                revokeToken(refreshToken);
+            }
+        }
+    }
+
+    private void revokeToken(Token token) {
+        Instant now = Instant.now();
+        token.setRevoked(true);
+        token.setExpired(true);
+        token.setRevokedAt(now);
+        token.setExpiredAt(now);
     }
 
     @Caching(evict = {
@@ -1050,7 +1066,7 @@ public class UserServiceImpl implements UserService {
                 .groups(groups)
                 .membershipId(membershipId)
                 .status(resolveTenantUserStatus(user))
-                .createdAt(user.getCreatedDate())
+                .createdAt(user.getCreatedAt())
                 .protectedAccount(isProtectedTenantAccount(user))
                 .protectedReason(protectedAccountReason(user))
                 .build();

@@ -1,10 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.common.filter;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -26,7 +30,12 @@ public class TenantFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
+        HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
         String tenantIdString = httpServletRequest.getHeader("X-Tenant-ID");
+        String alternateTenantHeader = httpServletRequest.getHeader("X-Tenant-Id");
+        if ((tenantIdString == null || tenantIdString.isEmpty()) && alternateTenantHeader != null && !alternateTenantHeader.isEmpty()) {
+            tenantIdString = alternateTenantHeader;
+        }
 
 
         if (tenantIdString == null || tenantIdString.isEmpty() || "null".equalsIgnoreCase(tenantIdString)) {
@@ -40,6 +49,23 @@ public class TenantFilter implements Filter {
                     throw new ServletException("Invalid JWT token: " + e.getMessage());
                 }
             }
+        }
+
+        UUID principalTenantId = resolvePrincipalTenantId();
+        if (principalTenantId != null && tenantIdString != null && !tenantIdString.isEmpty() && !"null".equalsIgnoreCase(tenantIdString)) {
+            try {
+                UUID requestedTenantId = UUID.fromString(tenantIdString);
+                if (!principalTenantId.equals(requestedTenantId)) {
+                    httpServletResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant access denied");
+                    return;
+                }
+            } catch (IllegalArgumentException e) {
+                throw new ServletException("Invalid Tenant ID format");
+            }
+        }
+
+        if (principalTenantId != null) {
+            tenantIdString = principalTenantId.toString();
         }
 
         if (tenantIdString != null && !tenantIdString.isEmpty() && !"null".equalsIgnoreCase(tenantIdString)) {
@@ -59,6 +85,14 @@ public class TenantFilter implements Filter {
         } finally {
             TenantContext.clear();
         }
+    }
+
+    private UUID resolvePrincipalTenantId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal principal) {
+            return principal.getTenantId();
+        }
+        return null;
     }
 
 

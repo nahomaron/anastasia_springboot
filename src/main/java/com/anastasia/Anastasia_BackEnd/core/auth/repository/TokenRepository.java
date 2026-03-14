@@ -19,6 +19,17 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
     Optional<Token> findTopByTokenOrderByIdDesc(String token);
 
     @Query("""
+            select t from Token t
+            where t.token = :token
+              and t.tokenType = :tokenType
+              and t.expired = false
+              and t.revoked = false
+              and t.deletedAt is null
+            order by t.id desc
+            """)
+    List<Token> findActiveTokensByValueAndType(@Param("token") String token, @Param("tokenType") TokenType tokenType);
+
+    @Query("""
             select t from Token t inner join UserEntity u on t.user.id = u.uuid
             where u.uuid = :uuid and t.expired = false and t.revoked = false and t.deletedAt is null
             """)
@@ -54,6 +65,16 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
         ORDER BY t.id DESC
     """)
     List<Token> findByUserUuidAndTokenTypeOrderByIdDesc(@Param("userId") UUID userId, @Param("tokenType") TokenType tokenType);
+
+    @Query("""
+        SELECT t FROM Token t
+        WHERE t.user.uuid = :userId
+          AND t.expired = false
+          AND t.revoked = false
+          AND t.deletedAt is null
+        ORDER BY t.id DESC
+    """)
+    List<Token> findAllActiveTokensByUserUuid(@Param("userId") UUID userId);
 
     @Query("""
         SELECT t FROM Token t
