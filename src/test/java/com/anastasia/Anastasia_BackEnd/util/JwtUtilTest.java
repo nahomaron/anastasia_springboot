@@ -40,7 +40,7 @@ public class JwtUtilTest {
                 .email("test@example.com")
                 .password("password")
                 .roles(Set.of(role))
-                .tenant(tenant)
+                .affiliatedTenant(tenant)
                 .build();
 
         userPrincipal = new UserPrincipal(user);
@@ -98,7 +98,7 @@ public class JwtUtilTest {
     @Test
     void testValidationWithPreviousSecret() {
         JwtUtil previousSigner = new JwtUtil(PREVIOUS_JWT_SECRET);
-        JwtUtil rotatingVerifier = new JwtUtil(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
+        JwtUtil rotatingVerifier = JwtUtil.forSecrets(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
 
         String token = previousSigner.generateAccessToken(userPrincipal);
 

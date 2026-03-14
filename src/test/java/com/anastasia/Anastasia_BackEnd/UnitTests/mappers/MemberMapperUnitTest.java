@@ -1,6 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.mappers;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.MemberMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.EducationLevel;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberGender;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
@@ -19,7 +22,7 @@ class MemberMapperUnitTest {
     void memberEntityToDTO_shouldMapAllRelevantFields() {
         Adult_MemberEntity entity = Adult_MemberEntity.builder()
                 .churchNumber("CH12345")
-                .status("ACTIVE")
+                .statusValue(MemberLifecycleStatus.ACTIVE)
                 .approvedByChurch(true)
                 .approvedByPriest(false)
                 .deacon(true)
@@ -33,7 +36,7 @@ class MemberMapperUnitTest {
                 .fatherNameT("ምንያም")
                 .grandFatherNameT("እስጢፋኖስ")
                 .motherFullNameT("ሐና ስለም")
-                .gender("Male")
+                .genderValue(MemberGender.MALE)
                 .birthday(LocalDate.of(1990, 1, 1))
                 .nationality("Ethiopian")
                 .placeOfBirth("Addis Ababa")
@@ -48,7 +51,7 @@ class MemberMapperUnitTest {
                 .firstLanguage("Amharic")
                 .secondLanguage("English")
                 .profession("Engineer")
-                .levelOfEducation("Masters")
+                .educationLevelValue(EducationLevel.MASTERS)
                 .fatherOfConfession("Father Abraham")
                 .spouseIdNumber("SP1234")
                 .termsAccepted(true)

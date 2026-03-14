@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
@@ -55,7 +56,7 @@ public class AuthServiceUnitTest {
                 .password("plain")
                 .fullName("Test User")
                 .userType(UserType.GUEST)
-                .verified(false)
+                .status(UserStatus.PENDING_VERIFICATION)
                 .createdAt(Instant.now().minusSeconds(24L * 60L * 60L))
                 .build();
     }

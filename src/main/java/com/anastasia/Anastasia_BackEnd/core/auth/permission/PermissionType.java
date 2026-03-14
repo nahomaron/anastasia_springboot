@@ -37,6 +37,11 @@ public enum PermissionType {
     /**/VIEW_CHILDREN("view_children", "can view children profiles"),
     /**/EDIT_CHILDREN("edit_children", "can edit children profiles"),
     /**/DELETE_CHILDREN("delete_children", "can delete children profiles"),
+    VIEW_PRIESTS("view_priests", "Can view priest profiles and listings"),
+    MANAGE_PRIESTS("manage_priests", "Can create, update, and delete priest records"),
+    VIEW_PRIEST_ASSIGNMENTS("view_priest_assignments", "Can view members and children assigned to priests"),
+    APPROVE_MEMBERSHIP_AS_PRIEST("approve_membership_as_priest", "Can perform priest-stage membership approvals"),
+    VIEW_PRIEST_DASHBOARD("view_priest_dashboard", "Can access the priest dashboard"),
 
     // Group Management
     /**/MANAGE_GROUPS("manage_groups", "can do everything with groups"),

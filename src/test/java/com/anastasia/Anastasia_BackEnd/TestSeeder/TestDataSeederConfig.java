@@ -94,11 +94,11 @@ public class TestDataSeederConfig {
                 .email("weldit@gmail.com")
                 .password(passwordEncoder.encode("WGebray@123"))
                 .fullName("Test User")
-                .verified(true)
+                .emailVerifiedAt(java.time.Instant.now())
                 .roles(Set.of(ownerRole))
                 .userType(UserType.GUEST)
-                .tenant(savedTenant)
-                .tenantId(savedTenant.getId())
+                .affiliatedTenant(savedTenant)
+                .affiliatedTenantId(savedTenant.getId())
                 .build();
 
         UserEntity savedUser = userRepository.save(user);

@@ -36,13 +36,13 @@ public class JwtUtil {
         this(currentBase64Key, null, "jwt current secret", "jwt previous secret");
     }
 
-    public JwtUtil(String currentBase64Key, String previousBase64Key) {
-        this(currentBase64Key, previousBase64Key, "jwt current secret", "jwt previous secret");
-    }
-
     private JwtUtil(String currentBase64Key, String previousBase64Key, String currentPropertyName, String previousPropertyName) {
         this.signingKey = decodeSecretKey(currentBase64Key, currentPropertyName);
         this.verificationKeys = buildVerificationKeys(signingKey, previousBase64Key, previousPropertyName);
+    }
+
+    public static JwtUtil forSecrets(String currentBase64Key, String previousBase64Key) {
+        return new JwtUtil(currentBase64Key, previousBase64Key, "jwt current secret", "jwt previous secret");
     }
 
 

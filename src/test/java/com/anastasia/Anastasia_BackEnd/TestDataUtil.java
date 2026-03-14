@@ -6,6 +6,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.Ima
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.EducationLevel;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberGender;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus;
@@ -277,7 +280,7 @@ public class TestDataUtil {
                 .membershipNumber("MBR-" + uniqueSuffix())
                 .church(church)
                 .churchNumber(church.getChurchNumber())
-                .status("ACTIVE")
+                .statusValue(MemberLifecycleStatus.ACTIVE)
                 .approvedByChurch(true)
                 .approvedByPriest(true)
                 .deacon(false)
@@ -291,7 +294,7 @@ public class TestDataUtil {
                 .fatherNameT("ኣሮን")
                 .grandFatherNameT("ዳዊት")
                 .motherFullNameT("ሩት ዮሓንስ")
-                .gender("Male")
+                .genderValue(MemberGender.MALE)
                 .birthday(LocalDate.of(1990, Month.DECEMBER, 3))
                 .phone("+1234567890")
                 .maritalStatus("Single")
@@ -307,7 +310,7 @@ public class TestDataUtil {
                 .firstLanguage("Tigrinya")
                 .secondLanguage("English")
                 .profession("Engineer")
-                .levelOfEducation("BSc")
+                .educationLevelValue(EducationLevel.BACHELORS)
                 .termsAccepted(true)
                 .termsVersion("test-v1")
                 .termsAcceptedAt(Instant.now())
@@ -359,7 +362,7 @@ public class TestDataUtil {
                 .membershipNumber("CHD-" + uniqueSuffix())
                 .church(church)
                 .churchNumber(church.getChurchNumber())
-                .status("ACTIVE")
+                .statusValue(MemberLifecycleStatus.ACTIVE)
                 .deacon(false)
                 .title("Master")
                 .firstName("Yonas")
@@ -371,7 +374,7 @@ public class TestDataUtil {
                 .fatherNameT("ሳሙኤል")
                 .grandFatherNameT("በረከት")
                 .motherFullNameT("ማርታ ተስፋዬ")
-                .gender("Male")
+                .genderValue(MemberGender.MALE)
                 .birthday(LocalDate.of(2015, Month.MARCH, 15))
                 .nationality("Eritrean")
                 .placeOfBirth("Keren")
@@ -382,7 +385,7 @@ public class TestDataUtil {
                 .contactRelation("Father")
                 .firstLanguage("Tigrinya")
                 .secondLanguage("English")
-                .levelOfEducation("Grade 2")
+                .educationLevelValue(EducationLevel.PRIMARY)
                 .fatherOfConfession("Abba Mikael")
                 .address(Address.builder()
                         .addressLine1("123 School Street")

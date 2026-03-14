@@ -179,9 +179,25 @@ public class Adult_MemberEntity extends BaseMember {
         this.numberOfChildren = numberOfChildren;
     }
 
+    public boolean isTermsAccepted() {
+        return termsAccepted;
+    }
+
+    public void setTermsAccepted(boolean termsAccepted) {
+        this.termsAccepted = termsAccepted;
+    }
+
+    public String getTermsVersion() {
+        return termsVersion;
+    }
+
     public void setTermsAcceptedAt(Instant termsAcceptedAt) {
         this.termsAcceptedAt = termsAcceptedAt;
         this.setConsentAcceptedAt(termsAcceptedAt != null ? LocalDateTime.ofInstant(termsAcceptedAt, java.time.ZoneOffset.UTC) : null);
+    }
+
+    public Instant getTermsAcceptedAt() {
+        return termsAcceptedAt;
     }
 
     public void setTermsVersion(String termsVersion) {

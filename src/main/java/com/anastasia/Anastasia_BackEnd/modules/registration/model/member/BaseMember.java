@@ -212,6 +212,31 @@ public abstract class BaseMember extends Auditable {
         this.educationLevelValue = educationLevel;
     }
 
+    public UserEntity getUser() {
+        return user;
+    }
+
+    public void setUser(UserEntity user) {
+        this.user = user;
+        this.userId = user != null ? user.getUuid() : null;
+    }
+
+    public LocalDateTime getConsentAcceptedAt() {
+        return consentAcceptedAt;
+    }
+
+    public void setConsentAcceptedAt(LocalDateTime consentAcceptedAt) {
+        this.consentAcceptedAt = consentAcceptedAt;
+    }
+
+    public String getConsentVersion() {
+        return consentVersion;
+    }
+
+    public void setConsentVersion(String consentVersion) {
+        this.consentVersion = consentVersion;
+    }
+
     @PrePersist
     protected void onMemberCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -223,37 +248,4 @@ public abstract class BaseMember extends Auditable {
         }
     }
 
-    public abstract static class BaseMemberBuilder<C extends BaseMember, B extends BaseMemberBuilder<C, B>>
-            extends Auditable.AuditableBuilder<C, B> {
-
-        public B status(String status) {
-            this.statusValue = MemberLifecycleStatus.from(status);
-            return self();
-        }
-
-        public B statusEnum(MemberLifecycleStatus status) {
-            this.statusValue = status;
-            return self();
-        }
-
-        public B gender(String gender) {
-            this.genderValue = MemberGender.from(gender);
-            return self();
-        }
-
-        public B genderEnum(MemberGender gender) {
-            this.genderValue = gender;
-            return self();
-        }
-
-        public B levelOfEducation(String levelOfEducation) {
-            this.educationLevelValue = EducationLevel.from(levelOfEducation);
-            return self();
-        }
-
-        public B educationLevel(EducationLevel educationLevel) {
-            this.educationLevelValue = educationLevel;
-            return self();
-        }
-    }
 }

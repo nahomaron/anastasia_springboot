@@ -29,6 +29,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdm
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantOnboardingSessionRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.text.Normalizer;
+import java.time.Instant;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
@@ -216,10 +218,11 @@ public class TenantOnboardingProvisioningService {
                 .fullName(session.getOwnerName())
                 .email(session.getOwnerEmail())
                 .password(session.getDraftPasswordHash())
-                .tenant(tenant)
+                .affiliatedTenant(tenant)
                 .roles(new HashSet<>(Set.of(ownerRole, adminRole)))
                 .userType(UserType.TENANT)
-                .verified(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()))
+                .emailVerifiedAt(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? Instant.now() : null)
+                .status(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION)
                 .build();
         UserEntity savedOwner = userRepository.save(owner);
 

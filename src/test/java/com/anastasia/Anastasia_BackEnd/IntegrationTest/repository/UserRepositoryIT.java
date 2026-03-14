@@ -56,9 +56,9 @@ class UserRepositoryIT extends ServiceIntegrationTestBase {
                 .fullName("Tenant Admin")
                 .email("tenant-admin+" + UUID.randomUUID() + "@integration.com")
                 .password("Secret123!")
-                .tenant(tenant)
+                .affiliatedTenant(tenant)
                 .userType(UserType.TENANT)
-                .verified(true)
+                .emailVerifiedAt(java.time.Instant.now())
                 .roles(Set.of(ownerRole))
                 .build());
 

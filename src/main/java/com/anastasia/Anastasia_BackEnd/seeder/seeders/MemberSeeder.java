@@ -3,6 +3,9 @@ package com.anastasia.Anastasia_BackEnd.seeder.seeders;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.EducationLevel;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberGender;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
@@ -70,7 +73,7 @@ public class MemberSeeder {
                         .churchNumber(assignedChurch.getChurchNumber())
                         .church(assignedChurch)
                         .membershipNumber("M" + faker.number().numberBetween(10000,99999 ))
-                        .status(faker.options().option("PENDING", "APPROVED", "REJECTED", "ACTIVE", "BLOCKED"))
+                        .statusValue(MemberLifecycleStatus.from(faker.options().option("PENDING", "APPROVED", "ACTIVE", "NON_ACTIVE", "DECEASED")))
                         .deacon(faker.bool().bool())
                         .title(faker.options().option("Mr.", "Ms.", "Mrs.", "Dr."))
                         .firstName(faker.name().firstName())
@@ -82,7 +85,7 @@ public class MemberSeeder {
                         .fatherNameT(faker.options().option("ተስፋይ", "መንግስትኣብ", "ብርሃነ", "ርእሶም", "ጠዓመ", "በራኺ", "ዝኾነ", "ተኽለብርሃን", "ወልደማርያም"))
                         .grandFatherNameT("ገብረ")
                         .motherFullNameT("ሳባ ኣማኑኤል")
-                        .gender(faker.options().option("Male", "Female"))
+                        .genderValue(MemberGender.from(faker.options().option("Male", "Female")))
                         .birthday(birthday)
                         .nationality(faker.nation().nationality())
                         .placeOfBirth(faker.address().city())
@@ -108,7 +111,7 @@ public class MemberSeeder {
                                 .build())
                         .secondLanguage(faker.options().option("English", "Arabic", "Amharic", null))
                         .profession(faker.company().profession())
-                        .levelOfEducation(faker.options().option("High School", "Diploma", "Bachelor's", "Master's"))
+                        .educationLevelValue(EducationLevel.from(faker.options().option("High School", "Diploma", "Bachelor's", "Master's")))
                         .fatherOfConfession("Abune " + faker.name().firstName())
                         .user(savedUser) // 🔁 Link to the user
                         .build();

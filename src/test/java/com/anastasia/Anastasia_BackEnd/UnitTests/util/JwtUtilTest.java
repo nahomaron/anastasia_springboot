@@ -61,7 +61,7 @@ class JwtUtilTest {
                 .email("test@example.com")
                 .password("Password1!")
                 .roles(Set.of(role))
-                .tenant(tenant)
+                .affiliatedTenant(tenant)
                 .build();
 
         userPrincipal = new UserPrincipal(userEntity);
@@ -105,7 +105,7 @@ class JwtUtilTest {
     @Test
     void extractAllClaims_shouldAcceptTokenSignedWithPreviousSecret() {
         JwtUtil previousSigner = new JwtUtil(PREVIOUS_JWT_SECRET);
-        JwtUtil rotatingVerifier = new JwtUtil(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
+        JwtUtil rotatingVerifier = JwtUtil.forSecrets(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
 
         String token = previousSigner.generateAccessToken(userPrincipal);
 

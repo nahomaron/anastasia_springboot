@@ -176,7 +176,7 @@ public class TenantServiceImpl implements TenantService {
                 .fullName(tenantDTO.getOwnerName())
                 .email(tenantDTO.getOwnerEmail())
                 .password(tenantDTO.getPassword())
-                .tenant(savedTenant)
+                .affiliatedTenant(savedTenant)
                 .roles(new HashSet<>(Set.of(ownerRole, adminRole)))
                 .userType(UserType.TENANT)
                 .build();

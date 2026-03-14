@@ -3,6 +3,8 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.EducationLevel;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberGender;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
@@ -139,7 +141,7 @@ public class ChildMapper {
                 .fatherNameT(dto.getFatherNameT())
                 .grandFatherNameT(dto.getGrandFatherNameT())
                 .motherFullNameT(dto.getMotherFullNameT())
-                .gender(dto.getGender())
+                .genderValue(MemberGender.from(dto.getGender()))
                 .birthday(dto.getBirthday())
                 .nationality(dto.getNationality())
                 .placeOfBirth(dto.getPlaceOfBirth())
@@ -153,7 +155,7 @@ public class ChildMapper {
                 .guardianRelationship(dto.getGuardianRelationship())
                 .firstLanguage(dto.getFirstLanguage())
                 .secondLanguage(dto.getSecondLanguage())
-                .levelOfEducation(dto.getLevelOfEducation())
+                .educationLevelValue(EducationLevel.from(dto.getLevelOfEducation()))
                 .fatherOfConfession(dto.getFatherOfConfession())
                 .churchOfBaptism(dto.getChurchOfBaptism())
                 .baptismName(dto.getBaptismName())

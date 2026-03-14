@@ -484,7 +484,7 @@ class GroupServiceUnitTest {
     private UserEntity userEntity(UUID userId, UUID tenantId) {
         return UserEntity.builder()
                 .uuid(userId)
-                .tenantId(tenantId)
+                .affiliatedTenantId(tenantId)
                 .email(userId + "@example.com")
                 .groups(new HashSet<>())
                 .build();

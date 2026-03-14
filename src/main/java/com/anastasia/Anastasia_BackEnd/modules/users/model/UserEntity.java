@@ -146,12 +146,16 @@ public class UserEntity extends Auditable {
     }
 
     public void assignMembership(Adult_MemberEntity membership){
-        this.setMembership(membership);
-        membership.setUser(this);
+        this.membership = membership;
+        this.membershipId = membership != null ? membership.getId() : null;
+        if (membership != null) {
+            membership.setUser(this);
+        }
     }
 
     public void assignAffiliatedTenant(TenantEntity tenant){
-        this.setAffiliatedTenant(tenant);
+        this.affiliatedTenant = tenant;
+        this.affiliatedTenantId = tenant != null ? tenant.getId() : null;
     }
 
     public boolean isVerified() {
@@ -202,7 +206,7 @@ public class UserEntity extends Auditable {
     }
 
     public void setTenant(TenantEntity tenant) {
-        this.affiliatedTenant = tenant;
+        assignAffiliatedTenant(tenant);
     }
 
     public UUID getTenantId() {
@@ -214,49 +218,7 @@ public class UserEntity extends Auditable {
     }
 
     public void assignTenant(TenantEntity tenant){
-        this.setAffiliatedTenant(tenant);
-    }
-
-    public abstract static class UserEntityBuilder<C extends UserEntity, B extends UserEntityBuilder<C, B>>
-            extends Auditable.AuditableBuilder<C, B> {
-        public B tenant(TenantEntity tenant) {
-            this.affiliatedTenant = tenant;
-            return self();
-        }
-
-        public B tenantId(UUID tenantId) {
-            this.affiliatedTenantId = tenantId;
-            return self();
-        }
-
-        public B verified(boolean verified) {
-            if (verified) {
-                if (this.emailVerifiedAt == null) {
-                    this.emailVerifiedAt = Instant.now();
-                }
-                if (this.status == null || this.status == UserStatus.PENDING_VERIFICATION) {
-                    this.status = UserStatus.ACTIVE;
-                }
-            } else {
-                this.emailVerifiedAt = null;
-                if (this.status == null) {
-                    this.status = UserStatus.PENDING_VERIFICATION;
-                }
-            }
-            return self();
-        }
-
-        public B accountLocked(boolean accountLocked) {
-            if (accountLocked) {
-                this.status = UserStatus.LOCKED;
-                if (this.lockedAt == null) {
-                    this.lockedAt = Instant.now();
-                }
-            } else if (this.status == null) {
-                this.status = UserStatus.PENDING_VERIFICATION;
-            }
-            return self();
-        }
+        assignAffiliatedTenant(tenant);
     }
 
     public void addGroup(GroupEntity group) {

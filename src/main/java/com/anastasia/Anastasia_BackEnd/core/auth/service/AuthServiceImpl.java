@@ -216,7 +216,7 @@ public class AuthServiceImpl implements AuthService {
                     .googleId(normalizedGoogleId)
                     .email(normalizedEmail)
                     .fullName(fallbackName)
-                    .verified(true)
+                    .emailVerifiedAt(Instant.now())
                     .status(UserStatus.ACTIVE)
                     .userType(UserType.GUEST)
                     .roles(Set.of(userRole))

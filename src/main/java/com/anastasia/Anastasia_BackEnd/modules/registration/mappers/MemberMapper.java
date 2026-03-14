@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.mappers;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.EducationLevel;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberGender;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
@@ -154,7 +156,7 @@ public class MemberMapper {
                 .fatherNameT(dto.getFatherNameT())
                 .grandFatherNameT(dto.getGrandFatherNameT())
                 .motherFullNameT(dto.getMotherFullNameT())
-                .gender(dto.getGender())
+                .genderValue(MemberGender.from(dto.getGender()))
                 .birthday(dto.getBirthday())
                 .avatar(mapAvatar(dto.getAvatar()))
                 .nationality(dto.getNationality())
@@ -171,7 +173,7 @@ public class MemberMapper {
                 .firstLanguage(dto.getFirstLanguage())
                 .secondLanguage(dto.getSecondLanguage())
                 .profession(dto.getProfession())
-                .levelOfEducation(dto.getLevelOfEducation())
+                .educationLevelValue(EducationLevel.from(dto.getLevelOfEducation()))
                 .fatherOfConfession(dto.getFatherOfConfession())
                 .churchOfBaptism(dto.getChurchOfBaptism())
                 .baptismName(dto.getBaptismName())
