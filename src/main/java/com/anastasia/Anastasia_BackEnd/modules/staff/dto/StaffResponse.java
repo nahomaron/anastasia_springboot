@@ -3,8 +3,8 @@ package com.anastasia.Anastasia_BackEnd.modules.staff.dto;
 import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffEmploymentStatus;
 import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffPositionType;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record StaffResponse(
@@ -28,12 +28,12 @@ public record StaffResponse(
         String reportsToStaffName,
         String notes,
         boolean mustChangePassword,
-        LocalDateTime invitedAt,
-        LocalDateTime inviteAcceptedAt,
-        LocalDateTime firstLoginAt,
-        LocalDateTime lastCredentialResetAt,
-        LocalDateTime deactivatedAt,
-        LocalDateTime createdDate,
-        LocalDateTime lastModifiedDate
+        Instant invitedAt,
+        Instant inviteAcceptedAt,
+        Instant firstLoginAt,
+        Instant lastCredentialResetAt,
+        Instant deactivatedAt,
+        Instant createdAt,
+        Instant updatedAt
 ) {
 }

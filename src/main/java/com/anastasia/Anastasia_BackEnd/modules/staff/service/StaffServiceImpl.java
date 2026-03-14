@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -262,13 +261,13 @@ public class StaffServiceImpl implements StaffService {
                 staff.getReportsTo() == null ? null : staff.getReportsTo().getUser().getFullName(),
                 staff.getNotes(),
                 staff.getUser().isMustChangePassword(),
-                toLocalDateTime(staff.getInvitedAt()),
-                toLocalDateTime(staff.getInviteAcceptedAt()),
-                toLocalDateTime(staff.getFirstLoginAt()),
-                toLocalDateTime(staff.getLastCredentialResetAt()),
-                toLocalDateTime(staff.getDeactivatedAt()),
-                staff.getCreatedDate(),
-                staff.getLastModifiedDate()
+                staff.getInvitedAt(),
+                staff.getInviteAcceptedAt(),
+                staff.getFirstLoginAt(),
+                staff.getLastCredentialResetAt(),
+                staff.getDeactivatedAt(),
+                staff.getCreatedAt(),
+                staff.getUpdatedAt()
         );
     }
 
@@ -326,10 +325,6 @@ public class StaffServiceImpl implements StaffService {
         if (hireDate != null && endDate != null && endDate.isBefore(hireDate)) {
             throw new IllegalArgumentException(messageService.get("staff.dates.invalid", "End date cannot be earlier than hire date"));
         }
-    }
-
-    private LocalDateTime toLocalDateTime(Instant instant) {
-        return instant == null ? null : LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
     }
 
     private String generateUniqueStaffNumber() {
