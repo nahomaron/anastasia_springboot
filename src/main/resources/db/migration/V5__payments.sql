@@ -1,0 +1,80 @@
+CREATE TABLE payment_intents (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    purpose VARCHAR(64) NOT NULL,
+    amount BIGINT NOT NULL,
+    currency VARCHAR(8) NOT NULL,
+    status VARCHAR(64) NOT NULL,
+    provider VARCHAR(64),
+    provider_payment_reference VARCHAR(255),
+    provider_checkout_reference VARCHAR(255),
+    member_id BIGINT,
+    user_id UUID,
+    user_email VARCHAR(255),
+    fund_id VARCHAR(128),
+    fund_name VARCHAR(255),
+    idempotency_key VARCHAR(255) NOT NULL,
+    checkout_url VARCHAR(1024),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    status_changed_at TIMESTAMP WITH TIME ZONE,
+    status_reason VARCHAR(512),
+    authorized_at TIMESTAMP WITH TIME ZONE,
+    captured_at TIMESTAMP WITH TIME ZONE,
+    failed_at TIMESTAMP WITH TIME ZONE,
+    refunded_at TIMESTAMP WITH TIME ZONE,
+    authorized_amount_minor BIGINT,
+    captured_gross_amount_minor BIGINT,
+    captured_fee_amount_minor BIGINT,
+    captured_net_amount_minor BIGINT,
+    captured_currency VARCHAR(8),
+    refunded_amount_minor BIGINT,
+    refunded_currency VARCHAR(8),
+    provider_event_id VARCHAR(255),
+    provider_event_type VARCHAR(255),
+    provider_event_received_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    version BIGINT NOT NULL,
+    CONSTRAINT fk_payment_intents_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    CONSTRAINT uk_payment_intents_tenant_idempotency UNIQUE (tenant_id, idempotency_key)
+);
+
+CREATE INDEX idx_payment_intent_tenant_status_created ON payment_intents(tenant_id, status, created_at);
+CREATE INDEX idx_payment_intent_provider_payment_ref ON payment_intents(provider_payment_reference);
+CREATE INDEX idx_payment_intent_provider_checkout_ref ON payment_intents(provider_checkout_reference);
+
+CREATE TABLE payment_subscriptions (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    purpose VARCHAR(64) NOT NULL,
+    amount BIGINT NOT NULL,
+    currency VARCHAR(8) NOT NULL,
+    status VARCHAR(64) NOT NULL,
+    member_id VARCHAR(128),
+    user_id UUID,
+    user_email VARCHAR(255),
+    fund_id VARCHAR(128),
+    provider VARCHAR(64),
+    provider_subscription_reference VARCHAR(255),
+    provider_checkout_reference VARCHAR(255),
+    checkout_url VARCHAR(1024),
+    idempotency_key VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    status_changed_at TIMESTAMP WITH TIME ZONE,
+    status_reason VARCHAR(512),
+    activated_at TIMESTAMP WITH TIME ZONE,
+    canceled_at TIMESTAMP WITH TIME ZONE,
+    deactivated_at TIMESTAMP WITH TIME ZONE,
+    provider_event_id VARCHAR(255),
+    provider_event_type VARCHAR(255),
+    provider_event_received_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    version BIGINT NOT NULL,
+    CONSTRAINT fk_payment_subscriptions_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    CONSTRAINT uk_payment_subscriptions_tenant_idempotency UNIQUE (tenant_id, idempotency_key)
+);
+
+CREATE INDEX idx_payment_subscription_tenant_status_created ON payment_subscriptions(tenant_id, status, created_at);
+CREATE INDEX idx_payment_subscription_provider_subscription_ref ON payment_subscriptions(provider_subscription_reference);
+CREATE INDEX idx_payment_subscription_provider_checkout_ref ON payment_subscriptions(provider_checkout_reference);
