@@ -8,6 +8,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MaritalStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import jakarta.persistence.Persistence;
 import org.springframework.stereotype.Component;
@@ -46,7 +47,7 @@ public class MemberMapper {
                 .emergencyContactNumber(adultMemberEntity.getEmergencyContactNumber())
                 .contactRelation(adultMemberEntity.getContactRelation())
                 .eritreaContact(adultMemberEntity.getEritreaContact())
-                .maritalStatus(adultMemberEntity.getMaritalStatus())
+                .maritalStatus(toApiMaritalStatus(adultMemberEntity.getMaritalStatus()))
                 .numberOfChildren(adultMemberEntity.getNumberOfChildren())
                 .firstLanguage(adultMemberEntity.getFirstLanguage())
                 .secondLanguage(adultMemberEntity.getSecondLanguage())
@@ -115,7 +116,7 @@ public class MemberMapper {
                 .termsVersion(adultMemberEntity.getTermsVersion())
                 .termsAcceptedAt(adultMemberEntity.getTermsAcceptedAt())
                 .eritreaContact(adultMemberEntity.getEritreaContact())
-                .maritalStatus(adultMemberEntity.getMaritalStatus())
+                .maritalStatus(toApiMaritalStatus(adultMemberEntity.getMaritalStatus()))
                 .numberOfChildren(adultMemberEntity.getNumberOfChildren())
                 .profession(adultMemberEntity.getProfession())
                 .spouseIdNumber(adultMemberEntity.getSpouseIdNumber())
@@ -168,7 +169,7 @@ public class MemberMapper {
                 .emergencyContactNumber(dto.getEmergencyContactNumber())
                 .contactRelation(dto.getContactRelation())
                 .eritreaContact(dto.getEritreaContact())
-                .maritalStatus(dto.getMaritalStatus())
+                .maritalStatus(MaritalStatus.from(dto.getMaritalStatus()))
                 .numberOfChildren(dto.getNumberOfChildren())
                 .firstLanguage(dto.getFirstLanguage())
                 .secondLanguage(dto.getSecondLanguage())
@@ -218,5 +219,9 @@ public class MemberMapper {
                 .map(Child_MemberEntity::getId)
                 .filter(id -> id != null)
                 .collect(Collectors.toSet());
+    }
+
+    private String toApiMaritalStatus(MaritalStatus maritalStatus) {
+        return maritalStatus != null ? maritalStatus.toApiValue() : null;
     }
 }

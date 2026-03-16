@@ -75,7 +75,7 @@ public class MembershipCardService {
         card.setMembershipNumber(member.getMembershipNumber());
         card.setMemberFullName(fullName(member));
         card.setDateOfBirth(member.getBirthday());
-        card.setChurchName(member.getChurch() != null ? member.getChurch().getChurchName() : "Church");
+        card.setChurchName(member.getChurch() != null ? member.getChurch().getChurchNameLocal() : "Church");
         card.setIssueDate(issueDate);
         card.setExpirationDate(expirationDate);
         card.setStatus(MembershipCardStatus.ACTIVE);

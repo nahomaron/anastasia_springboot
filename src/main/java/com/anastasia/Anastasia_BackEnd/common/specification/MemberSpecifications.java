@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.common.specification;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MaritalStatus;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
@@ -73,7 +74,7 @@ public class MemberSpecifications {
     }
 
     public static Specification<Adult_MemberEntity> hasMaritalStatus(String maritalStatus){
-        return (root, query, cb) -> cb.equal(root.get("maritalStatus"), maritalStatus);
+        return (root, query, cb) -> cb.equal(root.get("maritalStatus"), MaritalStatus.from(maritalStatus));
     }
 
     public static Specification<Adult_MemberEntity> hasProfession(String profession){

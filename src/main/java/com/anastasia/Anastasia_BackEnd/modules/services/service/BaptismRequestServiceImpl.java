@@ -98,7 +98,7 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
                         request.getCreatedAt(),
                         request.getReviewedAt(),
                         request.getEnglish() != null ? request.getEnglish().getFullName() : null,
-                        request.getChurch() != null ? request.getChurch().getChurchName() : request.getChurchNumber(),
+                        request.getChurch() != null ? request.getChurch().getChurchNameLocal() : request.getChurchNumber(),
                         request.getChurchNumber()
                 ))
                 .toList();

@@ -84,7 +84,7 @@ public class EventSeeder {
                     .orElse(null);
 
             if (tenantId == null) {
-                log.debug("Skipping events for church {} because tenant is missing.", church.getChurchName());
+                log.debug("Skipping events for church {} because tenant is missing.", church.getChurchNameLocal());
                 continue;
             }
 
@@ -92,7 +92,7 @@ public class EventSeeder {
                     userRepository.findAllUsersByChurchIdOptimized(church.getChurchId()));
 
             if (churchUsers.isEmpty()) {
-                log.debug("Skipping events for church {} because there are no users yet.", church.getChurchName());
+                log.debug("Skipping events for church {} because there are no users yet.", church.getChurchNameLocal());
                 continue;
             }
 

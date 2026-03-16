@@ -7,11 +7,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -31,6 +34,8 @@ and it gracefully handles invalid or missing tokens by returning a JSON error re
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
 
     private final JwtUtil jwtUtil;
 
@@ -61,21 +66,43 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
         }
+//
+//        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+//
+//            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+//
+//        var isTokenStillValid = tokenRepository.findTopByTokenOrderByIdDesc(token)
+//                    .map(t -> !t.isExpired() && !t.isRevoked()).orElse(false);
+//
+//
+//            if(jwtUtil.isTokenValid(token, userDetails) && isTokenStillValid){
+//                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+//                        userDetails, null, userDetails.getAuthorities()
+//                );
+//                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+//            }
+//        }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                var isTokenStillValid = tokenRepository.findTopByTokenOrderByIdDesc(token)
+                        .map(t -> !t.isExpired() && !t.isRevoked()).orElse(false);
 
-        var isTokenStillValid = tokenRepository.findTopByTokenOrderByIdDesc(token)
-                    .map(t -> !t.isExpired() && !t.isRevoked()).orElse(false);
-
-
-            if(jwtUtil.isTokenValid(token, userDetails) && isTokenStillValid){
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                if (jwtUtil.isTokenValid(token, userDetails) && isTokenStillValid) {
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
+            } catch (UsernameNotFoundException e) {
+                // Log a quiet, one-line warning instead of a massive error
+                log.warn("Security Exception: User '{}' not found in JwtFilter", username);
+                sendErrorResponse(response, "User not found or account disabled", HttpServletResponse.SC_UNAUTHORIZED);
+                return; // Stop the filter chain here
             }
         }
 

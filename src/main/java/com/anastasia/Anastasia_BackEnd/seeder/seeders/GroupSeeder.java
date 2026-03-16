@@ -61,7 +61,7 @@ public class GroupSeeder {
                     .orElse(null);
 
             if (tenantId == null) {
-                log.debug("Skipping church {} because tenant information is missing.", church.getChurchName());
+                log.debug("Skipping church {} because tenant information is missing.", church.getChurchNameLocal());
                 continue;
             }
 
@@ -69,7 +69,7 @@ public class GroupSeeder {
                     userRepository.findAllUsersByChurchIdOptimized(church.getChurchId()));
 
             if (churchUsers.isEmpty()) {
-                log.debug("Skipping groups for church {} because no users are linked yet.", church.getChurchName());
+                log.debug("Skipping groups for church {} because no users are linked yet.", church.getChurchNameLocal());
                 continue;
             }
 

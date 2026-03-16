@@ -19,10 +19,12 @@ import java.time.Instant;
 public class Token {
 
     @Id
-    @GeneratedValue
+    @SequenceGenerator(name = "token_seq", sequenceName = "tokens_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "token_seq")
     private int id;
 
-    @Column(length = 500)
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String token;
 
     @Column(length = 64)

@@ -1529,7 +1529,7 @@ public class MarriageCaseServiceImpl implements MarriageCaseService {
                 marriageCase.getTenantId(),
                 marriageCase.getChurchId(),
                 marriageCase.getChurch().getChurchNumber(),
-                marriageCase.getChurch().getChurchName(),
+                marriageCase.getChurch().getChurchNameLocal(),
                 marriageCase.isBothSubmitted(),
                 marriageCase.isSecretaryClearanceComplete(),
                 marriageCase.isAdminApprovalGranted(),
@@ -1915,7 +1915,7 @@ public class MarriageCaseServiceImpl implements MarriageCaseService {
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("caseReference", marriageCase.getCaseReference());
-        payload.put("churchName", marriageCase.getChurch().getChurchName());
+        payload.put("churchName", marriageCase.getChurch().getChurchNameLocal());
         payload.put("primaryLanguage", marriageCase.getPrimaryLanguage().name());
         payload.put("bride", certificatePartyMap(parties, MarriagePartyRole.BRIDE));
         payload.put("groom", certificatePartyMap(parties, MarriagePartyRole.GROOM));

@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.Ima
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MaritalStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.EducationLevel;
@@ -90,9 +91,9 @@ public class TestDataUtil {
     public static ChurchEntity createTestChurchEntity(TenantEntity tenant) {
         return ChurchEntity.builder()
                 .prefix("St.")
-                .tPrefix("ቅዱስ")
+                .prefixLocal("ቅዱስ")
                 .churchName("St. Michael Church")
-                .tChurchName("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
+                .churchNameLocal("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
                 .churchNumber("M" + uniqueSuffix())
                 .tenant(tenant)
                 .email("stmichael+" + uniqueSuffix() + "@church.org")
@@ -104,7 +105,7 @@ public class TestDataUtil {
                 .description("Test parish community")
                 .usesOurServices(true)
                 .neighborhood("Downtown")
-                .tNeighborhood("መሃል ከተማ")
+                .neighborhoodLocal("መሃል ከተማ")
                 .status(ChurchStatus.ACTIVE)
                 .address(Address.builder()
                         .addressLine1("123 Test St")
@@ -132,11 +133,11 @@ public class TestDataUtil {
     public static ChurchDTO createTestChurchDTO() {
         return ChurchDTO.builder()
                 .prefix("St.")
-                .tPrefix("ቅዱስ")
+                .prefixLocal("ቅዱስ")
                 .churchName("St. Michael Church")
-                .tChurchName("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
+                .churchNameLocal("ቤተ ክርስቲያን ቅዱስ ሚካኤል")
                 .neighborhood("Downtown")
-                .tNeighborhood("መሃል ከተማ")
+                .neighborhoodLocal("መሃል ከተማ")
                 .email("stgebriel+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
                 .phone("+1555" + randomDigits(7))
@@ -168,11 +169,11 @@ public class TestDataUtil {
     public static ChurchDTO createTestChurchDTO_B() {
         return ChurchDTO.builder()
                 .prefix("St.")
-                .tPrefix("ቅድስት")
+                .prefixLocal("ቅድስት")
                 .churchName("St. Mary Church")
-                .tChurchName("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .churchNameLocal("ቤተ ክርስቲያን ቅዱስት ማርያም")
                 .neighborhood("Midtown")
-                .tNeighborhood("ማእከል ከተማ")
+                .neighborhoodLocal("ማእከል ከተማ")
                 .email("stmary+" + uniqueSuffix() + "@church.org")
                 .diocese("North America")
                 .phone("+1555" + randomDigits(7))
@@ -240,9 +241,9 @@ public class TestDataUtil {
     public static TenantDTO createTestTenantDTO(){
         ChurchDTO church = ChurchDTO.builder()
                 .churchName("St. Mary Church")
-                .tChurchName("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .churchNameLocal("ቤተ ክርስቲያን ቅዱስት ማርያም")
                 .neighborhood("Midtown")
-                .tNeighborhood("ማእከል ከተማ")
+                .neighborhoodLocal("ማእከል ከተማ")
                 .diocese("Addis Ababa")
                 .email(uniqueEmail("church", "example.com"))
                 .phone("+1555" + randomDigits(7))
@@ -297,7 +298,7 @@ public class TestDataUtil {
                 .genderValue(MemberGender.MALE)
                 .birthday(LocalDate.of(1990, Month.DECEMBER, 3))
                 .phone("+1234567890")
-                .maritalStatus("Single")
+                .maritalStatus(MaritalStatus.MARRIED)
                 .fatherOfConfession("Abba Abraham")
                 .email(uniqueEmail("gebray.member", "gmail.com"))
                 .nationality("Eritrean")

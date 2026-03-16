@@ -26,14 +26,13 @@ public interface ChurchRepository extends JpaRepository<ChurchEntity, Long> {
             SELECT c FROM ChurchEntity c
             WHERE (:usesOurServices IS NULL OR c.usesOurServices = :usesOurServices)
               AND (
-                   :q IS NULL
-                   OR LOWER(COALESCE(c.churchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                   OR LOWER(COALESCE(c.tChurchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   LOWER(COALESCE(c.churchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.churchNameLocal, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.churchNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.prefix, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                   OR LOWER(COALESCE(c.tPrefix, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.prefixLocal, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.neighborhood, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                   OR LOWER(COALESCE(c.tNeighborhood, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.neighborhoodLocal, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.diocese, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.denomination, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(c.address.city, '')) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -41,6 +40,12 @@ public interface ChurchRepository extends JpaRepository<ChurchEntity, Long> {
               )
             """)
     Page<ChurchEntity> search(@Param("q") String query, @Param("usesOurServices") Boolean usesOurServices, Pageable pageable);
+
+    @Query("""
+            SELECT c FROM ChurchEntity c
+            WHERE (:usesOurServices IS NULL OR c.usesOurServices = :usesOurServices)
+            """)
+    Page<ChurchEntity> findAllFiltered(@Param("usesOurServices") Boolean usesOurServices, Pageable pageable);
 
     Optional<ChurchEntity> findByChurchNumberAndUsesOurServicesTrue(String churchNumber);
 

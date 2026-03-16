@@ -124,7 +124,9 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public Page<StaffResponse> list(String query, StaffEmploymentStatus status, Pageable pageable) {
         UUID tenantId = requireTenantId();
-        return staffRepository.searchTenantStaff(tenantId, normalizeQuery(query), status, pageable)
+        String normalizedQuery = normalizeQuery(query);
+        boolean thresholdBlank = normalizedQuery == null || normalizedQuery.isBlank();
+        return staffRepository.searchTenantStaff(tenantId, normalizedQuery, thresholdBlank, status, pageable)
                 .map(this::toResponse);
     }
 
@@ -249,7 +251,7 @@ public class StaffServiceImpl implements StaffService {
                 staff.getUser().getPhoneNumber(),
                 staff.getChurch() == null ? null : staff.getChurch().getChurchId(),
                 staff.getChurchNumber(),
-                staff.getChurch() == null ? null : staff.getChurch().getChurchName(),
+                staff.getChurch() == null ? null : staff.getChurch().getChurchNameLocal(),
                 staff.getPositionType(),
                 staff.getEmploymentStatus(),
                 staff.getDepartment(),

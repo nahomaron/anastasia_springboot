@@ -10,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchR
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.common.utils.ChurchNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -104,7 +105,7 @@ public class ChurchServiceImpl implements ChurchService{
         churchEntity.setTenant(tenant);
         applyStatusLifecycle(churchEntity, null);
 
-        churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchName(), 5));
+        churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchNameLocal(), 5));
         if (churchEntity.getProfilePicture() != null) {
             stampProfilePicture(churchEntity, churchEntity.getProfilePicture());
         }
@@ -121,6 +122,9 @@ public class ChurchServiceImpl implements ChurchService{
     @Override
     public Page<ChurchResponse> findAll(Pageable pageable, String query, Boolean usesOurServices) {
         String normalizedQuery = (query == null || query.isBlank()) ? null : query.trim();
+        if (normalizedQuery == null) {
+            return churchRepository.findAllFiltered(usesOurServices, pageable).map(this::convertToResponse);
+        }
         return churchRepository.search(normalizedQuery, usesOurServices, pageable).map(this::convertToResponse);
     }
 
@@ -200,7 +204,7 @@ public class ChurchServiceImpl implements ChurchService{
     }
 
     private String generateUniqueChurchNumber(String churchName, int length) {
-        String baseLetter = resolveChurchNumberPrefix(churchName);
+        String baseLetter = ChurchNumberUtils.derivePrefix(churchName);
 
         String churchNumber;
 
@@ -212,11 +216,11 @@ public class ChurchServiceImpl implements ChurchService{
 
     private void mergeChurch(ChurchEntity target, ChurchEntity incoming) {
         target.setPrefix(incoming.getPrefix());
-        target.setTPrefix(incoming.getTPrefix());
+        target.setPrefixLocal(incoming.getPrefixLocal());
         target.setChurchName(incoming.getChurchName());
-        target.setTChurchName(incoming.getTChurchName());
+        target.setChurchNameLocal(incoming.getChurchNameLocal());
         target.setNeighborhood(incoming.getNeighborhood());
-        target.setTNeighborhood(incoming.getTNeighborhood());
+        target.setNeighborhoodLocal(incoming.getNeighborhoodLocal());
         target.setDiocese(incoming.getDiocese());
         target.setAddress(incoming.getAddress());
         target.setEmail(incoming.getEmail());
@@ -269,26 +273,6 @@ public class ChurchServiceImpl implements ChurchService{
         profilePicture.setImageAssetType(ImageAssetType.CHURCH);
         profilePicture.setOwnerId(church.getTenant().getId());
         profilePicture.setTenantId(church.getTenant().getId());
-    }
-
-    private String resolveChurchNumberPrefix(String churchName) {
-        if (!StringUtils.hasText(churchName)) {
-            return null;
-        }
-
-        String normalized = churchName.trim().toUpperCase();
-        if (normalized.startsWith("ST.") || normalized.startsWith("ST ")) {
-            normalized = normalized.substring(3).trim();
-        }
-
-        String lettersOnly = normalized.replaceAll("[^A-Z]", "");
-        if (!StringUtils.hasText(lettersOnly)) {
-            return "CH";
-        }
-        if (lettersOnly.length() == 1) {
-            return lettersOnly + "H";
-        }
-        return lettersOnly.substring(0, 2);
     }
 
     private String defaultTimezone(String candidate, String fallback) {

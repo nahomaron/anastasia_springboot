@@ -56,7 +56,7 @@ class ChurchServiceUnitTest {
             return ChurchResponse.builder()
                     .churchId(mappedChurch.getChurchId())
                     .churchNumber(mappedChurch.getChurchNumber())
-                    .churchName(mappedChurch.getChurchName())
+                    .churchName(mappedChurch.getChurchNameLocal())
                     .diocese(mappedChurch.getDiocese())
                     .email(mappedChurch.getEmail())
                     .phone(mappedChurch.getPhone())
@@ -71,7 +71,7 @@ class ChurchServiceUnitTest {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<ChurchEntity> entityPage = new PageImpl<>(List.of(church));
         ChurchResponse dto = ChurchResponse.builder()
-                .churchName(church.getChurchName())
+                .churchName(church.getChurchNameLocal())
                 .diocese(church.getDiocese())
                 .email(church.getEmail())
                 .phone(church.getPhone())
@@ -97,14 +97,14 @@ class ChurchServiceUnitTest {
         when(churchRepository.save(any(ChurchEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ChurchEntity update = TestDataUtil.createTestChurchEntity(tenant);
-        update.setChurchName("Updated Church");
+        update.setChurchNameLocal("Updated Church");
         update.setStatus(ChurchStatus.ACTIVE);
 
         ChurchResponse response = churchService.updateChurch(1L, update);
 
-        assertThat(response.getChurchName()).isEqualTo("Updated Church");
+        assertThat(response.getChurchNameLocal()).isEqualTo("Updated Church");
         verify(churchRepository).save(church);
-        assertThat(church.getChurchName()).isEqualTo("Updated Church");
+        assertThat(church.getChurchNameLocal()).isEqualTo("Updated Church");
         assertThat(church.getChurchNumber()).isNotBlank();
     }
 

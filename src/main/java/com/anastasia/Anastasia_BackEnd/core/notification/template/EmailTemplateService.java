@@ -20,7 +20,7 @@ public class EmailTemplateService {
     private final EmailNotificationService emailNotificationService;
 
     private final String appName;
-    private final String defaultChurchName;
+    private final String defaulchurchNameLocal;
     private final String appLogoUrl;
     private final String churchLogoUrl;
     private final String supportEmail;
@@ -33,7 +33,7 @@ public class EmailTemplateService {
                                 MessageSource messageSource,
                                 EmailNotificationService emailNotificationService,
                                 @Value("${notification.email.template.app-name:Anastasia}") String appName,
-                                @Value("${notification.email.template.church-name:Your Church}") String defaultChurchName,
+                                @Value("${notification.email.template.church-name:Your Church}") String defaulchurchNameLocal,
                                 @Value("${notification.email.template.app-logo-url:}") String appLogoUrl,
                                 @Value("${notification.email.template.church-logo-url:}") String churchLogoUrl,
                                 @Value("${notification.email.template.support-email:support@anastasia.app}") String supportEmail,
@@ -45,7 +45,7 @@ public class EmailTemplateService {
         this.messageSource = messageSource;
         this.emailNotificationService = emailNotificationService;
         this.appName = appName;
-        this.defaultChurchName = defaultChurchName;
+        this.defaulchurchNameLocal = defaulchurchNameLocal;
         this.appLogoUrl = appLogoUrl;
         this.churchLogoUrl = churchLogoUrl;
         this.supportEmail = supportEmail;
@@ -101,7 +101,7 @@ public class EmailTemplateService {
         }
 
         merged.putIfAbsent("appName", appName);
-        merged.putIfAbsent("churchName", defaultChurchName);
+        merged.putIfAbsent("churchName", defaulchurchNameLocal);
         merged.putIfAbsent("appLogoUrl", appLogoUrl);
         merged.putIfAbsent("churchLogoUrl", churchLogoUrl);
         merged.putIfAbsent("supportEmail", supportEmail);
@@ -132,7 +132,7 @@ public class EmailTemplateService {
     }
 
     private String fallbackSubject(EmailTemplate template, Map<String, Object> model) {
-        String churchName = String.valueOf(model.getOrDefault("churchName", defaultChurchName));
+        String churchName = String.valueOf(model.getOrDefault("churchName", defaulchurchNameLocal));
         return appName + " - " + churchName + " - " + template.name().replace('_', ' ');
     }
 

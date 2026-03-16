@@ -20,25 +20,25 @@ public class ChurchDTO {
 
     private String prefix;
 
-    @JsonProperty("tPrefix")
-    @JsonAlias("TPrefix")
-    private String tPrefix;
+    @JsonProperty("prefixLocal")
+    @JsonAlias("PrefixLocal")
+    private String prefixLocal;
 
     @NotBlank(message = "{validation.church.name.required}")
     private String churchName;
 
     @NotBlank(message = "{validation.church.localName.required}")
-    @JsonProperty("tChurchName")
-    @JsonAlias("TChurchName")
-    private String tChurchName;
+    @JsonProperty("churchNameLocal")
+    @JsonAlias("ChurchNameLocal")
+    private String churchNameLocal;
 
     @NotBlank(message = "{validation.church.neighborhood.required}")
     private String neighborhood;
 
     @NotBlank(message = "{validation.church.localNeighborhood.required}")
-    @JsonProperty("tNeighborhood")
-    @JsonAlias("TNeighborhood")
-    private String tNeighborhood;
+    @JsonProperty("neighborhoodLocal")
+    @JsonAlias("NeighborhoodLocal")
+    private String neighborhoodLocal;
 
     @NotBlank(message = "{validation.church.diocese.required}")
     private String diocese;

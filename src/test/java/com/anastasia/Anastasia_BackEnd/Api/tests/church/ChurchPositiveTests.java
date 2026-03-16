@@ -48,7 +48,7 @@ class ChurchPositiveTests extends BaseApiTest {
                 .isNotNull();
 
         ChurchDTO updatePayload = ChurchDataFactory.newValidChurch();
-        updatePayload.setChurchName(updatePayload.getChurchName() + " Updated");
+        updatePayload.setChurchNameLocal(updatePayload.getChurchNameLocal() + " Updated");
 
         Response updateResponse = churchService.updateChurch(adminSpec, churchId, updatePayload);
         assertThat(updateResponse.statusCode()).isIn(200, 202);

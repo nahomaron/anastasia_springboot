@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.specification;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MaritalStatus;
 import com.anastasia.Anastasia_BackEnd.common.specification.MemberSpecifications;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,7 +46,7 @@ class MemberSpecificationTest {
         Path<String> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
 
-        Mockito.<Path<String>>when(root.get("status")).thenReturn(path);
+        Mockito.<Path<String>>when(root.get("statusValue")).thenReturn(path);
         when(cb.equal(path, "ACTIVE")).thenReturn(predicate);
 
         Specification<Adult_MemberEntity> spec = MemberSpecifications.hasStatus("ACTIVE");
@@ -157,11 +158,11 @@ class MemberSpecificationTest {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         Root<Adult_MemberEntity> root = mock(Root.class);
-        Path<String> maritalStatusPath = mock(Path.class);
+        Path<MaritalStatus> maritalStatusPath = mock(Path.class);
         Predicate expected = mock(Predicate.class);
 
-        Mockito.<Path<String>>when(root.get("maritalStatus")).thenReturn(maritalStatusPath);
-        when(cb.equal(maritalStatusPath, "Married")).thenReturn(expected);
+        Mockito.<Path<MaritalStatus>>when(root.get("maritalStatus")).thenReturn(maritalStatusPath);
+        when(cb.equal(maritalStatusPath, MaritalStatus.MARRIED)).thenReturn(expected);
 
         Specification<Adult_MemberEntity> spec = MemberSpecifications.hasMaritalStatus("Married");
         Predicate actual = spec.toPredicate(root, query, cb);

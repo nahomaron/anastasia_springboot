@@ -91,11 +91,8 @@ public class Adult_MemberEntity extends BaseMember {
     private String eritreaContact;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "marital_status", nullable = false, length = 24)
-    private MaritalStatus maritalStatusValue;
-
-    @Transient
-    private String maritalStatus;
+    @Column(nullable = false, length = 24)
+    private MaritalStatus maritalStatus;
 
     @Transient
     private Integer numberOfChildren;
@@ -146,23 +143,6 @@ public class Adult_MemberEntity extends BaseMember {
             priestApprovedAt = null;
             priestApprovedBy = null;
         }
-    }
-
-    public String getMaritalStatus() {
-        return maritalStatusValue != null ? maritalStatusValue.name() : null;
-    }
-
-    public void setMaritalStatus(String maritalStatus) {
-        this.maritalStatus = maritalStatus;
-        this.maritalStatusValue = MaritalStatus.from(maritalStatus);
-    }
-
-    public MaritalStatus getMaritalStatusEnum() {
-        return maritalStatusValue;
-    }
-
-    public void setMaritalStatusEnum(MaritalStatus maritalStatus) {
-        this.maritalStatusValue = maritalStatus;
     }
 
     @Transient

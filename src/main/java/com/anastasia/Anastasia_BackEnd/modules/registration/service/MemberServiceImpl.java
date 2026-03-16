@@ -361,7 +361,9 @@ public class MemberServiceImpl implements MemberService {
             Optional.ofNullable(request.getEmergencyContactNumber()).ifPresent(memberEntity::setEmergencyContactNumber);
             Optional.ofNullable(request.getContactRelation()).ifPresent(memberEntity::setContactRelation);
             Optional.ofNullable(request.getEritreaContact()).ifPresent(memberEntity::setEritreaContact);
-            Optional.ofNullable(request.getMaritalStatus()).ifPresent(memberEntity::setMaritalStatus);
+            Optional.ofNullable(request.getMaritalStatus())
+                    .map(MaritalStatus::from)
+                    .ifPresent(memberEntity::setMaritalStatus);
             Optional.of(request.getNumberOfChildren()).ifPresent(memberEntity::setNumberOfChildren); // primitive int
 
             Optional.ofNullable(request.getFirstLanguage()).ifPresent(memberEntity::setFirstLanguage);
@@ -762,7 +764,7 @@ public class MemberServiceImpl implements MemberService {
                 .linkedToMemberProfile(true)
                 .membershipNumber(member.getMembershipNumber())
                 .sortOrder(0)
-                .maritalStatus(member.getMaritalStatus())
+                .maritalStatus(member.getMaritalStatus() != null ? member.getMaritalStatus().toApiValue() : null)
                 .active(true)
                 .build();
     }
@@ -798,7 +800,7 @@ public class MemberServiceImpl implements MemberService {
                     .linkedToMemberProfile(true)
                     .membershipNumber(member.getMembershipNumber())
                     .sortOrder(relationship.getSortOrder())
-                    .maritalStatus(member.getMaritalStatus())
+                    .maritalStatus(member.getMaritalStatus() != null ? member.getMaritalStatus().toApiValue() : null)
                     .active(relationship.isActive())
                     .build();
         }

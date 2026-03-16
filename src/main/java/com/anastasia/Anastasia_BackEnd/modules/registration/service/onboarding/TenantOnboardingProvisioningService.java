@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding;
 
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.anastasia.Anastasia_BackEnd.common.utils.ChurchNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -196,7 +197,7 @@ public class TenantOnboardingProvisioningService {
             church.getProfilePicture().setImageAssetType(ImageAssetType.CHURCH);
             church.getProfilePicture().setOwnerId(tenant.getId());
         }
-        church.setChurchNumber(generateUniqueChurchNumber(church.getChurchName(), 5));
+        church.setChurchNumber(generateUniqueChurchNumber(church.getChurchNameLocal(), 5));
         ChurchEntity savedChurch = churchRepository.save(church);
         tenant.assignChurch(savedChurch);
         tenantRepository.save(tenant);
@@ -256,8 +257,8 @@ public class TenantOnboardingProvisioningService {
     private String resolveDisplayName(TenantOnboardingSessionEntity session) {
         DraftTenantPayload draft = parseDraft(session);
         ChurchDTO church = draft.church();
-        if (session.getTenantType() == TenantType.CHURCH && church != null && StringUtils.hasText(church.getChurchName())) {
-            return church.getChurchName().trim();
+        if (session.getTenantType() == TenantType.CHURCH && church != null && StringUtils.hasText(church.getChurchNameLocal())) {
+            return church.getChurchNameLocal().trim();
         }
         return session.getOwnerName().trim();
     }
@@ -280,18 +281,7 @@ public class TenantOnboardingProvisioningService {
     }
 
     private String generateUniqueChurchNumber(String churchName, int length) {
-        String baseLetter = "CH";
-        if (churchName != null) {
-            String trimmed = churchName.trim();
-            if (trimmed.length() >= 2) {
-                if (trimmed.startsWith("st.") && trimmed.length() >= 5) {
-                    baseLetter = trimmed.substring(3, 5).toUpperCase();
-                } else {
-                    baseLetter = trimmed.substring(0, 2).toUpperCase();
-                }
-            }
-        }
-
+        String baseLetter = ChurchNumberUtils.derivePrefix(churchName);
         String churchNumber;
         do {
             churchNumber = securityUtils.generateUniqueIDNumber(length, baseLetter);

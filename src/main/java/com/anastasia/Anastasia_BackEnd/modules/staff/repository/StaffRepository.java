@@ -30,7 +30,7 @@ public interface StaffRepository extends JpaRepository<StaffEntity, Long> {
           AND (:status IS NULL OR s.employmentStatus = :status)
           AND (
                 :q IS NULL
-                OR TRIM(:q) = ''
+                OR :qBlank = true
                 OR LOWER(COALESCE(s.staffNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR LOWER(COALESCE(u.fullName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -41,6 +41,7 @@ public interface StaffRepository extends JpaRepository<StaffEntity, Long> {
     Page<StaffEntity> searchTenantStaff(
             @Param("tenantId") UUID tenantId,
             @Param("q") String query,
+            @Param("qBlank") boolean queryBlank,
             @Param("status") StaffEmploymentStatus status,
             Pageable pageable
     );

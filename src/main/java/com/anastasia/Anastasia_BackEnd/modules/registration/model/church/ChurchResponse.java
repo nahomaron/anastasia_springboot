@@ -24,7 +24,7 @@ public class ChurchResponse {
 
     private String prefix;
 
-    private String tPrefix;
+    private String prefixLocal;
 
     private ImageAssetDTO profilePicture;
 
@@ -34,9 +34,9 @@ public class ChurchResponse {
     @NotBlank(message = "Neighborhood is required")
     private String neighborhood;
 
-    private String tChurchName;
+    private String churchNameLocal;
 
-    private String tNeighborhood;
+    private String neighborhoodLocal;
 
     @NotBlank(message = "Diocese is required")
     private String diocese;

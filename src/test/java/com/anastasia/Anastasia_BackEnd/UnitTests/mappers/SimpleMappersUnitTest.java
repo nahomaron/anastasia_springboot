@@ -94,10 +94,10 @@ class SimpleMappersUnitTest {
         ChurchEntity entity = ChurchEntity.builder()
                 .churchName("St. Mary")
                 .prefix("St.")
-                .tPrefix("ቅድስት")
-                .tChurchName("ቤተ ክርስቲያን ቅዱስት ማርያም")
+                .prefixLocal("ቅድስት")
+                .churchNameLocal("ቤተ ክርስቲያን ቅዱስት ማርያም")
                 .neighborhood("Piassa")
-                .tNeighborhood("ፒያሳ")
+                .neighborhoodLocal("ፒያሳ")
                 .diocese("Addis Diocese")
                 .email("church@example.com")
                 .phone("+251900000000")
@@ -119,12 +119,12 @@ class SimpleMappersUnitTest {
                 .build();
 
         ChurchDTO dto = churchMapper.churchEntityToDTO(entity);
-        assertThat(dto.getChurchName()).isEqualTo("St. Mary");
         assertThat(dto.getPrefix()).isEqualTo("St.");
-        assertThat(dto.getTPrefix()).isEqualTo("ቅድስት");
-        assertThat(dto.getTChurchName()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
+        assertThat(dto.getPrefixLocal()).isEqualTo("ቅዱስ");
+        assertThat(dto.getChurchName()).isEqualTo("St. Mary");
+        assertThat(dto.getChurchNameLocal()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
         assertThat(dto.getNeighborhood()).isEqualTo("Piassa");
-        assertThat(dto.getTNeighborhood()).isEqualTo("ፒያሳ");
+        assertThat(dto.getNeighborhoodLocal()).isEqualTo("ፒያሳ");
         assertThat(dto.getDiocese()).isEqualTo("Addis Diocese");
         assertThat(dto.getEmail()).isEqualTo("church@example.com");
         assertThat(dto.getAddress().getCity()).isEqualTo("Addis Ababa");
@@ -136,10 +136,12 @@ class SimpleMappersUnitTest {
         assertThat(dto.getFacebook()).isEqualTo("facebook.com/stmary");
 
         ChurchEntity mappedBack = churchMapper.churchDTOToEntity(dto);
+        assertThat(mappedBack.getPrefix()).isEqualTo("St.");
         assertThat(mappedBack.getChurchName()).isEqualTo("St. Mary");
-        assertThat(mappedBack.getTPrefix()).isEqualTo("ቅድስት");
-        assertThat(mappedBack.getTChurchName()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
-        assertThat(mappedBack.getTNeighborhood()).isEqualTo("ፒያሳ");
+        assertThat(mappedBack.getPrefixLocal()).isEqualTo("ቅዱስ");
+        assertThat(mappedBack.getChurchNameLocal()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
+        assertThat(mappedBack.getNeighborhood()).isEqualTo("Piassa");
+        assertThat(mappedBack.getNeighborhoodLocal()).isEqualTo("ፒያሳ");
         assertThat(mappedBack.getEmail()).isEqualTo("church@example.com");
         assertThat(mappedBack.getPhone()).isEqualTo("+251900000000");
         assertThat(mappedBack.getInstagram()).isEqualTo("instagram.com/stmary");
@@ -150,9 +152,9 @@ class SimpleMappersUnitTest {
         String json = """
                 {
                   "churchName": "St. Michael Church",
-                  "tChurchName": "ሚካኤል ቤተ ክርስቲያን",
+                  "churchNameLocal": "ሚካኤል ቤተ ክርስቲያን",
                   "neighborhood": "Akria",
-                  "tNeighborhood": "ኣኽርያ",
+                  "neighborhoodLocal": "ኣኽርያ",
                   "diocese": "Addis Ababa",
                   "email": "contact@stmichael.org"
                 }
@@ -160,8 +162,8 @@ class SimpleMappersUnitTest {
 
         ChurchDTO dto = objectMapper.readValue(json, ChurchDTO.class);
 
-        assertThat(dto.getTChurchName()).isEqualTo("ሚካኤል ቤተ ክርስቲያን");
-        assertThat(dto.getTNeighborhood()).isEqualTo("ኣኽርያ");
+        assertThat(dto.getChurchNameLocal()).isEqualTo("ሚካኤል ቤተ ክርስቲያን");
+        assertThat(dto.getNeighborhoodLocal()).isEqualTo("ኣኽርያ");
     }
 
     @Test

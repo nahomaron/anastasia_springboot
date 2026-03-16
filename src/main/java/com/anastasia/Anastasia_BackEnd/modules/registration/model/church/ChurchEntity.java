@@ -54,10 +54,11 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     private String prefix;
 
-    private String tPrefix;
+    @Column(name = "prefix_local")
+    private String prefixLocal;
 
     @Column(name = "church_name_local", nullable = false)
-    private String tChurchName;
+    private String churchNameLocal;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "avatar_id", referencedColumnName = "id")
@@ -69,8 +70,8 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
     @Column(nullable = false)
     private String neighborhood;
 
-    @Column(nullable = false)
-    private String tNeighborhood;
+    @Column(name = "neighborhood_local", nullable = false)
+    private String neighborhoodLocal;
 
     @Column(nullable = false)
     private String diocese;
@@ -166,9 +167,9 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     public boolean isComplete() {
         return hasText(churchName)
-                && hasText(tChurchName)
+                && hasText(churchNameLocal)
                 && hasText(neighborhood)
-                && hasText(tNeighborhood)
+                && hasText(neighborhoodLocal)
                 && hasText(diocese)
                 && hasText(email)
                 && hasText(phone)

@@ -124,7 +124,7 @@ class ChurchControllerIT extends PostgresTestContainer {
                         .content(objectMapper.writeValueAsString(testChurch)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.churchNumber", notNullValue()))
-                .andExpect(jsonPath("$.churchName", is(testChurch.getChurchName())));
+                .andExpect(jsonPath("$.churchName", is(testChurch.getChurchNameLocal())));
     }
 
     @Test
@@ -161,7 +161,7 @@ class ChurchControllerIT extends PostgresTestContainer {
       String churchNum = churchService.createChurch(churchEntity).getChurchNumber();
 
       ChurchEntity church01 = churchRepository.findByChurchNumber(churchNum).orElse(null);
-      churchDTO1.setChurchName("Updated Church Name");
+      churchDTO1.setChurchNameLocal("Updated Church Name");
 
       assert church01 != null;
       mockMvc.perform(put("/api/v1/churches/{id}", church01.getChurchId())

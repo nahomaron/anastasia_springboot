@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberL
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MaritalStatus;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -46,7 +47,7 @@ class MemberMapperUnitTest {
                 .emergencyContactNumber("+251922222222")
                 .contactRelation("Brother")
                 .eritreaContact("+251933333333")
-                .maritalStatus("Single")
+                .maritalStatus(MaritalStatus.DIVORCED)
                 .numberOfChildren(0)
                 .firstLanguage("Amharic")
                 .secondLanguage("English")
@@ -74,6 +75,7 @@ class MemberMapperUnitTest {
         assertThat(dto.getFirstName()).isEqualTo("John");
         assertThat(dto.getMotherName()).isEqualTo("Jane");
         assertThat(dto.getProfession()).isEqualTo("Engineer");
+        assertThat(dto.getMaritalStatus()).isEqualTo("Divorced");
         assertThat(dto.getAddress().getCity()).isEqualTo("Addis");
     }
 
@@ -134,6 +136,7 @@ class MemberMapperUnitTest {
         assertThat(entity.getChurchNumber()).isEqualTo("CH54321");
         assertThat(entity.getFirstName()).isEqualTo("Hanna");
         assertThat(entity.getProfession()).isEqualTo("Designer");
+        assertThat(entity.getMaritalStatus()).isEqualTo(MaritalStatus.MARRIED);
         assertThat(entity.getAddress().getCity()).isEqualTo("Asmara");
     }
 

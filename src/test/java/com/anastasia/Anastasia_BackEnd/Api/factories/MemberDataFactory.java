@@ -4,7 +4,6 @@ import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberDTO;
-
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -38,7 +37,7 @@ public final class MemberDataFactory {
                 .emergencyContactNumber("+1408777" + (1000 + (int) (Math.random() * 8999)))
                 .contactRelation("Brother")
                 .eritreaContact("+291711111")
-                .maritalStatus("Single")
+                .maritalStatus("Married")
                 .numberOfChildren(0)
                 .firstLanguage("Tigrinya")
                 .secondLanguage("English")

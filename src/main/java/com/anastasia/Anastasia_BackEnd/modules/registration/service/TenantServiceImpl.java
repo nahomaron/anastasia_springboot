@@ -27,6 +27,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
+import com.anastasia.Anastasia_BackEnd.common.utils.ChurchNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
@@ -349,18 +350,7 @@ public class TenantServiceImpl implements TenantService {
     }
 
     private String generateUniqueChurchNumber(String churchName, int length) {
-        String baseLetter = "CH";
-
-        if (churchName != null) {
-            String trimmed = churchName.trim();
-            if (trimmed.length() >= 2) {
-                if (trimmed.startsWith("st.") && trimmed.length() >= 5) {
-                    baseLetter = trimmed.substring(3, 5).toUpperCase();
-                } else {
-                    baseLetter = trimmed.substring(0, 2).toUpperCase();
-                }
-            }
-        }
+        String baseLetter = ChurchNumberUtils.derivePrefix(churchName);
 
         String churchNumber;
         do {
@@ -375,8 +365,8 @@ public class TenantServiceImpl implements TenantService {
             return tenantDTO.getDisplayName().trim();
         }
         if (tenantDTO.getTenantType() == TenantType.CHURCH && tenantDTO.getChurch() != null
-                && StringUtils.hasText(tenantDTO.getChurch().getChurchName())) {
-            return tenantDTO.getChurch().getChurchName().trim();
+                && StringUtils.hasText(tenantDTO.getChurch().getChurchNameLocal())) {
+            return tenantDTO.getChurch().getChurchNameLocal().trim();
         }
         return tenantDTO.getOwnerName().trim();
     }

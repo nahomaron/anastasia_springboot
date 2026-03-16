@@ -923,7 +923,7 @@ public class UserServiceImpl implements UserService {
                 nullToEmpty(member.getGrandFatherName())
         ).trim();
 
-        String churchName = member.getChurch() != null ? member.getChurch().getChurchName() : null;
+        String churchName = member.getChurch() != null ? member.getChurch().getChurchNameLocal() : null;
 
         return MembershipSummary.builder()
                 .memberId(member.getMembershipNumber())
@@ -966,7 +966,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private Specification<UserEntity> byTenant(UUID tenantId) {
-        return (root, query, cb) -> cb.equal(root.get("tenantId"), tenantId);
+        return (root, query, cb) -> cb.equal(root.get("affiliatedTenantId"), tenantId);
     }
 
     private Specification<UserEntity> searchByQuery(String queryText) {

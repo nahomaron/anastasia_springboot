@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.Educati
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberGender;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MaritalStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -95,7 +96,7 @@ public class MemberSeeder {
                         .emergencyContactNumber("+2917" + faker.number().digits(7))
                         .contactRelation(faker.options().option("Brother", "Sister", "Uncle", "Aunt", "Friend"))
                         .eritreaContact("+2917" + faker.number().digits(7))
-                        .maritalStatus(faker.options().option("Single", "Married", "Divorced", "Widowed"))
+                        .maritalStatus(faker.options().option(MaritalStatus.MARRIED, MaritalStatus.SINGLE))
                         .numberOfChildren(faker.number().numberBetween(0, 4))
                         .firstLanguage(faker.nation().language())
                         .termsAccepted(true)

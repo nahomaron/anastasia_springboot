@@ -255,7 +255,7 @@ public class TenantAdminNotificationService {
                 props.put("caseReference", marriageCase.getCaseReference());
                 props.put("status", marriageCase.getStatus());
                 props.put("churchId", marriageCase.getChurchId());
-                props.put("churchName", marriageCase.getChurch() == null ? null : marriageCase.getChurch().getChurchName());
+                props.put("churchName", marriageCase.getChurch() == null ? null : marriageCase.getChurch().getChurchNameLocal());
                 props.put("tenantId", tenantId);
                 props.put("submittedByUserId", submittedByUserId);
                 props.put("stageLabel", stageLabel);

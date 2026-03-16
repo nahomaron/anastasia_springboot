@@ -125,9 +125,11 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         var reloaded = churchRepository.findById(church.getChurchId())
                 .orElseThrow();
 
-        assertThat(reloaded.getChurchName()).isEqualTo(updatedDto.getChurchName());
-        assertThat(reloaded.getTChurchName()).isEqualTo(updatedDto.getTChurchName());
-        assertThat(reloaded.getTNeighborhood()).isEqualTo(updatedDto.getTNeighborhood());
+        assertThat(reloaded.getChurchNameLocal()).isEqualTo(updatedDto.getChurchNameLocal());
+        assertThat(reloaded.getPrefix()).isEqualTo(updatedDto.getPrefix());
+        assertThat(reloaded.getPrefixLocal()).isEqualTo(updatedDto.getPrefixLocal());
+        assertThat(reloaded.getNeighborhood()).isEqualTo(updatedDto.getNeighborhood());
+        assertThat(reloaded.getNeighborhoodLocal()).isEqualTo(updatedDto.getNeighborhoodLocal());
         assertThat(reloaded.getEmail()).isEqualTo(updatedDto.getEmail());
         assertThat(reloaded.getFacebook()).isEqualTo(updatedDto.getFacebook());
     }

@@ -64,16 +64,16 @@ public abstract class BaseMember extends Auditable {
     @Column(nullable = false)
     private String mothersFather;
 
-    @Column(nullable = false)
+    @Column(name = "first_name_t", nullable = false)
     private String firstNameT;
 
-    @Column(nullable = false)
+    @Column(name = "father_name_t", nullable = false)
     private String fatherNameT;
 
-    @Column(nullable = false)
+    @Column(name = "grand_father_name_t", nullable = false)
     private String grandFatherNameT;
 
-    @Column(nullable = false)
+    @Column(name = "mother_full_name_t", nullable = false)
     private String motherFullNameT;
 
     @Enumerated(EnumType.STRING)

@@ -235,9 +235,9 @@ public class MemberDashboardService {
         }
 
         return java.util.stream.Stream.of(
-                        trimToNull(church.getPrefix()),
-                        trimToNull(church.getChurchName()),
-                        trimToNull(church.getNeighborhood())
+                        trimToNull(church.getPrefixLocal()),
+                        trimToNull(church.getChurchNameLocal()),
+                        trimToNull(church.getNeighborhoodLocal())
                 )
                 .filter(value -> value != null && !value.isBlank())
                 .reduce((a, b) -> a + " " + b)
