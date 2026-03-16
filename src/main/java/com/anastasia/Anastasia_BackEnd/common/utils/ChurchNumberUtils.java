@@ -18,6 +18,7 @@ public final class ChurchNumberUtils {
         if (normalized.length() >= 3 && normalized.regionMatches(true, 0, "st.", 0, 3)) {
             normalized = normalized.substring(3).trim();
         }
+        normalized = normalized.replaceAll("\\s+", "");
 
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < normalized.length() && builder.length() < 2; i++) {
