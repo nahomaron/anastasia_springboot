@@ -23,8 +23,7 @@ public class Token {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "token_seq")
     private int id;
 
-    @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 500)
     private String token;
 
     @Column(length = 64)
