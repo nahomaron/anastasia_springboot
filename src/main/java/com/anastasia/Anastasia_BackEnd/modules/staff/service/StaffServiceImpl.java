@@ -125,8 +125,8 @@ public class StaffServiceImpl implements StaffService {
     public Page<StaffResponse> list(String query, StaffEmploymentStatus status, Pageable pageable) {
         UUID tenantId = requireTenantId();
         String normalizedQuery = normalizeQuery(query);
-        boolean thresholdBlank = normalizedQuery == null || normalizedQuery.isBlank();
-        return staffRepository.searchTenantStaff(tenantId, normalizedQuery, thresholdBlank, status, pageable)
+        String queryLike = normalizedQuery == null ? null : "%" + normalizedQuery.toLowerCase(Locale.ROOT) + "%";
+        return staffRepository.searchTenantStaff(tenantId, queryLike, status, pageable)
                 .map(this::toResponse);
     }
 

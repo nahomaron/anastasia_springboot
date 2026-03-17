@@ -52,7 +52,7 @@ CREATE TABLE user_two_factor_backup_codes (
 CREATE TABLE group_join_requests (
     id BIGSERIAL PRIMARY KEY,
     tenant_id UUID NOT NULL,
-    group_id UUID NOT NULL,
+    group_id BIGINT NOT NULL,
     requester_id UUID NOT NULL,
     status VARCHAR(32) NOT NULL,
     decision_note VARCHAR(500),
@@ -96,7 +96,7 @@ CREATE TABLE calendar_parish_events (
     entry_id UUID PRIMARY KEY,
     ministry VARCHAR(255),
     location VARCHAR(255),
-    event_id UUID,
+    event_id BIGINT,
     CONSTRAINT fk_calendar_parish_events_entry FOREIGN KEY (entry_id) REFERENCES calendar_entries(id),
     CONSTRAINT fk_calendar_parish_events_event FOREIGN KEY (event_id) REFERENCES events(event_id)
 );

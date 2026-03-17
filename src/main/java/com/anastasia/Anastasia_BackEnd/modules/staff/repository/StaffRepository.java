@@ -29,19 +29,17 @@ public interface StaffRepository extends JpaRepository<StaffEntity, Long> {
         WHERE s.tenant.id = :tenantId
           AND (:status IS NULL OR s.employmentStatus = :status)
           AND (
-                :q IS NULL
-                OR :qBlank = true
-                OR LOWER(COALESCE(s.staffNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(COALESCE(u.fullName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(COALESCE(s.department, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                :queryLike IS NULL
+                OR LOWER(COALESCE(s.staffNumber, '')) LIKE :queryLike
+                OR LOWER(COALESCE(u.fullName, '')) LIKE :queryLike
+                OR LOWER(COALESCE(u.email, '')) LIKE :queryLike
+                OR LOWER(COALESCE(s.department, '')) LIKE :queryLike
           )
         ORDER BY u.fullName
     """)
     Page<StaffEntity> searchTenantStaff(
             @Param("tenantId") UUID tenantId,
-            @Param("q") String query,
-            @Param("qBlank") boolean queryBlank,
+            @Param("queryLike") String queryLike,
             @Param("status") StaffEmploymentStatus status,
             Pageable pageable
     );
