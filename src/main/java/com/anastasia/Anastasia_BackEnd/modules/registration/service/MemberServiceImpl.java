@@ -770,7 +770,12 @@ public class MemberServiceImpl implements MemberService {
         if (memberRole == null) {
             return;
         }
-        if (user.getRoles().contains(memberRole)) {
+        boolean alreadyAssigned = Optional.ofNullable(user.getRoles())
+                .orElseGet(Collections::emptySet)
+                .stream()
+                .anyMatch(role -> Objects.equals(role.getId(), memberRole.getId())
+                        || Objects.equals(role.getRoleName(), memberRole.getRoleName()));
+        if (alreadyAssigned) {
             return;
         }
         user.getRoles().add(memberRole);

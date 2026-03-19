@@ -5,17 +5,22 @@ import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString(exclude = {"permissions", "tenant"})
 @Entity
 @Table(name = "roles")
 public class Role {
@@ -47,5 +52,24 @@ public class Role {
 
     public void setPermissions(Set<Permission> permissions) {
         this.permissions = permissions == null ? new HashSet<>() : new HashSet<>(permissions);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Role role)) {
+            return false;
+        }
+        if (id != null && role.id != null) {
+            return Objects.equals(id, role.id);
+        }
+        return roleName != null && Objects.equals(roleName, role.roleName);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? Objects.hash(id) : Objects.hashCode(roleName);
     }
 }
