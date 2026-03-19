@@ -104,12 +104,13 @@ public class PriestController {
             @PathVariable String priestNumber,
             @RequestParam(required = false) UUID tenantId,
             @RequestParam(required = false) String status,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String language,
             Pageable pageable
     ) {
         UUID effectiveTenantId = resolveTenantId(tenantId);
         Page<Adult_MemberSummaryResponse> members = status == null || status.isBlank()
-                ? memberService.findByTenantAndPriestNumberSummary(effectiveTenantId, priestNumber, pageable)
-                : memberService.findByTenantAndPriestNumberAndStatusSummary(effectiveTenantId, priestNumber, status, pageable);
+                ? memberService.findByTenantAndPriestNumberSummary(effectiveTenantId, priestNumber, pageable, language)
+                : memberService.findByTenantAndPriestNumberAndStatusSummary(effectiveTenantId, priestNumber, status, pageable, language);
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
@@ -134,13 +135,15 @@ public class PriestController {
     public ResponseEntity<Page<Child_MemberSummaryResponse>> listChildrenByPriest(
             @PathVariable String priestNumber,
             @RequestParam(required = false) UUID tenantId,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String language,
             Pageable pageable
     ) {
         UUID effectiveTenantId = resolveTenantId(tenantId);
         Page<Child_MemberSummaryResponse> children = childService.findByTenantAndPriestNumberSummary(
                 effectiveTenantId,
                 priestNumber,
-                pageable
+                pageable,
+                language
         );
         return new ResponseEntity<>(children, HttpStatus.OK);
     }

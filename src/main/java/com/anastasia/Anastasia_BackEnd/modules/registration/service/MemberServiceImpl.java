@@ -55,9 +55,17 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -95,7 +103,70 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public Adult_MemberResponse convertToResponse(Adult_MemberEntity adultMemberEntity) {
+        if (adultMemberEntity == null) {
+            return null;
+        }
+        enrichChildMetadata(List.of(adultMemberEntity), adultMemberEntity.getTenantId());
         return memberMapper.memberEntityToResponse(adultMemberEntity);
+    }
+
+    private Page<Adult_MemberResponse> mapMembersToResponse(Page<Adult_MemberEntity> members, UUID tenantId) {
+        enrichChildMetadata(members.getContent(), tenantId);
+        return members.map(memberMapper::memberEntityToResponse);
+    }
+
+    private void enrichChildMetadata(Collection<? extends Adult_MemberEntity> members, UUID tenantId) {
+        if (members == null || members.isEmpty()) {
+            return;
+        }
+        Set<Long> ownerIds = members.stream()
+                .map(Adult_MemberEntity::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (ownerIds.isEmpty()) {
+            members.forEach(member -> {
+                if (member != null) {
+                    member.setChildrenAsFatherIds(Collections.emptySet());
+                    member.setChildrenAsMotherIds(Collections.emptySet());
+                    member.setNumberOfChildren(0);
+                }
+            });
+            return;
+        }
+        UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
+        List<FamilyRelationshipRepository.OwnerChildRelationship> relationships =
+                familyRelationshipRepository.findChildRelationshipsByOwnerIdsAndTenantIdAndRelationshipType(
+                        ownerIds,
+                        effectiveTenantId,
+                        FamilyRelationshipType.CHILD);
+
+        Map<Long, Set<Long>> fatherIndex = new HashMap<>();
+        Map<Long, Set<Long>> motherIndex = new HashMap<>();
+        for (FamilyRelationshipRepository.OwnerChildRelationship relationship : relationships) {
+            Long ownerId = relationship.getOwnerMemberId();
+            Long childId = relationship.getChildId();
+            if (ownerId == null || childId == null) {
+                continue;
+            }
+            if (Boolean.TRUE.equals(relationship.getFather())) {
+                fatherIndex.computeIfAbsent(ownerId, id -> new HashSet<>()).add(childId);
+            }
+            if (Boolean.TRUE.equals(relationship.getMother())) {
+                motherIndex.computeIfAbsent(ownerId, id -> new HashSet<>()).add(childId);
+            }
+        }
+
+        for (Adult_MemberEntity member : members) {
+            if (member == null) {
+                continue;
+            }
+            Long memberId = member.getId();
+            Set<Long> fatherChildren = memberId != null ? fatherIndex.getOrDefault(memberId, Collections.emptySet()) : Collections.emptySet();
+            Set<Long> motherChildren = memberId != null ? motherIndex.getOrDefault(memberId, Collections.emptySet()) : Collections.emptySet();
+            member.setChildrenAsFatherIds(fatherChildren.isEmpty() ? Collections.emptySet() : Set.copyOf(fatherChildren));
+            member.setChildrenAsMotherIds(motherChildren.isEmpty() ? Collections.emptySet() : Set.copyOf(motherChildren));
+            member.setNumberOfChildren(Math.max(fatherChildren.size(), motherChildren.size()));
+        }
     }
 
    @CacheEvict(
@@ -164,20 +235,21 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public Page<Adult_MemberResponse> findAll(Pageable pageable) {
-        return memberRepository.findByStatusValueNotAndTenantId(
-                        MemberLifecycleStatus.PENDING,
-                        requireTenantId(),
-                        pageable)
-                .map(memberMapper::memberEntityToResponse);
+        UUID tenantId = requireTenantId();
+        Page<Adult_MemberEntity> members = memberRepository.findByStatusValueNotAndTenantId(
+                MemberLifecycleStatus.PENDING,
+                tenantId,
+                pageable);
+        return mapMembersToResponse(members, tenantId);
     }
 
     @Override
-    public Page<Adult_MemberSummaryResponse> findAllSummary(Pageable pageable) {
+    public Page<Adult_MemberSummaryResponse> findAllSummary(Pageable pageable, String language) {
         return memberRepository.findByStatusValueNotAndTenantId(
                         MemberLifecycleStatus.PENDING,
                         requireTenantId(),
                         pageable)
-                .map(memberMapper::memberEntityToSummaryResponse);
+                .map(member -> memberMapper.memberEntityToSummaryResponse(member, language));
     }
 
     @Override
@@ -190,57 +262,58 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Page<Adult_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
-                .map(memberMapper::memberEntityToResponse);
+        Page<Adult_MemberEntity> members = memberRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable);
+        return mapMembersToResponse(members, effectiveTenantId);
     }
 
     @Override
-    public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable) {
+    public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable, String language) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return memberRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
-                .map(memberMapper::memberEntityToSummaryResponse);
+                .map(member -> memberMapper.memberEntityToSummaryResponse(member, language));
     }
 
     @Override
     public Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
-                        effectiveTenantId,
-                        priestNumber,
-                        MemberLifecycleStatus.from(status),
-                        pageable)
-                .map(memberMapper::memberEntityToResponse);
+        Page<Adult_MemberEntity> members = memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
+                effectiveTenantId,
+                priestNumber,
+                MemberLifecycleStatus.from(status),
+                pageable);
+        return mapMembersToResponse(members, effectiveTenantId);
     }
 
     @Override
-    public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberAndStatusSummary(UUID tenantId, String priestNumber, String status, Pageable pageable) {
+    public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberAndStatusSummary(UUID tenantId, String priestNumber, String status, Pageable pageable, String language) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
                         effectiveTenantId,
                         priestNumber,
                         MemberLifecycleStatus.from(status),
                         pageable)
-                .map(memberMapper::memberEntityToSummaryResponse);
+                .map(member -> memberMapper.memberEntityToSummaryResponse(member, language));
     }
 
     @Override
     public Page<Adult_MemberResponse> findPending(Pageable pageable) {
-        return memberRepository.findByStatusValueAndTenantId(
+        UUID tenantId = requireTenantId();
+        Page<Adult_MemberEntity> members = memberRepository.findByStatusValueAndTenantId(
                 MemberLifecycleStatus.PENDING,
-                requireTenantId(),
-                pageable)
-                .map(memberMapper::memberEntityToResponse);
+                tenantId,
+                pageable);
+        return mapMembersToResponse(members, tenantId);
     }
 
     @Override
     public Page<Adult_MemberResponse> findPendingByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
-        return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
-                        effectiveTenantId,
-                        priestNumber,
-                        MemberLifecycleStatus.PENDING,
-                        pageable)
-                .map(memberMapper::memberEntityToResponse);
+        Page<Adult_MemberEntity> members = memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
+                effectiveTenantId,
+                priestNumber,
+                MemberLifecycleStatus.PENDING,
+                pageable);
+        return mapMembersToResponse(members, effectiveTenantId);
     }
 
     @Override
@@ -273,12 +346,12 @@ public class MemberServiceImpl implements MemberService {
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
-        return memberRepository.findAll(scopeSpec, pageable)
-                .map(memberMapper::memberEntityToResponse);
+        Page<Adult_MemberEntity> members = memberRepository.findAll(scopeSpec, pageable);
+        return mapMembersToResponse(members, tenantId);
     }
 
     @Override
-    public Page<Adult_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query) {
+    public Page<Adult_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query, String language) {
         UUID tenantId = requireTenantId();
         Long churchId = resolveCurrentChurchId();
         String search = query == null ? null : query.trim();
@@ -308,14 +381,14 @@ public class MemberServiceImpl implements MemberService {
         };
 
         return memberRepository.findAll(scopeSpec, pageable)
-                .map(memberMapper::memberEntityToSummaryResponse);
+                .map(member -> memberMapper.memberEntityToSummaryResponse(member, language));
     }
 
     @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator", unless = "#result == null")
     @Override
     public Optional<Adult_MemberResponse> findMemberById(Long memberId) {
         return memberRepository.findByIdAndTenantId(memberId, requireTenantId())
-                .map(memberMapper::memberEntityToResponse);
+                .map(this::convertToResponse);
     }
 
     @Caching(
@@ -484,8 +557,8 @@ public class MemberServiceImpl implements MemberService {
         Specification<Adult_MemberEntity> tenantSpec = (root, query, cb) ->
                 cb.equal(root.get("tenantId"), requireTenantId());
         Specification<Adult_MemberEntity> combinedSpec = Specification.where(tenantSpec).and(spec);
-        return memberRepository.findAll(combinedSpec, pageable)
-                .map(memberMapper::memberEntityToResponse);
+        Page<Adult_MemberEntity> members = memberRepository.findAll(combinedSpec, pageable);
+        return mapMembersToResponse(members, requireTenantId());
     }
 
     @Override

@@ -51,8 +51,11 @@ public class MemberController {
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping
-    public ResponseEntity<Page<Adult_MemberSummaryResponse>> listOfMembers(Pageable pageable){
-        Page<Adult_MemberSummaryResponse> members = memberService.findAllSummary(pageable);
+    public ResponseEntity<Page<Adult_MemberSummaryResponse>> listOfMembers(
+            Pageable pageable,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String language
+    ){
+        Page<Adult_MemberSummaryResponse> members = memberService.findAllSummary(pageable, language);
         return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
@@ -66,9 +69,10 @@ public class MemberController {
     @GetMapping("/search")
     public ResponseEntity<Page<Adult_MemberSummaryResponse>> searchMembers(
             Pageable pageable,
-            @RequestParam(value = "q", required = false) String query
+            @RequestParam(value = "q", required = false) String query,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String language
     ){
-        return new ResponseEntity<>(memberService.searchNonPendingSummary(pageable, query), HttpStatus.OK);
+        return new ResponseEntity<>(memberService.searchNonPendingSummary(pageable, query, language), HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")

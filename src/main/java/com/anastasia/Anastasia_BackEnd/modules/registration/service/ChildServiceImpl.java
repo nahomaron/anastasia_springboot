@@ -37,7 +37,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -135,12 +134,12 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
-    public Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable) {
+    public Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable, String language) {
         return childRepository.findByStatusValueNotAndTenantId(
                 MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
-                .map(childMapper::childEntityToSummaryResponse);
+                .map(child -> childMapper.childEntityToSummaryResponse(child, language));
     }
 
     @Override
@@ -158,10 +157,10 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
-    public Page<Child_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable) {
+    public Page<Child_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable, String language) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return childRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
-                .map(childMapper::childEntityToSummaryResponse);
+                .map(child -> childMapper.childEntityToSummaryResponse(child, language));
     }
 
     @Override
@@ -191,20 +190,20 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
-    public Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query) {
+    public Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query, String language) {
         if (query == null || query.isBlank()) {
             return childRepository.findByStatusValueNotAndTenantId(
                     MemberLifecycleStatus.PENDING,
                     requireTenantId(),
                     pageable)
-                    .map(childMapper::childEntityToSummaryResponse);
+                    .map(child -> childMapper.childEntityToSummaryResponse(child, language));
         }
         return childRepository.searchNonPending(
                 query.trim(),
                 MemberLifecycleStatus.PENDING,
                 requireTenantId(),
                 pageable)
-                .map(childMapper::childEntityToSummaryResponse);
+                .map(child -> childMapper.childEntityToSummaryResponse(child, language));
     }
 
     @Cacheable(value = "children", keyGenerator = "tenantAwareKeyGenerator")
@@ -398,26 +397,15 @@ public class ChildServiceImpl implements ChildService{
 
         detachParent(child, isFather);
 
-        Consumer<Child_MemberEntity> adder = isFather
-                ? parent.getChildrenAsFather()::add
-                : parent.getChildrenAsMother()::add;
-
         if (isFather) {
             child.setFather(parent);
         } else {
             child.setMother(parent);
         }
-        adder.accept(child);
     }
 
     private void detachParent(Child_MemberEntity child, boolean isFather) {
         Adult_MemberEntity existing = isFather ? child.getFather() : child.getMother();
-        if (existing != null) {
-            Consumer<Child_MemberEntity> remover = isFather
-                    ? existing.getChildrenAsFather()::remove
-                    : existing.getChildrenAsMother()::remove;
-            remover.accept(child);
-        }
         if (isFather) {
             child.setFather(null);
         } else {

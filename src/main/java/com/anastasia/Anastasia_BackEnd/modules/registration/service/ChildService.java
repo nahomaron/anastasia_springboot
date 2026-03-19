@@ -22,17 +22,17 @@ public interface ChildService {
     Child_MemberResponse registerChild(Child_MemberEntity childMemberEntity);
 
     Page<Child_MemberResponse> findAll(Pageable pageable);
-    Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable);
+    Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable, String language);
 
     long countNonPending();
 
     Page<Child_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);
-    Page<Child_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable);
+    Page<Child_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable, String language);
 
     Page<Child_MemberResponse> findPending(Pageable pageable);
 
     Page<Child_MemberResponse> searchNonPending(Pageable pageable, String query);
-    Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query);
+    Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query, String language);
 
     Optional<Child_MemberResponse> findChildById(Long memberId);
 

@@ -45,8 +45,11 @@ public class ChildController {
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
-    public ResponseEntity<Page<Child_MemberSummaryResponse>> listOfChildren(Pageable pageable){
-        return new ResponseEntity<>(childService.findAllSummary(pageable), HttpStatus.OK);
+    public ResponseEntity<Page<Child_MemberSummaryResponse>> listOfChildren(
+            Pageable pageable,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String language
+    ){
+        return new ResponseEntity<>(childService.findAllSummary(pageable, language), HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
@@ -66,9 +69,10 @@ public class ChildController {
     @GetMapping("/search")
     public ResponseEntity<Page<Child_MemberSummaryResponse>> searchChildren(
             Pageable pageable,
-            @RequestParam(value = "q", required = false) String query
+            @RequestParam(value = "q", required = false) String query,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String language
     ){
-        return new ResponseEntity<>(childService.searchNonPendingSummary(pageable, query), HttpStatus.OK);
+        return new ResponseEntity<>(childService.searchNonPendingSummary(pageable, query, language), HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")

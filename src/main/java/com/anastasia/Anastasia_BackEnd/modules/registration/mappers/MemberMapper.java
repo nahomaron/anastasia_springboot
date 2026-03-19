@@ -9,13 +9,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MaritalStatus;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
-import jakarta.persistence.Persistence;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 public class MemberMapper {
@@ -120,21 +117,38 @@ public class MemberMapper {
                 .numberOfChildren(adultMemberEntity.getNumberOfChildren())
                 .profession(adultMemberEntity.getProfession())
                 .spouseIdNumber(adultMemberEntity.getSpouseIdNumber())
-                .childrenAsFatherIds(mapChildIds(adultMemberEntity.getChildrenAsFather()))
-                .childrenAsMotherIds(mapChildIds(adultMemberEntity.getChildrenAsMother()))
+                .childrenAsFatherIds(safeChildIds(adultMemberEntity.getChildrenAsFatherIds()))
+                .childrenAsMotherIds(safeChildIds(adultMemberEntity.getChildrenAsMotherIds()))
                 .build();
     }
 
-    public Adult_MemberSummaryResponse memberEntityToSummaryResponse(Adult_MemberEntity adultMemberEntity) {
+    public Adult_MemberSummaryResponse memberEntityToSummaryResponse(Adult_MemberEntity adultMemberEntity, String language) {
         if (adultMemberEntity == null) return null;
+
+        String fullName = joinNameParts(
+                adultMemberEntity.getFirstName(),
+                adultMemberEntity.getFatherName(),
+                adultMemberEntity.getGrandFatherName()
+        );
+        String fullNameLocal = joinNameParts(
+                adultMemberEntity.getFirstNameT(),
+                adultMemberEntity.getFatherNameT(),
+                adultMemberEntity.getGrandFatherNameT()
+        );
 
         return Adult_MemberSummaryResponse.builder()
                 .id(adultMemberEntity.getId())
                 .membershipNumber(adultMemberEntity.getMembershipNumber())
                 .status(adultMemberEntity.getStatus())
+                .fullName(fullName)
+                .fullNameLocal(fullNameLocal)
+                .displayName(resolveDisplayName(language, fullName, fullNameLocal))
                 .firstName(adultMemberEntity.getFirstName())
                 .fatherName(adultMemberEntity.getFatherName())
                 .grandFatherName(adultMemberEntity.getGrandFatherName())
+                .firstNameT(adultMemberEntity.getFirstNameT())
+                .fatherNameT(adultMemberEntity.getFatherNameT())
+                .grandFatherNameT(adultMemberEntity.getGrandFatherNameT())
                 .email(adultMemberEntity.getEmail())
                 .phone(adultMemberEntity.getPhone())
                 .createdAt(adultMemberEntity.getCreatedAt())
@@ -208,20 +222,24 @@ public class MemberMapper {
                 .build();
     }
 
-    private Set<Long> mapChildIds(Set<Child_MemberEntity> children) {
-        if (children == null || !Persistence.getPersistenceUtil().isLoaded(children)) {
-            return Collections.emptySet();
-        }
-        if (children.isEmpty()) {
-            return Collections.emptySet();
-        }
-        return children.stream()
-                .map(Child_MemberEntity::getId)
-                .filter(id -> id != null)
-                .collect(Collectors.toSet());
+    private Set<Long> safeChildIds(Set<Long> children) {
+        return children == null ? Collections.emptySet() : children;
     }
 
     private String toApiMaritalStatus(MaritalStatus maritalStatus) {
         return maritalStatus != null ? maritalStatus.toApiValue() : null;
+    }
+
+    private String joinNameParts(String... parts) {
+        return String.join(" ", parts == null ? new String[0] : parts)
+                .trim()
+                .replaceAll("\\s+", " ");
+    }
+
+    private String resolveDisplayName(String language, String fullName, String fullNameLocal) {
+        if ("ti".equalsIgnoreCase(language) && fullNameLocal != null && !fullNameLocal.isBlank()) {
+            return fullNameLocal;
+        }
+        return fullName != null && !fullName.isBlank() ? fullName : fullNameLocal;
     }
 }

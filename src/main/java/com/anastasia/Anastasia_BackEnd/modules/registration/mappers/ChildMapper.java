@@ -109,16 +109,33 @@ public class ChildMapper {
                 .build();
     }
 
-    public Child_MemberSummaryResponse childEntityToSummaryResponse(Child_MemberEntity childMemberEntity) {
+    public Child_MemberSummaryResponse childEntityToSummaryResponse(Child_MemberEntity childMemberEntity, String language) {
         if (childMemberEntity == null) return null;
+
+        String fullName = joinNameParts(
+                childMemberEntity.getFirstName(),
+                childMemberEntity.getFatherName(),
+                childMemberEntity.getGrandFatherName()
+        );
+        String fullNameLocal = joinNameParts(
+                childMemberEntity.getFirstNameT(),
+                childMemberEntity.getFatherNameT(),
+                childMemberEntity.getGrandFatherNameT()
+        );
 
         return Child_MemberSummaryResponse.builder()
                 .id(childMemberEntity.getId())
                 .membershipNumber(childMemberEntity.getMembershipNumber())
                 .status(childMemberEntity.getStatus())
+                .fullName(fullName)
+                .fullNameLocal(fullNameLocal)
+                .displayName(resolveDisplayName(language, fullName, fullNameLocal))
                 .firstName(childMemberEntity.getFirstName())
                 .fatherName(childMemberEntity.getFatherName())
                 .grandFatherName(childMemberEntity.getGrandFatherName())
+                .firstNameT(childMemberEntity.getFirstNameT())
+                .fatherNameT(childMemberEntity.getFatherNameT())
+                .grandFatherNameT(childMemberEntity.getGrandFatherNameT())
                 .email(childMemberEntity.getEmail())
                 .phone(childMemberEntity.getPhone())
                 .createdAt(childMemberEntity.getCreatedAt())
@@ -193,5 +210,18 @@ public class ChildMapper {
                 .membershipNumber(parent.getMembershipNumber())
                 .fullName(fullName)
                 .build();
+    }
+
+    private String joinNameParts(String... parts) {
+        return String.join(" ", parts == null ? new String[0] : parts)
+                .trim()
+                .replaceAll("\\s+", " ");
+    }
+
+    private String resolveDisplayName(String language, String fullName, String fullNameLocal) {
+        if ("ti".equalsIgnoreCase(language) && fullNameLocal != null && !fullNameLocal.isBlank()) {
+            return fullNameLocal;
+        }
+        return fullName != null && !fullName.isBlank() ? fullName : fullNameLocal;
     }
 }
