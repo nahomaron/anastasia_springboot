@@ -140,6 +140,7 @@ public class MemberMapper {
                 .id(adultMemberEntity.getId())
                 .membershipNumber(adultMemberEntity.getMembershipNumber())
                 .status(adultMemberEntity.getStatus())
+                .avatarUrl(resolveAvatarUrl(adultMemberEntity.getAvatar()))
                 .fullName(fullName)
                 .fullNameLocal(fullNameLocal)
                 .displayName(resolveDisplayName(language, fullName, fullNameLocal))
@@ -241,5 +242,9 @@ public class MemberMapper {
             return fullNameLocal;
         }
         return fullName != null && !fullName.isBlank() ? fullName : fullNameLocal;
+    }
+
+    private String resolveAvatarUrl(ImageAssetEntity avatar) {
+        return avatar != null ? avatar.getImageUrl() : null;
     }
 }

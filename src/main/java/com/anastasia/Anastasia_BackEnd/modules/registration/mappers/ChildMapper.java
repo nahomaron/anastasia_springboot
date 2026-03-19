@@ -127,6 +127,7 @@ public class ChildMapper {
                 .id(childMemberEntity.getId())
                 .membershipNumber(childMemberEntity.getMembershipNumber())
                 .status(childMemberEntity.getStatus())
+                .avatarUrl(resolveAvatarUrl(childMemberEntity.getAvatar()))
                 .fullName(fullName)
                 .fullNameLocal(fullNameLocal)
                 .displayName(resolveDisplayName(language, fullName, fullNameLocal))
@@ -223,5 +224,9 @@ public class ChildMapper {
             return fullNameLocal;
         }
         return fullName != null && !fullName.isBlank() ? fullName : fullNameLocal;
+    }
+
+    private String resolveAvatarUrl(ImageAssetEntity avatar) {
+        return avatar != null ? avatar.getImageUrl() : null;
     }
 }

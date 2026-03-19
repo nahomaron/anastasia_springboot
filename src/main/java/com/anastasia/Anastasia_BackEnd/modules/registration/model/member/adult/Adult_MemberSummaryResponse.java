@@ -15,6 +15,7 @@ public class Adult_MemberSummaryResponse {
     private Long id;
     private String membershipNumber;
     private String status;
+    private String avatarUrl;
     private String fullName;
     private String fullNameLocal;
     private String displayName;
