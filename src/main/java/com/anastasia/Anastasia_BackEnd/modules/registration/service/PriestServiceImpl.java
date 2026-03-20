@@ -13,6 +13,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
@@ -32,11 +33,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -80,6 +83,7 @@ public class PriestServiceImpl implements PriestService{
 //            }
 //    )
     @Override
+    @Transactional
     public void registerPriest(PriestDTO priestDTO) {
 
         // Try to find an existing user by email
@@ -102,9 +106,12 @@ public class PriestServiceImpl implements PriestService{
                     .email(priestDTO.getPersonalEmail())
                     .password(passwordEncoder.encode(priestDTO.getPassword()))
                     .roles(new HashSet<>(Set.of(priestRole)))
+                    .status(UserStatus.PENDING_VERIFICATION)
                     .userType(UserType.PRIEST)
                     .priestNumber(priestNumber)
                     .build();
+
+            ensureBackendManagedUserStatus(priestUser);
 
             // Save the newly created priest user
             try {
@@ -119,6 +126,7 @@ public class PriestServiceImpl implements PriestService{
             }
         } else {
             priestUser.setPriestNumber(priestNumber);
+            ensureBackendManagedUserStatus(priestUser);
             userRepository.save(priestUser);
         }
 
@@ -144,7 +152,7 @@ public class PriestServiceImpl implements PriestService{
                 .priesthoodCardId(priestDTO.getPriesthoodCardId())
                 .priesthoodCardScan(priestDTO.getPriesthoodCardScan())
                 .birthdate(priestDTO.getBirthdate())
-                .languages(priestDTO.getLanguages())
+                .languages(normalizeLanguages(priestDTO.getLanguages()))
                 .levelOfEducation(priestDTO.getLevelOfEducation())
                 .address(priestDTO.getAddress())
                 .status(PriestStatus.PENDING)
@@ -197,6 +205,12 @@ public class PriestServiceImpl implements PriestService{
 
         // Save the priest entity
         priestRepository.save(priestBuilder.build());
+    }
+
+    private void ensureBackendManagedUserStatus(UserEntity user) {
+        if (user.getStatus() == null) {
+            user.setStatus(UserStatus.PENDING_VERIFICATION);
+        }
     }
 
 //    @Cacheable(value = "priests_all", keyGenerator = "tenantAwareKeyGenerator")
@@ -259,7 +273,9 @@ public class PriestServiceImpl implements PriestService{
             Optional.ofNullable(priestEntity.getBirthdate()).ifPresent(foundPriest::setBirthdate);
 
             Optional.ofNullable(priestEntity.getAddress()).ifPresent(foundPriest::setAddress);
-            Optional.ofNullable(priestEntity.getLanguages()).ifPresent(foundPriest::setLanguages);
+            Optional.ofNullable(priestEntity.getLanguages())
+                    .map(this::normalizeLanguages)
+                    .ifPresent(foundPriest::setLanguages);
             Optional.ofNullable(priestEntity.getLevelOfEducation()).ifPresent(foundPriest::setLevelOfEducation);
             Optional.ofNullable(priestEntity.getPriesthoodCardId()).ifPresent(foundPriest::setPriesthoodCardId);
             Optional.ofNullable(priestEntity.getPriesthoodCardScan()).ifPresent(foundPriest::setPriesthoodCardScan);
@@ -280,6 +296,16 @@ public class PriestServiceImpl implements PriestService{
             avatar.setImageAssetType(ImageAssetType.USER);
         }
         return avatar;
+    }
+
+    private Set<String> normalizeLanguages(Set<String> languages) {
+        if (languages == null || languages.isEmpty()) {
+            return new HashSet<>();
+        }
+        return languages.stream()
+                .filter(language -> language != null && !language.isBlank())
+                .map(String::trim)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
 //    @Caching(

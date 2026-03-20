@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -75,7 +76,11 @@ public class PriestEntity {
     @Column(nullable = false)
     private String birthdate;
 
-    private Set<String> languages;
+    @Builder.Default
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "priest_languages", joinColumns = @JoinColumn(name = "priest_id"))
+    @Column(name = "language", nullable = false, length = 128)
+    private Set<String> languages = new HashSet<>();
 
     private String levelOfEducation;
 
@@ -83,5 +88,9 @@ public class PriestEntity {
     private Address address;
 
     private boolean isActive;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
 }

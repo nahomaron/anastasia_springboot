@@ -278,6 +278,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ExceptionResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.error("Data integrity violation", ex);
+        String requiredField = extractRequiredField(ex);
+        if (requiredField != null) {
+            String requiredMessage = key("validation.common.required", "This field is required");
+            return ResponseEntity.status(BAD_REQUEST).body(
+                    ExceptionResponse.builder()
+                            .errorCode(INVALID_REQUEST.getCode())
+                            .errorDescription(localizedDescription(INVALID_REQUEST))
+                            .error(key("error.request.missingRequiredField", "Missing required field: {0}", requiredField))
+                            .errors(Map.of(requiredField, requiredMessage))
+                            .validationErrors(Set.of(requiredField + ": " + requiredMessage))
+                            .build()
+            );
+        }
+
         String field = extractDuplicateField(ex);
         return ResponseEntity.status(CONFLICT).body(
                 ExceptionResponse.builder()
@@ -407,6 +421,29 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return "resource";
     }
 
+    private String extractRequiredField(DataIntegrityViolationException ex) {
+        String message = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : ex.getMessage();
+        if (message == null) {
+            return null;
+        }
+
+        String marker = "null value in column \"";
+        int start = message.indexOf(marker);
+        if (start < 0) {
+            return null;
+        }
+
+        int columnStart = start + marker.length();
+        int columnEnd = message.indexOf('"', columnStart);
+        if (columnEnd < 0) {
+            return null;
+        }
+
+        return message.substring(columnStart, columnEnd);
+    }
+
     private ResponseEntity<Object> bodyOnly(ResponseEntity<ExceptionResponse> response, HttpStatus status) {
         return new ResponseEntity<>(response.getBody(), status);
     }
@@ -419,22 +456,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private String localizedDescription(BusinessErrorCodes code) {
-        return switch (code) {
-            case INVALID_REQUEST -> key("error.code.invalidRequest", code.getDescription());
-            case RESOURCE_NOT_FOUND -> key("error.code.resourceNotFound", code.getDescription());
-            case DUPLICATE_REQUEST -> key("error.code.duplicateRequest", code.getDescription());
-            case DUPLICATE_RESOURCE -> key("error.code.duplicateResourceGeneric", code.getDescription());
-            case ACCESS_DENIED -> key("error.code.accessDenied", code.getDescription());
-            case AUTHENTICATION_FAILED -> key("error.code.authenticationFailed", code.getDescription());
-            case ACCOUNT_DISABLED -> key("error.code.accountDisabled", code.getDescription());
-            case ACCOUNT_LOCKED -> key("error.code.accountLocked", code.getDescription());
-            case BAD_CREDENTIALS -> key("error.code.badCredentials", code.getDescription());
-            case BUSINESS_RULE_VIOLATION -> key("error.code.businessRuleViolation", code.getDescription());
-            case STATE_CONFLICT -> key("error.code.stateConflict", code.getDescription());
-            case DATA_ACCESS_ERROR -> key("error.code.dataAccessError", code.getDescription());
-            case UNSUPPORTED_OPERATION -> key("error.code.unsupportedOperation", code.getDescription());
-            default -> code.getDescription();
-        };
+        if (code.getMessageKey() == null || code.getMessageKey().isBlank()) {
+            return code.getDescription();
+        }
+        return key(code.getMessageKey(), code.getDescription());
     }
 
     private String key(String key, String fallback, Object... args) {
