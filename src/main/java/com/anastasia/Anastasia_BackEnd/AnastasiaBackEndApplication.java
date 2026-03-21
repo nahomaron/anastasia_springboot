@@ -30,7 +30,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableRetry
 @EnableCaching
 @EnableJpaAuditing(auditorAwareRef = "auditorAware")
-@EnableSpringDataWebSupport
+@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 @EntityScan(basePackages = "com.anastasia.Anastasia_BackEnd")
 public class AnastasiaBackEndApplication {
 
