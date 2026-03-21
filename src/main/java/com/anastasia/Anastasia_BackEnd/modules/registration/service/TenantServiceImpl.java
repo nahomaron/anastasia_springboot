@@ -161,6 +161,12 @@ public class TenantServiceImpl implements TenantService {
             savedTenant = tenantRepository.save(savedTenant);
         }
 
+        Role ownerRole = roleRepository.findByRoleName("OWNER")
+                .orElseThrow(() -> new RuntimeException(messageService.get(
+                        "role.owner.notFound",
+                        "Owner role not found"
+                )));
+
         Role primaryAdminRole = roleRepository.findByRoleName("PRIMARY_ADMIN")
                 .orElseThrow(() -> new RuntimeException(messageService.get(
                         "role.primaryAdmin.notFound",
@@ -173,7 +179,7 @@ public class TenantServiceImpl implements TenantService {
                 .email(tenantDTO.getOwnerEmail())
                 .password(tenantDTO.getPassword())
                 .affiliatedTenant(savedTenant)
-                .roles(new HashSet<>(Set.of(primaryAdminRole)))
+                .roles(new HashSet<>(Set.of(primaryAdminRole, ownerRole)))
                 .userType(UserType.TENANT)
                 .status(UserStatus.PENDING_VERIFICATION)
                 .build();

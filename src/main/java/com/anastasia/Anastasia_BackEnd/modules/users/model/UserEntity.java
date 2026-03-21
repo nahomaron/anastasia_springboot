@@ -40,6 +40,7 @@ public class UserEntity extends Auditable {
     @Column(nullable = false)
     private UserType userType = UserType.GUEST;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private UserStatus status = UserStatus.PENDING_VERIFICATION;

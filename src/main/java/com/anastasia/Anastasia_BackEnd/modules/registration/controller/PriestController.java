@@ -36,15 +36,14 @@ public class PriestController {
     private final MemberService memberService;
     private final ChildService childService;
     private final LocalizedMessageService messageService;
+    private final ObjectMapper objectMapper;
 
-    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'MANAGE_PRIESTS')")
     @PostMapping("/register")
     public ResponseEntity<?> registerPriest(@Valid @RequestBody PriestDTO priestDTO){
-
-        if(!priestDTO.isPasswordMatch()){
-            return ResponseEntity.badRequest().body(messageService.get(
-                    "auth.changePassword.mismatch",
-                    "Password do not match"
+        if (priestDTO.getStatus() != null) {
+            throw new IllegalArgumentException(messageService.get(
+                    "validation.priest.status.systemManaged",
+                    "Status is managed by the system and must not be provided"
             ));
         }
         priestService.registerPriest(priestDTO);

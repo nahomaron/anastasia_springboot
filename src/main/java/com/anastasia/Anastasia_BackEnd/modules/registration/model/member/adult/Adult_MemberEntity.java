@@ -1,19 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.BaseMember;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -28,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
@@ -101,17 +97,13 @@ public class Adult_MemberEntity extends BaseMember {
 
     private String spouseIdNumber;
 
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
+    @Transient
     @Builder.Default
-    @OneToMany(mappedBy = "father", fetch = FetchType.LAZY)
-    private Set<Child_MemberEntity> childrenAsFather = new HashSet<>();
+    private Set<Long> childrenAsFatherIds = Collections.emptySet();
 
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
+    @Transient
     @Builder.Default
-    @OneToMany(mappedBy = "mother", fetch = FetchType.LAZY)
-    private Set<Child_MemberEntity> childrenAsMother = new HashSet<>();
+    private Set<Long> childrenAsMotherIds = Collections.emptySet();
 
     public boolean isApprovedByChurch() {
         return approvedByChurch != null ? approvedByChurch : churchApprovalStatus == ApprovalStatus.APPROVED;
@@ -145,14 +137,8 @@ public class Adult_MemberEntity extends BaseMember {
         }
     }
 
-    @Transient
     public int getNumberOfChildren() {
-        if (numberOfChildren != null) {
-            return numberOfChildren;
-        }
-        int fatherCount = childrenAsFather == null ? 0 : childrenAsFather.size();
-        int motherCount = childrenAsMother == null ? 0 : childrenAsMother.size();
-        return Math.max(fatherCount, motherCount);
+        return numberOfChildren != null ? numberOfChildren : 0;
     }
 
     public void setNumberOfChildren(int numberOfChildren) {

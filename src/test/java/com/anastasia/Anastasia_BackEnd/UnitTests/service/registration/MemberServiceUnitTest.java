@@ -18,7 +18,11 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.FamilyRelationshipRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNotificationService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyRelationshipType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberServiceImpl;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -37,6 +41,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,6 +52,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class MemberServiceUnitTest {
 
+    @Mock private FamilyRelationshipRepository familyRelationshipRepository;
     @Mock private MemberRepository memberRepository;
     @Mock private ChurchRepository churchRepository;
     @Mock private UserRepository userRepository;
@@ -58,6 +64,8 @@ public class MemberServiceUnitTest {
     @Mock private ApplicationEventPublisher publisher;
     @Mock private CacheManager cacheManager;
     @Mock private OutboxPublisher outboxPublisher;
+    @Mock private TenantAdminNotificationService tenantAdminNotificationService;
+    @Mock private LocalizedMessageService messageService;
 
     @InjectMocks
     private MemberServiceImpl memberService;
@@ -73,6 +81,23 @@ public class MemberServiceUnitTest {
         TenantContext.setTenantId(tenantId);
         user = TestDataUtil.createTestUserEntityA();
         member = TestDataUtil.createTestMember(TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity()));
+        lenient().when(familyRelationshipRepository.findChildRelationshipsByOwnerIdsAndTenantIdAndRelationshipType(
+                anySet(),
+                any(UUID.class),
+                eq(FamilyRelationshipType.CHILD)))
+                .thenReturn(List.of());
+        lenient().when(memberMapper.memberEntityToResponse(any(Adult_MemberEntity.class)))
+                .thenAnswer(invocation -> {
+                    Adult_MemberEntity entity = invocation.getArgument(0);
+                    Adult_MemberResponse response = new Adult_MemberResponse();
+                    response.setFirstName(entity.getFirstName());
+                    response.setMembershipNumber(entity.getMembershipNumber());
+                    response.setChildrenAsFatherIds(Collections.emptySet());
+                    response.setChildrenAsMotherIds(Collections.emptySet());
+                    return response;
+                });
+        lenient().when(memberRepository.save(any(Adult_MemberEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @AfterEach

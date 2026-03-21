@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.model.priest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -79,6 +80,7 @@ public class PriestDTO {
     @NotBlank(message = "{validation.priest.confirmPassword.required}")
     private String confirmPassword;
 
+    @AssertTrue(message = "{onboarding.password.mismatch}")
     public boolean isPasswordMatch() {
         return this.password != null && this.password.equals(this.confirmPassword);
     }
