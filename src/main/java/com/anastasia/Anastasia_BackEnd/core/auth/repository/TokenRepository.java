@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,6 +57,86 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
         where t.expiresAt < CURRENT_TIMESTAMP and t.expired = false
         """)
     void markExpiredTokens();
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Token t
+        set t.expired = true,
+            t.revoked = true,
+            t.expiredAt = :now,
+            t.revokedAt = :now
+        where t.id = :tokenId
+          and t.user.uuid = :userId
+          and t.deletedAt is null
+          and (t.expired = false or t.revoked = false or t.expiredAt is null or t.revokedAt is null)
+        """)
+    int revokeTokenByIdAndUserUuid(@Param("tokenId") Integer tokenId, @Param("userId") UUID userId, @Param("now") Instant now);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Token t
+        set t.expired = true,
+            t.revoked = true,
+            t.expiredAt = :now,
+            t.revokedAt = :now
+        where t.token = :token
+          and t.deletedAt is null
+          and (t.expired = false or t.revoked = false or t.expiredAt is null or t.revokedAt is null)
+        """)
+    int revokeTokenByValue(@Param("token") String token, @Param("now") Instant now);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Token t
+        set t.expired = true,
+            t.revoked = true,
+            t.expiredAt = :now,
+            t.revokedAt = :now
+        where t.user.uuid = :userId
+          and t.expired = false
+          and t.revoked = false
+          and t.deletedAt is null
+        """)
+    int revokeAllActiveTokensByUserUuid(@Param("userId") UUID userId, @Param("now") Instant now);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Token t
+        set t.expired = true,
+            t.revoked = true,
+            t.expiredAt = :now,
+            t.revokedAt = :now
+        where t.user.uuid = :userId
+          and t.sessionId = :sessionId
+          and t.expired = false
+          and t.revoked = false
+          and t.deletedAt is null
+        """)
+    int revokeAllActiveTokensByUserUuidAndSessionId(@Param("userId") UUID userId, @Param("sessionId") String sessionId, @Param("now") Instant now);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Token t
+        set t.expired = true,
+            t.revoked = true,
+            t.expiredAt = :now,
+            t.revokedAt = :now
+        where t.user.uuid = :userId
+          and t.sessionId = :sessionId
+          and t.tokenType = :tokenType
+          and t.expired = false
+          and t.revoked = false
+          and t.deletedAt is null
+        """)
+    int revokeAllActiveTokensByUserUuidAndSessionIdAndType(@Param("userId") UUID userId,
+                                                           @Param("sessionId") String sessionId,
+                                                           @Param("tokenType") TokenType tokenType,
+                                                           @Param("now") Instant now);
 
     Token findByUserUuid(UUID uuid);
 

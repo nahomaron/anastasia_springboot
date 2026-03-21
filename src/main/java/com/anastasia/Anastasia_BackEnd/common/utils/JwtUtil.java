@@ -65,28 +65,31 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return buildToken(generateClaims(userDetails), userDetails, ACCESS_TOKEN_EXPIRATION_PERIOD);
-
+        return buildToken(generateClaims(userDetails, true), userDetails, ACCESS_TOKEN_EXPIRATION_PERIOD);
     }
 
     public String generateAccessToken(UserDetails userDetails, String sessionId, String jwtId) {
-        Map<String, Object> claims = generateClaims(userDetails);
+        Map<String, Object> claims = generateClaims(userDetails, true);
         claims.put("sessionId", sessionId);
         return buildToken(claims, userDetails, ACCESS_TOKEN_EXPIRATION_PERIOD, jwtId);
     }
 
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(generateClaims(userDetails), userDetails, REFRESH_TOKEN_EXPIRATION_PERIOD);
+        return buildToken(generateClaims(userDetails, false), userDetails, REFRESH_TOKEN_EXPIRATION_PERIOD);
     }
 
     public String generateRefreshToken(UserDetails userDetails, String sessionId, String jwtId) {
-        Map<String, Object> claims = generateClaims(userDetails);
+        Map<String, Object> claims = generateClaims(userDetails, false);
         claims.put("sessionId", sessionId);
         return buildToken(claims, userDetails, REFRESH_TOKEN_EXPIRATION_PERIOD, jwtId);
     }
 
     public Map<String, Object> generateClaims(UserDetails userDetails){
+        return generateClaims(userDetails, true);
+    }
+
+    private Map<String, Object> generateClaims(UserDetails userDetails, boolean includeRoles){
         if (!(userDetails instanceof UserPrincipal userPrincipal)) {
             throw new IllegalArgumentException("UserDetails is not an instance of UserPrincipal");
         }
@@ -95,14 +98,16 @@ public class JwtUtil {
         if (userPrincipal.getTenantId() != null) {
             claims.put("tenantId", userPrincipal.getTenantId().toString());
         }
-        claims.put("roles", userPrincipal.getRoles().stream()
-                .map(role -> {
-                    String roleName = role.getRoleName();
-                    return roleName != null && roleName.startsWith("ROLE_")
-                            ? roleName
-                            : "ROLE_" + roleName;
-                })
-                .collect(Collectors.toList()));
+        if (includeRoles) {
+            claims.put("roles", userPrincipal.getRoles().stream()
+                    .map(role -> {
+                        String roleName = role.getRoleName();
+                        return roleName != null && roleName.startsWith("ROLE_")
+                                ? roleName
+                                : "ROLE_" + roleName;
+                    })
+                    .collect(Collectors.toList()));
+        }
 
         return claims;
     }

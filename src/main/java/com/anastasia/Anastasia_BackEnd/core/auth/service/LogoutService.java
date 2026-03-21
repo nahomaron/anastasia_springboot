@@ -8,6 +8,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Service
 @RequiredArgsConstructor
 public class LogoutService implements LogoutHandler {
@@ -33,15 +35,6 @@ public class LogoutService implements LogoutHandler {
         if (token == null || token.isBlank()) {
             return;
         }
-
-        var storedToken = tokenRepository.findTopByTokenOrderByIdDesc(token).orElse(null);
-
-        if (storedToken != null) {
-            storedToken.setExpired(true);
-            storedToken.setRevoked(true);
-            storedToken.setExpiredAt(java.time.Instant.now());
-            storedToken.setRevokedAt(java.time.Instant.now());
-            tokenRepository.save(storedToken);
-        }
+        tokenRepository.revokeTokenByValue(token, Instant.now());
     }
 }

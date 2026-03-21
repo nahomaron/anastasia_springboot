@@ -46,7 +46,9 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -151,6 +153,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException {
+        Optional<UserEntity> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent() && !existingUser.get().isVerified()) {
+            handleUnverifiedLoginAttempt(existingUser.get());
+        }
 
         try {
             authenticationManager.authenticate(
@@ -158,35 +164,40 @@ public class AuthServiceImpl implements AuthService {
             );
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
             throw new InvalidCredentialsException(messageService.get("auth.login.invalidCredentials", "Invalid email or password"));
+        } catch (AuthenticationException e) {
+            throw e;
         } catch (Exception e) {
-            throw new AuthenticationProcessException(messageService.get("auth.login.unexpectedError", "An unexpected error occurred during login"));
+            throw new AuthenticationProcessException(
+                    messageService.get("auth.login.unexpectedError", "An unexpected error occurred during login"),
+                    e
+            );
         }
 
 
-        var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException(messageService.get("auth.login.userNotFound", "Login - Username not found")));
-
-
-        if(!user.isVerified()){
-            if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(Instant.now().minusSeconds(24L * 60L * 60L))) {
-                // The user was created more than 24 hours ago
-                sendValidationEmail(user);
-                throw new RuntimeException(messageService.get(
-                        "auth.login.accountNotVerifiedResent",
-                        "Login: Account is not verified. Please find a new token sent to you for verification!"
-                ));
-            }
-            throw new RuntimeException(messageService.get(
-                    "auth.login.accountNotVerified",
-                    "Login: Account is not verified. Please find the token sent to you for verification!"
-            ));
-        }
+        var user = existingUser.orElseGet(() -> userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        messageService.get("auth.login.userNotFound", "Login - Username not found")
+                )));
 
         if (isTwoFactorRequired(user)) {
             return createTwoFactorChallenge(user);
         }
 
         return issueSessionForUser(user.getUuid());
+    }
+
+    private void handleUnverifiedLoginAttempt(UserEntity user) throws MessagingException {
+        if (user.getCreatedAt() != null && user.getCreatedAt().isBefore(Instant.now().minusSeconds(24L * 60L * 60L))) {
+            sendValidationEmail(user);
+            throw new IllegalStateException(messageService.get(
+                    "auth.login.accountNotVerifiedResent",
+                    "Login: Account is not verified. Please find a new token sent to you for verification!"
+            ));
+        }
+        throw new IllegalStateException(messageService.get(
+                "auth.login.accountNotVerified",
+                "Login: Account is not verified. Please find the token sent to you for verification!"
+        ));
     }
 
     @Override
@@ -538,52 +549,21 @@ public class AuthServiceImpl implements AuthService {
         if (sessionId == null || sessionId.isBlank()) {
             return;
         }
-
-        List<Token> sessionTokens = tokenRepository.findAllActiveTokensByUserUuidAndSessionId(userId, sessionId);
-        Instant now = Instant.now();
-        sessionTokens.stream()
-                .filter(token -> token.getTokenType() == TokenType.BEARER)
-                .forEach(token -> {
-                    token.setRevoked(true);
-                    token.setExpired(true);
-                    token.setRevokedAt(now);
-                    token.setExpiredAt(now);
-                });
-        tokenRepository.saveAll(sessionTokens);
+        tokenRepository.revokeAllActiveTokensByUserUuidAndSessionIdAndType(
+                userId,
+                sessionId,
+                TokenType.BEARER,
+                Instant.now()
+        );
     }
 
     // revoking the currently existing bearer tokens
     public void revokeAllValidUserTokens(UserEntity user){
-        var validUserTokens = tokenRepository.findAllValidUserTokens(user.getUuid());
-
-        if (validUserTokens.isEmpty()) return;
-
-        validUserTokens.forEach(token -> {
-            if(token.getTokenType() == TokenType.BEARER){
-                token.setRevoked(true);
-                token.setExpired(true);
-                token.setRevokedAt(Instant.now());
-                token.setExpiredAt(Instant.now());
-            }
-        });
-        tokenRepository.saveAll(validUserTokens);
+        tokenRepository.revokeAllActiveTokensByUserUuid(user.getUuid(), Instant.now());
     }
 
     public void revokeAllActiveUserTokens(UserEntity user) {
-        var activeTokens = tokenRepository.findAllActiveTokensByUserUuid(user.getUuid());
-
-        if (activeTokens.isEmpty()) {
-            return;
-        }
-
-        Instant now = Instant.now();
-        activeTokens.forEach(token -> {
-            token.setRevoked(true);
-            token.setExpired(true);
-            token.setRevokedAt(now);
-            token.setExpiredAt(now);
-        });
-        tokenRepository.saveAll(activeTokens);
+        tokenRepository.revokeAllActiveTokensByUserUuid(user.getUuid(), Instant.now());
     }
 
     private AuthSessionResponse buildAuthSessionResponse(UserEntity user) {

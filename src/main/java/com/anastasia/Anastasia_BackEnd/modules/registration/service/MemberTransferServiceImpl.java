@@ -195,17 +195,7 @@ public class MemberTransferServiceImpl implements MemberTransferService {
     }
 
     private void revokeValidTokens(UUID userId) {
-        List<Token> tokens = tokenRepository.findAllValidUserTokens(userId);
-        if (tokens.isEmpty()) {
-            return;
-        }
-        for (Token token : tokens) {
-            token.setExpired(true);
-            token.setRevoked(true);
-            token.setExpiredAt(Instant.now());
-            token.setRevokedAt(Instant.now());
-        }
-        tokenRepository.saveAll(tokens);
+        tokenRepository.revokeAllActiveTokensByUserUuid(userId, Instant.now());
     }
 
     private String trimToNull(String value) {

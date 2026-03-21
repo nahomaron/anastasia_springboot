@@ -488,7 +488,7 @@ public class UserServiceImpl implements UserService {
             revokeSessionFamily(user.getUuid(), token.getSessionId());
             return;
         }
-        revokeToken(token);
+        tokenRepository.revokeTokenByIdAndUserUuid(token.getId(), user.getUuid(), Instant.now());
     }
 
     @Transactional
@@ -497,6 +497,8 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getCurrentAuthenticatedUser();
         List<Token> tokens = tokenRepository.findAllActiveTokensByUserUuid(user.getUuid());
         Set<String> preservedSessionIds = new HashSet<>();
+        Set<String> sessionIdsToRevoke = new HashSet<>();
+        Set<Integer> standaloneTokenIdsToRevoke = new HashSet<>();
         for (Token token : tokens) {
             if (currentBearerToken != null && currentBearerToken.equals(token.getToken())) {
                 if (token.getSessionId() != null && !token.getSessionId().isBlank()) {
@@ -507,23 +509,20 @@ public class UserServiceImpl implements UserService {
             if (token.getSessionId() != null && preservedSessionIds.contains(token.getSessionId())) {
                 continue;
             }
-            revokeToken(token);
+            if (token.getSessionId() != null && !token.getSessionId().isBlank()) {
+                sessionIdsToRevoke.add(token.getSessionId());
+            } else {
+                standaloneTokenIdsToRevoke.add(token.getId());
+            }
         }
-        tokenRepository.saveAll(tokens);
-    }
 
-    private void revokeToken(Token token) {
         Instant now = Instant.now();
-        token.setRevoked(true);
-        token.setExpired(true);
-        token.setRevokedAt(now);
-        token.setExpiredAt(now);
+        sessionIdsToRevoke.forEach(sessionId -> tokenRepository.revokeAllActiveTokensByUserUuidAndSessionId(user.getUuid(), sessionId, now));
+        standaloneTokenIdsToRevoke.forEach(tokenId -> tokenRepository.revokeTokenByIdAndUserUuid(tokenId, user.getUuid(), now));
     }
 
     private void revokeSessionFamily(UUID userId, String sessionFamilyId) {
-        List<Token> sessionTokens = tokenRepository.findAllActiveTokensByUserUuidAndSessionId(userId, sessionFamilyId);
-        sessionTokens.forEach(this::revokeToken);
-        tokenRepository.saveAll(sessionTokens);
+        tokenRepository.revokeAllActiveTokensByUserUuidAndSessionId(userId, sessionFamilyId, Instant.now());
     }
 
     @Caching(
