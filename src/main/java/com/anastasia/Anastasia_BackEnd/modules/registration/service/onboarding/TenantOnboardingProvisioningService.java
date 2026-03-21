@@ -197,7 +197,7 @@ public class TenantOnboardingProvisioningService {
             church.getProfilePicture().setImageAssetType(ImageAssetType.CHURCH);
             church.getProfilePicture().setOwnerId(tenant.getId());
         }
-        church.setChurchNumber(generateUniqueChurchNumber(church.getChurchNameLocal(), 5));
+        church.setChurchNumber(generateUniqueChurchNumber(church.getChurchName(), 5));
         ChurchEntity savedChurch = churchRepository.save(church);
         tenant.assignChurch(savedChurch);
         tenantRepository.save(tenant);

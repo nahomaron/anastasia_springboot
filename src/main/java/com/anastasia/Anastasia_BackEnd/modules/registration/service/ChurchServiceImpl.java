@@ -103,9 +103,10 @@ public class ChurchServiceImpl implements ChurchService{
                 )));
 
         churchEntity.setTenant(tenant);
+        churchEntity.setUsesOurServices(true);
         applyStatusLifecycle(churchEntity, null);
 
-        churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchNameLocal(), 5));
+        churchEntity.setChurchNumber(generateUniqueChurchNumber(churchEntity.getChurchName(), 5));
         if (churchEntity.getProfilePicture() != null) {
             stampProfilePicture(churchEntity, churchEntity.getProfilePicture());
         }
@@ -229,7 +230,7 @@ public class ChurchServiceImpl implements ChurchService{
         target.setLocale(defaultLocale(incoming.getLocale(), target.getLocale()));
         target.setDenomination(incoming.getDenomination());
         target.setDescription(incoming.getDescription());
-        target.setUsesOurServices(incoming.isUsesOurServices());
+        target.setUsesOurServices(resolveUsesOurServices(target, incoming));
         target.setGpsLocation(incoming.getGpsLocation());
         target.setLatitude(incoming.getLatitude());
         target.setLongitude(incoming.getLongitude());
@@ -267,6 +268,13 @@ public class ChurchServiceImpl implements ChurchService{
                 church.setDeactivatedAt(Instant.now());
             }
         }
+    }
+
+    private boolean resolveUsesOurServices(ChurchEntity target, ChurchEntity incoming) {
+        if (target.getTenant() != null && target.getTenant().getId() != null) {
+            return true;
+        }
+        return incoming.isUsesOurServices();
     }
 
     private void stampProfilePicture(ChurchEntity church, com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity profilePicture) {
