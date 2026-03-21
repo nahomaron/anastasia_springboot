@@ -28,6 +28,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -89,7 +90,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("Malformed JSON request", ex);
+        logHandledClientException("Malformed JSON request", ex);
         return bodyOnly(buildResponse(BAD_REQUEST, INVALID_REQUEST, key("error.request.malformedJson", "Malformed JSON request")), BAD_REQUEST);
     }
 
@@ -100,7 +101,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("Request method not supported", ex);
+        logHandledClientException("Request method not supported", ex);
         return bodyOnly(
                 buildResponse(
                         METHOD_NOT_ALLOWED,
@@ -118,7 +119,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("Missing request parameter", ex);
+        logHandledClientException("Missing request parameter", ex);
         return bodyOnly(
                 buildResponse(BAD_REQUEST, INVALID_REQUEST, key("error.request.missingParameter", "Missing parameter: {0}", ex.getParameterName())),
                 BAD_REQUEST
@@ -132,7 +133,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("Type mismatch", ex);
+        logHandledClientException("Type mismatch", ex);
         String expectedType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
         return bodyOnly(
                 buildResponse(
@@ -151,7 +152,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("No handler found for request", ex);
+        logHandledClientException("No handler found for request", ex);
         return bodyOnly(
                 buildResponse(
                         NOT_FOUND,
@@ -169,7 +170,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("Media type not supported", ex);
+        logHandledClientException("Media type not supported", ex);
         return bodyOnly(
                 buildResponse(
                         UNSUPPORTED_MEDIA_TYPE,
@@ -187,13 +188,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("Media type not acceptable", ex);
+        logHandledClientException("Media type not acceptable", ex);
         return bodyOnly(buildResponse(NOT_ACCEPTABLE, INVALID_REQUEST, key("error.request.mediaTypeNotAcceptable", "Requested media type not acceptable")), NOT_ACCEPTABLE);
     }
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ExceptionResponse> handleBindException(BindException ex) {
-        log.error("Binding failure", ex);
+        logHandledClientException("Binding failure", ex);
         return ResponseEntity.status(BAD_REQUEST).body(validationResponse(ex.getFieldErrors(), ex.getGlobalErrors()));
     }
 
@@ -204,14 +205,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status,
             WebRequest request
     ) {
-        log.error("Validation error", ex);
+        logHandledClientException("Validation error", ex);
         return ResponseEntity.status(BAD_REQUEST)
                 .body(validationResponse(ex.getBindingResult().getFieldErrors(), ex.getBindingResult().getGlobalErrors()));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ExceptionResponse> handleArgTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        log.error("Argument type mismatch", ex);
+        logHandledClientException("Argument type mismatch", ex);
         return buildResponse(
                 BAD_REQUEST,
                 INVALID_REQUEST,
@@ -221,7 +222,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ExceptionResponse> handleConstraintViolation(ConstraintViolationException ex) {
-        log.error("Constraint violation", ex);
+        logHandledClientException("Constraint violation", ex);
         Set<String> violations = new HashSet<>();
         ex.getConstraintViolations().forEach(v -> violations.add(v.getPropertyPath() + ": " + messageService.resolve(v.getMessage(), null)));
         return ResponseEntity.status(BAD_REQUEST).body(
@@ -235,7 +236,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({LockedException.class, DisabledException.class, BadCredentialsException.class, InvalidCredentialsException.class})
     public ResponseEntity<ExceptionResponse> handleAuthExceptions(RuntimeException ex) {
-        log.error("Authentication error", ex);
+        logHandledClientException("Authentication error", ex);
         BusinessErrorCodes code = LockedException.class.isInstance(ex)
                 ? ACCOUNT_LOCKED
                 : DisabledException.class.isInstance(ex)
@@ -246,7 +247,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ExceptionResponse> handleAuthentication(AuthenticationException ex) {
-        log.error("Authentication failed", ex);
+        logHandledClientException("Authentication failed", ex);
         return buildResponse(UNAUTHORIZED, AUTHENTICATION_FAILED, ex.getMessage());
     }
 
@@ -258,20 +259,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ExceptionResponse> handleAccessDenied(AccessDeniedException ex) {
-        log.error("Access denied", ex);
+        logHandledClientException("Access denied", ex);
         return buildResponse(FORBIDDEN, ACCESS_DENIED, localizedDescription(ACCESS_DENIED));
     }
 
-    @ExceptionHandler({EntityNotFoundException.class, ResourceNotFoundException.class, AccountNotFoundException.class})
+    @ExceptionHandler({EntityNotFoundException.class, ResourceNotFoundException.class, AccountNotFoundException.class, UsernameNotFoundException.class})
     public ResponseEntity<ExceptionResponse> handleNotFound(RuntimeException ex) {
-        log.error("Resource not found", ex);
+        logHandledClientException("Resource not found", ex);
         String message = ex.getMessage() != null ? ex.getMessage() : key("error.resource.notFound", "Requested resource was not found");
         return buildResponse(NOT_FOUND, RESOURCE_NOT_FOUND, message);
     }
 
     @ExceptionHandler({EntityExistsException.class, DuplicateKeyException.class})
     public ResponseEntity<ExceptionResponse> handleEntityExists(RuntimeException ex) {
-        log.error("Duplicate resource", ex);
+        logHandledClientException("Duplicate resource", ex);
         return buildResponse(CONFLICT, DUPLICATE_REQUEST, ex.getMessage());
     }
 
@@ -316,25 +317,25 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({InvalidTransactionException.class, InsufficientFundsException.class, ReconciliationException.class})
     public ResponseEntity<ExceptionResponse> handleBusinessRuleViolation(RuntimeException ex) {
-        log.error("Business rule violation", ex);
+        logHandledClientException("Business rule violation", ex);
         return buildResponse(BAD_REQUEST, BUSINESS_RULE_VIOLATION, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ExceptionResponse> handleIllegalArgument(IllegalArgumentException ex) {
-        log.error("Invalid argument", ex);
+        logHandledClientException("Invalid argument", ex);
         return buildResponse(BAD_REQUEST, INVALID_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ExceptionResponse> handleIllegalState(IllegalStateException ex) {
-        log.error("Invalid state", ex);
+        logHandledClientException("Invalid state", ex);
         return buildResponse(CONFLICT, STATE_CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(NumberFormatException.class)
     public ResponseEntity<ExceptionResponse> handleNumberFormat(NumberFormatException ex) {
-        log.error("Number format exception", ex);
+        logHandledClientException("Number format exception", ex);
         return buildResponse(BAD_REQUEST, INVALID_REQUEST, key("error.request.invalidNumber", "Invalid numeric value in request"));
     }
 
@@ -346,7 +347,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ExceptionResponse> handleResponseStatus(ResponseStatusException ex) {
-        log.error("ResponseStatusException", ex);
+        logHandledClientException("ResponseStatusException", ex);
         HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
         HttpStatus resolved = status != null ? status : INTERNAL_SERVER_ERROR;
 
@@ -360,6 +361,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         };
         String message = ex.getReason() != null ? ex.getReason() : ex.getMessage();
         return buildResponse(resolved, code, message);
+    }
+
+    private void logHandledClientException(String context, Exception ex) {
+        if (log.isDebugEnabled()) {
+            log.debug("{}: {}", context, ex.getMessage(), ex);
+            return;
+        }
+        log.warn("{}: {}", context, ex.getMessage());
     }
 
     private ResponseEntity<ExceptionResponse> buildResponse(HttpStatus status, BusinessErrorCodes code, String message) {
