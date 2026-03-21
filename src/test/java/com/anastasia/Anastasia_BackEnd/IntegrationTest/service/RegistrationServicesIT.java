@@ -225,7 +225,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
                 .churchEmail("updated-priest@church.org")
                 .build();
 
-        PriestResponse updated = priestService.updatePriestDetails(saved.getId(), patch);
+        PriestResponse updated = priestService.updatePriestDetails(saved.getId(), patch, null);
         assertThat(updated.getPrefixes()).isEqualTo("Abune");
         assertThat(updated.getChurchEmail()).isEqualTo("updated-priest@church.org");
 

@@ -31,10 +31,10 @@ public class BaseMemberResponse {
     private String grandFatherName;
     private String motherName;
     private String mothersFather;
-    private String firstNameT;
-    private String fatherNameT;
-    private String grandFatherNameT;
-    private String motherFullNameT;
+    private String firstNameLocal;
+    private String fatherNameLocal;
+    private String grandFatherNameLocal;
+    private String motherFullNameLocal;
     private String gender;
     private LocalDate birthday;
     private String nationality;

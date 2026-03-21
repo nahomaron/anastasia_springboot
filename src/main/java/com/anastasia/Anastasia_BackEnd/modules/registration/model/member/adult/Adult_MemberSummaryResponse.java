@@ -22,9 +22,9 @@ public class Adult_MemberSummaryResponse {
     private String firstName;
     private String fatherName;
     private String grandFatherName;
-    private String firstNameT;
-    private String fatherNameT;
-    private String grandFatherNameT;
+    private String firstNameLocal;
+    private String fatherNameLocal;
+    private String grandFatherNameLocal;
     private String email;
     private String phone;
     private Instant createdAt;

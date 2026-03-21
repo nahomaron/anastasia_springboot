@@ -335,9 +335,9 @@ public class MemberServiceImpl implements MemberService {
                         cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("fatherName"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("grandFatherName"), "")), like),
-                        cb.like(cb.lower(cb.coalesce(root.get("firstNameT"), "")), like),
-                        cb.like(cb.lower(cb.coalesce(root.get("fatherNameT"), "")), like),
-                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("firstNameLocal"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("fatherNameLocal"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherNameLocal"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("membershipNumber"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("email"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("profession"), "")), like)
@@ -369,9 +369,9 @@ public class MemberServiceImpl implements MemberService {
                         cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("fatherName"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("grandFatherName"), "")), like),
-                        cb.like(cb.lower(cb.coalesce(root.get("firstNameT"), "")), like),
-                        cb.like(cb.lower(cb.coalesce(root.get("fatherNameT"), "")), like),
-                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherNameT"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("firstNameLocal"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("fatherNameLocal"), "")), like),
+                        cb.like(cb.lower(cb.coalesce(root.get("grandFatherNameLocal"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("membershipNumber"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("email"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("profession"), "")), like)
@@ -419,10 +419,10 @@ public class MemberServiceImpl implements MemberService {
             Optional.ofNullable(request.getGrandFatherName()).ifPresent(memberEntity::setGrandFatherName);
             Optional.ofNullable(request.getMotherName()).ifPresent(memberEntity::setMotherName);
             Optional.ofNullable(request.getMothersFather()).ifPresent(memberEntity::setMothersFather);
-            Optional.ofNullable(request.getFirstNameT()).ifPresent(memberEntity::setFirstNameT);
-            Optional.ofNullable(request.getFatherNameT()).ifPresent(memberEntity::setFatherNameT);
-            Optional.ofNullable(request.getGrandFatherNameT()).ifPresent(memberEntity::setGrandFatherNameT);
-            Optional.ofNullable(request.getMotherFullNameT()).ifPresent(memberEntity::setMotherFullNameT);
+            Optional.ofNullable(request.getFirstNameLocal()).ifPresent(memberEntity::setFirstNameLocal);
+            Optional.ofNullable(request.getFatherNameLocal()).ifPresent(memberEntity::setFatherNameLocal);
+            Optional.ofNullable(request.getGrandFatherNameLocal()).ifPresent(memberEntity::setGrandFatherNameLocal);
+            Optional.ofNullable(request.getMotherFullNameLocal()).ifPresent(memberEntity::setMotherFullNameLocal);
             Optional.ofNullable(request.getGender()).ifPresent(memberEntity::setGender);
             Optional.ofNullable(request.getBirthday()).ifPresent(memberEntity::setBirthday);
             Optional.ofNullable(request.getNationality()).ifPresent(memberEntity::setNationality);

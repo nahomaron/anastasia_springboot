@@ -34,9 +34,9 @@ public class MemberSpecifications {
                     cb.like(cb.lower(root.get("firstName")), likePattern),
                     cb.like(cb.lower(root.get("fatherName")), likePattern),
                     cb.like(cb.lower(root.get("grandFatherName")), likePattern),
-                    cb.like(root.get("firstNameT"), likePattern),
-                    cb.like(root.get("fatherNameT"), likePattern),
-                    cb.like(root.get("grandFatherNameT"), likePattern)
+                    cb.like(root.get("firstNameLocal"), likePattern),
+                    cb.like(root.get("fatherNameLocal"), likePattern),
+                    cb.like(root.get("grandFatherNameLocal"), likePattern)
             );
         };
     }
@@ -46,7 +46,7 @@ public class MemberSpecifications {
             String likePattern = "%" + motherName.toLowerCase() + "%";
             return cb.or(
                     cb.like(cb.lower(root.get("motherName")), likePattern),
-                    cb.like(root.get("motherFullNameT"), likePattern)
+                    cb.like(root.get("motherFullNameLocal"), likePattern)
             );
         };
     }

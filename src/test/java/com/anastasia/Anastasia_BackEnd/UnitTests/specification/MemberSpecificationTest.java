@@ -82,9 +82,9 @@ class MemberSpecificationTest {
         Path<String> firstName = mock(Path.class);
         Path<String> fatherName = mock(Path.class);
         Path<String> grandFatherName = mock(Path.class);
-        Path<String> firstNameT = mock(Path.class);
-        Path<String> fatherNameT = mock(Path.class);
-        Path<String> grandFatherNameT = mock(Path.class);
+        Path<String> firstNameLocal = mock(Path.class);
+        Path<String> fatherNameLocal = mock(Path.class);
+        Path<String> grandFatherNameLocal = mock(Path.class);
 
         // Expression mocks after cb.lower(...)
         Expression<String> expr1 = mock(Expression.class);
@@ -104,9 +104,9 @@ class MemberSpecificationTest {
         Mockito.<Path<String>>when(root.get("firstName")).thenReturn(firstName);
         Mockito.<Path<String>>when(root.get("fatherName")).thenReturn(fatherName);
         Mockito.<Path<String>>when(root.get("grandFatherName")).thenReturn(grandFatherName);
-        Mockito.<Path<String>>when(root.get("firstNameT")).thenReturn(firstNameT);
-        Mockito.<Path<String>>when(root.get("fatherNameT")).thenReturn(fatherNameT);
-        Mockito.<Path<String>>when(root.get("grandFatherNameT")).thenReturn(grandFatherNameT);
+        Mockito.<Path<String>>when(root.get("firstNameLocal")).thenReturn(firstNameLocal);
+        Mockito.<Path<String>>when(root.get("fatherNameLocal")).thenReturn(fatherNameLocal);
+        Mockito.<Path<String>>when(root.get("grandFatherNameLocal")).thenReturn(grandFatherNameLocal);
 
         String pattern = "%john%";
 
@@ -117,9 +117,9 @@ class MemberSpecificationTest {
         when(cb.like(expr1, pattern)).thenReturn(p1);
         when(cb.like(expr2, pattern)).thenReturn(p2);
         when(cb.like(expr3, pattern)).thenReturn(p3);
-        when(cb.like(firstNameT, pattern)).thenReturn(p4);
-        when(cb.like(fatherNameT, pattern)).thenReturn(p5);
-        when(cb.like(grandFatherNameT, pattern)).thenReturn(p6);
+        when(cb.like(firstNameLocal, pattern)).thenReturn(p4);
+        when(cb.like(fatherNameLocal, pattern)).thenReturn(p5);
+        when(cb.like(grandFatherNameLocal, pattern)).thenReturn(p6);
 
         when(cb.or(p1, p2, p3, p4, p5, p6)).thenReturn(finalPredicate);
 

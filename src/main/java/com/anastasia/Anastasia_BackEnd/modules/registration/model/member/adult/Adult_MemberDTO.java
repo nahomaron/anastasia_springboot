@@ -49,16 +49,16 @@ public class Adult_MemberDTO {
     private String mothersFather;
 
     @NotBlank(message = "{validation.member.firstNameLocal.required}")
-    private String firstNameT;
+    private String firstNameLocal;
 
     @NotBlank(message = "{validation.member.fatherNameLocal.required}")
-    private String fatherNameT;
+    private String fatherNameLocal;
 
     @NotBlank(message = "{validation.member.grandFatherNameLocal.required}")
-    private String grandFatherNameT;
+    private String grandFatherNameLocal;
 
     @NotBlank(message = "{validation.member.motherFullNameLocal.required}")
-    private String motherFullNameT;
+    private String motherFullNameLocal;
 
     @NotBlank(message = "{validation.member.gender.required}")
     @Pattern(regexp = "^(Male|Female)$", message = "{validation.member.gender.invalid}")

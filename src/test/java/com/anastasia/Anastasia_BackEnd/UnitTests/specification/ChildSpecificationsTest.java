@@ -115,16 +115,16 @@ class ChildSpecificationsTest {
         Path<String> firstName = mock(Path.class);
         Path<String> fatherName = mock(Path.class);
         Path<String> grandFatherName = mock(Path.class);
-        Path<String> firstNameT = mock(Path.class);
-        Path<String> fatherNameT = mock(Path.class);
-        Path<String> grandFatherNameT = mock(Path.class);
+        Path<String> firstNameLocal = mock(Path.class);
+        Path<String> fatherNameLocal = mock(Path.class);
+        Path<String> grandFatherNameLocal = mock(Path.class);
 
         Mockito.<Path<String>>when(root.get("firstName")).thenReturn(firstName);
         Mockito.<Path<String>>when(root.get("fatherName")).thenReturn(fatherName);
         Mockito.<Path<String>>when(root.get("grandFatherName")).thenReturn(grandFatherName);
-        Mockito.<Path<String>>when(root.get("firstNameT")).thenReturn(firstNameT);
-        Mockito.<Path<String>>when(root.get("fatherNameT")).thenReturn(fatherNameT);
-        Mockito.<Path<String>>when(root.get("grandFatherNameT")).thenReturn(grandFatherNameT);
+        Mockito.<Path<String>>when(root.get("firstNameLocal")).thenReturn(firstNameLocal);
+        Mockito.<Path<String>>when(root.get("fatherNameLocal")).thenReturn(fatherNameLocal);
+        Mockito.<Path<String>>when(root.get("grandFatherNameLocal")).thenReturn(grandFatherNameLocal);
 
         Expression<String> expr1 = mock(Expression.class);
         Expression<String> expr2 = mock(Expression.class);
@@ -137,9 +137,9 @@ class ChildSpecificationsTest {
         when(cb.like(expr1, "%john%")).thenReturn(mock(Predicate.class));
         when(cb.like(expr2, "%john%")).thenReturn(mock(Predicate.class));
         when(cb.like(expr3, "%john%")).thenReturn(mock(Predicate.class));
-        when(cb.like(firstNameT, "%john%")).thenReturn(mock(Predicate.class));
-        when(cb.like(fatherNameT, "%john%")).thenReturn(mock(Predicate.class));
-        when(cb.like(grandFatherNameT, "%john%")).thenReturn(mock(Predicate.class));
+        when(cb.like(firstNameLocal, "%john%")).thenReturn(mock(Predicate.class));
+        when(cb.like(fatherNameLocal, "%john%")).thenReturn(mock(Predicate.class));
+        when(cb.like(grandFatherNameLocal, "%john%")).thenReturn(mock(Predicate.class));
 
         when(cb.or(any(), any(), any(), any(), any(), any())).thenReturn(expected);
 

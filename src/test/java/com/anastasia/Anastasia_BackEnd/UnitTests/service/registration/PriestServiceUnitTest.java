@@ -133,7 +133,7 @@ public class PriestServiceUnitTest {
         when(priestRepository.save(any())).thenReturn(found);
         when(priestMapper.priestEntityToResponse(found)).thenReturn(response);
 
-        PriestResponse result = priestService.updatePriestDetails(1L, input);
+        PriestResponse result = priestService.updatePriestDetails(1L, input, null);
 
         assertNotNull(result);
         verify(priestRepository).save(any());
