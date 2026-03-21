@@ -644,7 +644,6 @@ public class AuthServiceImpl implements AuthService {
                 .map(TenantAdminAssignmentEntity::getRole)
                 .filter(TenantRole.PRIMARY_ADMIN::equals)
                 .ifPresent(role -> {
-                    roleNames.remove("OWNER");
                     roleNames.remove("ADMIN");
                     roleNames.add("PRIMARY_ADMIN");
                 });
@@ -689,7 +688,7 @@ public class AuthServiceImpl implements AuthService {
 
         TenantRole tenantRole = activeAssignment.get().getRole();
         if (tenantRole == TenantRole.PRIMARY_ADMIN) {
-            roles.removeIf(role -> "OWNER".equals(role.getRoleName()) || "ADMIN".equals(role.getRoleName()));
+            roles.removeIf(role -> "ADMIN".equals(role.getRoleName()));
         }
 
         resolveRoleEntity(tenantRole).ifPresent(roles::add);

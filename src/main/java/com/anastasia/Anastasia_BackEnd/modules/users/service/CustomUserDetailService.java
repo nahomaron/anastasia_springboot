@@ -55,7 +55,7 @@ public class CustomUserDetailService implements UserDetailsService {
 
         TenantRole tenantRole = activeAssignment.get().getRole();
         if (tenantRole == TenantRole.PRIMARY_ADMIN) {
-            roles.removeIf(role -> "OWNER".equals(role.getRoleName()) || "ADMIN".equals(role.getRoleName()));
+            roles.removeIf(role -> "ADMIN".equals(role.getRoleName()));
         }
 
         resolveRoleEntity(tenantRole).ifPresent(roles::add);

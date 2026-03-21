@@ -26,7 +26,7 @@ public interface PriestService {
     List<PriestResponse> findPriestsByChurchId(Long churchId);
     List<PriestResponse> findActivePriestsByChurchId(Long churchId);
 
-    PriestResponse updatePriestDetails(Long priestId, PriestEntity priestEntity);
+    PriestResponse updatePriestDetails(Long priestId, PriestEntity priestEntity, Boolean isActive);
 
     void deletePriest(Long priestId);
 }

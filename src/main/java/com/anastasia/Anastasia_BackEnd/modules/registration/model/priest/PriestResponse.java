@@ -56,4 +56,6 @@ public class PriestResponse {
     private String levelOfEducation;
 
     private Address address;
+
+    private boolean isActive;
 }

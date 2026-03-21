@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
@@ -22,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -85,9 +87,13 @@ public class PriestController {
     @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'MANAGE_PRIESTS')")
     @PatchMapping("/{priestId}")
     public ResponseEntity<PriestResponse> updatePriestDetails(@PathVariable Long priestId,
-                                                         @RequestBody PriestDTO priestDTO){
+                                                         @RequestBody Map<String, Object> payload){
+        PriestDTO priestDTO = objectMapper.convertValue(payload, PriestDTO.class);
+        Boolean isActive = payload.containsKey("isActive")
+                ? objectMapper.convertValue(payload.get("isActive"), Boolean.class)
+                : null;
         PriestEntity priestEntity = priestService.convertToEntity(priestDTO);
-        PriestResponse updatedPriest = priestService.updatePriestDetails(priestId, priestEntity);
+        PriestResponse updatedPriest = priestService.updatePriestDetails(priestId, priestEntity, isActive);
         return new ResponseEntity<>(updatedPriest, HttpStatus.ACCEPTED);
     }
 

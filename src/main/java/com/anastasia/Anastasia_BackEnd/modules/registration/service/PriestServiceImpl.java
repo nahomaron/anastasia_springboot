@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.common.Address;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.PriestMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
@@ -254,7 +255,7 @@ public class PriestServiceImpl implements PriestService{
 //                    allEntries = true)}
 //    )
     @Override
-    public PriestResponse updatePriestDetails(Long priestId, PriestEntity priestEntity) {
+    public PriestResponse updatePriestDetails(Long priestId, PriestEntity priestEntity, Boolean isActive) {
 
         return priestRepository.findById(priestId).map(foundPriest -> {
             Optional.ofNullable(priestEntity.getChurch()).ifPresent(foundPriest::setChurch);
@@ -267,22 +268,50 @@ public class PriestServiceImpl implements PriestService{
             Optional.ofNullable(priestEntity.getFirstName()).ifPresent(foundPriest::setFirstName);
             Optional.ofNullable(priestEntity.getFatherName()).ifPresent(foundPriest::setFatherName);
             Optional.ofNullable(priestEntity.getGrandFatherName()).ifPresent(foundPriest::setGrandFatherName);
+            Optional.ofNullable(priestEntity.getPhoneNumber()).ifPresent(foundPriest::setPhoneNumber);
 
             Optional.ofNullable(priestEntity.getChurchEmail()).ifPresent(foundPriest::setChurchEmail);
 
             Optional.ofNullable(priestEntity.getBirthdate()).ifPresent(foundPriest::setBirthdate);
 
-            Optional.ofNullable(priestEntity.getAddress()).ifPresent(foundPriest::setAddress);
+            Optional.ofNullable(priestEntity.getAddress())
+                    .ifPresent(address -> foundPriest.setAddress(mergeAddress(foundPriest.getAddress(), address)));
             Optional.ofNullable(priestEntity.getLanguages())
                     .map(this::normalizeLanguages)
                     .ifPresent(foundPriest::setLanguages);
             Optional.ofNullable(priestEntity.getLevelOfEducation()).ifPresent(foundPriest::setLevelOfEducation);
             Optional.ofNullable(priestEntity.getPriesthoodCardId()).ifPresent(foundPriest::setPriesthoodCardId);
             Optional.ofNullable(priestEntity.getPriesthoodCardScan()).ifPresent(foundPriest::setPriesthoodCardScan);
+            Optional.ofNullable(isActive).ifPresent(foundPriest::setActive);
 
             PriestEntity saved = priestRepository.save(foundPriest);
             return priestMapper.priestEntityToResponse(saved);
         }).orElseThrow(() -> new UsernameNotFoundException("Priest not found"));
+    }
+
+    private Address mergeAddress(Address current, Address incoming) {
+        Address merged = current == null ? new Address() : current;
+
+        if (incoming.getAddressLine1() != null) {
+            merged.setAddressLine1(incoming.getAddressLine1());
+        }
+        if (incoming.getAddressLine2() != null) {
+            merged.setAddressLine2(incoming.getAddressLine2());
+        }
+        if (incoming.getCity() != null) {
+            merged.setCity(incoming.getCity());
+        }
+        if (incoming.getStateProvince() != null) {
+            merged.setStateProvince(incoming.getStateProvince());
+        }
+        if (incoming.getCountry() != null) {
+            merged.setCountry(incoming.getCountry());
+        }
+        if (incoming.getPostalCode() != null) {
+            merged.setPostalCode(incoming.getPostalCode());
+        }
+
+        return merged;
     }
 
     private ImageAssetEntity enrichAvatar(ImageAssetEntity avatar, UserEntity user) {
