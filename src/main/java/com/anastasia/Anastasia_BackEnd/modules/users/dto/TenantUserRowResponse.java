@@ -14,6 +14,7 @@ public class TenantUserRowResponse {
     private UUID tenantId;
     private String username;
     private String email;
+    private String avatarUrl;
     private List<String> roles;
     private List<String> groups;
     private String membershipId;

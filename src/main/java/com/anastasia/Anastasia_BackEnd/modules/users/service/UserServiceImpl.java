@@ -1086,6 +1086,7 @@ public class UserServiceImpl implements UserService {
                 .tenantId(user.getTenantId())
                 .username(user.getFullName())
                 .email(user.getEmail())
+                .avatarUrl(user.getProfileAvatar() != null ? user.getProfileAvatar().getImageUrl() : null)
                 .roles(roles)
                 .groups(groups)
                 .membershipId(membershipId)
