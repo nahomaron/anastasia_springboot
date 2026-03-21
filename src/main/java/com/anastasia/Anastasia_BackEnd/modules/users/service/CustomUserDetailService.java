@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -9,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Members
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.TenantUserPermissionGrantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +29,8 @@ public class CustomUserDetailService implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
+    private final TenantUserPermissionGrantRepository permissionGrantRepository;
+    private final TenantUserAccessPolicy accessPolicy;
     private final LocalizedMessageService messageService;
 
     @Override
@@ -43,11 +47,15 @@ public class CustomUserDetailService implements UserDetailsService {
                 messageService.get("auth.login.userNotFound", "User not found")
         ));
 
-        return new UserPrincipal(resolvedUser, resolveEffectiveRoles(resolvedUser));
+        return new UserPrincipal(
+                resolvedUser,
+                resolveEffectiveRoles(resolvedUser),
+                resolveDirectPermissions(resolvedUser)
+        );
     }
 
     private Set<Role> resolveEffectiveRoles(UserEntity user) {
-        Set<Role> roles = new LinkedHashSet<>(user.getRoles() == null ? Set.of() : user.getRoles());
+        Set<Role> roles = new LinkedHashSet<>(accessPolicy.explicitRolesForTenant(user, user.getTenantId()));
         Optional<TenantAdminAssignmentEntity> activeAssignment = resolveActiveTenantAdminAssignment(user);
         if (activeAssignment.isEmpty()) {
             return roles;
@@ -86,5 +94,15 @@ public class CustomUserDetailService implements UserDetailsService {
         };
 
         return roleName == null ? Optional.empty() : roleRepository.findByRoleName(roleName);
+    }
+
+    private Set<Permission> resolveDirectPermissions(UserEntity user) {
+        if (user.getUuid() == null || user.getTenantId() == null) {
+            return Set.of();
+        }
+
+        return permissionGrantRepository.findByUserIdAndTenantId(user.getUuid(), user.getTenantId()).stream()
+                .map(grant -> grant.getPermission())
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
     }
 }

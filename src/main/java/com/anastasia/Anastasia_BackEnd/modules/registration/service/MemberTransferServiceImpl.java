@@ -2,7 +2,6 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
-import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
@@ -18,6 +17,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberTra
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.TenantUserPermissionGrantRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -38,6 +39,7 @@ public class MemberTransferServiceImpl implements MemberTransferService {
     private final MemberRepository memberRepository;
     private final ChildRepository childRepository;
     private final TokenRepository tokenRepository;
+    private final TenantUserPermissionGrantRepository permissionGrantRepository;
 
     @Override
     @Transactional
@@ -123,6 +125,8 @@ public class MemberTransferServiceImpl implements MemberTransferService {
         targetTenantAssignment.setUpdatedByUserId(actorUserId);
         tenantAdminAssignmentRepository.save(targetTenantAssignment);
 
+        user.setRoles(Set.of());
+        permissionGrantRepository.deleteByUserId(userId);
         user.assignTenant(request.getToTenant());
         synchronizeMemberChurchAndTenant(user, request.getToTenant());
         userRepository.save(user);

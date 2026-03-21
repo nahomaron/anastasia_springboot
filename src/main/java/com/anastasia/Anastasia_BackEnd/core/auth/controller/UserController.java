@@ -22,12 +22,16 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserPreferencesResponse
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyRecoveryEmailCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.VerifyTotpSetupRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantMembershipActionRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserAccessResponse;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTenantUserPermissionsRequest;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UpdateTenantUserRolesRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUserRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.TenantUserAccessService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +58,7 @@ public class UserController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final TenantUserAccessService tenantUserAccessService;
 
 
     /**
@@ -249,6 +254,30 @@ public class UserController {
             @Valid @RequestBody TenantMembershipActionRequest request
     ) {
         return ResponseEntity.ok(userService.applyMembershipAction(userId, request.getAction()));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @GetMapping("/tenant-access/{userId}/access")
+    public ResponseEntity<TenantUserAccessResponse> getTenantUserAccess(@PathVariable UUID userId) {
+        return ResponseEntity.ok(tenantUserAccessService.getUserAccess(userId));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PutMapping("/tenant-access/{userId}/access/roles")
+    public ResponseEntity<TenantUserAccessResponse> updateTenantUserRoles(
+            @PathVariable UUID userId,
+            @Valid @RequestBody UpdateTenantUserRolesRequest request
+    ) {
+        return ResponseEntity.ok(tenantUserAccessService.updateUserRoles(userId, request.getRoleIds()));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PutMapping("/tenant-access/{userId}/access/permissions")
+    public ResponseEntity<TenantUserAccessResponse> updateTenantUserPermissions(
+            @PathVariable UUID userId,
+            @Valid @RequestBody UpdateTenantUserPermissionsRequest request
+    ) {
+        return ResponseEntity.ok(tenantUserAccessService.updateUserPermissions(userId, request.getPermissions()));
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")

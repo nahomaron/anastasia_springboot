@@ -22,34 +22,47 @@ public class UserPrincipal implements UserDetails {
     @Getter
     private Set<Role> roles;
 
+    private final Set<Permission> directPermissions;
+
     public UserPrincipal(UserEntity user) {
-        this(user, user.getRoles());
+        this(user, user.getRoles(), Set.of());
     }
 
     public UserPrincipal(UserEntity user, Set<Role> roles) {
+        this(user, roles, Set.of());
+    }
+
+    public UserPrincipal(UserEntity user, Set<Role> roles, Set<Permission> directPermissions) {
         this.user = user;
         this.tenantId = (user.getTenant() != null) ? user.getTenant().getId() : null; //  Safe handling
         this.roles = roles == null ? Set.of() : new LinkedHashSet<>(roles);
+        this.directPermissions = directPermissions == null ? Set.of() : new LinkedHashSet<>(directPermissions);
     }
 
 
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        Set<String> authorities = new LinkedHashSet<>();
 
         for (Role role : roles) {
             String roleName = role.getRoleName();
             String authority = roleName != null && roleName.startsWith("ROLE_")
                     ? roleName
                     : "ROLE_" + roleName;
-            authorities.add(new SimpleGrantedAuthority(authority)); // Roles
+            authorities.add(authority);
 
             for (Permission permission : role.getPermissions()) {
-                authorities.add(new SimpleGrantedAuthority(permission.getName().name())); // Permissions
+                authorities.add(permission.getName().name());
             }
         }
 
-        return authorities;
+        for (Permission permission : directPermissions) {
+            authorities.add(permission.getName().name());
+        }
+
+        return authorities.stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
     }
 
     public boolean hasPermission(String permissionName) {

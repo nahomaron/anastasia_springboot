@@ -26,7 +26,6 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
-import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
@@ -121,6 +120,7 @@ public class UserServiceImpl implements UserService {
     private final TokenRepository tokenRepository;
     private final LocalePreferenceService localePreferenceService;
     private final LocalizedMessageService messageService;
+    private final TenantUserAccessPolicy accessPolicy;
 
     private static final String BACKUP_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int BACKUP_CODES_COUNT = 10;
@@ -622,15 +622,34 @@ public class UserServiceImpl implements UserService {
             throw new IllegalStateException(messageService.get("tenant.context.missing", "Tenant ID is not set in the context"));
         }
 
+        if (user.getTenantId() == null || !tenantId.equals(user.getTenantId())) {
+            throw new EntityNotFoundException(messageService.get("user.access.notFoundInTenant", "User not found in current tenant"));
+        }
 
-        Set<Role> roles = roleRepository.findAll()
-                .stream()
-                .filter(role -> request.roleIds().contains(role.getId()))
-                .collect(Collectors.toSet());
+        if (accessPolicy.isProtectedAccount(user)) {
+            throw new IllegalArgumentException(messageService.get(
+                    "user.access.protectedAccount",
+                    "Protected tenant account cannot be modified"
+            ));
+        }
 
-        System.out.println("Roles "+ roles);
+        List<Role> requestedRoles = roleRepository.findAllById(request.roleIds());
+        Set<Long> resolvedIds = requestedRoles.stream().map(Role::getId).collect(Collectors.toSet());
+        if (!resolvedIds.equals(new LinkedHashSet<>(request.roleIds()))) {
+            throw new IllegalArgumentException(messageService.get("user.access.roles.invalid", "One or more requested roles were not found"));
+        }
 
-        user.setRoles(roles);
+        List<Role> invalidRoles = requestedRoles.stream()
+                .filter(role -> !accessPolicy.isAssignableThroughTenantAccess(role, tenantId))
+                .toList();
+        if (!invalidRoles.isEmpty()) {
+            throw new IllegalArgumentException(messageService.get(
+                    "user.access.roles.notAssignable",
+                    "One or more requested roles cannot be assigned through tenant access"
+            ));
+        }
+
+        user.setRoles(new LinkedHashSet<>(requestedRoles));
 
         userRepository.save(user);
     }
@@ -753,7 +772,7 @@ public class UserServiceImpl implements UserService {
             throw new EntityNotFoundException("User not found in current tenant");
         }
 
-        if (isProtectedTenantAccount(user)) {
+        if (accessPolicy.isProtectedAccount(user)) {
             throw new IllegalArgumentException(messageService.get(
                     "user.membership.protectedAccount",
                     "Protected tenant account cannot be modified by membership actions."
@@ -1048,7 +1067,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private TenantUserRowResponse toTenantUserRow(UserEntity user) {
-        List<String> roles = user.getRoles().stream()
+        List<String> roles = accessPolicy.explicitRolesForTenant(user, user.getTenantId()).stream()
                 .map(Role::getRoleName)
                 .filter(name -> name != null && !name.isBlank())
                 .sorted()
@@ -1072,8 +1091,8 @@ public class UserServiceImpl implements UserService {
                 .membershipId(membershipId)
                 .status(resolveTenantUserStatus(user))
                 .createdAt(user.getCreatedAt())
-                .protectedAccount(isProtectedTenantAccount(user))
-                .protectedReason(protectedAccountReason(user))
+                .protectedAccount(accessPolicy.isProtectedAccount(user))
+                .protectedReason(accessPolicy.protectedReason(user))
                 .build();
     }
 
@@ -1118,46 +1137,6 @@ public class UserServiceImpl implements UserService {
                 EmailTemplateName.NOTIFICATION,
                 properties
         );
-    }
-
-    private boolean isProtectedTenantAccount(UserEntity user) {
-        if (user == null) {
-            return false;
-        }
-
-        if (UserType.TENANT.equals(user.getUserType())) {
-            return true;
-        }
-
-        Set<String> roleNames = user.getRoles().stream()
-                .map(Role::getRoleName)
-                .filter(name -> name != null && !name.isBlank())
-                .collect(Collectors.toSet());
-
-        return roleNames.contains("OWNER") || roleNames.contains("ADMIN");
-    }
-
-    private String protectedAccountReason(UserEntity user) {
-        if (!isProtectedTenantAccount(user)) {
-            return null;
-        }
-
-        if (UserType.TENANT.equals(user.getUserType())) {
-            return "Tenant governance account";
-        }
-
-        Set<String> roleNames = user.getRoles().stream()
-                .map(Role::getRoleName)
-                .filter(name -> name != null && !name.isBlank())
-                .collect(Collectors.toSet());
-
-        if (roleNames.contains("OWNER") && roleNames.contains("ADMIN")) {
-            return "Owner/Admin governance role";
-        }
-        if (roleNames.contains("OWNER")) {
-            return "Owner governance role";
-        }
-        return "Admin governance role";
     }
 
     private SimpleUserDTO toSimpleUserDTO(UserEntity user) {
