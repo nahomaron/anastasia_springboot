@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class TenantEntitlementAccessService {
 
     private final EntitlementResolverService entitlementResolverService;
+    private final SubscriptionService subscriptionService;
 
     public void requireFeature(TenantFeature feature) {
         if (isPlatformAdmin()) {
@@ -25,6 +27,7 @@ public class TenantEntitlementAccessService {
         if (tenantId == null) {
             return;
         }
+        subscriptionService.syncSubscriptionState(tenantId, null);
         boolean allowed = entitlementResolverService.hasFeature(tenantId, feature);
         if (!allowed) {
             throw new AccessDeniedException("Feature not available for current tenant plan: " + feature.name());

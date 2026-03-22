@@ -47,6 +47,11 @@ public interface SubscriptionService {
     TenantSubscriptionEntity getByTenantId(UUID tenantId);
 
     /**
+     * Applies lifecycle state transitions such as expiring a free trial into suspension.
+     */
+    TenantSubscriptionEntity syncSubscriptionState(UUID tenantId, UUID actorUserId);
+
+    /**
      * Request a tenant plan change (immediate for upgrades, period-end for downgrades).
      */
     TenantSubscriptionEntity requestPlanChange(UUID tenantId,

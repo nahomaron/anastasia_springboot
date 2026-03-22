@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.Enti
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.RequestPlanChangeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SubscriptionPlanHistoryItemResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingOverviewResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlanHistoryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
@@ -37,6 +38,7 @@ public class TenantEntitlementController {
     @GetMapping("/me/entitlements")
     public ResponseEntity<EntitlementSnapshotResponse> getMyEntitlements() {
         UUID tenantId = requireTenantId();
+        subscriptionService.syncSubscriptionState(tenantId, currentActorUserId());
         subscriptionService.applyDuePendingPlanChange(tenantId, currentActorUserId());
         return ResponseEntity.ok(entitlementAdministrationService.resolveCurrentTenant());
     }
@@ -47,6 +49,7 @@ public class TenantEntitlementController {
         UUID tenantId = requireTenantId();
         UUID actorUserId = currentActorUserId();
 
+        subscriptionService.syncSubscriptionState(tenantId, actorUserId);
         TenantSubscriptionEntity subscription = subscriptionService.applyDuePendingPlanChange(tenantId, actorUserId);
         List<SubscriptionPlanHistoryItemResponse> history = subscriptionService.listRecentPlanHistory(tenantId).stream()
                 .map(this::toHistoryItem)
@@ -71,9 +74,13 @@ public class TenantEntitlementController {
     public ResponseEntity<TenantBillingOverviewResponse> requestPlanChange(
             @Valid @RequestBody RequestPlanChangeRequest request
     ) {
+        if (request.getTargetPlan() != SubscriptionPlan.BASIC) {
+            throw new IllegalArgumentException("Selected plan is not available for self-service changes yet");
+        }
         UUID tenantId = requireTenantId();
         UUID actorUserId = currentActorUserId();
 
+        subscriptionService.syncSubscriptionState(tenantId, actorUserId);
         subscriptionService.requestPlanChange(
                 tenantId,
                 request.getTargetPlan(),

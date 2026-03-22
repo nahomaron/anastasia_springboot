@@ -3,9 +3,11 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.EntitlementSnapshotResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PromoRedemptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeatureOverrideEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantPlanGrantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PromoRedemptionRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantFeatureOverrideRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantPlanGrantRepository;
@@ -33,57 +35,65 @@ public class EntitlementResolverService {
 
     public EntitlementSnapshotResponse resolve(UUID tenantId) {
         Instant now = Instant.now();
-        SubscriptionPlan basePlan = tenantSubscriptionRepository.findByTenantId(tenantId)
-                .map(subscription -> subscription.getPlan())
-                .orElse(SubscriptionPlan.FREE);
-        SubscriptionPlan effectivePlan = catalog.normalizePlan(basePlan);
+        TenantSubscriptionEntity subscription = tenantSubscriptionRepository.findByTenantId(tenantId).orElse(null);
+        SubscriptionPlan basePlan = subscription != null && subscription.getPlan() != null
+                ? subscription.getPlan()
+                : SubscriptionPlan.FREE;
+        boolean subscriptionAccessActive = hasSubscriptionAccess(subscription, now);
+        SubscriptionPlan effectivePlan = resolveFeaturePlan(basePlan, subscription, now);
 
         List<TenantPlanGrantEntity> planGrants = tenantPlanGrantRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
         Integer activeMemberLimitOverride = null;
 
-        for (TenantPlanGrantEntity grant : planGrants) {
-            if (!grant.isEffective(now) || grant.getGrantedPlan() == null) {
-                continue;
-            }
-            SubscriptionPlan grantPlan = catalog.normalizePlan(grant.getGrantedPlan());
-            if (grantPlan.rank() > effectivePlan.rank()) {
-                effectivePlan = grantPlan;
-            }
-            if (grant.getActiveMemberLimitOverride() != null) {
-                activeMemberLimitOverride = max(activeMemberLimitOverride, grant.getActiveMemberLimitOverride());
+        if (subscriptionAccessActive) {
+            for (TenantPlanGrantEntity grant : planGrants) {
+                if (!grant.isEffective(now) || grant.getGrantedPlan() == null) {
+                    continue;
+                }
+                SubscriptionPlan grantPlan = catalog.normalizePlan(grant.getGrantedPlan());
+                if (grantPlan.rank() > effectivePlan.rank()) {
+                    effectivePlan = grantPlan;
+                }
+                if (grant.getActiveMemberLimitOverride() != null) {
+                    activeMemberLimitOverride = max(activeMemberLimitOverride, grant.getActiveMemberLimitOverride());
+                }
             }
         }
 
         Set<TenantFeature> features = EnumSet.noneOf(TenantFeature.class);
-        features.addAll(catalog.definitionFor(effectivePlan).features());
+        if (subscriptionAccessActive) {
+            features.addAll(catalog.definitionFor(effectivePlan).features());
 
-        List<PromoRedemptionEntity> redemptions = promoRedemptionRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
-        for (PromoRedemptionEntity redemption : redemptions) {
-            if (!isPromoEffective(redemption, now)) {
-                continue;
+            List<PromoRedemptionEntity> redemptions = promoRedemptionRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
+            for (PromoRedemptionEntity redemption : redemptions) {
+                if (!isPromoEffective(redemption, now)) {
+                    continue;
+                }
+                if (redemption.getPromoCode().getGrantedFeatures() != null) {
+                    features.addAll(redemption.getPromoCode().getGrantedFeatures());
+                }
+                if (redemption.getPromoCode().getActiveMemberLimitOverride() != null) {
+                    activeMemberLimitOverride = max(activeMemberLimitOverride, redemption.getPromoCode().getActiveMemberLimitOverride());
+                }
             }
-            if (redemption.getPromoCode().getGrantedFeatures() != null) {
-                features.addAll(redemption.getPromoCode().getGrantedFeatures());
-            }
-            if (redemption.getPromoCode().getActiveMemberLimitOverride() != null) {
-                activeMemberLimitOverride = max(activeMemberLimitOverride, redemption.getPromoCode().getActiveMemberLimitOverride());
+
+            List<TenantFeatureOverrideEntity> featureOverrides = tenantFeatureOverrideRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
+            for (TenantFeatureOverrideEntity override : featureOverrides) {
+                if (!override.isEffective(now) || override.getFeature() == null) {
+                    continue;
+                }
+                if (override.isEnabled()) {
+                    features.add(override.getFeature());
+                } else {
+                    features.remove(override.getFeature());
+                }
             }
         }
 
-        List<TenantFeatureOverrideEntity> featureOverrides = tenantFeatureOverrideRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
-        for (TenantFeatureOverrideEntity override : featureOverrides) {
-            if (!override.isEffective(now) || override.getFeature() == null) {
-                continue;
-            }
-            if (override.isEnabled()) {
-                features.add(override.getFeature());
-            } else {
-                features.remove(override.getFeature());
-            }
-        }
-
-        int activeMemberLimit = catalog.definitionFor(effectivePlan).activeMembersLimit();
-        if (activeMemberLimitOverride != null) {
+        int activeMemberLimit = subscriptionAccessActive
+                ? catalog.definitionFor(effectivePlan).activeMembersLimit()
+                : 0;
+        if (subscriptionAccessActive && activeMemberLimitOverride != null) {
             activeMemberLimit = Math.max(activeMemberLimit, activeMemberLimitOverride);
         }
 
@@ -97,6 +107,44 @@ public class EntitlementResolverService {
                 .features(features)
                 .limits(limits)
                 .build();
+    }
+
+    private SubscriptionPlan resolveFeaturePlan(SubscriptionPlan basePlan,
+                                                TenantSubscriptionEntity subscription,
+                                                Instant now) {
+        if (!hasSubscriptionAccess(subscription, now)) {
+            return catalog.normalizePlan(basePlan);
+        }
+
+        SubscriptionPlan normalized = catalog.normalizePlan(basePlan);
+        if (normalized == SubscriptionPlan.FREE) {
+            return SubscriptionPlan.BASIC;
+        }
+        return normalized;
+    }
+
+    private boolean hasSubscriptionAccess(TenantSubscriptionEntity subscription, Instant now) {
+        if (subscription == null) {
+            return false;
+        }
+
+        SubscriptionStatus status = subscription.getStatus();
+        if (status == null) {
+            return false;
+        }
+
+        return switch (status) {
+            case ACTIVE -> true;
+            case TRIALING -> isBeforeAccessDeadline(subscription, now);
+            case PAST_DUE, CANCELED, SUSPENDED -> false;
+        };
+    }
+
+    private boolean isBeforeAccessDeadline(TenantSubscriptionEntity subscription, Instant now) {
+        Instant endsAt = subscription.getTrialEndAt() != null
+                ? subscription.getTrialEndAt()
+                : subscription.getCurrentPeriodEndAt();
+        return endsAt == null || !endsAt.isBefore(now);
     }
 
     public boolean hasFeature(UUID tenantId, TenantFeature feature) {

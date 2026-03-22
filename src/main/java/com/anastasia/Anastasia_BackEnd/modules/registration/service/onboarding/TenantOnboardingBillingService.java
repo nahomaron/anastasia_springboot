@@ -25,12 +25,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TenantOnboardingBillingService {
+
+    private static final Set<SubscriptionPlan> LAUNCH_ONBOARDING_PLANS = Set.of(
+            SubscriptionPlan.FREE,
+            SubscriptionPlan.BASIC
+    );
 
     private static final int DEFAULT_EXPIRY_HOURS = 24;
 
@@ -177,6 +183,12 @@ public class TenantOnboardingBillingService {
             throw new IllegalArgumentException(messageService.get(
                     "onboarding.terms.version.required",
                     "Terms version is required."
+            ));
+        }
+        if (!LAUNCH_ONBOARDING_PLANS.contains(tenantDTO.getSubscriptionPlan())) {
+            throw new IllegalArgumentException(messageService.get(
+                    "onboarding.plan.unsupported",
+                    "Selected plan is not available for self-service onboarding yet."
             ));
         }
 

@@ -149,6 +149,40 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
+    public TenantSubscriptionEntity syncSubscriptionState(UUID tenantId, UUID actorUserId) {
+        TenantSubscriptionEntity subscription = requireByTenantId(tenantId);
+        Instant now = Instant.now();
+
+        if (subscription.getStatus() == SubscriptionStatus.TRIALING
+                && subscription.getPlan() == SubscriptionPlan.FREE
+                && subscription.getCurrentPeriodEndAt() != null
+                && subscription.getCurrentPeriodEndAt().isBefore(now)) {
+            SubscriptionStatus oldStatus = subscription.getStatus();
+            subscription.setStatus(SubscriptionStatus.SUSPENDED);
+            subscription.setEndedAt(now);
+            subscription.setStatusChangedAt(now);
+            subscription.setStatusChangeReason("Free trial expired");
+            subscription.setUpdatedByUserId(actorUserId);
+
+            TenantSubscriptionEntity saved = tenantSubscriptionRepository.save(subscription);
+            recordEvent(
+                    saved,
+                    TenantSubscriptionEventType.STATUS_CHANGED,
+                    saved.getPlan(),
+                    saved.getPlan(),
+                    oldStatus,
+                    saved.getStatus(),
+                    actorUserId,
+                    null
+            );
+            return saved;
+        }
+
+        return subscription;
+    }
+
+    @Override
+    @Transactional
     public TenantSubscriptionEntity requestPlanChange(UUID tenantId,
                                                       SubscriptionPlan targetPlan,
                                                       PlanChangeTiming timing,
@@ -158,7 +192,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             throw new IllegalArgumentException("targetPlan is required");
         }
 
-        TenantSubscriptionEntity subscription = requireByTenantId(tenantId);
+        TenantSubscriptionEntity subscription = syncSubscriptionState(tenantId, actorUserId);
         SubscriptionPlan currentPlan = subscription.getPlan() != null ? subscription.getPlan() : SubscriptionPlan.FREE;
 
         if (currentPlan == targetPlan && subscription.getPendingPlan() == null) {
@@ -207,7 +241,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Transactional
     public TenantSubscriptionEntity applyDuePendingPlanChange(UUID tenantId, UUID actorUserId) {
-        TenantSubscriptionEntity subscription = requireByTenantId(tenantId);
+        TenantSubscriptionEntity subscription = syncSubscriptionState(tenantId, actorUserId);
         if (subscription.getPendingPlan() == null || subscription.getPendingPlanEffectiveAt() == null) {
             return subscription;
         }

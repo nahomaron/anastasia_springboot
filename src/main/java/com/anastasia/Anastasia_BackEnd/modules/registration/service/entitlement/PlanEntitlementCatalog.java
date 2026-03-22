@@ -12,25 +12,12 @@ import java.util.Set;
 public class PlanEntitlementCatalog {
 
     public static final String LIMIT_ACTIVE_MEMBERS = "ACTIVE_MEMBERS";
+    public static final int LAUNCH_BASIC_ACTIVE_MEMBER_LIMIT = 100;
 
     private final Map<SubscriptionPlan, PlanDefinition> definitions = new EnumMap<>(SubscriptionPlan.class);
 
     public PlanEntitlementCatalog() {
-        definitions.put(SubscriptionPlan.FREE, new PlanDefinition(
-                Set.of(
-                        TenantFeature.MEMBER_MANAGEMENT,
-                        TenantFeature.CALENDAR,
-                        TenantFeature.APPOINTMENTS,
-                        TenantFeature.SACRAMENTAL_SERVICES,
-                        TenantFeature.EVENTS,
-                        TenantFeature.EVENT_ATTENDANCE,
-                        TenantFeature.NOTIFICATIONS,
-                        TenantFeature.EMAILING
-                ),
-                200
-        ));
-
-        definitions.put(SubscriptionPlan.BASIC, new PlanDefinition(
+        PlanDefinition launchBasic = new PlanDefinition(
                 Set.of(
                         TenantFeature.MEMBER_MANAGEMENT,
                         TenantFeature.CALENDAR,
@@ -40,12 +27,14 @@ public class PlanEntitlementCatalog {
                         TenantFeature.EVENT_ATTENDANCE,
                         TenantFeature.GROUPS,
                         TenantFeature.NOTIFICATIONS,
-                        TenantFeature.EMAILING,
-                        TenantFeature.STEWARDSHIP_GIVING,
                         TenantFeature.REPORTING
                 ),
-                1000
-        ));
+                LAUNCH_BASIC_ACTIVE_MEMBER_LIMIT
+        );
+
+        // FREE is a time-limited Basic trial for launch.
+        definitions.put(SubscriptionPlan.FREE, launchBasic);
+        definitions.put(SubscriptionPlan.BASIC, launchBasic);
 
         definitions.put(SubscriptionPlan.ADVANCED, new PlanDefinition(
                 Set.of(

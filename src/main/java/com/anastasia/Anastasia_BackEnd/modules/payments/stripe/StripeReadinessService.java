@@ -49,12 +49,6 @@ public class StripeReadinessService {
         if (!planPriceIdsConfigured.get("BASIC")) {
             missing.add("billing.tenant.plans.BASIC.price-id (env: STRIPE_TENANT_BASIC_PRICE_ID)");
         }
-        if (!planPriceIdsConfigured.get("ADVANCED")) {
-            missing.add("billing.tenant.plans.ADVANCED.price-id (env: STRIPE_TENANT_ADVANCED_PRICE_ID)");
-        }
-        if (!planPriceIdsConfigured.get("PREMIUM")) {
-            missing.add("billing.tenant.plans.PREMIUM.price-id (env: STRIPE_TENANT_PREMIUM_PRICE_ID)");
-        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("stripeConfigured", missing.isEmpty());
