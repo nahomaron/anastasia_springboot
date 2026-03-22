@@ -22,7 +22,6 @@ public class PlanEntitlementCatalog {
                         TenantFeature.MEMBER_MANAGEMENT,
                         TenantFeature.CALENDAR,
                         TenantFeature.APPOINTMENTS,
-                        TenantFeature.SACRAMENTAL_SERVICES,
                         TenantFeature.EVENTS,
                         TenantFeature.EVENT_ATTENDANCE,
                         TenantFeature.GROUPS,
