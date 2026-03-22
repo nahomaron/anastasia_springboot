@@ -307,12 +307,13 @@ public class AuthServiceImpl implements AuthService {
         if (!user.isVerified()) {
             throw new IllegalStateException(messageService.get("auth.account.notVerified", "User account is not verified."));
         }
+        boolean showWelcomeMessage = user.getLastLoginAt() == null;
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
         touchStaffLoginAudit(user);
 
         UserPrincipal userPrincipal = new UserPrincipal(user, resolveEffectiveRoles(user));
-        AuthSessionResponse session = buildAuthSessionResponse(user);
+        AuthSessionResponse session = buildAuthSessionResponse(user, showWelcomeMessage);
         String sessionId = UUID.randomUUID().toString();
         String accessJwtId = UUID.randomUUID().toString();
         String refreshJwtId = UUID.randomUUID().toString();
@@ -400,7 +401,7 @@ public class AuthServiceImpl implements AuthService {
 
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
-                .session(buildAuthSessionResponse(user))
+                .session(buildAuthSessionResponse(user, false))
                 .build();
     }
 
@@ -566,7 +567,7 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.revokeAllActiveTokensByUserUuid(user.getUuid(), Instant.now());
     }
 
-    private AuthSessionResponse buildAuthSessionResponse(UserEntity user) {
+    private AuthSessionResponse buildAuthSessionResponse(UserEntity user, boolean showWelcomeMessage) {
         Optional<TenantAdminAssignmentEntity> activeTenantAdminAssignment = resolveActiveTenantAdminAssignment(user);
         Set<String> roleNames = resolveSessionRoles(user, activeTenantAdminAssignment);
         Set<String> permissionKeys = resolveSessionPermissions(user, activeTenantAdminAssignment);
@@ -600,6 +601,7 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getUuid())
                 .email(user.getEmail())
                 .username(user.getFullName())
+                .fullName(user.getFullName())
                 .tenantId(user.getTenantId())
                 .churchId(churchId)
                 .churchNumber(churchNumber)
@@ -611,6 +613,7 @@ public class AuthServiceImpl implements AuthService {
                 .staffNumber(staffNumber)
                 .priestNumber(priestNumber)
                 .mustChangePassword(user.isMustChangePassword())
+                .showWelcomeMessage(showWelcomeMessage)
                 .build();
     }
 

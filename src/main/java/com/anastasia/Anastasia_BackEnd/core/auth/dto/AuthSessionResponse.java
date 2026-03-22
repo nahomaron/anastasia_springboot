@@ -16,6 +16,7 @@ public class AuthSessionResponse {
     private UUID userId;
     private String email;
     private String username;
+    private String fullName;
     private UUID tenantId;
     private Long churchId;
     private String churchNumber;
@@ -27,4 +28,5 @@ public class AuthSessionResponse {
     private String staffNumber;
     private String priestNumber;
     private boolean mustChangePassword;
+    private boolean showWelcomeMessage;
 }
