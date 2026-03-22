@@ -25,6 +25,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantS
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionProviderLinkEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WorkspaceInitializationMode;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantOnboardingSessionRepository;
@@ -40,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.text.Normalizer;
-import java.time.Instant;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
@@ -64,6 +64,7 @@ public class TenantOnboardingProvisioningService {
     private final ObjectMapper objectMapper;
     private final TenantPlanBillingCatalog billingCatalog;
     private final OnboardingEmailVerificationService onboardingEmailVerificationService;
+    private final TenantDemoWorkspaceSeederService tenantDemoWorkspaceSeederService;
     private final LocalizedMessageService messageService;
 
     @Transactional
@@ -148,6 +149,7 @@ public class TenantOnboardingProvisioningService {
         TenantEntity savedTenant = tenantRepository.save(tenant);
         provisionChurchIfNeeded(savedTenant, session);
         UserEntity owner = provisionOwner(savedTenant, session);
+        seedWorkspaceIfRequested(savedTenant, session, owner);
 
         session.setProvisionedOwnerUserId(owner.getUuid());
         try {
@@ -253,6 +255,19 @@ public class TenantOnboardingProvisioningService {
         }
     }
 
+    private void seedWorkspaceIfRequested(TenantEntity tenant,
+                                          TenantOnboardingSessionEntity session,
+                                          UserEntity owner) {
+        DraftTenantPayload draft = parseDraft(session);
+        WorkspaceInitializationMode mode = draft.workspaceInitializationMode() == null
+                ? WorkspaceInitializationMode.EMPTY
+                : draft.workspaceInitializationMode();
+        if (mode != WorkspaceInitializationMode.SEEDED) {
+            return;
+        }
+        tenantDemoWorkspaceSeederService.seedDemoWorkspace(tenant, owner);
+    }
+
     private String resolvePriceId(SubscriptionPlan plan) {
         if (plan == SubscriptionPlan.BASIC || plan == SubscriptionPlan.ADVANCED || plan == SubscriptionPlan.PREMIUM) {
             return billingCatalog.resolve(plan).getPriceId();
@@ -305,5 +320,5 @@ public class TenantOnboardingProvisioningService {
         return message.length() > 1000 ? message.substring(0, 1000) : message;
     }
 
-    private record DraftTenantPayload(ChurchDTO church) {}
+    private record DraftTenantPayload(ChurchDTO church, WorkspaceInitializationMode workspaceInitializationMode) {}
 }

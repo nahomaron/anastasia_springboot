@@ -28,7 +28,7 @@ import java.util.UUID;
 public class GroupEntity extends Auditable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long groupId;
 
     @Column(nullable = false)
@@ -66,6 +66,10 @@ public class GroupEntity extends Auditable {
     )
     @Builder.Default
     private Set<UserEntity> users = new HashSet<>();
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
 
     public void addUser(UserEntity user) {

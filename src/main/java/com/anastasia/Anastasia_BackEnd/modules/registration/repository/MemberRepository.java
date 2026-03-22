@@ -47,6 +47,8 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
 
     Page<Adult_MemberEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
 
+    long countByTenantId(UUID tenantId);
+
     @Query("""
             SELECT m FROM Adult_MemberEntity m
             WHERE m.tenantId = :tenantId

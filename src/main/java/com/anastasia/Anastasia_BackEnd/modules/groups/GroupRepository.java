@@ -18,6 +18,8 @@ public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
 
     boolean existsByGroupNameAndTenantId(String groupName, UUID tenantId);
 
+    long countByTenantId(UUID tenantId);
+
     Page<GroupEntity> findAllByTenantId(UUID tenantId, Pageable pageable);
 
     Page<GroupEntity> findAllByCreatedByAndTenantId(UUID createdBy, UUID tenantId, Pageable pageable);

@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Onboard
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantOnboardingSessionEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WorkspaceInitializationMode;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantOnboardingSessionRepository;
@@ -189,6 +190,13 @@ public class TenantOnboardingBillingService {
             throw new IllegalArgumentException(messageService.get(
                     "onboarding.plan.unsupported",
                     "Selected plan is not available for self-service onboarding yet."
+            ));
+        }
+        if (tenantDTO.getWorkspaceInitializationMode() == WorkspaceInitializationMode.SEEDED
+                && tenantDTO.getSubscriptionPlan() != SubscriptionPlan.FREE) {
+            throw new IllegalArgumentException(messageService.get(
+                    "onboarding.workspaceInitialization.unsupported",
+                    "Demo data can only be selected for the free plan."
             ));
         }
 

@@ -29,6 +29,8 @@ public class TenantDTO {
     @NotNull(message = "{validation.tenant.subscriptionPlan.required}")
     private SubscriptionPlan subscriptionPlan; // Subscription Type
 
+    private WorkspaceInitializationMode workspaceInitializationMode;
+
     @NotBlank(message = "{validation.tenant.ownerName.required}")
     private String ownerName; // Can be a church name or a priest's full name
 

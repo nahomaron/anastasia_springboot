@@ -12,6 +12,8 @@ import java.util.UUID;
 
 @Repository
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
+    long countByTenantId(UUID tenantId);
+
     List<EventManagerEntity> findAllManagersByEventId(Long eventId);
 
     @Query("""
