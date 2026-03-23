@@ -15,6 +15,8 @@ import java.util.UUID;
 @Repository
 public interface CalendarEntryRepository extends JpaRepository<CalendarEntryEntity, UUID> {
 
+    long countByTenantId(UUID tenantId);
+
     @Query("""
         select distinct e from CalendarEntryEntity e
         left join fetch e.recurrence r

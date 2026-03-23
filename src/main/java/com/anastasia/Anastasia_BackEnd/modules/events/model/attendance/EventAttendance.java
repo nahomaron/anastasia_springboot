@@ -33,6 +33,9 @@ public class EventAttendance {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private UUID userId;
+
     private LocalDateTime checkInTime;
 
     private String checkInMethod; // e.g. "QR", "Manual"

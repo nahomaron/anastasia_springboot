@@ -16,6 +16,8 @@ import java.util.UUID;
 
 public interface AppointmentRepository extends JpaRepository<AppointmentEntity, UUID> {
 
+    long countByTenantId(UUID tenantId);
+
     @EntityGraph(attributePaths = {"participants", "assignments", "statusHistory"})
     Optional<AppointmentEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 

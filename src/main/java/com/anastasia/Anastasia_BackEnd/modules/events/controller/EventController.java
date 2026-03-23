@@ -104,45 +104,45 @@ public class EventController {
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CHECK_IN_ATTENDANCE', 'VIEW_EVENTS')")
     @PostMapping("/event/check-in")
-    public ResponseEntity<EventAttendance> checkIn(@RequestBody CheckInRequestDTO requestDTO){
+    public ResponseEntity<EventAttendanceResponse> checkIn(@RequestBody CheckInRequestDTO requestDTO){
         EventAttendance attendance = attendanceService.checkIn(requestDTO);
-        return new ResponseEntity<>(attendance, HttpStatus.OK);
+        return new ResponseEntity<>(attendanceService.toResponse(attendance), HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'CHECK_IN_ATTENDANCE', 'VIEW_EVENTS')")
     @PostMapping("/event/check-in/qr-code")
-    public ResponseEntity<EventAttendance> checkInWithQR(@RequestBody CheckInQRRequestDTO requestDTO){
+    public ResponseEntity<EventAttendanceResponse> checkInWithQR(@RequestBody CheckInQRRequestDTO requestDTO){
         EventAttendance attendance = qrCheckInService.checkInWithQR(requestDTO);
-        return new ResponseEntity<>(attendance, HttpStatus.OK);
+        return new ResponseEntity<>(attendanceService.toResponse(attendance), HttpStatus.OK);
     }
 
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'MARK_ATTENDANCE')")
     @PostMapping("/mark-absent")
-    public ResponseEntity<EventAttendance> markAbsent(@RequestBody MarkAbsentRequestDTO request) {
+    public ResponseEntity<EventAttendanceResponse> markAbsent(@RequestBody MarkAbsentRequestDTO request) {
         EventAttendance attendance = attendanceService.markAbsent(request);
-        return new ResponseEntity<>(attendance, HttpStatus.OK);
+        return new ResponseEntity<>(attendanceService.toResponse(attendance), HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'MARK_ATTENDANCE')")
     @PostMapping("/attendance/status")
-    public ResponseEntity<EventAttendance> updateAttendanceStatus(@RequestBody UpdateAttendanceStatusRequestDTO request) {
+    public ResponseEntity<EventAttendanceResponse> updateAttendanceStatus(@RequestBody UpdateAttendanceStatusRequestDTO request) {
         EventAttendance attendance = attendanceService.updateAttendanceStatus(request);
-        return new ResponseEntity<>(attendance, HttpStatus.OK);
+        return new ResponseEntity<>(attendanceService.toResponse(attendance), HttpStatus.OK);
     }
 
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-event/{eventId}")
-    public ResponseEntity<List<EventAttendance>> getAttendanceByEvent(@PathVariable Long eventId) {
-        return ResponseEntity.ok(attendanceService.getAttendanceByEvent(eventId));
+    public ResponseEntity<List<EventAttendanceResponse>> getAttendanceByEvent(@PathVariable Long eventId) {
+        return ResponseEntity.ok(attendanceService.getAttendanceByEvent(eventId).stream().map(attendanceService::toResponse).toList());
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-event/{eventId}/status/{status}")
-    public ResponseEntity<List<EventAttendance>> getByEventAndStatus(@PathVariable Long eventId,
-                                                                     @PathVariable AttendanceStatus status) {
-        return ResponseEntity.ok(attendanceService.getAttendanceByEventAndStatus(eventId, status));
+    public ResponseEntity<List<EventAttendanceResponse>> getByEventAndStatus(@PathVariable Long eventId,
+                                                                             @PathVariable AttendanceStatus status) {
+        return ResponseEntity.ok(attendanceService.getAttendanceByEventAndStatus(eventId, status).stream().map(attendanceService::toResponse).toList());
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
@@ -153,15 +153,15 @@ public class EventController {
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-user/{userId}")
-    public ResponseEntity<List<EventAttendance>> getByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(attendanceService.getAttendanceByUser(userId));
+    public ResponseEntity<List<EventAttendanceResponse>> getByUser(@PathVariable UUID userId) {
+        return ResponseEntity.ok(attendanceService.getAttendanceByUser(userId).stream().map(attendanceService::toResponse).toList());
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-user/{userId}/status/{status}")
-    public ResponseEntity<List<EventAttendance>> getByUserAndStatus(@PathVariable UUID userId,
-                                                                    @PathVariable AttendanceStatus status) {
-        return ResponseEntity.ok(attendanceService.getAttendanceByUserAndStatus(userId, status));
+    public ResponseEntity<List<EventAttendanceResponse>> getByUserAndStatus(@PathVariable UUID userId,
+                                                                            @PathVariable AttendanceStatus status) {
+        return ResponseEntity.ok(attendanceService.getAttendanceByUserAndStatus(userId, status).stream().map(attendanceService::toResponse).toList());
     }
 
     private UUID resolveCurrentUserId() {

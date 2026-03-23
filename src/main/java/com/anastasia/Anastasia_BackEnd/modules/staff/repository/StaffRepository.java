@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -19,6 +20,10 @@ public interface StaffRepository extends JpaRepository<StaffEntity, Long> {
     boolean existsByStaffNumber(String staffNumber);
 
     boolean existsByUser(UserEntity user);
+
+    long countByTenant_Id(UUID tenantId);
+
+    List<StaffEntity> findByTenant_Id(UUID tenantId);
 
     Optional<StaffEntity> findByUser_Uuid(UUID userId);
 

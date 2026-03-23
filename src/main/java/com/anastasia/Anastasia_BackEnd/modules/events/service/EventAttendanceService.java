@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendance;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendanceResponse;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MarkAbsentRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.UpdateAttendanceStatusRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -142,5 +143,17 @@ public class EventAttendanceService {
         }
 
         return attendanceRepository.save(attendance);
+    }
+
+    public EventAttendanceResponse toResponse(EventAttendance attendance) {
+        return EventAttendanceResponse.builder()
+                .id(attendance.getId())
+                .eventId(attendance.getEventId())
+                .userId(attendance.getUserId())
+                .checkInTime(attendance.getCheckInTime())
+                .checkInMethod(attendance.getCheckInMethod())
+                .status(attendance.getStatus())
+                .checkedInBy(attendance.getCheckedInBy())
+                .build();
     }
 }
