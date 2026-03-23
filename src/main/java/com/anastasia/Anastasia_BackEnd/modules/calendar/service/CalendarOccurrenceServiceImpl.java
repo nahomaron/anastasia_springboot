@@ -53,6 +53,7 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
     private final CalendarEntryRepository entryRepository;
     private final ChurchRepository churchRepository;
     private final UserRepository userRepository;
+    private final GeezCalendarSupport geezCalendarSupport;
 
     @Override
     @Transactional(readOnly = true)
@@ -314,15 +315,12 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
             return List.of(baseDate);
         }
 
-        if (recurrence.getCalendarSystem() == CalendarSystem.GEEZ && entrySystem == CalendarSystem.GEEZ) {
-            if (baseDate.isBefore(rangeStart) || baseDate.isAfter(rangeEnd)) {
-                return List.of();
-            }
-            return List.of(baseDate);
-        }
-
         RecurrenceFrequency frequency = recurrence.getFrequency();
         int interval = recurrence.getInterval() == null || recurrence.getInterval() < 1 ? 1 : recurrence.getInterval();
+
+        if (recurrence.getCalendarSystem() == CalendarSystem.GEEZ && entrySystem == CalendarSystem.GEEZ) {
+            return expandGeezOccurrences(recurrence, baseDate, rangeStart, rangeEnd, interval);
+        }
 
         LocalDate effectiveEnd = rangeEnd;
         if (recurrence.getUntil() != null) {
@@ -563,5 +561,69 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
 
     private boolean withinCountLimit(int produced, Integer countLimit) {
         return countLimit == null || produced < countLimit;
+    }
+
+    private List<LocalDate> expandGeezOccurrences(
+            CalendarRecurrenceEntity recurrence,
+            LocalDate baseDate,
+            LocalDate rangeStart,
+            LocalDate rangeEnd,
+            int interval
+    ) {
+        List<LocalDate> results = new ArrayList<>();
+        if (rangeEnd.isBefore(baseDate)) {
+            return results;
+        }
+
+        GeezCalendarSupport.GeezDate baseGeez = geezCalendarSupport.toGeezFromGregorian(baseDate);
+        Integer geezMonth = recurrence.getGeezMonth();
+        Integer geezDay = recurrence.getGeezDay();
+        int produced = 0;
+
+        LocalDate cursor = rangeStart.isAfter(baseDate) ? rangeStart : baseDate;
+        while (!cursor.isAfter(rangeEnd) && withinCountLimit(produced, recurrence.getCount())) {
+            GeezCalendarSupport.GeezDate candidate = geezCalendarSupport.toGeezFromGregorian(cursor);
+            if (matchesGeezRecurrence(recurrence, baseGeez, candidate, geezMonth, geezDay, interval)) {
+                results.add(cursor);
+                produced++;
+                if (results.size() >= MAX_OCCURRENCES_PER_ENTRY) {
+                    break;
+                }
+            }
+            cursor = cursor.plusDays(1);
+        }
+
+        return results;
+    }
+
+    private boolean matchesGeezRecurrence(
+            CalendarRecurrenceEntity recurrence,
+            GeezCalendarSupport.GeezDate baseGeez,
+            GeezCalendarSupport.GeezDate candidate,
+            Integer geezMonth,
+            Integer geezDay,
+            int interval
+    ) {
+        if (geezDay == null || geezDay < 1 || geezDay > 30) {
+            return false;
+        }
+
+        return switch (recurrence.getFrequency()) {
+            case MONTHLY -> candidate.day() == geezDay
+                    && geezMonthsBetween(baseGeez, candidate) >= 0
+                    && geezMonthsBetween(baseGeez, candidate) % interval == 0;
+            case YEARLY -> geezMonth != null
+                    && geezMonth >= 1
+                    && geezMonth <= 13
+                    && candidate.month() == geezMonth
+                    && candidate.day() == geezDay
+                    && candidate.year() >= baseGeez.year()
+                    && (candidate.year() - baseGeez.year()) % interval == 0;
+            default -> false;
+        };
+    }
+
+    private int geezMonthsBetween(GeezCalendarSupport.GeezDate start, GeezCalendarSupport.GeezDate end) {
+        return ((end.year() - start.year()) * 13) + (end.month() - start.month());
     }
 }

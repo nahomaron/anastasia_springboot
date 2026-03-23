@@ -1,8 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.seeder;
 
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.service.ChurchCalendarSeedService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.seeder.seeders.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -32,6 +34,8 @@ public class DataSeeder {
     private final GroupSeeder groupSeeder;
     private final EventSeeder eventSeeder;
     private final AccountingSeeder accountingSeeder;
+    private final ChurchCalendarSeedService churchCalendarSeedService;
+    private final ChurchRepository churchRepository;
     @Value("${app.seeding.enabled:false}")
     private boolean dataSeedingEnabled;
 
@@ -57,6 +61,12 @@ public class DataSeeder {
         memberSeeder.seedMembers(savedChurches);
         List<GroupEntity> savedGroups = groupSeeder.seedGroups(savedChurches);
         eventSeeder.seedEvents(savedChurches, savedGroups);
+        List<ChurchEntity> churchesForCalendarSeed = savedChurches.isEmpty() ? churchRepository.findAll() : savedChurches;
+        for (ChurchEntity church : churchesForCalendarSeed) {
+            if (church.getTenant() != null) {
+                churchCalendarSeedService.seedDefaults(church.getTenant(), church, null);
+            }
+        }
 //        accountingSeeder.seedAccounting(savedTenants);
 
         logger.info("Data seeding completed successfully.");

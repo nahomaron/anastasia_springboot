@@ -24,6 +24,7 @@ import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarSystem;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarVisibility;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.repository.CalendarEntryRepository;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.service.ChurchCalendarSeedService;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventType;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType;
@@ -88,6 +89,7 @@ public class TenantDemoWorkspaceSeederService {
     private final GroupRepository groupRepository;
     private final EventRepository eventRepository;
     private final CalendarEntryRepository calendarEntryRepository;
+    private final ChurchCalendarSeedService churchCalendarSeedService;
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -500,7 +502,10 @@ public class TenantDemoWorkspaceSeederService {
                                               ChurchEntity church,
                                               UserEntity owner,
                                               Instant baseInstant) {
-        if (calendarEntryRepository.countByTenantId(tenant.getId()) > 0) {
+        boolean hadExistingEntries = calendarEntryRepository.countByTenantId(tenant.getId()) > 0;
+
+        churchCalendarSeedService.seedDefaults(tenant, church, owner);
+        if (hadExistingEntries) {
             return;
         }
 

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ import java.util.UUID;
 public interface CalendarEntryRepository extends JpaRepository<CalendarEntryEntity, UUID> {
 
     long countByTenantId(UUID tenantId);
+
+    Optional<CalendarEntryEntity> findByTenantIdAndSourceEntityId(UUID tenantId, UUID sourceEntityId);
 
     @Query("""
         select distinct e from CalendarEntryEntity e
