@@ -28,4 +28,6 @@ public interface GroupJoinRequestRepository extends JpaRepository<GroupJoinReque
             UUID tenantId,
             GroupJoinRequestStatus status
     );
+
+    List<GroupJoinRequestEntity> findByTenantId(UUID tenantId);
 }

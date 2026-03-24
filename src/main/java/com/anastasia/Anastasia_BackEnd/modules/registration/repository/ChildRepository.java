@@ -46,6 +46,8 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
 
     Page<Child_MemberEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
 
+    List<Child_MemberEntity> findByTenantId(UUID tenantId);
+
     @Query("""
             SELECT c FROM Child_MemberEntity c
             WHERE c.tenantId = :tenantId

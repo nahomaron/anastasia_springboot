@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MembershipCardTemplateRepository extends JpaRepository<MembershipCardTemplateEntity, Long> {
+    List<MembershipCardTemplateEntity> findByTenantId(UUID tenantId);
     List<MembershipCardTemplateEntity> findByTenantIdAndActiveTrueOrderBySortOrderAscDisplayNameAsc(UUID tenantId);
     Optional<MembershipCardTemplateEntity> findByTenantIdAndIsDefaultTrue(UUID tenantId);
     Optional<MembershipCardTemplateEntity> findByIdAndTenantId(Long id, UUID tenantId);

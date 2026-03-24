@@ -8,8 +8,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.Subs
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingOverviewResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlanHistoryEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementAdministrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,12 +35,14 @@ public class TenantEntitlementController {
 
     private final EntitlementAdministrationService entitlementAdministrationService;
     private final SubscriptionService subscriptionService;
+    private final TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
     @GetMapping("/me/entitlements")
     public ResponseEntity<EntitlementSnapshotResponse> getMyEntitlements() {
         UUID tenantId = requireTenantId();
         subscriptionService.syncSubscriptionState(tenantId, currentActorUserId());
+        tenantWorkspaceLifecycleService.syncTenantLifecycle(tenantId, currentActorUserId());
         subscriptionService.applyDuePendingPlanChange(tenantId, currentActorUserId());
         return ResponseEntity.ok(entitlementAdministrationService.resolveCurrentTenant());
     }
@@ -50,23 +54,13 @@ public class TenantEntitlementController {
         UUID actorUserId = currentActorUserId();
 
         subscriptionService.syncSubscriptionState(tenantId, actorUserId);
+        TenantEntity tenant = tenantWorkspaceLifecycleService.syncTenantLifecycle(tenantId, actorUserId);
         TenantSubscriptionEntity subscription = subscriptionService.applyDuePendingPlanChange(tenantId, actorUserId);
         List<SubscriptionPlanHistoryItemResponse> history = subscriptionService.listRecentPlanHistory(tenantId).stream()
                 .map(this::toHistoryItem)
                 .toList();
 
-        return ResponseEntity.ok(TenantBillingOverviewResponse.builder()
-                .tenantId(tenantId)
-                .currentPlan(subscription.getPlan())
-                .status(subscription.getStatus())
-                .billingInterval(subscription.getBillingInterval())
-                .currentPeriodStartAt(subscription.getCurrentPeriodStartAt())
-                .currentPeriodEndAt(subscription.getCurrentPeriodEndAt())
-                .cancelAtPeriodEnd(subscription.isCancelAtPeriodEnd())
-                .pendingPlan(subscription.getPendingPlan())
-                .pendingPlanEffectiveAt(subscription.getPendingPlanEffectiveAt())
-                .recentPlanHistory(history)
-                .build());
+        return ResponseEntity.ok(toBillingOverview(tenant, subscription, history));
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
@@ -88,23 +82,26 @@ public class TenantEntitlementController {
                 request.getReason(),
                 actorUserId
         );
+        TenantEntity tenant = tenantWorkspaceLifecycleService.syncTenantLifecycle(tenantId, actorUserId);
         TenantSubscriptionEntity subscription = subscriptionService.getByTenantId(tenantId);
         List<SubscriptionPlanHistoryItemResponse> history = subscriptionService.listRecentPlanHistory(tenantId).stream()
                 .map(this::toHistoryItem)
                 .toList();
 
-        return ResponseEntity.ok(TenantBillingOverviewResponse.builder()
-                .tenantId(tenantId)
-                .currentPlan(subscription.getPlan())
-                .status(subscription.getStatus())
-                .billingInterval(subscription.getBillingInterval())
-                .currentPeriodStartAt(subscription.getCurrentPeriodStartAt())
-                .currentPeriodEndAt(subscription.getCurrentPeriodEndAt())
-                .cancelAtPeriodEnd(subscription.isCancelAtPeriodEnd())
-                .pendingPlan(subscription.getPendingPlan())
-                .pendingPlanEffectiveAt(subscription.getPendingPlanEffectiveAt())
-                .recentPlanHistory(history)
-                .build());
+        return ResponseEntity.ok(toBillingOverview(tenant, subscription, history));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
+    @PostMapping("/me/demo/reset")
+    public ResponseEntity<TenantBillingOverviewResponse> resetMyDemoWorkspace() {
+        UUID tenantId = requireTenantId();
+        UUID actorUserId = currentActorUserId();
+        TenantEntity tenant = tenantWorkspaceLifecycleService.resetDemoWorkspace(tenantId, actorUserId);
+        TenantSubscriptionEntity subscription = subscriptionService.getByTenantId(tenantId);
+        List<SubscriptionPlanHistoryItemResponse> history = subscriptionService.listRecentPlanHistory(tenantId).stream()
+                .map(this::toHistoryItem)
+                .toList();
+        return ResponseEntity.ok(toBillingOverview(tenant, subscription, history));
     }
 
     private SubscriptionPlanHistoryItemResponse toHistoryItem(SubscriptionPlanHistoryEntity entity) {
@@ -132,5 +129,31 @@ public class TenantEntitlementController {
             return principal.getUserUuid();
         }
         return null;
+    }
+
+    private TenantBillingOverviewResponse toBillingOverview(TenantEntity tenant,
+                                                            TenantSubscriptionEntity subscription,
+                                                            List<SubscriptionPlanHistoryItemResponse> history) {
+        return TenantBillingOverviewResponse.builder()
+                .tenantId(tenant.getId())
+                .currentPlan(subscription.getPlan())
+                .status(subscription.getStatus())
+                .billingInterval(subscription.getBillingInterval())
+                .workspaceInitializationMode(tenant.getWorkspaceInitializationMode())
+                .demoWorkspace(tenant.isDemoWorkspace())
+                .trialStartAt(subscription.getTrialStartAt())
+                .trialEndAt(subscription.getTrialEndAt())
+                .currentPeriodStartAt(subscription.getCurrentPeriodStartAt())
+                .currentPeriodEndAt(subscription.getCurrentPeriodEndAt())
+                .gracePeriodEndsAt(subscription.getGracePeriodEndsAt())
+                .cancelAtPeriodEnd(subscription.isCancelAtPeriodEnd())
+                .pendingPlan(subscription.getPendingPlan())
+                .pendingPlanEffectiveAt(subscription.getPendingPlanEffectiveAt())
+                .scheduledPurgeAt(tenant.getScheduledPurgeAt())
+                .archiveScheduledAt(tenant.getArchiveScheduledAt())
+                .archivedAt(tenant.getArchivedAt())
+                .retentionWarningActive(tenantWorkspaceLifecycleService.isRetentionWarningActive(tenant, subscription, java.time.Instant.now()))
+                .recentPlanHistory(history)
+                .build();
     }
 }

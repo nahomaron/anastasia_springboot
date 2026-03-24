@@ -11,6 +11,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.Tena
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantPlanGrantResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantDemoTemplateCloneService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementAdministrationService;
 import jakarta.validation.Valid;
@@ -37,6 +38,7 @@ public class PlatformSubscriptionAdminController {
 
     private final EntitlementAdministrationService entitlementAdministrationService;
     private final TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
+    private final TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
 
     @GetMapping("/demo-template")
     public ResponseEntity<java.util.Map<String, Object>> getConfiguredDemoTemplate() {
@@ -57,6 +59,17 @@ public class PlatformSubscriptionAdminController {
     public ResponseEntity<Void> clearDemoTemplate(@PathVariable UUID tenantId) {
         tenantDemoTemplateCloneService.clearConfiguredTemplate(tenantId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{tenantId}/demo-workspace/reset")
+    public ResponseEntity<java.util.Map<String, Object>> resetDemoWorkspace(@PathVariable UUID tenantId) {
+        TenantEntity tenant = tenantWorkspaceLifecycleService.resetDemoWorkspace(tenantId, currentActorUserId());
+        return ResponseEntity.ok(java.util.Map.of(
+                "tenantId", tenant.getId(),
+                "demoWorkspace", tenant.isDemoWorkspace(),
+                "scheduledPurgeAt", tenant.getScheduledPurgeAt(),
+                "status", tenant.getStatus()
+        ));
     }
 
     @GetMapping("/{tenantId}/entitlements")
@@ -249,5 +262,13 @@ public class PlatformSubscriptionAdminController {
                 "status", tenant.getStatus(),
                 "demoTemplate", tenant.isDemoTemplate()
         );
+    }
+
+    private UUID currentActorUserId() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal principal) {
+            return principal.getUserUuid();
+        }
+        return null;
     }
 }

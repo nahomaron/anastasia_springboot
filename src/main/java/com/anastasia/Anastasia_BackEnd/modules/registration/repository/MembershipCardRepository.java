@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MembershipCardRepository extends JpaRepository<MembershipCardEntity, Long> {
+    List<MembershipCardEntity> findByTenantId(UUID tenantId);
     Optional<MembershipCardEntity> findByTenantIdAndMemberId(UUID tenantId, Long memberId);
     Optional<MembershipCardEntity> findByTenantIdAndMembershipNumber(UUID tenantId, String membershipNumber);
     Optional<MembershipCardEntity> findByIdAndTenantId(Long id, UUID tenantId);

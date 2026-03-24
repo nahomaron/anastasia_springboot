@@ -37,6 +37,8 @@ public interface FamilyRelationshipRepository extends JpaRepository<FamilyRelati
 
     Optional<FamilyRelationshipEntity> findByIdAndOwnerMemberIdAndTenantId(Long id, Long ownerMemberId, UUID tenantId);
 
+    List<FamilyRelationshipEntity> findByTenantId(UUID tenantId);
+
     @Query("""
             SELECT fr.ownerMember.id as ownerMemberId,
                    fr.relatedChild.id as childId,

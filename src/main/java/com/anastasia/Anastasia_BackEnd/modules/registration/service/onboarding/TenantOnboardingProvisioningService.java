@@ -112,6 +112,10 @@ public class TenantOnboardingProvisioningService {
         }
 
         String displayName = resolveDisplayName(session);
+        DraftTenantPayload draft = parseDraft(session);
+        WorkspaceInitializationMode initializationMode = draft.workspaceInitializationMode() == null
+                ? WorkspaceInitializationMode.EMPTY
+                : draft.workspaceInitializationMode();
         TenantEntity tenant = TenantEntity.builder()
                 .displayName(displayName)
                 .slug(resolveUniqueSlug(displayName))
@@ -122,6 +126,8 @@ public class TenantOnboardingProvisioningService {
                 .status(TenantStatus.ACTIVE)
                 .activatedAt(Instant.now())
                 .billingEmail(session.getOwnerEmail())
+                .workspaceInitializationMode(initializationMode)
+                .demoWorkspace(initializationMode == WorkspaceInitializationMode.SEEDED)
                 .build();
 
         boolean paidFlow = session.isPaymentRequired();
@@ -130,6 +136,8 @@ public class TenantOnboardingProvisioningService {
                 .status(paidFlow ? SubscriptionStatus.ACTIVE : SubscriptionStatus.TRIALING)
                 .provider(paidFlow ? BillingProvider.STRIPE : BillingProvider.MANUAL)
                 .billingInterval(BillingInterval.MONTHLY)
+                .trialStartAt(paidFlow ? null : Instant.now())
+                .trialEndAt(paidFlow ? null : Instant.now().plusSeconds(30L * 24 * 60 * 60))
                 .currentPeriodStartAt(Instant.now())
                 .currentPeriodEndAt(Instant.now().plusSeconds(30L * 24 * 60 * 60))
                 .lastPaymentAt(paidFlow ? Instant.now() : null)

@@ -78,9 +78,17 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
     @Column(name = "billing_email", length = 160)
     private String billingEmail;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "workspace_initialization_mode", length = 24)
+    private WorkspaceInitializationMode workspaceInitializationMode;
+
     @Builder.Default
     @Column(name = "is_demo_template", nullable = false)
     private boolean demoTemplate = false;
+
+    @Builder.Default
+    @Column(name = "is_demo_workspace", nullable = false)
+    private boolean demoWorkspace = false;
 
     @Column(name = "external_id", length = 128)
     private String externalId;
@@ -99,6 +107,18 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
 
     @Column(name = "closed_at")
     private Instant closedAt;
+
+    @Column(name = "scheduled_purge_at")
+    private Instant scheduledPurgeAt;
+
+    @Column(name = "purged_at")
+    private Instant purgedAt;
+
+    @Column(name = "archive_scheduled_at")
+    private Instant archiveScheduledAt;
+
+    @Column(name = "archived_at")
+    private Instant archivedAt;
 
     @Column(name = "suspension_reason", length = 512)
     private String suspensionReason;
