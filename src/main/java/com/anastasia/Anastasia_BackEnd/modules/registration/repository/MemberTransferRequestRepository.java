@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MemberT
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MemberTransferStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +20,6 @@ public interface MemberTransferRequestRepository extends JpaRepository<MemberTra
                                                                   UUID fromTenantId,
                                                                   UUID toTenantId,
                                                                   MemberTransferStatus status);
+
+    List<MemberTransferRequestEntity> findByFromTenant_IdOrToTenant_Id(UUID fromTenantId, UUID toTenantId);
 }

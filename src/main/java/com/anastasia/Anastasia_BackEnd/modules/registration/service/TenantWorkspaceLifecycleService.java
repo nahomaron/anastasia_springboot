@@ -2,6 +2,12 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Account;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Fund;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Transaction;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.AccountRepository;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.FundRepository;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.TransactionRepository;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.repository.AppointmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryEntity;
@@ -12,6 +18,10 @@ import com.anastasia.Anastasia_BackEnd.modules.groups.GroupJoinRequestRepository
 import com.anastasia.Anastasia_BackEnd.modules.groups.GroupRepository;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupJoinRequestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentIntent;
+import com.anastasia.Anastasia_BackEnd.modules.payments.domain.model.PaymentSubscription;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentIntentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.payments.repository.PaymentSubscriptionRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.MembershipCardAuditEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.MembershipCardEntity;
@@ -19,27 +29,43 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.Me
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyRelationshipEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MemberTransferRequestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PromoRedemptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntitlementAuditEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeatureOverrideEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantPlanGrantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEventEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WebhookEventReceiptEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WorkspaceInitializationMode;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.FamilyRelationshipRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberTransferRequestRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MembershipCardAuditRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MembershipCardRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MembershipCardTemplateRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PromoRedemptionRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantEntitlementAuditRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantFeatureOverrideRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantPlanGrantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionEventRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.WebhookEventReceiptRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantDemoTemplateCloneService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantDemoWorkspaceSeederService;
 import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffEntity;
 import com.anastasia.Anastasia_BackEnd.modules.staff.repository.StaffRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.TenantUserPermissionGrantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,6 +91,7 @@ public class TenantWorkspaceLifecycleService {
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    private final TenantUserPermissionGrantRepository tenantUserPermissionGrantRepository;
     private final PriestRepository priestRepository;
     private final StaffRepository staffRepository;
     private final MemberRepository memberRepository;
@@ -78,6 +105,18 @@ public class TenantWorkspaceLifecycleService {
     private final EventRepository eventRepository;
     private final CalendarEntryRepository calendarEntryRepository;
     private final AppointmentRepository appointmentRepository;
+    private final TenantPlanGrantRepository tenantPlanGrantRepository;
+    private final TenantFeatureOverrideRepository tenantFeatureOverrideRepository;
+    private final PromoRedemptionRepository promoRedemptionRepository;
+    private final TenantSubscriptionEventRepository tenantSubscriptionEventRepository;
+    private final TenantEntitlementAuditRepository tenantEntitlementAuditRepository;
+    private final WebhookEventReceiptRepository webhookEventReceiptRepository;
+    private final MemberTransferRequestRepository memberTransferRequestRepository;
+    private final PaymentIntentRepository paymentIntentRepository;
+    private final PaymentSubscriptionRepository paymentSubscriptionRepository;
+    private final TransactionRepository transactionRepository;
+    private final FundRepository fundRepository;
+    private final AccountRepository accountRepository;
     private final TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
     private final TenantDemoWorkspaceSeederService tenantDemoWorkspaceSeederService;
 
@@ -104,6 +143,9 @@ public class TenantWorkspaceLifecycleService {
                 .orElseThrow(() -> new IllegalArgumentException("Tenant not found"));
         if (!tenant.isDemoWorkspace()) {
             throw new IllegalStateException("Only demo workspaces can be reset.");
+        }
+        if (hasEverPaid(tenant.getSubscription())) {
+            throw new IllegalStateException("Paid workspaces cannot be reset from the demo template.");
         }
         if (tenant.getDeletedAt() != null || tenant.getPurgedAt() != null) {
             throw new IllegalStateException("Purged workspaces cannot be reset.");
@@ -251,6 +293,7 @@ public class TenantWorkspaceLifecycleService {
         tenant.setDeletedAt(now);
         tenant.setPurgedAt(now);
         tenant.setSuspensionReason("Demo trial data purged after grace period");
+        purgeTenantGovernanceData(tenant.getId());
         tenantRepository.save(tenant);
         log.info("Purged demo workspace for tenant {}", tenant.getId());
     }
@@ -276,6 +319,31 @@ public class TenantWorkspaceLifecycleService {
         List<MembershipCardAuditEntity> cardAudits = membershipCardAuditRepository.findByTenantId(tenantId);
         if (!cardAudits.isEmpty()) {
             membershipCardAuditRepository.deleteAllInBatch(cardAudits);
+        }
+
+        List<PaymentIntent> paymentIntents = paymentIntentRepository.findByTenantId(tenantId);
+        if (!paymentIntents.isEmpty()) {
+            paymentIntentRepository.deleteAllInBatch(paymentIntents);
+        }
+
+        List<PaymentSubscription> paymentSubscriptions = paymentSubscriptionRepository.findByTenantId(tenantId);
+        if (!paymentSubscriptions.isEmpty()) {
+            paymentSubscriptionRepository.deleteAllInBatch(paymentSubscriptions);
+        }
+
+        List<Transaction> transactions = transactionRepository.findByTenantId(tenantId);
+        if (!transactions.isEmpty()) {
+            transactionRepository.deleteAllInBatch(transactions);
+        }
+
+        List<Fund> funds = fundRepository.findByTenantId(tenantId);
+        if (!funds.isEmpty()) {
+            fundRepository.deleteAllInBatch(funds);
+        }
+
+        List<Account> accounts = accountRepository.findByTenantId(tenantId);
+        if (!accounts.isEmpty()) {
+            accountRepository.deleteAllInBatch(accounts);
         }
 
         List<MembershipCardEntity> cards = membershipCardRepository.findByTenantId(tenantId);
@@ -359,8 +427,51 @@ public class TenantWorkspaceLifecycleService {
                 .filter(user -> user.getUuid() != null && !preservedUserIds.contains(user.getUuid()))
                 .toList();
         removableUsers.forEach(user -> tokenRepository.revokeAllActiveTokensByUserUuid(user.getUuid(), Instant.now()));
+        removableUsers.forEach(user -> tenantUserPermissionGrantRepository.deleteByUserIdAndTenantId(user.getUuid(), tenantId));
         if (!removableUsers.isEmpty()) {
             userRepository.deleteAllInBatch(removableUsers);
+        }
+    }
+
+    private void purgeTenantGovernanceData(UUID tenantId) {
+        List<TenantPlanGrantEntity> planGrants = tenantPlanGrantRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
+        if (!planGrants.isEmpty()) {
+            tenantPlanGrantRepository.deleteAllInBatch(planGrants);
+        }
+
+        List<TenantFeatureOverrideEntity> featureOverrides = tenantFeatureOverrideRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
+        if (!featureOverrides.isEmpty()) {
+            tenantFeatureOverrideRepository.deleteAllInBatch(featureOverrides);
+        }
+
+        List<PromoRedemptionEntity> promoRedemptions = promoRedemptionRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
+        if (!promoRedemptions.isEmpty()) {
+            promoRedemptionRepository.deleteAllInBatch(promoRedemptions);
+        }
+
+        List<TenantSubscriptionEventEntity> subscriptionEvents = tenantSubscriptionEventRepository.findByTenantIdOrderByOccurredAtDesc(tenantId);
+        if (!subscriptionEvents.isEmpty()) {
+            tenantSubscriptionEventRepository.deleteAllInBatch(subscriptionEvents);
+        }
+
+        List<TenantEntitlementAuditEntity> entitlementAudits = tenantEntitlementAuditRepository.findByTenant_IdOrderByOccurredAtDesc(tenantId);
+        if (!entitlementAudits.isEmpty()) {
+            tenantEntitlementAuditRepository.deleteAllInBatch(entitlementAudits);
+        }
+
+        List<WebhookEventReceiptEntity> webhookReceipts = webhookEventReceiptRepository.findByTenant_Id(tenantId);
+        if (!webhookReceipts.isEmpty()) {
+            webhookEventReceiptRepository.deleteAllInBatch(webhookReceipts);
+        }
+
+        List<MemberTransferRequestEntity> transferRequests = memberTransferRequestRepository.findByFromTenant_IdOrToTenant_Id(tenantId, tenantId);
+        if (!transferRequests.isEmpty()) {
+            memberTransferRequestRepository.deleteAllInBatch(transferRequests);
+        }
+
+        List<TenantAdminAssignmentEntity> adminAssignments = tenantAdminAssignmentRepository.findByTenant_IdOrderByCreatedAtAsc(tenantId);
+        if (!adminAssignments.isEmpty()) {
+            tenantAdminAssignmentRepository.deleteAllInBatch(adminAssignments);
         }
     }
 

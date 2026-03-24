@@ -14,6 +14,7 @@ import java.util.UUID;
 
 @Repository
 public interface PaymentIntentRepository extends JpaRepository<PaymentIntent, UUID> {
+    List<PaymentIntent> findByTenantId(UUID tenantId);
     Optional<PaymentIntent> findByTenantIdAndIdempotencyKey(UUID tenantId, String key);
 
     // PaymentIntentRepository
