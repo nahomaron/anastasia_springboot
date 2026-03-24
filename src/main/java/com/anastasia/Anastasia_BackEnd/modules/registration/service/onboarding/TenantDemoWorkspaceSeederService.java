@@ -80,6 +80,7 @@ public class TenantDemoWorkspaceSeederService {
     private static final String DEMO_SOURCE = "DEMO_SEED";
     private static final String DEFAULT_TIMEZONE = "UTC";
     private static final String DEMO_PASSWORD = "{demo-seed}";
+    private static final String DEMO_PHONE_COUNTRY_CODE = "+291";
 
     private final ChurchRepository churchRepository;
     private final MemberRepository memberRepository;
@@ -295,6 +296,8 @@ public class TenantDemoWorkspaceSeederService {
         }
 
         Instant now = Instant.now();
+        String priestUserPhone = buildDemoPhoneNumber(tenant, "73", 0);
+        String priestPhone = buildDemoPhoneNumber(tenant, "73", 1);
         UserEntity priestUser = createDemoUser(
                 tenant,
                 owner,
@@ -302,7 +305,7 @@ public class TenantDemoWorkspaceSeederService {
                 "Abune Michael Tesfai",
                 UserType.PRIEST,
                 RoleType.PRIEST,
-                "+291733000100",
+                priestUserPhone,
                 now
         );
 
@@ -317,7 +320,7 @@ public class TenantDemoWorkspaceSeederService {
                 .firstName("Michael")
                 .fatherName("Tesfai")
                 .grandFatherName("Abraha")
-                .phoneNumber("+291733000101")
+                .phoneNumber(priestPhone)
                 .churchEmail("abune.michael@" + church.getChurchNumber().toLowerCase(Locale.ROOT) + ".demo.local")
                 .birthdate(LocalDate.of(1978, 2, 9).toString())
                 .languages(new HashSet<>(Set.of("Tigrinya", "English")))
@@ -343,6 +346,10 @@ public class TenantDemoWorkspaceSeederService {
         }
 
         Instant now = Instant.now();
+        String secretaryUserPhone = buildDemoPhoneNumber(tenant, "74", 0);
+        String coordinatorUserPhone = buildDemoPhoneNumber(tenant, "74", 1);
+        String secretaryPrimaryPhone = buildDemoPhoneNumber(tenant, "74", 2);
+        String coordinatorPrimaryPhone = buildDemoPhoneNumber(tenant, "74", 3);
         UserEntity secretaryUser = createDemoUser(
                 tenant,
                 owner,
@@ -350,7 +357,7 @@ public class TenantDemoWorkspaceSeederService {
                 "Hana Ghebre",
                 UserType.STAFF,
                 RoleType.STAFF,
-                "+291744000100",
+                secretaryUserPhone,
                 now
         );
         UserEntity coordinatorUser = createDemoUser(
@@ -360,7 +367,7 @@ public class TenantDemoWorkspaceSeederService {
                 "Yonas Mehari",
                 UserType.STAFF,
                 RoleType.STAFF,
-                "+291744000101",
+                coordinatorUserPhone,
                 now
         );
 
@@ -373,7 +380,7 @@ public class TenantDemoWorkspaceSeederService {
                 .positionType(StaffPositionType.SECRETARY)
                 .employmentStatus(StaffEmploymentStatus.ACTIVE)
                 .department("Administration")
-                .primaryPhone("+291744000200")
+                .primaryPhone(secretaryPrimaryPhone)
                 .hireDate(LocalDate.ofInstant(baseInstant, ZoneOffset.UTC))
                 .notes("Demo staff account for administrative workflows.")
                 .invitedAt(now)
@@ -395,7 +402,7 @@ public class TenantDemoWorkspaceSeederService {
                 .positionType(StaffPositionType.EVENTS_COORDINATOR)
                 .employmentStatus(StaffEmploymentStatus.ACTIVE)
                 .department("Ministry")
-                .primaryPhone("+291744000201")
+                .primaryPhone(coordinatorPrimaryPhone)
                 .hireDate(LocalDate.ofInstant(baseInstant.plusSeconds(7 * 24 * 60L * 60L), ZoneOffset.UTC))
                 .notes("Demo staff account for scheduling and events.")
                 .invitedAt(now)
@@ -743,5 +750,11 @@ public class TenantDemoWorkspaceSeederService {
                 .updatedAt(now)
                 .build();
         return userRepository.save(user);
+    }
+
+    private String buildDemoPhoneNumber(TenantEntity tenant, String carrierPrefix, int sequence) {
+        String tenantDigits = tenant.getId().toString().replace("-", "");
+        int numeric = Math.floorMod(tenantDigits.hashCode(), 100_000);
+        return DEMO_PHONE_COUNTRY_CODE + carrierPrefix + String.format("%05d%02d", numeric, sequence);
     }
 }
