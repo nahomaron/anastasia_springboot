@@ -128,10 +128,17 @@ public class TenantServiceImpl implements TenantService {
                 .defaultLocale(firstNonBlank(tenantDTO.getDefaultLocale(), "en"))
                 .build();
 
+        Instant subscriptionStartedAt = Instant.now();
+        Instant trialEndsAt = subscriptionStartedAt.plusSeconds(30L * 24 * 60 * 60);
+
         TenantSubscriptionEntity subscription = TenantSubscriptionEntity.builder()
                 .plan(tenantDTO.getSubscriptionPlan())
                 .status(SubscriptionStatus.TRIALING)
                 .provider(BillingProvider.MANUAL)
+                .trialStartAt(subscriptionStartedAt)
+                .trialEndAt(trialEndsAt)
+                .currentPeriodStartAt(subscriptionStartedAt)
+                .currentPeriodEndAt(trialEndsAt)
                 .build();
         tenantEntity.assignSubscription(subscription);
 
