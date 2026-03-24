@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.calendar.repository;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,9 @@ import java.util.UUID;
 public interface CalendarEntryRepository extends JpaRepository<CalendarEntryEntity, UUID> {
 
     long countByTenantId(UUID tenantId);
+
+    @EntityGraph(attributePaths = {"recurrence", "overrides", "audiences", "audiences.user", "audiences.group"})
+    List<CalendarEntryEntity> findByTenantIdOrderByStartAtUtcAsc(UUID tenantId);
 
     Optional<CalendarEntryEntity> findByTenantIdAndSourceEntityId(UUID tenantId, UUID sourceEntityId);
 

@@ -63,6 +63,7 @@ public class TenantOnboardingProvisioningService {
     private final TenantPlanBillingCatalog billingCatalog;
     private final OnboardingEmailVerificationService onboardingEmailVerificationService;
     private final TenantDemoWorkspaceSeederService tenantDemoWorkspaceSeederService;
+    private final TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
     private final LocalizedMessageService messageService;
 
     @Transactional
@@ -258,7 +259,10 @@ public class TenantOnboardingProvisioningService {
         if (mode != WorkspaceInitializationMode.SEEDED) {
             return;
         }
-        tenantDemoWorkspaceSeederService.seedDemoWorkspace(tenant, owner);
+        boolean cloned = tenantDemoTemplateCloneService.cloneWorkspaceFromConfiguredTemplate(tenant, owner);
+        if (!cloned) {
+            tenantDemoWorkspaceSeederService.seedDemoWorkspace(tenant, owner);
+        }
     }
 
     private String resolvePriceId(SubscriptionPlan plan) {

@@ -9,7 +9,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.Rede
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SetFeatureOverrideRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantFeatureOverrideResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantPlanGrantResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantDemoTemplateCloneService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementAdministrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,28 @@ import java.util.UUID;
 public class PlatformSubscriptionAdminController {
 
     private final EntitlementAdministrationService entitlementAdministrationService;
+    private final TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
+
+    @GetMapping("/demo-template")
+    public ResponseEntity<java.util.Map<String, Object>> getConfiguredDemoTemplate() {
+        return ResponseEntity.ok(tenantDemoTemplateCloneService.findConfiguredTemplate()
+                .map(this::toDemoTemplateResponse)
+                .orElseGet(() -> java.util.Map.of(
+                        "configured", false
+                )));
+    }
+
+    @PatchMapping("/demo-template/{tenantId}")
+    public ResponseEntity<java.util.Map<String, Object>> configureDemoTemplate(@PathVariable UUID tenantId) {
+        TenantEntity tenant = tenantDemoTemplateCloneService.configureTemplateTenant(tenantId);
+        return ResponseEntity.ok(toDemoTemplateResponse(tenant));
+    }
+
+    @DeleteMapping("/demo-template/{tenantId}")
+    public ResponseEntity<Void> clearDemoTemplate(@PathVariable UUID tenantId) {
+        tenantDemoTemplateCloneService.clearConfiguredTemplate(tenantId);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping("/{tenantId}/entitlements")
     public ResponseEntity<EntitlementSnapshotResponse> getTenantEntitlements(@PathVariable UUID tenantId) {
@@ -213,5 +237,17 @@ public class PlatformSubscriptionAdminController {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    private java.util.Map<String, Object> toDemoTemplateResponse(TenantEntity tenant) {
+        return java.util.Map.of(
+                "configured", true,
+                "tenantId", tenant.getId(),
+                "displayName", tenant.getDisplayName(),
+                "slug", tenant.getSlug(),
+                "ownerEmail", tenant.getOwnerEmail(),
+                "status", tenant.getStatus(),
+                "demoTemplate", tenant.isDemoTemplate()
+        );
     }
 }

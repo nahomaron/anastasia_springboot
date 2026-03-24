@@ -55,6 +55,9 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
     @EntityGraph(attributePaths = {"participants", "assignments"})
     List<AppointmentEntity> findByTenantId(UUID tenantId);
 
+    @EntityGraph(attributePaths = {"participants", "assignments", "statusHistory"})
+    List<AppointmentEntity> findByTenantIdOrderByStartAtUtcAsc(UUID tenantId);
+
     @EntityGraph(attributePaths = {"participants", "assignments"})
     @Query("""
             select distinct a from AppointmentEntity a

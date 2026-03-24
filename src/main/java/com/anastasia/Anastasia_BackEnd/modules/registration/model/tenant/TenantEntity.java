@@ -78,6 +78,10 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
     @Column(name = "billing_email", length = 160)
     private String billingEmail;
 
+    @Builder.Default
+    @Column(name = "is_demo_template", nullable = false)
+    private boolean demoTemplate = false;
+
     @Column(name = "external_id", length = 128)
     private String externalId;
 
