@@ -6,9 +6,11 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.Enti
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.RequestPlanChangeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SubscriptionPlanHistoryItemResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingOverviewResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.UpdateCurrentTenantFeatureRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlanHistoryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
@@ -19,8 +21,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -102,6 +106,22 @@ public class TenantEntitlementController {
                 .map(this::toHistoryItem)
                 .toList();
         return ResponseEntity.ok(toBillingOverview(tenant, subscription, history));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANTS', 'OWN_SUBSCRIPTION', 'VIEW_ALL_DATA')")
+    @PutMapping("/me/features/{feature}")
+    public ResponseEntity<EntitlementSnapshotResponse> updateCurrentTenantFeature(
+            @PathVariable TenantFeature feature,
+            @Valid @RequestBody UpdateCurrentTenantFeatureRequest request
+    ) {
+        UUID tenantId = requireTenantId();
+        return ResponseEntity.ok(
+                entitlementAdministrationService.setSelfServiceFeatureEnabled(
+                        tenantId,
+                        feature,
+                        Boolean.TRUE.equals(request.getEnabled())
+                )
+        );
     }
 
     private SubscriptionPlanHistoryItemResponse toHistoryItem(SubscriptionPlanHistoryEntity entity) {

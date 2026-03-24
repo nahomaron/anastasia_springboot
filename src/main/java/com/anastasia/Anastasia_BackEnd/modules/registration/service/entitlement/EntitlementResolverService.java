@@ -109,6 +109,46 @@ public class EntitlementResolverService {
                 .build();
     }
 
+    public Set<TenantFeature> resolvePlanScopedFeatures(UUID tenantId) {
+        Instant now = Instant.now();
+        TenantSubscriptionEntity subscription = tenantSubscriptionRepository.findByTenantId(tenantId).orElse(null);
+        SubscriptionPlan basePlan = subscription != null && subscription.getPlan() != null
+                ? subscription.getPlan()
+                : SubscriptionPlan.FREE;
+        boolean subscriptionAccessActive = hasSubscriptionAccess(subscription, now);
+        SubscriptionPlan effectivePlan = resolveFeaturePlan(basePlan, subscription, now);
+
+        List<TenantPlanGrantEntity> planGrants = tenantPlanGrantRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
+        if (subscriptionAccessActive) {
+            for (TenantPlanGrantEntity grant : planGrants) {
+                if (!grant.isEffective(now) || grant.getGrantedPlan() == null) {
+                    continue;
+                }
+                SubscriptionPlan grantPlan = catalog.normalizePlan(grant.getGrantedPlan());
+                if (grantPlan.rank() > effectivePlan.rank()) {
+                    effectivePlan = grantPlan;
+                }
+            }
+        }
+
+        Set<TenantFeature> features = EnumSet.noneOf(TenantFeature.class);
+        if (!subscriptionAccessActive) {
+            return features;
+        }
+
+        features.addAll(catalog.definitionFor(effectivePlan).features());
+
+        List<PromoRedemptionEntity> redemptions = promoRedemptionRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
+        for (PromoRedemptionEntity redemption : redemptions) {
+            if (!isPromoEffective(redemption, now) || redemption.getPromoCode().getGrantedFeatures() == null) {
+                continue;
+            }
+            features.addAll(redemption.getPromoCode().getGrantedFeatures());
+        }
+
+        return features;
+    }
+
     private SubscriptionPlan resolveFeaturePlan(SubscriptionPlan basePlan,
                                                 TenantSubscriptionEntity subscription,
                                                 Instant now) {

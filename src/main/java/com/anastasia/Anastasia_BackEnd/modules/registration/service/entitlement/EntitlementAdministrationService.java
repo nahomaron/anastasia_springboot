@@ -15,6 +15,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PromoRe
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntitlementAuditEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeatureOverrideEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantPlanGrantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PromoCodeRepository;
@@ -161,6 +162,65 @@ public class EntitlementAdministrationService {
         audit(tenantId, EntitlementActionType.FEATURE_OVERRIDE_SET,
                 "Feature override: " + request.getFeature() + " -> " + request.getEnabled(), actorUserId);
         return saved;
+    }
+
+    @Transactional
+    public EntitlementSnapshotResponse setSelfServiceFeatureEnabled(UUID tenantId, TenantFeature feature, boolean enabled) {
+        UUID actorUserId = currentActorUserId();
+        TenantEntity tenant = requireTenant(tenantId);
+        Instant now = Instant.now();
+
+        java.util.Set<TenantFeature> planScopedFeatures =
+                entitlementResolverService.resolvePlanScopedFeatures(tenantId);
+        java.util.List<TenantFeatureOverrideEntity> existingOverrides =
+                tenantFeatureOverrideRepository.findByTenant_IdAndFeatureOrderByCreatedAtDesc(tenantId, feature);
+
+        if (enabled) {
+            if (!planScopedFeatures.contains(feature)) {
+                throw new IllegalArgumentException(messageService.get(
+                        "tenant.entitlement.feature.notIncluded",
+                        "Feature is not available on the current tenant plan."
+                ));
+            }
+
+            existingOverrides.stream()
+                    .filter(override -> override.isEffective(now) && override.getSource() == GrantSource.MANUAL)
+                    .forEach(override -> {
+                        override.setActive(false);
+                        override.setRevokedAt(now);
+                        override.setExpiresAt(now);
+                        override.setReason("Re-enabled by tenant admin");
+                        override.setUpdatedByUserId(actorUserId);
+                        tenantFeatureOverrideRepository.save(override);
+                    });
+        } else {
+            existingOverrides.stream()
+                    .filter(override -> override.isEffective(now) && override.getSource() == GrantSource.MANUAL)
+                    .forEach(override -> {
+                        override.setActive(false);
+                        override.setRevokedAt(now);
+                        override.setExpiresAt(now);
+                        override.setReason("Replaced by tenant admin feature setting");
+                        override.setUpdatedByUserId(actorUserId);
+                        tenantFeatureOverrideRepository.save(override);
+                    });
+
+            tenantFeatureOverrideRepository.save(TenantFeatureOverrideEntity.builder()
+                    .tenant(tenant)
+                    .feature(feature)
+                    .enabled(false)
+                    .source(GrantSource.MANUAL)
+                    .active(true)
+                    .startsAt(now)
+                    .reason("Disabled by tenant admin")
+                    .createdByUserId(actorUserId)
+                    .updatedByUserId(actorUserId)
+                    .build());
+        }
+
+        audit(tenantId, EntitlementActionType.FEATURE_OVERRIDE_SET,
+                "Self-service feature setting: " + feature + " -> " + enabled, actorUserId);
+        return entitlementResolverService.resolve(tenantId);
     }
 
     @Transactional
