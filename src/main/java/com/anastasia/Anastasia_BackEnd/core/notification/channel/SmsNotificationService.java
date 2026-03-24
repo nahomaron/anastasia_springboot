@@ -34,7 +34,7 @@ public class SmsNotificationService {
     public SmsNotificationService(ObjectProvider<SmsService> smsServiceProvider,
                                   NotificationRepository notificationRepository,
                                   NotificationIdempotencyService idempotencyService,
-                                  @Value("${notification.sms.enabled:true}") boolean smsEnabled) {
+                                  @Value("${notification.sms.enabled:false}") boolean smsEnabled) {
         this.smsServiceProvider = smsServiceProvider;
         this.notificationRepository = notificationRepository;
         this.idempotencyService = idempotencyService;

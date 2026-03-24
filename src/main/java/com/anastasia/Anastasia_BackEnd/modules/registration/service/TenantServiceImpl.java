@@ -25,7 +25,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRep
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.ChurchNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
@@ -62,7 +61,6 @@ public class TenantServiceImpl implements TenantService {
     private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
-    private final PhoneVerificationService phoneVerificationService;   // NEW
     private final SecurityUtils securityUtils;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final LocalizedMessageService messageService;
@@ -123,7 +121,8 @@ public class TenantServiceImpl implements TenantService {
                 .ownerName(tenantDTO.getOwnerName())
                 .ownerEmail(tenantDTO.getOwnerEmail())
                 .phoneNumber(tenantDTO.getPhoneNumber())
-                .phoneVerified(Boolean.TRUE.equals(tenantDTO.getPhoneVerified()))
+                .phoneVerified(true)
+                .phoneVerifiedAt(Instant.now())
                 .billingEmail(firstNonBlank(tenantDTO.getBillingEmail(), tenantDTO.getOwnerEmail()))
                 .defaultTimezone(firstNonBlank(tenantDTO.getDefaultTimezone(), "UTC"))
                 .defaultLocale(firstNonBlank(tenantDTO.getDefaultLocale(), "en"))
@@ -201,8 +200,6 @@ public class TenantServiceImpl implements TenantService {
             tenantAdminAssignmentRepository.save(primaryAdminAssignment);
         }
 
-        // Send OTP after account creation
-        phoneVerificationService.startVerification(tenantDTO.getPhoneNumber());
         return savedTenant;
     }
 
@@ -245,10 +242,6 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public boolean verifyTenantPhone(String phone, String rawOtp) {
         String normalizedPhone = PhoneNumberUtils.normalize(phone);
-        if (!phoneVerificationService.confirmOtp(normalizedPhone, rawOtp)) {
-            return false;
-        }
-
         tenantRepository.findByPhoneNumber(normalizedPhone)
                 .or(() -> tenantRepository.findByPhoneNumber(phone))
                 .ifPresent(tenant -> {

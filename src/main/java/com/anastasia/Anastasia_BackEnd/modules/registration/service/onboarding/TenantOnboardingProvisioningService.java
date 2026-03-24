@@ -6,7 +6,6 @@ import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
@@ -59,7 +58,6 @@ public class TenantOnboardingProvisioningService {
     private final RoleRepository roleRepository;
     private final ChurchMapper churchMapper;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
-    private final PhoneVerificationService phoneVerificationService;
     private final SecurityUtils securityUtils;
     private final ObjectMapper objectMapper;
     private final TenantPlanBillingCatalog billingCatalog;
@@ -152,11 +150,6 @@ public class TenantOnboardingProvisioningService {
         seedWorkspaceIfRequested(savedTenant, session, owner);
 
         session.setProvisionedOwnerUserId(owner.getUuid());
-        try {
-            phoneVerificationService.startVerification(session.getOwnerPhone());
-        } catch (RuntimeException ex) {
-            log.warn("Phone verification kickoff failed for onboarding session {}: {}", session.getId(), ex.getMessage());
-        }
         return savedTenant;
     }
 

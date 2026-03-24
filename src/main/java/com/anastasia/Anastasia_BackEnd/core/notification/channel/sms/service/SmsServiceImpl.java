@@ -39,7 +39,7 @@ public class SmsServiceImpl implements SmsService {
     @Value("${twilio.phone_number:}")
     private String fromNumber;
 
-    @Value("${notification.sms.enabled:true}")
+    @Value("${notification.sms.enabled:false}")
     private boolean smsEnabled;
 
     @PostConstruct

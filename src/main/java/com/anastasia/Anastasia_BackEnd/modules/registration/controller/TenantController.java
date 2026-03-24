@@ -8,7 +8,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantD
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
 import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +34,6 @@ public class TenantController {
 
     private final TenantService tenantService;
     private final RateLimiterService rateLimiterService;
-    private final PhoneVerificationService phoneVerificationService;
     private final LocalizedMessageService messageService;
 
     /**
@@ -88,11 +86,8 @@ public class TenantController {
                     "Too many attempts. Try again later."
             ));
         }
-        boolean verified = tenantService.verifyTenantPhone(normalizedPhone, request.getOtp());
-
-        return verified
-                ? ResponseEntity.ok("Phone verified successfully.")
-                : ResponseEntity.badRequest().body("Invalid or expired OTP or wrong phone number.");
+        tenantService.verifyTenantPhone(normalizedPhone, request.getOtp());
+        return ResponseEntity.ok("Phone verification is disabled. Tenant phone marked as verified.");
     }
 
     /**
@@ -113,8 +108,7 @@ public class TenantController {
         if (!rateLimiterService.isAllowed(key)) {
             return ResponseEntity.status(429).body("Too many attempts. Try again later.");
         }
-        phoneVerificationService.resendOtp(normalizedPhone);
-        return ResponseEntity.ok("OTP has been resent successfully.");
+        return ResponseEntity.ok("Phone verification is disabled. No OTP was sent.");
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -126,11 +120,8 @@ public class TenantController {
         if (!rateLimiterService.isAllowed(key)) {
             return ResponseEntity.status(429).body("Too many attempts. Try again later.");
         }
-        boolean verified = tenantService.verifyTenantPhone(tenantPhone, request.getOtp());
-
-        return verified
-                ? ResponseEntity.ok("Phone verified successfully.")
-                : ResponseEntity.badRequest().body("Invalid or expired OTP.");
+        tenantService.verifyTenantPhone(tenantPhone, request.getOtp());
+        return ResponseEntity.ok("Phone verification is disabled. Tenant phone marked as verified.");
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -141,8 +132,7 @@ public class TenantController {
         if (!rateLimiterService.isAllowed(key)) {
             return ResponseEntity.status(429).body("Too many attempts. Try again later.");
         }
-        phoneVerificationService.resendOtp(tenantPhone);
-        return ResponseEntity.ok("OTP has been resent successfully.");
+        return ResponseEntity.ok("Phone verification is disabled. No OTP was sent.");
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -151,7 +141,7 @@ public class TenantController {
         TenantEntity tenant = resolveCurrentTenant();
         return ResponseEntity.ok(Map.of(
                 "tenantId", tenant.getId(),
-                "phoneVerified", tenant.isPhoneVerified()
+                "phoneVerified", true
         ));
     }
 
