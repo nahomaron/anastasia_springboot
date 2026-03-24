@@ -43,6 +43,11 @@ public class ChurchDTO {
     @NotBlank(message = "{validation.church.diocese.required}")
     private String diocese;
 
+    @NotBlank(message = "{validation.church.localDiocese.required}")
+    @JsonProperty("dioceseLocal")
+    @JsonAlias("DioceseLocal")
+    private String dioceseLocal;
+
     @Valid
     private Address address;
 
@@ -59,6 +64,10 @@ public class ChurchDTO {
     private String denomination;
 
     private String description;
+
+    @JsonProperty("descriptionLocal")
+    @JsonAlias("DescriptionLocal")
+    private String descriptionLocal;
 
     private boolean usesOurServices;
 

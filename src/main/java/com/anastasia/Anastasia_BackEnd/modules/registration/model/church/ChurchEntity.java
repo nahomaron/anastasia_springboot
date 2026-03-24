@@ -76,6 +76,9 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
     @Column(nullable = false)
     private String diocese;
 
+    @Column(name = "diocese_local", nullable = false)
+    private String dioceseLocal;
+
     @Column(nullable = false)
     private String email;
 
@@ -93,6 +96,9 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
 
     @Column(length = 1000)
     private String description;
+
+    @Column(name = "description_local", length = 1000)
+    private String descriptionLocal;
 
     @Column(name = "uses_our_services", nullable = false)
     private boolean usesOurServices;
@@ -171,6 +177,7 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
                 && hasText(neighborhood)
                 && hasText(neighborhoodLocal)
                 && hasText(diocese)
+                && hasText(dioceseLocal)
                 && hasText(email)
                 && hasText(phone)
                 && hasText(description)

@@ -223,6 +223,7 @@ public class ChurchServiceImpl implements ChurchService{
         target.setNeighborhood(incoming.getNeighborhood());
         target.setNeighborhoodLocal(incoming.getNeighborhoodLocal());
         target.setDiocese(incoming.getDiocese());
+        target.setDioceseLocal(incoming.getDioceseLocal());
         target.setAddress(incoming.getAddress());
         target.setEmail(incoming.getEmail());
         target.setPhone(incoming.getPhone());
@@ -230,6 +231,7 @@ public class ChurchServiceImpl implements ChurchService{
         target.setLocale(defaultLocale(incoming.getLocale(), target.getLocale()));
         target.setDenomination(incoming.getDenomination());
         target.setDescription(incoming.getDescription());
+        target.setDescriptionLocal(incoming.getDescriptionLocal());
         target.setUsesOurServices(resolveUsesOurServices(target, incoming));
         target.setGpsLocation(incoming.getGpsLocation());
         target.setLatitude(incoming.getLatitude());

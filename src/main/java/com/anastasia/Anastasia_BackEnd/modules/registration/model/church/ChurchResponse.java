@@ -41,6 +41,8 @@ public class ChurchResponse {
     @NotBlank(message = "Diocese is required")
     private String diocese;
 
+    private String dioceseLocal;
+
     @Valid
     private Address address;
 
@@ -56,6 +58,8 @@ public class ChurchResponse {
     private String denomination;
 
     private String description;
+
+    private String descriptionLocal;
 
     private boolean usesOurServices;
 

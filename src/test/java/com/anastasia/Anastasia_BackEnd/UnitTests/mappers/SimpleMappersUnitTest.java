@@ -99,10 +99,12 @@ class SimpleMappersUnitTest {
                 .neighborhood("Piassa")
                 .neighborhoodLocal("ፒያሳ")
                 .diocese("Addis Diocese")
+                .dioceseLocal("ኣዲስ ሃገረ ስብከት")
                 .email("church@example.com")
                 .phone("+251900000000")
                 .denomination("Orthodox")
                 .description("Historic parish")
+                .descriptionLocal("ታሪኻዊት ደብሪ")
                 .usesOurServices(true)
                 .address(Address.builder()
                         .addressLine1("123 Main")
@@ -120,16 +122,18 @@ class SimpleMappersUnitTest {
 
         ChurchDTO dto = churchMapper.churchEntityToDTO(entity);
         assertThat(dto.getPrefix()).isEqualTo("St.");
-        assertThat(dto.getPrefixLocal()).isEqualTo("ቅዱስ");
+        assertThat(dto.getPrefixLocal()).isEqualTo("ቅድስት");
         assertThat(dto.getChurchName()).isEqualTo("St. Mary");
         assertThat(dto.getChurchNameLocal()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
         assertThat(dto.getNeighborhood()).isEqualTo("Piassa");
         assertThat(dto.getNeighborhoodLocal()).isEqualTo("ፒያሳ");
         assertThat(dto.getDiocese()).isEqualTo("Addis Diocese");
+        assertThat(dto.getDioceseLocal()).isEqualTo("ኣዲስ ሃገረ ስብከት");
         assertThat(dto.getEmail()).isEqualTo("church@example.com");
         assertThat(dto.getAddress().getCity()).isEqualTo("Addis Ababa");
         assertThat(dto.getPhone()).isEqualTo("+251900000000");
         assertThat(dto.getDenomination()).isEqualTo("Orthodox");
+        assertThat(dto.getDescriptionLocal()).isEqualTo("ታሪኻዊት ደብሪ");
         assertThat(dto.isUsesOurServices()).isTrue();
         assertThat(dto.getInstagram()).isEqualTo("instagram.com/stmary");
         assertThat(dto.getYoutube()).isEqualTo("youtube.com/stmary");
@@ -138,12 +142,14 @@ class SimpleMappersUnitTest {
         ChurchEntity mappedBack = churchMapper.churchDTOToEntity(dto);
         assertThat(mappedBack.getPrefix()).isEqualTo("St.");
         assertThat(mappedBack.getChurchName()).isEqualTo("St. Mary");
-        assertThat(mappedBack.getPrefixLocal()).isEqualTo("ቅዱስ");
+        assertThat(mappedBack.getPrefixLocal()).isEqualTo("ቅድስት");
         assertThat(mappedBack.getChurchNameLocal()).isEqualTo("ቤተ ክርስቲያን ቅዱስት ማርያም");
         assertThat(mappedBack.getNeighborhood()).isEqualTo("Piassa");
         assertThat(mappedBack.getNeighborhoodLocal()).isEqualTo("ፒያሳ");
+        assertThat(mappedBack.getDioceseLocal()).isEqualTo("ኣዲስ ሃገረ ስብከት");
         assertThat(mappedBack.getEmail()).isEqualTo("church@example.com");
         assertThat(mappedBack.getPhone()).isEqualTo("+251900000000");
+        assertThat(mappedBack.getDescriptionLocal()).isEqualTo("ታሪኻዊት ደብሪ");
         assertThat(mappedBack.getInstagram()).isEqualTo("instagram.com/stmary");
     }
 
@@ -156,6 +162,8 @@ class SimpleMappersUnitTest {
                   "neighborhood": "Akria",
                   "neighborhoodLocal": "ኣኽርያ",
                   "diocese": "Addis Ababa",
+                  "dioceseLocal": "ኣዲስ ኣበባ ሃገረ ስብከት",
+                  "descriptionLocal": "ናይ ከባቢ መግለጺ",
                   "email": "contact@stmichael.org"
                 }
                 """;
@@ -164,6 +172,8 @@ class SimpleMappersUnitTest {
 
         assertThat(dto.getChurchNameLocal()).isEqualTo("ሚካኤል ቤተ ክርስቲያን");
         assertThat(dto.getNeighborhoodLocal()).isEqualTo("ኣኽርያ");
+        assertThat(dto.getDioceseLocal()).isEqualTo("ኣዲስ ኣበባ ሃገረ ስብከት");
+        assertThat(dto.getDescriptionLocal()).isEqualTo("ናይ ከባቢ መግለጺ");
     }
 
     @Test

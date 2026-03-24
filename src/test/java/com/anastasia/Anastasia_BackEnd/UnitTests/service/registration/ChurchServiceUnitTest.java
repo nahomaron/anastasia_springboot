@@ -58,8 +58,10 @@ class ChurchServiceUnitTest {
                     .churchNumber(mappedChurch.getChurchNumber())
                     .churchName(mappedChurch.getChurchNameLocal())
                     .diocese(mappedChurch.getDiocese())
+                    .dioceseLocal(mappedChurch.getDioceseLocal())
                     .email(mappedChurch.getEmail())
                     .phone(mappedChurch.getPhone())
+                    .descriptionLocal(mappedChurch.getDescriptionLocal())
                     .status(mappedChurch.getStatus())
                     .tenantId(mappedChurch.getTenant() != null ? mappedChurch.getTenant().getId() : null)
                     .build();
@@ -73,11 +75,13 @@ class ChurchServiceUnitTest {
         ChurchResponse dto = ChurchResponse.builder()
                 .churchName(church.getChurchNameLocal())
                 .diocese(church.getDiocese())
+                .dioceseLocal(church.getDioceseLocal())
                 .email(church.getEmail())
                 .phone(church.getPhone())
+                .descriptionLocal(church.getDescriptionLocal())
                 .build();
 
-        when(churchRepository.search(null, null, pageable)).thenReturn(entityPage);
+        when(churchRepository.findAllFiltered(null, pageable)).thenReturn(entityPage);
         when(churchMapper.churchEntityToResponse(church)).thenReturn(dto);
 
         Page<ChurchResponse> result = churchService.findAll(pageable, null, null);
@@ -98,13 +102,17 @@ class ChurchServiceUnitTest {
 
         ChurchEntity update = TestDataUtil.createTestChurchEntity(tenant);
         update.setChurchNameLocal("Updated Church");
+        update.setDioceseLocal("ዝተሓደሰ ሃገረ ስብከት");
+        update.setDescriptionLocal("ዝተሓደሰ ናይ ደብሪ መግለጺ");
         update.setStatus(ChurchStatus.ACTIVE);
 
         ChurchResponse response = churchService.updateChurch(1L, update);
 
-        assertThat(response.getChurchNameLocal()).isEqualTo("Updated Church");
-        verify(churchRepository).save(church);
         assertThat(church.getChurchNameLocal()).isEqualTo("Updated Church");
+        assertThat(response.getDioceseLocal()).isEqualTo("ዝተሓደሰ ሃገረ ስብከት");
+        assertThat(response.getDescriptionLocal()).isEqualTo("ዝተሓደሰ ናይ ደብሪ መግለጺ");
+        verify(churchRepository).save(church);
+        assertThat(church.getDioceseLocal()).isEqualTo("ዝተሓደሰ ሃገረ ስብከት");
         assertThat(church.getChurchNumber()).isNotBlank();
     }
 

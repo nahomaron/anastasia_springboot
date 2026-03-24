@@ -124,7 +124,9 @@ class ChurchControllerIT extends PostgresTestContainer {
                         .content(objectMapper.writeValueAsString(testChurch)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.churchNumber", notNullValue()))
-                .andExpect(jsonPath("$.churchName", is(testChurch.getChurchNameLocal())));
+                .andExpect(jsonPath("$.churchName", is(testChurch.getChurchNameLocal())))
+                .andExpect(jsonPath("$.dioceseLocal", is(testChurch.getDioceseLocal())))
+                .andExpect(jsonPath("$.descriptionLocal", is(testChurch.getDescriptionLocal())));
     }
 
     @Test
@@ -169,7 +171,9 @@ class ChurchControllerIT extends PostgresTestContainer {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(churchDTO1)))
               .andExpect(status().isOk())
-              .andExpect(jsonPath("$.churchName", is("Updated Church Name")));
+              .andExpect(jsonPath("$.churchName", is("Updated Church Name")))
+              .andExpect(jsonPath("$.dioceseLocal", is(churchDTO1.getDioceseLocal())))
+              .andExpect(jsonPath("$.descriptionLocal", is(churchDTO1.getDescriptionLocal())));
     }
 
     @Test
