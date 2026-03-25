@@ -14,6 +14,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRep
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSettingsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,20 +31,20 @@ public class TenantSettingsService {
     @Transactional(readOnly = true)
     public CurrentTenantSettingsResponse getCurrentTenantSettings() {
         UUID tenantId = requireTenantId();
-        TenantSettingsEntity settings = getOrCreateSettings(tenantId);
-        return toResponse(settings);
+        return tenantSettingsRepository.findById(tenantId)
+                .map(this::toResponse)
+                .orElseGet(() -> defaultResponse(tenantId));
     }
 
     @Transactional
     public CurrentTenantSettingsResponse updateCurrentTenantSettings(UpdateCurrentTenantSettingsRequest request) {
         UUID tenantId = requireTenantId();
-        TenantSettingsEntity settings = getOrCreateSettings(tenantId);
+        TenantSettingsEntity settings = getOrCreateSettingsForUpdate(tenantId);
 
         if (request != null && request.getAttendance() != null) {
             applyAttendance(settings, request.getAttendance());
         }
 
-        tenantSettingsRepository.save(settings);
         return toResponse(settings);
     }
 
@@ -86,12 +87,32 @@ public class TenantSettingsService {
                 .build();
     }
 
-    private TenantSettingsEntity getOrCreateSettings(UUID tenantId) {
+    private CurrentTenantSettingsResponse defaultResponse(UUID tenantId) {
+        return toResponse(TenantSettingsEntity.builder()
+                .tenantId(tenantId)
+                .attendanceKioskModeEnabled(false)
+                .attendanceNewcomerCaptureEnabled(true)
+                .attendanceCaptureFullName(true)
+                .attendanceCaptureEmail(true)
+                .attendanceCapturePhone(false)
+                .build());
+    }
+
+    private TenantSettingsEntity getOrCreateSettingsForUpdate(UUID tenantId) {
         return tenantSettingsRepository.findById(tenantId)
-                .orElseGet(() -> tenantSettingsRepository.save(TenantSettingsEntity.builder()
-                        .tenant(resolveTenant(tenantId))
-                        .tenantId(tenantId)
-                        .build()));
+                .orElseGet(() -> createSettings(tenantId));
+    }
+
+    private TenantSettingsEntity createSettings(UUID tenantId) {
+        try {
+            return tenantSettingsRepository.saveAndFlush(TenantSettingsEntity.builder()
+                    .tenant(resolveTenant(tenantId))
+                    .tenantId(tenantId)
+                    .build());
+        } catch (DataIntegrityViolationException ex) {
+            return tenantSettingsRepository.findById(tenantId)
+                    .orElseThrow(() -> ex);
+        }
     }
 
     private TenantEntity resolveTenant(UUID tenantId) {

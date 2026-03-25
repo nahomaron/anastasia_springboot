@@ -111,8 +111,9 @@ public class NotificationInboxService {
     @Transactional(readOnly = true)
     public NotificationPreferencesResponse getPreferences() {
         ActorScope scope = resolveActorScope();
-        NotificationPreferenceEntity preference = findOrCreatePreference(scope.tenantId(), scope.userId());
-        return toPreferenceResponse(preference);
+        return findPreference(scope.tenantId(), scope.userId())
+                .map(this::toPreferenceResponse)
+                .orElseGet(this::defaultPreferenceResponse);
     }
 
     @Transactional
@@ -196,6 +197,10 @@ public class NotificationInboxService {
                 preference.isInAppEnabled(),
                 preference.getMutedTypes() == null ? Set.of() : Set.copyOf(preference.getMutedTypes())
         );
+    }
+
+    private NotificationPreferencesResponse defaultPreferenceResponse() {
+        return new NotificationPreferencesResponse(true, false, true, Set.of());
     }
 
     private Set<NotificationType> parseTypes(String typeQuery) {
