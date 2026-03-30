@@ -3,7 +3,7 @@ name: ⚡ K6 Load & Performance Dashboard
 on:
   workflow_dispatch:        # manual trigger
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 jobs:
   # ------------------------------------------------------------
@@ -89,7 +89,7 @@ jobs:
           python3 performance/scripts/generate_allure_perf_results.py
 
       - name: 📊 Generate Allure HTML Performance Report
-        uses: simple-elf/allure-report-action@v1.6
+        uses: simple-elf/allure-report-action@v1.13
         with:
           allure_results: target/allure-results
           allure_report: allure-performance-report

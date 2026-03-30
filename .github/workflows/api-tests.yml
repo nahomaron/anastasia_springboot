@@ -39,6 +39,11 @@ jobs:
       - name: 🧰 Grant execute permission for Maven wrapper
         run: chmod +x ./mvnw
 
+      - name: 📏 Run static-analysis gates
+        run: |
+          echo "Running Checkstyle and SpotBugs";
+          ./mvnw -DskipTests compile checkstyle:check spotbugs:check -B
+
       # ---------------------------------------------------
       # 1️⃣ INTERNAL TESTS – Run integration/unit suite
       # ---------------------------------------------------
@@ -130,7 +135,7 @@ jobs:
       # ---------------------------------------------------
       - name: 🧮 Generate Allure HTML report
         if: always()
-        uses: simple-elf/allure-report-action@v1.6
+        uses: simple-elf/allure-report-action@v1.13
         with:
           allure_results: target/allure-results
           allure_report: allure-html-report-dir
