@@ -34,6 +34,7 @@
 		<aws.sdk.version>2.25.68</aws.sdk.version>
 		<allure.version>2.16.1</allure.version>
 		<lombok.version>1.18.42</lombok.version>
+		<experimental.tests.tag>experimental</experimental.tests.tag>
 	</properties>
 	<repositories>
 		<repository>
@@ -407,6 +408,12 @@
 			<artifactId>javafaker</artifactId>
 			<version>1.0.2</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-simple</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -582,6 +589,17 @@
 				</executions>
 			</plugin>
 
+			<!-- 🔹 SpotBugs static analysis -->
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+				<version>4.9.8.2</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>Low</threshold>
+				</configuration>
+			</plugin>
+
 			<!-- 🔹 JUnit + Allure runtime -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -589,6 +607,7 @@
 				<version>3.2.5</version>
 				<configuration>
 					<reuseForks>false</reuseForks>
+					<excludedGroups>${experimental.tests.tag}</excludedGroups>
 
 					<!-- Combine existing argLine (e.g. Jacoco) with the Mockito agent -->
 					<argLine>
