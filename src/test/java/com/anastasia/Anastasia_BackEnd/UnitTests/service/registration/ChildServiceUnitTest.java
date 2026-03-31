@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChildMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberDTO;
@@ -14,14 +15,14 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildServiceImpl;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -30,9 +31,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 public class ChildServiceUnitTest {
 
     @Mock private ChildRepository childRepository;
@@ -41,6 +43,8 @@ public class ChildServiceUnitTest {
     @Mock private MemberRepository memberRepository;
     @Mock private ChildMapper childMapper;
     @Mock private SecurityUtils securityUtils;
+    @Mock private TenantAdminNotificationService tenantAdminNotificationService;
+    @Mock private LocalizedMessageService messageService;
 
     @InjectMocks
     private ChildServiceImpl childService;
@@ -48,6 +52,7 @@ public class ChildServiceUnitTest {
     private Child_MemberEntity child;
     private UserEntity user;
     private ChurchEntity church;
+    private ChurchEntity updateChurch;
     private UserPrincipal principal;
     private Authentication authentication;
     private SecurityContext securityContext;
@@ -63,6 +68,7 @@ public class ChildServiceUnitTest {
                 .fatherName("Doe")
                 .grandFatherName("Smith")
                 .deacon(false)
+                .tenantId(tenantId)
                 .build();
 
         user = UserEntity.builder()
@@ -72,7 +78,12 @@ public class ChildServiceUnitTest {
                 .build();
 
         church = new ChurchEntity();
+        church.setChurchNumber("CH123");
         church.setTenant(TenantEntity.builder().id(tenantId).build());
+
+        updateChurch = new ChurchEntity();
+        updateChurch.setChurchNumber("NEW_CH");
+        updateChurch.setTenant(TenantEntity.builder().id(tenantId).build());
         principal = new UserPrincipal(user);
         authentication = mock(Authentication.class);
         securityContext = mock(SecurityContext.class);
@@ -80,6 +91,28 @@ public class ChildServiceUnitTest {
 //        when(authentication.getPrincipal()).thenReturn(principal);
 //        when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
+        lenient().when(childMapper.childEntityToResponse(any())).thenAnswer(invocation -> {
+            Child_MemberEntity source = invocation.getArgument(0);
+            if (source == null) {
+                return Child_MemberResponse.builder().build();
+            }
+            return Child_MemberResponse.builder()
+                    .id(source.getId())
+                    .firstName(source.getFirstName())
+                    .build();
+        });
+        lenient().when(messageService.get(anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(messageService.get(anyString(), anyString(), any(Object[].class)))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(churchRepository.findByChurchNumber(anyString())).thenAnswer(invocation -> {
+            String requested = invocation.getArgument(0);
+            if ("NEW_CH".equalsIgnoreCase(requested)) {
+                return Optional.of(updateChurch);
+            }
+            return Optional.of(church);
+        });
+        lenient().when(childRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @AfterEach
