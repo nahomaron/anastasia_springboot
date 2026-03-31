@@ -1,20 +1,9 @@
-ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP WITH TIME ZONE;
+${members_columns_sql}
 
-ALTER TABLE children
-    ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP WITH TIME ZONE,
-    ADD COLUMN IF NOT EXISTS inactive_at TIMESTAMP WITH TIME ZONE,
-    ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMP WITH TIME ZONE,
-    ADD COLUMN IF NOT EXISTS status_reason VARCHAR(512),
-    ADD COLUMN IF NOT EXISTS consent_version VARCHAR(64),
-    ADD COLUMN IF NOT EXISTS consent_accepted_at TIMESTAMP WITH TIME ZONE,
-    ADD COLUMN IF NOT EXISTS external_id VARCHAR(128),
-    ADD COLUMN IF NOT EXISTS source_system VARCHAR(64),
-    ADD COLUMN IF NOT EXISTS preferred_name VARCHAR(120),
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+${children_columns_sql}
 
 CREATE TABLE tenant_feature_overrides (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     feature VARCHAR(64) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,

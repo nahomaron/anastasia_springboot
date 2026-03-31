@@ -626,6 +626,7 @@
 
 					<systemPropertyVariables>
 						<allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+						<spring.flyway.locations>classpath:db/migration-h2,classpath:db/migration</spring.flyway.locations>
 						<TESTCONTAINERS_RYUK_DISABLED>false</TESTCONTAINERS_RYUK_DISABLED>
 					</systemPropertyVariables>
 
@@ -639,6 +640,11 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>3.2.5</version>
+				<configuration>
+					<systemPropertyVariables>
+						<spring.flyway.locations>classpath:db/migration-h2,classpath:db/migration</spring.flyway.locations>
+					</systemPropertyVariables>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>

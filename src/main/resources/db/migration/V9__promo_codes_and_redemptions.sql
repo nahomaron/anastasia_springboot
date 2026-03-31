@@ -1,5 +1,5 @@
 CREATE TABLE promo_codes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     code VARCHAR(64) NOT NULL UNIQUE,
     name VARCHAR(128) NOT NULL,
     description VARCHAR(1024),
@@ -32,7 +32,7 @@ CREATE TABLE promo_code_features (
 );
 
 CREATE TABLE promo_redemptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     promo_code_id UUID NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,

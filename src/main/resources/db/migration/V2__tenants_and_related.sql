@@ -1,5 +1,5 @@
 CREATE TABLE tenants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     display_name VARCHAR(120) NOT NULL,
     slug VARCHAR(120) NOT NULL UNIQUE,
     tenant_type VARCHAR(24) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE tenants (
 );
 
 CREATE TABLE tenant_subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL UNIQUE,
     plan VARCHAR(32) NOT NULL,
     status VARCHAR(24) NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE tenant_subscriptions (
 );
 
 CREATE TABLE tenant_subscription_provider_links (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     tenant_subscription_id UUID NOT NULL,
     provider VARCHAR(24) NOT NULL,
     provider_customer_id VARCHAR(128),
@@ -80,7 +80,7 @@ CREATE TABLE tenant_subscription_provider_links (
 );
 
 CREATE TABLE tenant_admin_assignments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     user_id UUID NOT NULL,
     role VARCHAR(32) NOT NULL,

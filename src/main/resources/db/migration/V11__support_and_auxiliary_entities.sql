@@ -207,7 +207,7 @@ CREATE TABLE membership_card_audits (
 CREATE INDEX idx_membership_card_audits_card_time ON membership_card_audits(membership_card_id, event_time);
 
 CREATE TABLE tenant_entitlement_audit (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     action VARCHAR(48) NOT NULL,
     details VARCHAR(2048),
@@ -220,7 +220,7 @@ CREATE INDEX idx_tenant_entitlement_audit_tenant_time ON tenant_entitlement_audi
 CREATE INDEX idx_tenant_entitlement_audit_action ON tenant_entitlement_audit(action);
 
 CREATE TABLE tenant_onboarding_sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     idempotency_key VARCHAR(128) NOT NULL UNIQUE,
     status VARCHAR(40) NOT NULL,
     tenant_type VARCHAR(24) NOT NULL,
@@ -273,7 +273,7 @@ CREATE UNIQUE INDEX idx_onboarding_email_verification_email ON onboarding_email_
 CREATE INDEX idx_onboarding_email_verification_expires ON onboarding_email_verification_codes(expires_at);
 
 CREATE TABLE webhook_event_receipts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     provider VARCHAR(24) NOT NULL,
     event_id VARCHAR(128) NOT NULL UNIQUE,
     event_type VARCHAR(120) NOT NULL,
@@ -297,7 +297,7 @@ CREATE INDEX idx_webhook_event_receipts_onboarding ON webhook_event_receipts(onb
 CREATE INDEX idx_webhook_event_receipts_subscription ON webhook_event_receipts(tenant_subscription_id);
 
 CREATE TABLE tenant_subscription_plan_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     tenant_subscription_id UUID,
     old_plan VARCHAR(32),
@@ -315,7 +315,7 @@ CREATE INDEX idx_tenant_subscription_plan_history_tenant_effective ON tenant_sub
 CREATE INDEX idx_tenant_subscription_plan_history_event ON tenant_subscription_plan_history(provider_event_id);
 
 CREATE TABLE tenant_subscription_events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_subscription_id UUID NOT NULL,
     tenant_id UUID NOT NULL,
     event_type VARCHAR(32) NOT NULL,
@@ -334,7 +334,7 @@ CREATE INDEX idx_tenant_subscription_events_tenant_time ON tenant_subscription_e
 CREATE INDEX idx_tenant_subscription_events_idempotency ON tenant_subscription_events(idempotency_key);
 
 CREATE TABLE member_transfer_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL,
     from_tenant_id UUID NOT NULL,
     to_tenant_id UUID NOT NULL,
@@ -360,7 +360,7 @@ CREATE INDEX idx_member_transfer_from_tenant_status ON member_transfer_requests(
 CREATE INDEX idx_member_transfer_to_tenant_status ON member_transfer_requests(to_tenant_id, status);
 
 CREATE TABLE baptism_service_requests (
-    id BIGINT PRIMARY KEY DEFAULT nextval('baptism_request_seq'),
+    id BIGINT DEFAULT nextval('baptism_request_seq') PRIMARY KEY,
     request_number VARCHAR(32) NOT NULL UNIQUE,
     tenant_id UUID NOT NULL,
     church_id BIGINT NOT NULL,

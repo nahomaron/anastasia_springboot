@@ -1,5 +1,5 @@
 CREATE TABLE marriage_cases (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     church_id BIGINT NOT NULL,
     case_reference VARCHAR(64) NOT NULL UNIQUE,
@@ -32,7 +32,7 @@ CREATE INDEX idx_marriage_case_church_status ON marriage_cases(church_id, status
 CREATE INDEX idx_marriage_case_church_reference ON marriage_cases(church_id, case_reference);
 
 CREATE TABLE marriage_requirement_templates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     church_id BIGINT NOT NULL,
     code VARCHAR(64) NOT NULL,
@@ -61,7 +61,7 @@ CREATE INDEX idx_marriage_requirement_template_church ON marriage_requirement_te
 CREATE INDEX idx_marriage_requirement_template_scope ON marriage_requirement_templates(applies_to, required_flag);
 
 CREATE TABLE marriage_parties (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     party_role VARCHAR(16) NOT NULL,
     member_id BIGINT,
@@ -108,7 +108,7 @@ ALTER TABLE marriage_cases
     ADD CONSTRAINT fk_marriage_cases_groom_party FOREIGN KEY (groom_party_id) REFERENCES marriage_parties(id);
 
 CREATE TABLE marriage_status_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     from_status VARCHAR(48),
     to_status VARCHAR(48) NOT NULL,
@@ -121,7 +121,7 @@ CREATE TABLE marriage_status_history (
 CREATE INDEX idx_marriage_status_history_case ON marriage_status_history(marriage_case_id, changed_at);
 
 CREATE TABLE marriage_pairing_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     target_party_id UUID,
     token_value VARCHAR(128) NOT NULL,
@@ -145,7 +145,7 @@ CREATE INDEX idx_marriage_pairing_case ON marriage_pairing_tokens(marriage_case_
 CREATE INDEX idx_marriage_pairing_expires ON marriage_pairing_tokens(expires_at);
 
 CREATE TABLE marriage_priest_assignments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     priest_user_id UUID,
     priest_name_snapshot VARCHAR(255),
@@ -165,7 +165,7 @@ CREATE INDEX idx_marriage_priest_assignment_case ON marriage_priest_assignments(
 CREATE INDEX idx_marriage_priest_assignment_priest ON marriage_priest_assignments(priest_user_id, active);
 
 CREATE TABLE marriage_party_submissions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     party_id UUID NOT NULL,
     submission_version INTEGER NOT NULL,
@@ -187,7 +187,7 @@ CREATE INDEX idx_marriage_submission_party_status ON marriage_party_submissions(
 CREATE INDEX idx_marriage_submission_case_version ON marriage_party_submissions(marriage_case_id, submission_version);
 
 CREATE TABLE marriage_requirement_assignments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     requirement_template_id UUID NOT NULL,
     marriage_case_id UUID NOT NULL,
     party_id UUID,
@@ -210,7 +210,7 @@ CREATE INDEX idx_marriage_requirement_assignment_case ON marriage_requirement_as
 CREATE INDEX idx_marriage_requirement_assignment_party ON marriage_requirement_assignments(party_id, current_status);
 
 CREATE TABLE marriage_confessor_approvals (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     party_id UUID,
     approval_status VARCHAR(24) NOT NULL,
@@ -238,7 +238,7 @@ CREATE INDEX idx_marriage_confessor_case_status ON marriage_confessor_approvals(
 CREATE INDEX idx_marriage_confessor_mode ON marriage_confessor_approvals(approval_mode, priest_user_id);
 
 CREATE TABLE marriage_schedules (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     proposed_date_time TIMESTAMP WITH TIME ZONE,
     approved_date_time TIMESTAMP WITH TIME ZONE,
@@ -261,7 +261,7 @@ CREATE INDEX idx_marriage_schedule_case_status ON marriage_schedules(marriage_ca
 CREATE INDEX idx_marriage_schedule_priest ON marriage_schedules(assigned_priest_user_id, approved_date_time);
 
 CREATE TABLE marriage_party_documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     party_id UUID,
     document_category VARCHAR(64) NOT NULL,
@@ -290,7 +290,7 @@ CREATE INDEX idx_marriage_document_case_party ON marriage_party_documents(marria
 CREATE INDEX idx_marriage_document_category ON marriage_party_documents(document_category, verification_status);
 
 CREATE TABLE marriage_reviews (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     stage VARCHAR(48) NOT NULL,
     decision VARCHAR(32) NOT NULL,
@@ -311,7 +311,7 @@ CREATE INDEX idx_marriage_review_case_stage ON marriage_reviews(marriage_case_id
 CREATE INDEX idx_marriage_review_actor ON marriage_reviews(actor_user_id, stage);
 
 CREATE TABLE marriage_case_notes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     party_id UUID,
     author_user_id UUID NOT NULL,
@@ -330,7 +330,7 @@ CREATE INDEX idx_marriage_case_note_case_visibility ON marriage_case_notes(marri
 CREATE INDEX idx_marriage_case_note_party ON marriage_case_notes(party_id);
 
 CREATE TABLE marriage_audit_events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     event_type VARCHAR(64) NOT NULL,
     actor_user_id UUID,
@@ -345,7 +345,7 @@ CREATE INDEX idx_marriage_audit_case_type ON marriage_audit_events(marriage_case
 CREATE INDEX idx_marriage_audit_occurred_at ON marriage_audit_events(occurred_at);
 
 CREATE TABLE marriage_witnesses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     party_id UUID,
     witness_type VARCHAR(24) NOT NULL,
@@ -376,7 +376,7 @@ CREATE INDEX idx_marriage_witness_case_type ON marriage_witnesses(marriage_case_
 CREATE INDEX idx_marriage_witness_party_type ON marriage_witnesses(party_id, witness_type);
 
 CREATE TABLE marriage_impediments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     party_id UUID,
     impediment_type VARCHAR(48) NOT NULL,
@@ -400,7 +400,7 @@ CREATE INDEX idx_marriage_impediment_case_status ON marriage_impediments(marriag
 CREATE INDEX idx_marriage_impediment_party_status ON marriage_impediments(party_id, status);
 
 CREATE TABLE marriage_manual_payments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     payment_category VARCHAR(64) NOT NULL,
     amount NUMERIC(12,2),
@@ -421,7 +421,7 @@ CREATE TABLE marriage_manual_payments (
 CREATE INDEX idx_marriage_payment_case_status ON marriage_manual_payments(marriage_case_id, verification_status);
 
 CREATE TABLE marriage_certificate_sequence_configs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     church_id BIGINT NOT NULL,
     prefix VARCHAR(32),
@@ -443,7 +443,7 @@ CREATE TABLE marriage_certificate_sequence_configs (
 CREATE INDEX idx_marriage_certificate_sequence_church ON marriage_certificate_sequence_configs(church_id, active);
 
 CREATE TABLE marriage_certificates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     marriage_case_id UUID NOT NULL,
     certificate_number VARCHAR(64) NOT NULL,
     numbering_format_snapshot VARCHAR(255) NOT NULL,
@@ -467,7 +467,7 @@ CREATE INDEX idx_marriage_certificate_case_status ON marriage_certificates(marri
 CREATE INDEX idx_marriage_certificate_issued_date ON marriage_certificates(issued_date);
 
 CREATE TABLE marriage_certificate_amendments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     certificate_id UUID NOT NULL,
     amendment_reason VARCHAR(2000) NOT NULL,
     amendment_snapshot_json TEXT NOT NULL,

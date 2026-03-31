@@ -1,5 +1,5 @@
 CREATE TABLE tenant_plan_grants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     tenant_id UUID NOT NULL,
     granted_plan VARCHAR(32) NOT NULL,
     source VARCHAR(16) NOT NULL,
