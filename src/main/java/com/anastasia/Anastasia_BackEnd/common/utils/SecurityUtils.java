@@ -9,6 +9,8 @@ import java.security.SecureRandom;
 @Component
 public class SecurityUtils {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     public boolean hasPermission(String permission) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth.getAuthorities().stream()
@@ -19,11 +21,8 @@ public class SecurityUtils {
 
         String characters = "01234456789";
         StringBuilder codeBuilder = new StringBuilder(baseLetter);
-        SecureRandom secureRandom = new SecureRandom();
-
-
         for (int i = 0; i < length; i++) {
-            int randomIndex = secureRandom.nextInt(characters.length());
+            int randomIndex = SECURE_RANDOM.nextInt(characters.length());
             codeBuilder.append(characters.charAt(randomIndex));
         }
 

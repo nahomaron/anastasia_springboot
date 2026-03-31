@@ -17,9 +17,9 @@ public class TenantAwareCacheKeyGenerator implements KeyGenerator {
     @Override
     public Object generate(Object target, Method method, Object... params) {
         // Always start with tenantId prefix
-        String tenantId = String.valueOf(TenantContext.getTenantId());
-        StringBuilder key = new StringBuilder("tenant:")
-                .append(tenantId != null ? tenantId : "unknown");
+        var tenant = TenantContext.getTenantId();
+        String tenantId = tenant != null ? tenant.toString() : "unknown";
+        StringBuilder key = new StringBuilder("tenant:").append(tenantId);
 
         // Append all method parameters
         for (Object param : params) {

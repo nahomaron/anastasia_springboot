@@ -25,6 +25,7 @@ public class JwtUtil {
 
     private static final Long ACCESS_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24;
     private static final Long REFRESH_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24 * 7;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Autowired
     public JwtUtil(
@@ -182,7 +183,7 @@ public class JwtUtil {
 
     public static String generateBase64Secret() {
         byte[] key = new byte[32];
-        new SecureRandom().nextBytes(key);
+        SECURE_RANDOM.nextBytes(key);
         return Base64.getEncoder().encodeToString(key);
     }
 

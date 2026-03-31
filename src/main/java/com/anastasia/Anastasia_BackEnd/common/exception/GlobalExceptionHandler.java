@@ -48,6 +48,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -135,11 +136,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         logHandledClientException("Type mismatch", ex);
         String expectedType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        String propertyName = ex.getPropertyName() != null ? ex.getPropertyName() : "value";
         return bodyOnly(
                 buildResponse(
                         BAD_REQUEST,
                         INVALID_REQUEST,
-                        key("error.request.typeMismatch", "Parameter ''{0}'' expects value of type {1}", ex.getPropertyName(), expectedType)
+                        key("error.request.typeMismatch", "Parameter ''{0}'' expects value of type {1}", propertyName, expectedType)
                 ),
                 BAD_REQUEST
         );
@@ -293,15 +295,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             );
         }
 
-        String field = extractDuplicateField(ex);
-        return ResponseEntity.status(CONFLICT).body(
-                ExceptionResponse.builder()
-                        .errorCode(DUPLICATE_RESOURCE.getCode())
-                        .errorDescription(key("error.code.duplicateResource", DUPLICATE_RESOURCE.formatDescription(field), field, field))
-                        .error(ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage())
-                        .build()
-        );
-    }
+            String field = extractDuplicateField(ex);
+            return ResponseEntity.status(CONFLICT).body(
+                    ExceptionResponse.builder()
+                            .errorCode(DUPLICATE_RESOURCE.getCode())
+                            .errorDescription(key("error.code.duplicateResource", DUPLICATE_RESOURCE.formatDescription(field), field, field))
+                            .error(mostSpecificMessage(ex))
+                            .build()
+            );
+        }
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ExceptionResponse> handleDataAccess(DataAccessException ex) {
@@ -407,14 +409,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private String extractDuplicateField(DataIntegrityViolationException ex) {
-        String message = ex.getMostSpecificCause() != null
-                ? ex.getMostSpecificCause().getMessage()
-                : ex.getMessage();
+        String message = mostSpecificMessage(ex);
         if (message == null) {
             return "resource";
         }
 
-        String normalized = message.toLowerCase();
+        String normalized = message.toLowerCase(Locale.ROOT);
         if (normalized.contains("email")) {
             return "email";
         }
@@ -431,9 +431,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private String extractRequiredField(DataIntegrityViolationException ex) {
-        String message = ex.getMostSpecificCause() != null
-                ? ex.getMostSpecificCause().getMessage()
-                : ex.getMessage();
+        String message = mostSpecificMessage(ex);
         if (message == null) {
             return null;
         }
@@ -451,6 +449,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
 
         return message.substring(columnStart, columnEnd);
+    }
+
+    private String mostSpecificMessage(DataIntegrityViolationException ex) {
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause != null) {
+            return cause.getMessage();
+        }
+        return ex.getMessage();
     }
 
     private ResponseEntity<Object> bodyOnly(ResponseEntity<ExceptionResponse> response, HttpStatus status) {
