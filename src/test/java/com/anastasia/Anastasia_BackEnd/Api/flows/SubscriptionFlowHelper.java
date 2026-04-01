@@ -74,6 +74,7 @@ public final class SubscriptionFlowHelper {
     private static String fetchActivationToken(String email) {
         String activationEndpoint = resolveConfigPath("test.activation.endpoint", "/auth/test/activation-token");
         Response response = given()
+                .basePath("")
                 .queryParam("email", email)
                 .get(activationEndpoint)
                 .then()
@@ -91,6 +92,7 @@ public final class SubscriptionFlowHelper {
         int attempts = 0;
         while (attempts < 5) {
             Response response = given()
+                    .basePath("")
                     .queryParam("phone", phone)
                     .get(otpEndpoint)
                     .then()
