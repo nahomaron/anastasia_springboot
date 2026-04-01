@@ -20,6 +20,8 @@ app:
   security:
     allow-anonymous: true
     oauth2-enabled: false
+  kafka:
+    enabled: false
 
 logging:
   pattern:
