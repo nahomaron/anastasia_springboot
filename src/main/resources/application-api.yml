@@ -19,6 +19,7 @@ app:
   evn: api
   security:
     allow-anonymous: true
+    oauth2-enabled: false
 
 logging:
   pattern:
