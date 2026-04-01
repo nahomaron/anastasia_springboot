@@ -28,6 +28,7 @@ public final class TenantDataFactory {
                 .neighborhood("Addis Ketema")
                 .neighborhoodLocal("ኣዲስ ከተማ")
                 .diocese("Addis Ababa")
+                .dioceseLocal("ኣዲስ ኣበባ ሃገረ ስብከት")
                 .email("church_" + UUID.randomUUID() + "@mail.com")
                 .phone("+1408777" + (1000 + (int)(Math.random() * 8999)))
                 .build();
