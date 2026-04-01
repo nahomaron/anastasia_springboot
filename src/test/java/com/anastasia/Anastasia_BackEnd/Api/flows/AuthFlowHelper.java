@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.flows;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.ConfigManager;
+import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
@@ -28,11 +29,13 @@ public class AuthFlowHelper {
 
         // 2️⃣ Fetch activation token (from DB or test endpoint)
         Response tokenRes = given()
+                .spec(RequestSpecFactory.anonymousSpec())
                 .queryParam("email", email)
                 .get(ConfigManager.get("test.activation.endpoint"))
                 .then().extract().response();
 
         String token = tokenRes.asString();
+        Assertions.assertTrue(hasText(token), "Test activation token could not be retrieved for email: " + email);
 
         // 3️⃣ Activate account
         Response activateRes = authService.activateAccount(token);
@@ -45,5 +48,8 @@ public class AuthFlowHelper {
         Assertions.assertNotNull(loginRes.getAccessToken(), "Token must not be null");
         return loginRes;
     }
-}
 
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+}
