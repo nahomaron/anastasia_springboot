@@ -64,6 +64,9 @@ stripe:
 email:
   sending:
     enabled: false
+notification:
+  email:
+    enabled: false
 
 base:
   url: http://localhost:8080
