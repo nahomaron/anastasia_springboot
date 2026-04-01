@@ -69,6 +69,10 @@ public class SecurityConfig {
             "/ws/**",
             "/ws-sockjs/**"
     };
+    private static final String[] TEST_HELPER_ENDPOINTS = {
+            "/api/v1/tenant/test/**",
+            "/api/v1/auth/test/**"
+    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -84,6 +88,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(WHITE_LIST_ENDPOINTS).permitAll()
+                        .requestMatchers(TEST_HELPER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/tenant/subscription",
                                 "/api/v1/tenant/verify-phone",
