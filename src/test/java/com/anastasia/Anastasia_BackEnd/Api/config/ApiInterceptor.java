@@ -140,14 +140,14 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
                         normalizePublicEndpoint(ConfigManager.get("auth.activate.endpoint")),
                         normalizePublicEndpoint(ConfigManager.get("test.activation.endpoint")),
                         normalizePublicEndpoint(ConfigManager.get("test.tenant.otp.endpoint")),
-                        "/api/v1/auth/login",
-                        "/api/v1/auth/sign-up",
-                        "/api/v1/auth/activate-account",
-                        "/api/v1/auth/test/activation-token",
-                        "/api/v1/tenant/test/otp",
-                        "/api/v1/auth/refresh-token",
-                        "/api/v1/auth/logout",
-                        "/api/v1/test-utils"
+                        "/auth/login",
+                        "/auth/sign-up",
+                        "/auth/activate-account",
+                        "/auth/test/activation-token",
+                        "/tenant/test/otp",
+                        "/auth/refresh-token",
+                        "/auth/logout",
+                        "/test-utils"
                 )
                 .stream()
                 .filter(Objects::nonNull)
@@ -163,11 +163,7 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
             normalized = "/" + normalized;
         }
         normalized = normalized.replaceAll("/{2,}", "/");
-        String prefix = "/api/v1";
-        if (normalized.startsWith(prefix)) {
-            return normalized;
-        }
-        return prefix + normalized;
+        return normalized;
     }
 
     private static String stripBasePath(FilterableRequestSpecification requestSpec) {

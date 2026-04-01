@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.utils;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.ConfigManager;
+import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import io.qameta.allure.Allure;
 import io.restassured.response.Response;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class TestDataManager {
     // --------------------------------------------------------------------
     // Configuration Resolution
     // --------------------------------------------------------------------
-    private static final String DEFAULT_CLEANUP_BASE = "/api/v1/test-utils/cleanup";
+    private static final String DEFAULT_CLEANUP_BASE = "/test-utils/cleanup";
     private static final String CLEANUP_BASE = normalizeBase(resolveCleanupBase());
     private static final boolean ABSOLUTE_ENDPOINT = isAbsolute(CLEANUP_BASE);
 
@@ -93,6 +94,7 @@ public class TestDataManager {
     public static void resetAllTestData() {
         runCleanup("Global Reset", "All Entities", () ->
                 given()
+                        .spec(RequestSpecFactory.authenticatedSpec())
                         .when()
                         .post(buildPath("reset-all"))
                         .then()
