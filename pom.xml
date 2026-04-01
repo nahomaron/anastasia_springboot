@@ -79,9 +79,10 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
 						<configuration>
-							<includes>
-								<include>**/api/**/tests/**/*.java</include>
-							</includes>
+                            <includes>
+                                <include>**/Api/tests/**/*.java</include>
+                                <include>**/api/**/tests/**/*.java</include>
+                            </includes>
 							<systemPropertyVariables>
 								<base.url>${env.BASE_URL}</base.url>
 								<allure.results.directory>target/allure-results/api</allure.results.directory>
@@ -105,9 +106,10 @@
 						<artifactId>maven-surefire-plugin</artifactId>
 						<configuration>
 							<!-- Run only API test classes -->
-							<includes>
-								<include>**/api/**/tests/**/*.java</include>
-							</includes>
+                            <includes>
+                                <include>**/Api/tests/**/*.java</include>
+                                <include>**/api/**/tests/**/*.java</include>
+                            </includes>
 
 							<!-- Optional: make Allure output predictable -->
 							<systemPropertyVariables>
@@ -466,11 +468,17 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>it.ozimov</groupId>
-			<artifactId>embedded-redis</artifactId>
-			<version>0.7.3</version>
-			<scope>test</scope>
-		</dependency>
+    <groupId>it.ozimov</groupId>
+    <artifactId>embedded-redis</artifactId>
+    <version>0.7.3</version>
+    <scope>test</scope>
+    <exclusions>
+        <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
 
 		<!-- Stripe -->
 		<dependency>
