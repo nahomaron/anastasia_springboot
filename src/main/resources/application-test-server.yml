@@ -31,6 +31,9 @@ spring:
 email:
   sending:
     enabled: false
+notification:
+  email:
+    enabled: false
 
 management:
   endpoints:
@@ -45,6 +48,23 @@ management:
   server:
     port: 8080
 
+base:
+  url: http://localhost:8080
+
+auth:
+  login:
+    endpoint: /auth/login
+  signup:
+    endpoint: /auth/sign-up
+  activate:
+    endpoint: /auth/activate-account
+
+test:
+  activation:
+    endpoint: /auth/test/activation-token
+  cleanup:
+    endpoint: /api/v1/test-utils/cleanup
+
 app:
   evn: test-server
   seeding:
@@ -58,13 +78,14 @@ app:
     enabled: false
   security:
     allow-anonymous: true
+    oauth2-enabled: false
 
 aws:
   s3:
     bucket: anastasia-app-bucket
 
 stripe:
-  api-key: test_key
+  api-key: stripe_test_placeholder_key
   webhook-secret: stripe_test_placeholder_webhook
   success-url: "http://localhost:4200/payments/success?pid={PAYMENT_ID}"
   cancel-url: "http://localhost:4200/payments/cancel?pid={PAYMENT_ID}"
