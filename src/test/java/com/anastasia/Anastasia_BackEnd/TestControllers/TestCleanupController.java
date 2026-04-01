@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
-@Profile({"test", "test-server"})  // Only available in 'test' profile
+@Profile({"test", "test-server", "api"})  // Only available in test/api profiles
 @RestController
 @RequestMapping("/test-utils/cleanup")
 public class TestCleanupController {
