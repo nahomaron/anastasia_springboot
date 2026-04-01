@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@Profile({"test", "test-server"})
+@Profile({"test", "test-server", "api"})
 @RequestMapping("/api/v1/tenant/test")
 public class TestSubscriptionController {
 

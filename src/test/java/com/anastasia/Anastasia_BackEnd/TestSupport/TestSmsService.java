@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Primary
-@Profile({"test", "test-server"})  // Only active in test profiles
+@Profile({"test", "test-server", "api"})  // Active in test and API automation profiles
 public class TestSmsService implements SmsService {
 
     private static final Logger log = LoggerFactory.getLogger(TestSmsService.class);
