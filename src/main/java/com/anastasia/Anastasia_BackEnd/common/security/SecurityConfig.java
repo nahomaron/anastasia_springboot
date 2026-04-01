@@ -49,6 +49,8 @@ public class SecurityConfig {
     private String allowedOrigins;
     @Value("${app.security.oauth2-enabled:true}")
     private boolean oauth2Enabled;
+    @Value("${app.security.allow-anonymous:false}")
+    private boolean allowAnonymous;
     private static final String[] WHITE_LIST_ENDPOINTS = {
             "/api/v1/auth/**",
             "/oauth2/**",
@@ -105,7 +107,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied")))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .anonymous(AbstractHttpConfigurer::disable) // anonymous users are users who are not authenticated but still have a user context. Disabling anonymous access ensures that only authenticated users can access the application.
+                .anonymous(allowAnonymous ? Customizer.withDefaults() : AbstractHttpConfigurer::disable) // controls if anonymous users are allowed
                 .headers(headers -> headers
                                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                         // todo -> in production the below should replace the above frameOptions

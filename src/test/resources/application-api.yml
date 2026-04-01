@@ -16,6 +16,8 @@ test:
 
 app:
   evn: api
+  security:
+    allow-anonymous: true
 
 logging:
   pattern:

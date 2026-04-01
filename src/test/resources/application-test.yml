@@ -101,6 +101,7 @@ app:
   evn: test
   security:
     oauth2-enabled: false
+    allow-anonymous: true
 
 logging:
   pattern:

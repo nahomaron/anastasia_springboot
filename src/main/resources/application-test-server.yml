@@ -56,6 +56,8 @@ app:
     verify-base-url: http://localhost:8080
   kafka:
     enabled: false
+  security:
+    allow-anonymous: true
 
 aws:
   s3:
