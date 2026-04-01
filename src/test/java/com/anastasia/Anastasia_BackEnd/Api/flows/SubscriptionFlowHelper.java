@@ -147,16 +147,6 @@ public final class SubscriptionFlowHelper {
         }
         normalized = normalized.replaceAll("/{2,}", "/");
 
-        String base = RestAssured.basePath != null ? RestAssured.basePath.trim() : "";
-        if (hasText(base)) {
-            if (base.endsWith("/") && base.length() > 1) {
-                base = base.substring(0, base.length() - 1);
-            }
-            if (normalized.startsWith(base)) {
-                return normalized;
-            }
-            return base + normalized;
-        }
         return normalized;
     }
 
