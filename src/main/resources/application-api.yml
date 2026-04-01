@@ -31,3 +31,7 @@ email:
 notification:
   email:
     enabled: false
+
+stripe:
+  api-key: stripe_test_placeholder_key
+  webhook-secret: stripe_test_placeholder_webhook
