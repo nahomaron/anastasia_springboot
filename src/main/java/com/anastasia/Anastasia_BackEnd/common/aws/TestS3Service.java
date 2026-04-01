@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Service
 @Primary
-@Profile({"test", "test-server"})
+@Profile({"test", "test-server", "api"})
 public class TestS3Service implements S3Service {
 
     @Override
