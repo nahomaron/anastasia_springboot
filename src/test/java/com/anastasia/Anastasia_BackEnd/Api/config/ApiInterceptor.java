@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.Api.utils.RequestTracker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.qameta.allure.Allure;
+import io.restassured.RestAssured;
 import io.restassured.builder.ResponseBuilder;
 import io.restassured.filter.Filter;
 import io.restassured.filter.FilterContext;
@@ -27,18 +28,19 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
 
 
     private static final List<String> PUBLIC_AUTH_ENDPOINTS = List.of(
-            ConfigManager.get("auth.login.endpoint"),
-            ConfigManager.get("auth.signup.endpoint"),
-            ConfigManager.get("auth.activate.endpoint"),
-            ConfigManager.get("test.activation.endpoint"),
-            ConfigManager.get("test.tenant.otp.endpoint"),
-            "/auth/login",
-            "/auth/sign-up",
-            "/auth/activate-account",
-            "/auth/test/activation-token",
-            "/tenant/test/otp",
-            "/auth/refresh-token",
-            "/auth/logout"
+            "/api/v1" + ConfigManager.get("auth.login.endpoint"),
+            "/api/v1" + ConfigManager.get("auth.signup.endpoint"),
+            "/api/v1" + ConfigManager.get("auth.activate.endpoint"),
+            "/api/v1" + ConfigManager.get("test.activation.endpoint"),
+            "/api/v1" + ConfigManager.get("test.tenant.otp.endpoint"),
+            "/api/v1/auth/login",
+            "/api/v1/auth/sign-up",
+            "/api/v1/auth/activate-account",
+            "/api/v1/auth/test/activation-token",
+            "/api/v1/tenant/test/otp",
+            "/api/v1/auth/refresh-token",
+            "/api/v1/auth/logout",
+            "/api/v1/test-utils"
     );
 
     @Override
@@ -109,10 +111,26 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
     }
 
     private boolean isPublicAuthEndpoint(FilterableRequestSpecification requestSpec) {
-        String uri = requestSpec.getURI();
+        String uri = stripBasePath(requestSpec);
         return PUBLIC_AUTH_ENDPOINTS.stream()
                 .filter(Objects::nonNull)
-                .anyMatch(uri::contains);
+                .anyMatch(uri::startsWith);
+    }
+
+    private String stripBasePath(FilterableRequestSpecification requestSpec) {
+        String baseUri = RestAssured.baseURI;
+        String fullUri = requestSpec.getURI();
+        if (!hasLength(baseUri)) {
+            return fullUri;
+        }
+        if (fullUri.startsWith(baseUri)) {
+            return fullUri.substring(baseUri.length());
+        }
+        return fullUri;
+    }
+
+    private boolean hasLength(String value) {
+        return value != null && !value.isBlank();
     }
 
     private void attachRequestAndResponse(FilterableRequestSpecification req, Response res) {

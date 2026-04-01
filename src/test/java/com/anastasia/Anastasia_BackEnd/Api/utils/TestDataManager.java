@@ -29,7 +29,7 @@ public class TestDataManager {
     // --------------------------------------------------------------------
     // Configuration Resolution
     // --------------------------------------------------------------------
-    private static final String DEFAULT_CLEANUP_BASE = "/test-utils/cleanup";
+    private static final String DEFAULT_CLEANUP_BASE = "/api/v1/test-utils/cleanup";
     private static final String CLEANUP_BASE = normalizeBase(resolveCleanupBase());
     private static final boolean ABSOLUTE_ENDPOINT = isAbsolute(CLEANUP_BASE);
 
@@ -52,7 +52,6 @@ public class TestDataManager {
     public static void deleteUserByEmail(String email) {
         runCleanup("User", email, () ->
                 given()
-                        .basePath("")
                         .queryParam("email", email)
                         .when()
                         .delete(buildPath(null))
@@ -65,7 +64,6 @@ public class TestDataManager {
     public static void deleteTenantByEmail(String email) {
         runCleanup("Tenant", email, () ->
                 given()
-                        .basePath("")
                         .queryParam("email", email)
                         .when()
                         .delete(buildPath("tenant"))
@@ -78,7 +76,6 @@ public class TestDataManager {
     public static void deleteMemberById(String memberId) {
         runCleanup("Member", memberId, () ->
                 given()
-                        .basePath("")
                         .queryParam("id", memberId)
                         .when()
                         .delete(buildPath("member"))
@@ -96,7 +93,6 @@ public class TestDataManager {
     public static void resetAllTestData() {
         runCleanup("Global Reset", "All Entities", () ->
                 given()
-                        .basePath("")
                         .when()
                         .post(buildPath("reset-all"))
                         .then()

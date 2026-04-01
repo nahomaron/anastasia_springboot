@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.flows;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.ConfigManager;
+import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.Api.services.TenantService;
 import com.anastasia.Anastasia_BackEnd.Api.factories.TenantDataFactory;
@@ -78,6 +79,7 @@ public final class SubscriptionFlowHelper {
     private static String fetchActivationToken(String email) {
         String activationEndpoint = resolveConfigPath("test.activation.endpoint", "/auth/test/activation-token");
         Response response = given()
+                .spec(RequestSpecFactory.anonymousSpec())
                 .queryParam("email", email)
                 .get(activationEndpoint)
                 .then()
@@ -95,6 +97,7 @@ public final class SubscriptionFlowHelper {
         int attempts = 0;
         while (attempts < 5) {
             Response response = given()
+                    .spec(RequestSpecFactory.anonymousSpec())
                     .queryParam("phone", phone)
                     .get(otpEndpoint)
                     .then()
