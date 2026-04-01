@@ -32,4 +32,33 @@ public record AppointmentCreateRequest(
         CalendarVisibility visibility,
         Set<AppointmentParticipantRequest> participants,
         Set<AppointmentAssigneeRequest> assignees
-) {}
+) {
+
+    public AppointmentCreateRequest(
+            @NotBlank String title,
+            String description,
+            @NotNull AppointmentType type,
+            @NotNull Instant startDateTime,
+            Instant endDateTime,
+            @NotBlank String timeZone,
+            @NotNull LocationType locationType,
+            @NotBlank String locationLabel,
+            AppointmentStatus status,
+            AppointmentSource source,
+            String notesForMember,
+            String contactPhone,
+            String contactEmail,
+            ContactPreference contactPreference,
+            UUID linkedRequestId,
+            CalendarVisibility visibility,
+            Set<AppointmentParticipantRequest> participants,
+            Set<AppointmentAssigneeRequest> assignees
+    ) {
+        this.participants = copySet(participants);
+        this.assignees = copySet(assignees);
+    }
+
+    private static <T> Set<T> copySet(Set<T> input) {
+        return input == null ? Set.of() : Set.copyOf(input);
+    }
+}

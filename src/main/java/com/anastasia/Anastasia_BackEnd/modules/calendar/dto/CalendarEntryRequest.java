@@ -25,4 +25,29 @@ public record CalendarEntryRequest(
         CalendarRecurrenceRequest recurrence,
         Set<UUID> audienceUserIds,
         Set<Long> audienceGroupIds
-) {}
+) {
+
+    public CalendarEntryRequest(
+            @NotNull CalendarEntryType type,
+            @NotBlank String title,
+            String description,
+            @NotNull CalendarSystem calendarSystem,
+            @NotNull Instant startAtUtc,
+            Instant endAtUtc,
+            @NotBlank String timezone,
+            boolean allDay,
+            @NotNull CalendarVisibility visibility,
+            Set<CalendarCategory> categories,
+            CalendarRecurrenceRequest recurrence,
+            Set<UUID> audienceUserIds,
+            Set<Long> audienceGroupIds
+    ) {
+        this.categories = copySet(categories);
+        this.audienceUserIds = copySet(audienceUserIds);
+        this.audienceGroupIds = copySet(audienceGroupIds);
+    }
+
+    private static <T> Set<T> copySet(Set<T> input) {
+        return input == null ? Set.of() : Set.copyOf(input);
+    }
+}

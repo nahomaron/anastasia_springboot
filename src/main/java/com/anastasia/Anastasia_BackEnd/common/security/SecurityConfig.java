@@ -47,12 +47,15 @@ public class SecurityConfig {
     private final LogoutHandler logoutHandler;
     @Value("${app.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200,http://192.168.1.79:4200}")
     private String allowedOrigins;
+    @Value("${app.security.oauth2-enabled:true}")
+    private boolean oauth2Enabled;
     private static final String[] WHITE_LIST_ENDPOINTS = {
             "/api/v1/auth/**",
             "/oauth2/**",
             "/login/oauth2/**",
             "/webhooks/stripe",
             "/api/v1/priests/register",
+            "/api/v1/auth/platform-admin/register",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v2/api-docs/**",
@@ -89,7 +92,8 @@ public class SecurityConfig {
                                 "/api/v1/onboarding/billing/sessions/*/checkout",
                                 "/api/v1/onboarding/billing/sessions/*/finalize",
                                 "/api/v1/onboarding/billing/sessions/*/auto-login",
-                                "/api/v1/priests/register"
+                                "/api/v1/priests/register",
+                                "/api/v1/auth/platform-admin/register"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/onboarding/billing/sessions/*",
@@ -119,11 +123,16 @@ public class SecurityConfig {
                             SecurityContextHolder.clearContext();
                             response.setStatus(HttpServletResponse.SC_OK);
                         }))
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
-                        .successHandler(oauth2AuthenticationSuccessHandler)
-                        .failureHandler(oauth2AuthenticationFailureHandler))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        ;
+
+        if (oauth2Enabled) {
+            http.oauth2Login(oauth2 -> oauth2
+                    .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+                    .successHandler(oauth2AuthenticationSuccessHandler)
+                    .failureHandler(oauth2AuthenticationFailureHandler));
+        }
+
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
