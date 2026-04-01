@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import java.net.URI;
 
 @Configuration
-@Profile({"dev", "prod", "test", "test-server"})
+@Profile({"dev", "prod", "test", "test-server", "api"})
 public class S3Config {
 
     @Value("${aws.accessKeyId:test}")
