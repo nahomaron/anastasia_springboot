@@ -1,0 +1,82 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  flyway:
+    enabled: false
+  docker:
+    compose:
+      enabled: false
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000
+  redis:
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 1
+  kafka:
+    listener:
+      auto-startup: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+email:
+  sending:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+  endpoint:
+    health:
+      show-details: always
+  server:
+    port: 8080
+
+app:
+  evn: test-server
+  seeding:
+    enabled: false
+  features:
+    messaging:
+      enabled: false
+  membership-card:
+    verify-base-url: http://localhost:8080
+  kafka:
+    enabled: false
+
+aws:
+  s3:
+    bucket: anastasia-app-bucket
+
+stripe:
+  api-key: test_key
+  webhook-secret: stripe_test_placeholder_webhook
+  success-url: "http://localhost:4200/payments/success?pid={PAYMENT_ID}"
+  cancel-url: "http://localhost:4200/payments/cancel?pid={PAYMENT_ID}"
+
+billing:
+  tenant:
+    currency: USD
+    plans:
+      BASIC:
+        price-id: price_test_basic
+        amount-minor: 1500
+      ADVANCED:
+        price-id: price_test_advanced
+        amount-minor: 4900
+      PREMIUM:
+        price-id: price_test_premium
+        amount-minor: 9900

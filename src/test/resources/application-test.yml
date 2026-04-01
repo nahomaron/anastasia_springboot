@@ -1,0 +1,107 @@
+# =================================================================
+# REQUIRED FOR ALL SPRING BOOT TESTS
+# This configuration is only loaded when @ActiveProfiles("test") is used.
+# It ensures an in-memory database (H2) is used for testing.
+# =================================================================
+
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  flyway:
+    placeholders:
+      members_columns_sql: "CALL ensure_member_columns();"
+      children_columns_sql: "CALL ensure_child_columns();"
+      tenant_demo_template_sql: "CALL ensure_tenant_demo_template_columns();"
+      tenant_workspace_lifecycle_sql: "CALL ensure_tenant_workspace_columns();"
+      normalize_priest_languages_sql: ""
+    # Additional Flyway properties can be added here.
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+    open-in-view: false
+  docker:
+    compose:
+      enabled: false
+  redis:
+    host: disabled
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 1
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000
+  kafka:
+    listener:
+      auto-startup: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+aws:
+  s3:
+    bucket: test-bucket-name
+  region: us-east-1
+
+stripe:
+  api-key: stripe_test_placeholder_override
+  webhook-secret: stripe_test_placeholder_webhook
+  success-url: "http://localhost:4200/payments/success?pid={PAYMENT_ID}"
+  cancel-url: "http://localhost:4200/payments/cancel?pid={PAYMENT_ID}"
+
+email:
+  sending:
+    enabled: false
+
+base:
+  url: http://localhost:8080
+
+auth:
+  login:
+    endpoint: /auth/login
+  signup:
+    endpoint: /auth/sign-up
+  activate:
+    endpoint: /auth/activate-account
+
+test:
+  activation:
+    endpoint: /auth/test/activation-token
+  cleanup:
+    endpoint: /test-utils/cleanup
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+  endpoint:
+    health:
+      show-details: always
+  server:
+    port: 8080
+
+app:
+  kafka:
+    enabled: false
+  evn: test
+  security:
+    oauth2-enabled: false
+
+logging:
+  pattern:
+    console: "%clr(%5p) %clr(${PID}){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40c){cyan} %clr(:){faint} %m%n"

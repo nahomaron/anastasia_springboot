@@ -6,7 +6,7 @@ Source lives under `src/main/java/com/anastasia/Anastasia_BackEnd`, grouped by c
 ## Build, Test, and Development Commands
 - `./mvnw clean verify` — compile, run unit/integration tests, and produce the JaCoCo report in `target/site/jacoco/`.
 - `./mvnw spring-boot:run` — start the API with the default profile.
-- `./mvnw spring-boot:run -Dspring-boot.run.profiles=api` — boot with the API profile to load `application-api.properties` overrides.
+- `./mvnw spring-boot:run -Dspring-boot.run.profiles=api` — boot with the API profile to load `application-api.yml` overrides.
 - `docker compose -f compose.yaml up -d` — launch ancillary services (e.g., database, queues) expected by local development.
 
 ## Coding Style & Naming Conventions
@@ -19,4 +19,4 @@ Write JUnit 5 tests alongside code in matching package paths. Name classes `*Tes
 Follow the existing convention `NN: concise summary`, where `NN` maps to the relevant task or issue number. Each commit should isolate a logical change and include updated documentation or tests. PRs must describe the feature, reference tickets, list breaking changes, and attach screenshots or API samples when behavior shifts. Confirm CI passes and Allure/JaCoCo artifacts are attached when QA review is required.
 
 ## Security & Configuration Tips
-Never commit secrets; use environment variables or `application-*.properties`. AWS S3 and STS credentials are resolved via IAM roles or local `.env` files ignored by Git. When updating security modules, double-check filters in `security/` and JWT handling classes for regression risks.
+Never commit secrets; use environment variables or `application-*.yml`. AWS S3 and STS credentials are resolved via IAM roles or local `.env` files ignored by Git. When updating security modules, double-check filters in `security/` and JWT handling classes for regression risks.

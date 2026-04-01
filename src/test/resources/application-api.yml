@@ -1,0 +1,22 @@
+# --- For purpose of API automation
+base:
+  url: http://localhost:8080
+
+auth:
+  login:
+    endpoint: /auth/login
+  signup:
+    endpoint: /auth/sign-up
+  activate:
+    endpoint: /auth/activate-account
+
+test:
+  activation:
+    endpoint: /auth/test/activation-token
+
+app:
+  evn: api
+
+logging:
+  pattern:
+    console: "%clr(%5p) %clr(${PID}){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40c){cyan} %clr(:){faint} %m%n"
