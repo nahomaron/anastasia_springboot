@@ -1,0 +1,6 @@
+email:
+  sending:
+    enabled: false
+notification:
+  email:
+    enabled: false
