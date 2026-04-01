@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Profile({"test", "test-server", "api"})  // Only available in test/api profiles
 @RestController
-@RequestMapping("/test-utils/cleanup")
+@RequestMapping("/api/v1/test-utils/cleanup")
 public class TestCleanupController {
 
     @Autowired private UserRepository userRepository;

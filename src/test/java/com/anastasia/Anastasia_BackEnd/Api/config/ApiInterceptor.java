@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
@@ -27,21 +29,7 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
     private static final ObjectWriter PRETTY_WRITER = new ObjectMapper().writerWithDefaultPrettyPrinter();
 
 
-    private static final List<String> PUBLIC_AUTH_ENDPOINTS = List.of(
-            "/api/v1" + ConfigManager.get("auth.login.endpoint"),
-            "/api/v1" + ConfigManager.get("auth.signup.endpoint"),
-            "/api/v1" + ConfigManager.get("auth.activate.endpoint"),
-            "/api/v1" + ConfigManager.get("test.activation.endpoint"),
-            "/api/v1" + ConfigManager.get("test.tenant.otp.endpoint"),
-            "/api/v1/auth/login",
-            "/api/v1/auth/sign-up",
-            "/api/v1/auth/activate-account",
-            "/api/v1/auth/test/activation-token",
-            "/api/v1/tenant/test/otp",
-            "/api/v1/auth/refresh-token",
-            "/api/v1/auth/logout",
-            "/api/v1/test-utils"
-    );
+    private static final List<String> PUBLIC_AUTH_ENDPOINTS = buildPublicAuthEndpoints();
 
     @Override
     public Response filter(FilterableRequestSpecification requestSpec,
@@ -111,13 +99,78 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
     }
 
     private boolean isPublicAuthEndpoint(FilterableRequestSpecification requestSpec) {
-        String uri = stripBasePath(requestSpec);
+        String path = extractPath(requestSpec);
+        if (!hasLength(path)) {
+            return false;
+        }
         return PUBLIC_AUTH_ENDPOINTS.stream()
                 .filter(Objects::nonNull)
-                .anyMatch(uri::startsWith);
+                .anyMatch(path::startsWith);
     }
 
-    private String stripBasePath(FilterableRequestSpecification requestSpec) {
+    private String extractPath(FilterableRequestSpecification requestSpec) {
+        String raw = requestSpec.getURI();
+        try {
+            URI uri = new URI(raw);
+            String path = uri.getPath();
+            if (hasLength(path)) {
+                return normalizePath(path);
+            }
+        } catch (URISyntaxException e) {
+            log.debug("Unable to parse URI for public endpoint check: {}", raw);
+        }
+        return normalizePath(stripBasePath(requestSpec));
+    }
+
+    private static boolean hasLength(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String normalizePath(String path) {
+        if (!hasLength(path)) {
+            return path;
+        }
+        return path.replaceAll("/{2,}", "/");
+    }
+
+    private static List<String> buildPublicAuthEndpoints() {
+        return List.of(
+                        normalizePublicEndpoint(ConfigManager.get("auth.login.endpoint")),
+                        normalizePublicEndpoint(ConfigManager.get("auth.signup.endpoint")),
+                        normalizePublicEndpoint(ConfigManager.get("auth.activate.endpoint")),
+                        normalizePublicEndpoint(ConfigManager.get("test.activation.endpoint")),
+                        normalizePublicEndpoint(ConfigManager.get("test.tenant.otp.endpoint")),
+                        "/api/v1/auth/login",
+                        "/api/v1/auth/sign-up",
+                        "/api/v1/auth/activate-account",
+                        "/api/v1/auth/test/activation-token",
+                        "/api/v1/tenant/test/otp",
+                        "/api/v1/auth/refresh-token",
+                        "/api/v1/auth/logout",
+                        "/api/v1/test-utils"
+                )
+                .stream()
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private static String normalizePublicEndpoint(String value) {
+        if (!hasLength(value)) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (!normalized.startsWith("/")) {
+            normalized = "/" + normalized;
+        }
+        normalized = normalized.replaceAll("/{2,}", "/");
+        String prefix = "/api/v1";
+        if (normalized.startsWith(prefix)) {
+            return normalized;
+        }
+        return prefix + normalized;
+    }
+
+    private static String stripBasePath(FilterableRequestSpecification requestSpec) {
         String baseUri = RestAssured.baseURI;
         String fullUri = requestSpec.getURI();
         if (!hasLength(baseUri)) {
@@ -127,10 +180,6 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
             return fullUri.substring(baseUri.length());
         }
         return fullUri;
-    }
-
-    private boolean hasLength(String value) {
-        return value != null && !value.isBlank();
     }
 
     private void attachRequestAndResponse(FilterableRequestSpecification req, Response res) {

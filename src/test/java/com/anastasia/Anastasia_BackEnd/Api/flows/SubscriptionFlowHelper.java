@@ -10,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
+import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
 
@@ -77,7 +78,7 @@ public final class SubscriptionFlowHelper {
     }
 
     private static String fetchActivationToken(String email) {
-        String activationEndpoint = resolveConfigPath("test.activation.endpoint", "/auth/test/activation-token");
+        String activationEndpoint = resolveEndpointPath("test.activation.endpoint", "/auth/test/activation-token");
         Response response = given()
                 .spec(RequestSpecFactory.anonymousSpec())
                 .queryParam("email", email)
@@ -93,7 +94,7 @@ public final class SubscriptionFlowHelper {
     }
 
     private static String fetchOtpWithRetry(String phone) {
-        String otpEndpoint = resolveConfigPath("test.tenant.otp.endpoint", "/tenant/test/otp");
+        String otpEndpoint = resolveEndpointPath("test.tenant.otp.endpoint", "/tenant/test/otp");
         int attempts = 0;
         while (attempts < 5) {
             Response response = given()
@@ -130,6 +131,33 @@ public final class SubscriptionFlowHelper {
             return value.trim();
         }
         return fallback;
+    }
+
+    private static String resolveEndpointPath(String key, String fallback) {
+        return normalizeEndpointPath(resolveConfigPath(key, fallback));
+    }
+
+    private static String normalizeEndpointPath(String path) {
+        if (!hasText(path)) {
+            return path;
+        }
+        String normalized = path.trim();
+        if (!normalized.startsWith("/")) {
+            normalized = "/" + normalized;
+        }
+        normalized = normalized.replaceAll("/{2,}", "/");
+
+        String base = RestAssured.basePath != null ? RestAssured.basePath.trim() : "";
+        if (hasText(base)) {
+            if (base.endsWith("/") && base.length() > 1) {
+                base = base.substring(0, base.length() - 1);
+            }
+            if (normalized.startsWith(base)) {
+                return normalized;
+            }
+            return base + normalized;
+        }
+        return normalized;
     }
 
     private static SubscriptionResult findExistingTenant(TenantDTO incomingTenant) {

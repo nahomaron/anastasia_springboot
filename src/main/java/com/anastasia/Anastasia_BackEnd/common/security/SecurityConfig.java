@@ -68,7 +68,8 @@ public class SecurityConfig {
             "/api/v1/membership-cards/verify/**",
             "/ws/**",
             "/ws-sockjs/**",
-            "/test-utils/**"
+            "/test-utils/**",
+            "/api/v1/test-utils/**"
     };
     private static final String[] TEST_HELPER_ENDPOINTS = {
             "/api/v1/tenant/test/**",
