@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.PriestMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
@@ -11,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -20,10 +22,9 @@ import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -31,10 +32,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-        import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 public class PriestServiceUnitTest {
 
     @Mock private PriestMapper priestMapper;
@@ -46,6 +48,7 @@ public class PriestServiceUnitTest {
     @Mock private AuthServiceImpl authService;
     @Mock private RoleRepository roleRepository;
     @Mock private SecurityUtils securityUtils;
+    @Mock private LocalizedMessageService messageService;
 
 
     @InjectMocks
@@ -54,6 +57,7 @@ public class PriestServiceUnitTest {
     private PriestDTO priestDTO;
     private UserEntity priestUser;
     private Role priestRole;
+    private ChurchEntity priestChurch;
 
     @BeforeEach
     void setup() {
@@ -61,6 +65,10 @@ public class PriestServiceUnitTest {
                 .roleName(RoleType.PRIEST.name())
                 .build();
 
+        lenient().when(messageService.get(anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(messageService.get(anyString(), anyString(), any(Object[].class)))
+                .thenAnswer(invocation -> invocation.getArgument(1));
         priestDTO = PriestDTO.builder()
                 .firstName("Abune")
                 .fatherName("Paulos")
@@ -68,7 +76,11 @@ public class PriestServiceUnitTest {
                 .personalEmail("abune@example.com")
                 .password("secure")
                 .churchNumber("CH123")
-                .build();
+            .build();
+
+        priestChurch = new ChurchEntity();
+        priestChurch.setChurchNumber(priestDTO.getChurchNumber());
+        priestChurch.setTenant(TenantEntity.builder().id(UUID.randomUUID()).build());
 
         priestUser = UserEntity.builder()
                 .fullName("Abune Paulos Tesfa")
@@ -86,11 +98,11 @@ public class PriestServiceUnitTest {
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
         when(userRepository.save(any())).thenReturn(priestUser);
         when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("K12345");
-        when(churchRepository.findByChurchNumber(priestDTO.getChurchNumber())).thenReturn(Optional.of(new ChurchEntity()));
+        when(churchRepository.findByChurchNumber(priestDTO.getChurchNumber())).thenReturn(Optional.of(priestChurch));
 
         assertDoesNotThrow(() -> priestService.registerPriest(priestDTO));
 
-        verify(userRepository).save(any());
+        verify(userRepository, times(2)).save(any());
         verify(priestRepository).save(any());
         verify(authService).sendValidationEmail(any());
     }

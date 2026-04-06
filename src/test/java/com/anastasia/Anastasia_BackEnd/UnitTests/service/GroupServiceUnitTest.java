@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.groups.GroupJoinRequestRepository;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.*;
@@ -20,11 +21,10 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 class GroupServiceUnitTest {
 
     @Mock
@@ -54,6 +54,8 @@ class GroupServiceUnitTest {
     private ChurchRepository churchRepository;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private LocalizedMessageService messageService;
 
     @InjectMocks
     private GroupServiceImpl groupService;
@@ -78,6 +80,10 @@ class GroupServiceUnitTest {
                 .users(new HashSet<>())
                 .managers(new HashSet<>())
                 .build();
+        lenient().when(messageService.get(anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(messageService.get(anyString(), anyString(), any(Object[].class)))
+                .thenAnswer(invocation -> invocation.getArgument(1));
     }
 
     @AfterEach

@@ -62,7 +62,7 @@ class ChildSpecificationsTest {
         Path<String> path = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
 
-        Mockito.<Path<String>>when(root.get("status")).thenReturn(path);
+        Mockito.<Path<String>>when(root.get("statusValue")).thenReturn(path);
         when(cb.equal(path, "active")).thenReturn(predicate);
 
         Specification<Child_MemberEntity> spec = ChildSpecifications.hasStatus("active");

@@ -41,43 +41,12 @@ public record AppointmentResponse(
         String cancellationReason,
         String outcomeNotes,
         Set<AppointmentStatusHistoryResponse> statusHistory
-) {
+ ) {
 
-    public AppointmentResponse(
-            UUID id,
-            String title,
-            String description,
-            AppointmentType type,
-            Instant startDateTime,
-            Instant endDateTime,
-            String timeZone,
-            LocationType locationType,
-            String locationLabel,
-            AppointmentStatus status,
-            AppointmentSource source,
-            AppointmentParticipantResponse member,
-            AppointmentAssigneeResponse primaryAssignee,
-            Set<AppointmentParticipantResponse> participants,
-            Set<AppointmentAssigneeResponse> assignees,
-            UUID linkedRequestId,
-            String notesForMember,
-            String contactPhone,
-            String contactEmail,
-            ContactPreference contactPreference,
-            Boolean privateNotesExists,
-            Boolean firstVisit,
-            Boolean sacramentRelated,
-            Instant requestedAt,
-            Instant confirmedAt,
-            Instant completedAt,
-            Instant canceledAt,
-            String cancellationReason,
-            String outcomeNotes,
-            Set<AppointmentStatusHistoryResponse> statusHistory
-    ) {
-        this.participants = copySet(participants);
-        this.assignees = copySet(assignees);
-        this.statusHistory = copySet(statusHistory);
+    public AppointmentResponse {
+        participants = copySet(participants);
+        assignees = copySet(assignees);
+        statusHistory = copySet(statusHistory);
     }
 
     private static <T> Set<T> copySet(Set<T> input) {

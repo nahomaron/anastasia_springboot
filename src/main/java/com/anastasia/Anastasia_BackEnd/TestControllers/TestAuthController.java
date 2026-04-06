@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.TestControllers;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
@@ -27,5 +28,12 @@ public class TestAuthController {
                 .map(Token::getToken)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No active activation token found for " + email));
+    }
+
+    @GetMapping("/refresh-token")
+    public String getRefreshToken(@RequestParam String email) {
+        return tokenRepository.findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(email, TokenType.REFRESH)
+                .map(Token::getToken)
+                .orElseThrow(() -> new RuntimeException("No refresh token found for " + email));
     }
 }

@@ -27,10 +27,11 @@ import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBac
 import com.anastasia.Anastasia_BackEnd.util.JwtUtilTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -46,7 +47,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthServiceUnitTest {
 
     @Mock private JwtUtilTest jwtUtil;

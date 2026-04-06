@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.controller;
 
-import com.anastasia.Anastasia_BackEnd.common.config.RateLimiterConfig;
+import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
 import com.anastasia.Anastasia_BackEnd.core.auth.controller.AuthController;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
@@ -11,33 +11,35 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
-import io.github.bucket4j.Bucket;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.time.Duration;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 class AuthControllerUnitTest {
 
     @Mock
@@ -45,7 +47,7 @@ class AuthControllerUnitTest {
     @Mock
     private UserService userService;
     @Mock
-    private RateLimiterConfig rateLimiterConfig;
+    private RateLimiterService rateLimiterService;
     @Mock
     private OAuthLoginTicketService oauthLoginTicketService;
     @Mock
@@ -64,6 +66,7 @@ class AuthControllerUnitTest {
                 .password("Password1!")
                 .confirmPassword("Password1!")
                 .build();
+        lenient().when(rateLimiterService.tryConsume(anyString(), anyLong(), any(Duration.class))).thenReturn(true);
     }
 
     @Test
@@ -92,16 +95,14 @@ class AuthControllerUnitTest {
         AuthenticationRequest request = new AuthenticationRequest("test@example.com", "secret");
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         HttpServletResponse httpResponse = mock(HttpServletResponse.class);
-        Bucket bucket = mock(Bucket.class);
         AuthenticationResponse expected = AuthenticationResponse.builder()
                 .accessToken("access")
                 .refreshToken("refresh")
                 .build();
 
         when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-        when(rateLimiterConfig.getBucket(eq("auth:login:127.0.0.1:test@example.com"), eq(10L), eq(java.time.Duration.ofMinutes(10))))
-                .thenReturn(bucket);
-        when(bucket.tryConsume(1)).thenReturn(true);
+        when(rateLimiterService.tryConsume(eq("auth:login:127.0.0.1:test@example.com"), eq(10L), eq(Duration.ofMinutes(10))))
+                .thenReturn(true);
         when(authService.authenticate(request)).thenReturn(expected);
 
         ResponseEntity<AuthenticationResponse> response = authController.login(request, httpRequest, httpResponse);
@@ -117,14 +118,12 @@ class AuthControllerUnitTest {
     void refreshToken_whenAllowed_shouldInvokeAuthService() {
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         HttpServletResponse httpResponse = mock(HttpServletResponse.class);
-        Bucket bucket = mock(Bucket.class);
         AuthenticationResponse expected = AuthenticationResponse.builder()
                 .accessToken("fresh-access")
                 .build();
 
         when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-        when(rateLimiterConfig.getBucket("127.0.0.1")).thenReturn(bucket);
-        when(bucket.tryConsume(1)).thenReturn(true);
+        when(rateLimiterService.tryConsume("127.0.0.1", 5L, Duration.ofMinutes(1))).thenReturn(true);
         when(authService.refreshToken(httpRequest)).thenReturn(expected);
 
         ResponseEntity<?> response = authController.refreshToken(httpRequest, httpResponse);
@@ -139,11 +138,9 @@ class AuthControllerUnitTest {
     void refreshToken_whenRateLimited_shouldReturnTooManyRequests() {
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         HttpServletResponse httpResponse = mock(HttpServletResponse.class);
-        Bucket bucket = mock(Bucket.class);
 
         when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-        when(rateLimiterConfig.getBucket("127.0.0.1")).thenReturn(bucket);
-        when(bucket.tryConsume(1)).thenReturn(false);
+        when(rateLimiterService.tryConsume("127.0.0.1", 5L, Duration.ofMinutes(1))).thenReturn(false);
 
         ResponseEntity<?> response = authController.refreshToken(httpRequest, httpResponse);
 
@@ -215,11 +212,9 @@ class AuthControllerUnitTest {
     @Test
     void forgotPassword_whenEmailProvided_shouldInitiateReset() throws MessagingException {
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
-        Bucket bucket = mock(Bucket.class);
         when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-        when(rateLimiterConfig.getBucket(eq("auth:forgot-password:127.0.0.1:user@mail.com"), eq(3L), eq(java.time.Duration.ofMinutes(15))))
-                .thenReturn(bucket);
-        when(bucket.tryConsume(1)).thenReturn(true);
+        when(rateLimiterService.tryConsume(eq("auth:forgot-password:127.0.0.1:user@mail.com"), eq(3L), eq(Duration.ofMinutes(15))))
+                .thenReturn(true);
 
         ResponseEntity<Map<String, String>> response = authController.forgotPassword(Map.of("email", "user@mail.com"), httpRequest);
 
@@ -245,7 +240,6 @@ class AuthControllerUnitTest {
     @Test
     void resetPassword_whenValid_shouldInvokeService() {
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
-        Bucket bucket = mock(Bucket.class);
         ResetPasswordRequest request = ResetPasswordRequest.builder()
                 .token("token")
                 .newPassword("Password1!")
@@ -253,9 +247,8 @@ class AuthControllerUnitTest {
                 .build();
 
         when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-        when(rateLimiterConfig.getBucket(eq("auth:reset-password:127.0.0.1:token"), eq(5L), eq(java.time.Duration.ofMinutes(15))))
-                .thenReturn(bucket);
-        when(bucket.tryConsume(1)).thenReturn(true);
+        when(rateLimiterService.tryConsume(eq("auth:reset-password:127.0.0.1:token"), eq(5L), eq(Duration.ofMinutes(15))))
+                .thenReturn(true);
 
         ResponseEntity<Map<String, String>> response = authController.resetPassword(request, httpRequest);
 

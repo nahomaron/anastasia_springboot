@@ -1,6 +1,5 @@
-ALTER TABLE churches
-    ADD COLUMN diocese_local VARCHAR(255),
-    ADD COLUMN description_local TEXT;
+ALTER TABLE churches ADD COLUMN diocese_local VARCHAR(255);
+ALTER TABLE churches ADD COLUMN description_local TEXT;
 
 UPDATE churches
 SET diocese_local = diocese

@@ -856,6 +856,8 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        tokenRepository.deleteAllByUserUuid(userId);
+
         userRepository.delete(user);
     }
 

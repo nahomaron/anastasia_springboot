@@ -1,6 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.controller;
 
-import com.anastasia.Anastasia_BackEnd.common.config.RateLimiterConfig;
+import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ResetPasswordRequest;
@@ -11,7 +11,6 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
-import io.github.bucket4j.Bucket;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +37,7 @@ public class AuthController {
     private final OAuthLoginTicketService oauthLoginTicketService;
     private final RefreshTokenCookieService refreshTokenCookieService;
     private final UserService userService;
-    private final RateLimiterConfig rateLimiterConfig;
+    private final RateLimiterService rateLimiterService;
 
     /**
      * Registers a new user in the system.
@@ -123,9 +122,7 @@ public class AuthController {
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response){
         String clientIP = request.getRemoteAddr();
-        Bucket bucket = rateLimiterConfig.getBucket(clientIP);
-
-        if(bucket.tryConsume(1)){
+        if (rateLimiterService.tryConsume(clientIP, 5, Duration.ofMinutes(1))) {
             AuthenticationResponse authResponse = authService.refreshToken(request);
             return ResponseEntity.ok(withRefreshTokenCookie(authResponse, response));
         }else{
@@ -269,7 +266,7 @@ public class AuthController {
         String clientIp = request != null ? normalizeKeyComponent(request.getRemoteAddr()) : "n/a";
         String effectiveSubject = subject == null || subject.isBlank() ? "anonymous" : subject;
         String bucketKey = scope + ":" + clientIp + ":" + effectiveSubject;
-        return rateLimiterConfig.getBucket(bucketKey, capacity, period).tryConsume(1);
+        return rateLimiterService.tryConsume(bucketKey, capacity, period);
     }
 
     private String normalizeKeyComponent(String value) {

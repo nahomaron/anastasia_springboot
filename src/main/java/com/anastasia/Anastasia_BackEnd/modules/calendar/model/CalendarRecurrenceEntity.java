@@ -59,7 +59,7 @@ public class CalendarRecurrenceEntity {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "calendar_recurrence_by_month", joinColumns = @JoinColumn(name = "entry_id"))
-    @Column(name = "month", nullable = false)
+    @Column(name = "occurrence_month", nullable = false)
     @Builder.Default
     private Set<Integer> byMonth = new HashSet<>();
 

@@ -8,11 +8,10 @@ import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
 import com.google.common.hash.Hashing;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.nio.charset.StandardCharsets;
@@ -28,7 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 class PhoneVerificationServiceUnitTest {
 
     private static final String PHONE = "+251900000000";

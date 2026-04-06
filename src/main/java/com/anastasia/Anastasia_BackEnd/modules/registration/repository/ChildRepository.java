@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -39,7 +40,9 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
 
     long countByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId);
     long countByTenantId(UUID tenantId);
-    long countByTenantIdAndStatusValueIn(UUID tenantId, List<String> statuses);
+    long countByTenantIdAndStatusValueIn(UUID tenantId, Collection<MemberLifecycleStatus> statuses);
+
+    long countByStatusValueIn(Collection<MemberLifecycleStatus> statuses);
     long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, MemberLifecycleStatus status);
 
     Page<Child_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);

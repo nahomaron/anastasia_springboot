@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.auth;
 
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
@@ -10,11 +11,13 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
-import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.TenantUserAccessPolicy;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserServiceImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -28,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class UserServiceUnitTest {
@@ -35,10 +39,13 @@ public class UserServiceUnitTest {
     @Mock private UsersMapper usersMapper;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private RoleRepository roleRepository;
+    @Mock private LocalizedMessageService messageService;
+    @Mock private TenantUserAccessPolicy accessPolicy;
     @InjectMocks private UserServiceImpl userService;
 
     private UserEntity testUser;
     private UUID testUserId;
+    private UUID tenantId;
     private Authentication mockAuthentication;
     private UserPrincipal mockPrincipal;
 
@@ -47,6 +54,7 @@ public class UserServiceUnitTest {
         MockitoAnnotations.openMocks(this);
 
         testUserId = UUID.randomUUID();
+        tenantId = UUID.randomUUID();
         testUser = UserEntity.builder()
                 .uuid(testUserId)
                 .fullName("Test User")
@@ -54,10 +62,15 @@ public class UserServiceUnitTest {
                 .password("hashedPassword")
                 .userType(UserType.GUEST)
                 .build();
+        testUser.setTenantId(tenantId);
 
         mockPrincipal = new UserPrincipal(testUser);
         mockAuthentication = mock(Authentication.class);
         when(mockAuthentication.getPrincipal()).thenReturn(mockPrincipal);
+        lenient().when(messageService.get(anyString(), anyString(), any(Object[].class)))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(accessPolicy.isProtectedAccount(any(UserEntity.class))).thenReturn(false);
+        lenient().when(accessPolicy.isAssignableThroughTenantAccess(any(Role.class), any(UUID.class))).thenReturn(true);
     }
 
     @Test
@@ -150,15 +163,21 @@ public class UserServiceUnitTest {
     void testAssignRolesToUser_success() {
         UUID tenantId = UUID.randomUUID();
         TenantContext.setTenantId(tenantId);
+        testUser.setTenantId(tenantId);
 
         Role role = Role.builder().id(1L).build();
         AssignRolesRequest request = new AssignRolesRequest(Set.of(role.getId()));
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
-        when(roleRepository.findAll()).thenReturn(List.of(role));
+        when(roleRepository.findAllById(request.roleIds())).thenReturn(List.of(role));
 
         userService.assignRolesToUser(testUserId, request);
 
         verify(userRepository).save(any(UserEntity.class));
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test

@@ -95,7 +95,7 @@ public class NotificationInboxService {
     @Transactional
     public int markAllRead() {
         ActorScope scope = resolveActorScope();
-        return notificationRepository.markAllRead(scope.tenantId(), scope.userId());
+        return notificationRepository.markAllRead(scope.tenantId(), scope.userId(), Instant.now());
     }
 
     @Transactional

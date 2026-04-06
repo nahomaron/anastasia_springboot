@@ -459,7 +459,7 @@ public class TenantWorkspaceLifecycleService {
             tenantEntitlementAuditRepository.deleteAllInBatch(entitlementAudits);
         }
 
-        List<WebhookEventReceiptEntity> webhookReceipts = webhookEventReceiptRepository.findByTenant_Id(tenantId);
+        List<WebhookEventReceiptEntity> webhookReceipts = webhookEventReceiptRepository.findByTenantId(tenantId);
         if (!webhookReceipts.isEmpty()) {
             webhookEventReceiptRepository.deleteAllInBatch(webhookReceipts);
         }

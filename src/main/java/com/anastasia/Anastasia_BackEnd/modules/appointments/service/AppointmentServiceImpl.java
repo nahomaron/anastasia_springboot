@@ -699,6 +699,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             case CANCELLED -> {
                 appointment.setCanceledAt(changedAt);
+                appointment.setConfirmedAt(changedAt);
                 appointment.setCompletedAt(null);
                 appointment.setCancellationReason(trimToNull(reason));
                 appointment.setOutcomeNotes(null);

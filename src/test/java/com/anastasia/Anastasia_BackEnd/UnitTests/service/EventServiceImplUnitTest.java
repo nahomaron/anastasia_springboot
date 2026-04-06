@@ -1,12 +1,18 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventManagerMapper;
 import com.anastasia.Anastasia_BackEnd.modules.events.mappers.EventMapper;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventManagerEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.requests.EventManagerDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -15,12 +21,12 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -30,9 +36,11 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 class EventServiceImplUnitTest {
 
     @Mock
@@ -43,11 +51,16 @@ class EventServiceImplUnitTest {
     private EventMapper eventMapper;
     @Mock
     private EventManagerMapper eventManagerMapper;
+    @Mock
+    private LocalizedMessageService messageService;
+    @Mock
+    private ChurchRepository churchRepository;
 
     @InjectMocks
     private EventServiceImpl eventService;
 
     private EventEntity event;
+    private ChurchEntity church;
     private UserEntity user;
     private UUID userId;
     private UUID tenantId;
@@ -58,11 +71,44 @@ class EventServiceImplUnitTest {
         TenantContext.setTenantId(tenantId);
 
         userId = UUID.randomUUID();
-        user = UserEntity.builder().uuid(userId).build();
+        church = ChurchEntity.builder()
+                .churchId(13L)
+                .churchNumber("CH-001")
+                .churchName("Test Church")
+                .churchNameLocal("Test Church")
+                .neighborhood("Neighborhood")
+                .neighborhoodLocal("Neighborhood")
+                .diocese("Diocese")
+                .dioceseLocal("Diocese")
+                .email("church@example.dev")
+                .timezone("UTC")
+                .usesOurServices(true)
+                .status(ChurchStatus.DRAFT)
+                .tenant(TenantEntity.builder().id(tenantId).build())
+                .build();
+        user = UserEntity.builder()
+                .uuid(userId)
+                .membership(Adult_MemberEntity.builder()
+                        .churchId(church.getChurchId())
+                        .build())
+                .build();
+        user.setTenantId(tenantId);
+        Instant startAt = Instant.now().plusSeconds(3600);
         event = EventEntity.builder()
                 .eventId(7L)
                 .eventManagers(new HashSet<>())
+                .tenantId(tenantId)
+                .church(church)
+                .timezone("UTC")
+                .startAt(startAt)
+                .endAt(startAt.plusSeconds(3600))
                 .build();
+        lenient().when(messageService.get(anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(messageService.get(anyString(), anyString(), any(Object[].class)))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(eventRepository.findById(anyLong())).thenReturn(Optional.of(event));
+        lenient().when(churchRepository.findById(anyLong())).thenReturn(Optional.of(church));
     }
 
     @AfterEach
@@ -172,9 +218,11 @@ class EventServiceImplUnitTest {
     @Test
     void createEvent_withManagers_setsBackReference() {
         EventManagerEntity manager = EventManagerEntity.builder().build();
+        manager.setUser(user);
         event.getEventManagers().add(manager);
 
         when(eventRepository.save(event)).thenReturn(event);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         EventEntity result = eventService.createEvent(event);
 
@@ -197,7 +245,13 @@ class EventServiceImplUnitTest {
 
     @Test
     void updateEvent_whenExists_setsIdAndSaves() {
-        EventEntity update = EventEntity.builder().build();
+        Instant newStart = Instant.now().plusSeconds(7200);
+        EventEntity update = EventEntity.builder()
+                .church(church)
+                .timezone("UTC")
+                .startAt(newStart)
+                .endAt(newStart.plusSeconds(3600))
+                .build();
         when(eventRepository.existsById(event.getEventId())).thenReturn(true);
         when(eventRepository.save(update)).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -210,10 +264,11 @@ class EventServiceImplUnitTest {
     @Test
     void updateEvent_whenMissing_throwsException() {
         when(eventRepository.existsById(event.getEventId())).thenReturn(false);
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> eventService.updateEvent(event.getEventId(), EventEntity.builder().build()))
                 .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Event is not found");
+                .hasMessageContaining("Event not found");
     }
 
     @Test
@@ -228,10 +283,11 @@ class EventServiceImplUnitTest {
     @Test
     void deleteEvent_whenMissing_throwsException() {
         when(eventRepository.existsById(event.getEventId())).thenReturn(false);
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> eventService.deleteEvent(event.getEventId()))
                 .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Event is not found");
+                .hasMessageContaining("Event not found");
     }
 
     @Test

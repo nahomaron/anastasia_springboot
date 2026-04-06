@@ -7,10 +7,12 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.Ima
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageStorageProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.common.aws.PresignedUrlResponse;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
 import com.anastasia.Anastasia_BackEnd.common.aws.S3Service;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -24,17 +26,29 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ImageAssetServiceImpl implements ImageAssetService{
 
     private final S3Service s3Service;
     private final ImageAssetRepository imageAssetRepository;
+
+    @Value("${aws.s3.endpoint:http://localhost:4566}")
+    private String s3Endpoint;
 
     @Override
     public PresignedUrlResponse requestPresignedUrl(String fileName) {
         if (!StringUtils.hasText(fileName)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "fileName must not be blank");
         }
-        return s3Service.generatePresignedUploadUrl(fileName);
+        try {
+            return s3Service.generatePresignedUploadUrl(fileName);
+        } catch (RuntimeException ex) {
+            if (isFallbackEnabled()) {
+                log.warn("Unable to generate presigned URL via S3 ({}). Falling back to mock response.", ex.getMessage());
+                return mockPresignedUrl(fileName);
+            }
+            throw ex;
+        }
     }
 
     @CachePut(value = "imageAssets", key = "#root.target.buildImageAssetCacheKey(#ownerType, #ownerId)")
@@ -90,12 +104,12 @@ public class ImageAssetServiceImpl implements ImageAssetService{
         }
     }
 
-    private String buildImageAssetCacheKey(String ownerType, UUID ownerId) {
+    public String buildImageAssetCacheKey(String ownerType, UUID ownerId) {
         ImageAssetType imageAssetType = resolveImageAssetType(ownerType);
         return buildImageAssetCacheKey(imageAssetType, ownerId);
     }
 
-    private String buildImageAssetCacheKey(ImageAssetType imageAssetType, UUID ownerId) {
+    public String buildImageAssetCacheKey(ImageAssetType imageAssetType, UUID ownerId) {
         String tenantKey = String.valueOf(TenantContext.getTenantId());
         return tenantKey + ":" + imageAssetType.name() + ":" + ownerId;
     }
@@ -144,5 +158,14 @@ public class ImageAssetServiceImpl implements ImageAssetService{
         }
         int slashIndex = objectKey.lastIndexOf('/');
         return slashIndex >= 0 ? objectKey.substring(slashIndex + 1) : objectKey;
+    }
+
+    private boolean isFallbackEnabled() {
+        return s3Endpoint != null && (s3Endpoint.contains("localhost") || s3Endpoint.contains("127.0.0.1") || s3Endpoint.contains("0.0.0.0"));
+    }
+
+    private PresignedUrlResponse mockPresignedUrl(String fileName) {
+        String objectKey = "test-images/" + UUID.randomUUID() + "_" + fileName;
+        return new PresignedUrlResponse(objectKey, "http://localhost/mock-presigned-url");
     }
 }

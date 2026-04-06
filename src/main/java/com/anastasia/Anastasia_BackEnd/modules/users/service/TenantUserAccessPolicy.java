@@ -15,7 +15,6 @@ public class TenantUserAccessPolicy {
 
     private static final Set<String> GOVERNANCE_ROLE_NAMES = Set.of(
             "OWNER",
-            "ADMIN",
             "PRIMARY_ADMIN",
             "PLATFORM_ADMIN"
     );

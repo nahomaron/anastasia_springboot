@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service;
 
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRequestDTO;
@@ -13,10 +14,9 @@ import com.anastasia.Anastasia_BackEnd.modules.events.service.EventAttendanceSer
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,9 +25,10 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 class EventAttendanceServiceUnitTest {
 
     @Mock
@@ -36,6 +37,8 @@ class EventAttendanceServiceUnitTest {
     private EventAttendanceRepository attendanceRepository;
     @Mock
     private EventRepository eventRepository;
+    @Mock
+    private LocalizedMessageService messageService;
 
     @InjectMocks
     private EventAttendanceService eventAttendanceService;
@@ -49,6 +52,10 @@ class EventAttendanceServiceUnitTest {
         userId = UUID.randomUUID();
         event = EventEntity.builder().eventId(42L).build();
         user = UserEntity.builder().uuid(userId).build();
+        lenient().when(messageService.get(anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        lenient().when(messageService.get(anyString(), anyString(), any(Object[].class)))
+                .thenAnswer(invocation -> invocation.getArgument(1));
     }
 
     @Test
@@ -207,4 +214,3 @@ class EventAttendanceServiceUnitTest {
         verify(attendanceRepository).findByUserUuidAndStatus(userId, AttendanceStatus.ABSENT);
     }
 }
-

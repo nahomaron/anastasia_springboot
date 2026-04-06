@@ -16,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 ApplicationConfig.class
         }
 )
+@ContextConfiguration(classes = com.anastasia.Anastasia_BackEnd.UnitTests.config.RepositoryTestConfig.class)
 @Import(TestAuditorAwareConfig.class)
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 class MemberRepositoryUnitTest {
@@ -41,14 +43,17 @@ class MemberRepositoryUnitTest {
     void setUp() {
         TenantEntity tenant = TestDataUtil.createTestTenantEntity();
         entityManager.persist(tenant);
+        entityManager.flush();
 
         ChurchEntity church = TestDataUtil.createTestChurchEntity(tenant);
         entityManager.persist(church);
 
         tenant.setChurch(church);
         entityManager.persist(tenant);
+        entityManager.flush();
 
         member = TestDataUtil.createTestMember(church);
+        member.setTenantId(tenant.getId());
         entityManager.persist(member);
         entityManager.flush();
     }

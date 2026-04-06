@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,7 +39,9 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
     Page<Adult_MemberEntity> findByStatusValueAndTenantId(MemberLifecycleStatus status, UUID tenantId, Pageable pageable);
 
     long countByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId);
-    long countByTenantIdAndStatusValueIn(UUID tenantId, List<String> statuses);
+    long countByTenantIdAndStatusValueIn(UUID tenantId, Collection<MemberLifecycleStatus> statuses);
+
+    long countByStatusValueIn(Collection<MemberLifecycleStatus> statuses);
     long countByTenantIdAndPriestNumberAndStatusValueNot(UUID tenantId, String priestNumber, MemberLifecycleStatus status);
 
     Page<Adult_MemberEntity> findByTenantIdAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable);

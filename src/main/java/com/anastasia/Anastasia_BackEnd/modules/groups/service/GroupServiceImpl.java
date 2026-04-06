@@ -72,6 +72,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Transactional
     public GroupResponse createGroup(GroupDTO groupDTO) {
         UUID tenantId = requireTenantId();
 

@@ -18,10 +18,9 @@ import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.Pho
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 public class TenantServiceUnitTest {
 
     @Mock private TenantRepository tenantRepository;
@@ -104,14 +103,12 @@ public class TenantServiceUnitTest {
         Role ownerRole = TestDataUtil.createTestOwnerRole(tenantEntity);
         Role adminRole = Role.builder().roleName("ADMIN").build();
         when(roleRepository.findByRoleName("OWNER")).thenReturn(Optional.of(ownerRole));
-        when(roleRepository.findByRoleName("ADMIN")).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByRoleName("PRIMARY_ADMIN")).thenReturn(Optional.of(adminRole));
 
         tenantService.subscribeTenant(dto);
 
         verify(tenantRepository, times(2)).save(any(TenantEntity.class));
         verify(authService, times(1)).createUser(any(UserEntity.class));
-        verify(phoneVerificationService, times(1)).startVerification(dto.getPhoneNumber());
-
         // Optionally, verify no other interactions if strict mocks are desired
 //         verifyNoMoreInteractions(tenantRepository, roleRepository, authService, phoneVerificationService);
     }

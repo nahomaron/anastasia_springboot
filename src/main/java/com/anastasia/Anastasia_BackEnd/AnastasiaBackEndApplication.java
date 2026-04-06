@@ -15,13 +15,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
 		exclude = RedisRepositoriesAutoConfiguration.class,
-		scanBasePackages = {
-				"com.anastasia.Anastasia_BackEnd.core",
-				"com.anastasia.Anastasia_BackEnd.common",
-				"com.anastasia.Anastasia_BackEnd.infrastructure",
-				"com.anastasia.Anastasia_BackEnd.seeder",
-				"com.anastasia.Anastasia_BackEnd.modules"
-		}
+        scanBasePackages = {
+                "com.anastasia.Anastasia_BackEnd.core",
+                "com.anastasia.Anastasia_BackEnd.common",
+                "com.anastasia.Anastasia_BackEnd.infrastructure",
+                "com.anastasia.Anastasia_BackEnd.seeder",
+                "com.anastasia.Anastasia_BackEnd.modules",
+                "com.anastasia.Anastasia_BackEnd.TestControllers",
+                "com.anastasia.Anastasia_BackEnd.TestSupport"
+        }
 )
 //@SpringBootApplication
 @Import(ModulesBootstrapConfiguration.class)

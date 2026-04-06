@@ -8,6 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface WebhookEventReceiptRepository extends JpaRepository<WebhookEventReceiptEntity, UUID> {
-    List<WebhookEventReceiptEntity> findByTenant_Id(UUID tenantId);
+    List<WebhookEventReceiptEntity> findByTenantId(UUID tenantId);
     Optional<WebhookEventReceiptEntity> findByProviderAndEventId(String provider, String eventId);
 }

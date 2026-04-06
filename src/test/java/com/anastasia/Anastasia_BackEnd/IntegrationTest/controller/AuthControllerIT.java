@@ -4,7 +4,7 @@ import com.anastasia.Anastasia_BackEnd.AnastasiaBackEndApplication;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
 import com.anastasia.Anastasia_BackEnd.Api.utils.TestDataSeeder;
-import com.anastasia.Anastasia_BackEnd.common.config.RateLimiterConfig;
+import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
@@ -12,13 +12,13 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.bucket4j.Bucket;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,26 +49,19 @@ public class AuthControllerIT extends PostgresTestContainer {
     @Autowired private TestDataSeeder testDataSeeder;
 
     @MockitoBean
-    private RateLimiterConfig rateLimiterConfig;
-
-    @MockitoBean
-    private Bucket bucket;
+    private RateLimiterService rateLimiterService;
 
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(rateLimiterConfig);
+        Mockito.reset(rateLimiterService);
         testDataSeeder.createAdminUser();
         testDataSeeder.createMember("Nahom");
-        bucket = Bucket.builder()
-                .addLimit(io.github.bucket4j.Bandwidth.classic(5, io.github.bucket4j.Refill.greedy(5, java.time.Duration.ofMinutes(1))))
-                .build();
-
-        when(rateLimiterConfig.getBucket(Mockito.anyString())).thenReturn(bucket);
+        when(rateLimiterService.tryConsume(Mockito.anyString(), Mockito.anyLong(), Mockito.any(Duration.class))).thenReturn(true);
     }
 
     @Autowired
-    public AuthControllerIT(MockMvc mockMvc, ObjectMapper objectMapper, TokenRepository tokenRepository, Bucket bucket, AuthService authService) {
+    public AuthControllerIT(MockMvc mockMvc, ObjectMapper objectMapper, TokenRepository tokenRepository, AuthService authService) {
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
         this.tokenRepository = tokenRepository;
@@ -168,6 +161,8 @@ public class AuthControllerIT extends PostgresTestContainer {
 
     @Test
     public void testThatRefreshTokenReturnsHttpStatus200Ok() throws Exception {
+        when(rateLimiterService.tryConsume(eq("127.0.0.1"), eq(5L), eq(Duration.ofMinutes(1))))
+                .thenReturn(true);
         // should allow requests with in the limit
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")
@@ -178,6 +173,9 @@ public class AuthControllerIT extends PostgresTestContainer {
 
     @Test
     public void testRefreshToken_TooManyRequests() throws Exception {
+
+        when(rateLimiterService.tryConsume(eq("127.0.0.1"), eq(5L), eq(Duration.ofMinutes(1))))
+                .thenReturn(true, true, true, true, true, false);
 
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")

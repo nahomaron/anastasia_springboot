@@ -1,13 +1,15 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.repository;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +41,20 @@ public interface TenantRepository extends JpaRepository<TenantEntity, UUID> {
           and t.demoWorkspace = true
     """)
     List<TenantEntity> findActiveDemoWorkspaces();
+
+    @Query("""
+        select t
+        from TenantEntity t
+        left join fetch t.subscription s
+        where t.deletedAt is null
+    """)
+    List<TenantEntity> findAllWithSubscription();
+
+    long countByDeletedAtIsNull();
+
+    long countByStatus(TenantStatus status);
+
+    long countByStatusIn(Collection<TenantStatus> statuses);
 
     @Query("""
         select t

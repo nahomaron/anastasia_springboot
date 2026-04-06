@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.MemberLifecycleStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ActiveMemberLimitPolicy {
 
-    private static final List<String> ACTIVE_STATUSES = List.of("APPROVED", "ACTIVE");
+    private static final List<MemberLifecycleStatus> ACTIVE_STATUSES = List.of(MemberLifecycleStatus.APPROVED, MemberLifecycleStatus.ACTIVE);
 
     private final MemberRepository memberRepository;
     private final ChildRepository childRepository;

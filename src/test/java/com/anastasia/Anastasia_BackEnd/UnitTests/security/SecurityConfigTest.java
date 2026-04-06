@@ -3,10 +3,9 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.security;
 import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
 import com.anastasia.Anastasia_BackEnd.common.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,7 +16,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
+@LenientMockitoTest
 class SecurityConfigTest {
 
     @Mock
@@ -53,8 +52,7 @@ class SecurityConfigTest {
         // Pass your (mocked) userDetailsService into the method
         DaoAuthenticationProvider provider = (DaoAuthenticationProvider) securityConfig.authenticationProvider(userDetailsService);
 
-        // Using Reflection to verify internal state
-        PasswordEncoder encoder = (PasswordEncoder) ReflectionTestUtils.getField(provider, "passwordEncoder");
+        PasswordEncoder encoder = (PasswordEncoder) ReflectionTestUtils.invokeMethod(provider, "getPasswordEncoder");
         Object uds = ReflectionTestUtils.getField(provider, "userDetailsService");
 
         assertThat(encoder).isInstanceOf(BCryptPasswordEncoder.class);

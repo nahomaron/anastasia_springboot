@@ -7,5 +7,6 @@ public enum TenantSubscriptionEventType {
     STATUS_CHANGED,
     PAYMENT_SUCCEEDED,
     PAYMENT_FAILED,
+    PAYMENT_REFUNDED,
     CANCELED
 }

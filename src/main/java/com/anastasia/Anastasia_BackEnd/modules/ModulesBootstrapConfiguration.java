@@ -9,6 +9,8 @@ import com.anastasia.Anastasia_BackEnd.modules.payments.config.PaymentsModuleCon
 import com.anastasia.Anastasia_BackEnd.modules.registration.config.RegistrationModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.staff.config.StaffModuleConfig;
 import com.anastasia.Anastasia_BackEnd.modules.users.config.UsersModuleConfig;
+import com.anastasia.Anastasia_BackEnd.modules.platform.config.PlatformModuleConfig;
+import com.anastasia.Anastasia_BackEnd.modules.services.config.ServicesModuleConfig;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -26,7 +28,9 @@ import org.springframework.context.annotation.Import;
         RegistrationModuleConfig.class,
         StaffModuleConfig.class,
         UsersModuleConfig.class,
-        NotificationModuleConfig.class
+        NotificationModuleConfig.class,
+        PlatformModuleConfig.class,
+        ServicesModuleConfig.class
 })
 public class ModulesBootstrapConfiguration {
 }

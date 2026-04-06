@@ -20,6 +20,7 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 ApplicationConfig.class
         }
 )
+@ContextConfiguration(classes = com.anastasia.Anastasia_BackEnd.UnitTests.config.RepositoryTestConfig.class)
 @Import(TestAuditorAwareConfig.class)
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class UserRepositoryUnitTest {
@@ -55,20 +57,24 @@ public class UserRepositoryUnitTest {
     void setup() {
         TenantEntity tenant = TestDataUtil.createTestTenantEntity();
         entityManager.persist(tenant);
+        entityManager.flush();
 
         church = TestDataUtil.createTestChurchEntity(tenant);
         entityManager.persist(church);
 
         tenant.setChurch(church);
         entityManager.persist(tenant);
+        entityManager.flush();
 
         Adult_MemberEntity member = TestDataUtil.createTestMember(church);
+        member.setTenantId(tenant.getId());
         entityManager.persist(member);
 
         group = TestDataUtil.createTestGroupEntity(church, tenant.getId());
         entityManager.persist(group);
 
         user = TestDataUtil.createTestUserEntityA();
+        user.setTenantId(tenant.getId());
         user.setMembership(member);
         user.setUserType(UserType.MEMBER);
         user.setGroups(Set.of(group));
@@ -139,4 +145,3 @@ public class UserRepositoryUnitTest {
     }
 
 }
-

@@ -12,22 +12,14 @@ public record NotificationInboxPageResponse(
         long unreadCount
 ) {
 
-    public NotificationInboxPageResponse(
-            List<NotificationInboxItemResponse> items,
-            int page,
-            int size,
-            int totalPages,
-            long totalElements,
-            List<Integer> sizeOptions,
-            long unreadCount
-    ) {
-        this.items = copyList(items);
-        this.sizeOptions = copyList(sizeOptions);
-        this.page = page;
-        this.size = size;
-        this.totalPages = totalPages;
-        this.totalElements = totalElements;
-        this.unreadCount = unreadCount;
+    @Override
+    public List<NotificationInboxItemResponse> items() {
+        return copyList(items);
+    }
+
+    @Override
+    public List<Integer> sizeOptions() {
+        return copyList(sizeOptions);
     }
 
     private static <T> List<T> copyList(List<T> input) {

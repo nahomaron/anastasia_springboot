@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -87,7 +88,7 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
     @Query("""
         update NotificationEntity n
-        set n.readAt = CURRENT_TIMESTAMP, n.updatedAt = CURRENT_TIMESTAMP
+        set n.readAt = :now, n.updatedAt = :now
         where n.recipientUserId = :userId
           and n.channel = com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType.IN_APP
           and n.archivedAt is null
@@ -98,7 +99,7 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
           )
     """)
     @Modifying
-    int markAllRead(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId);
+    int markAllRead(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId, @Param("now") Instant now);
 
     boolean existsByIdempotencyKeyAndChannel(String idempotencyKey, NotificationChannelType channel);
 }

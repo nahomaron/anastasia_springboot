@@ -66,9 +66,11 @@ public enum RoleType {
     PRIEST(
             Set.of(
                     VIEW_MEMBERS, ADD_MEMBERS, EDIT_MEMBERS, DELETE_MEMBERS, SMS_MEMBERS,
+                    VIEW_CHILDREN,
                     VIEW_GROUPS, MANAGE_REQUESTS, VIEW_STAFF,
                     VIEW_PRIESTS, VIEW_PRIEST_ASSIGNMENTS,
-                    APPROVE_MEMBERSHIP_AS_PRIEST, VIEW_PRIEST_DASHBOARD
+                    APPROVE_MEMBERSHIP_AS_PRIEST, VIEW_PRIEST_DASHBOARD,
+                    ADVANCED_SEARCH_MEMBERS
             ), "Priest has role of pastoring members"
     )
 

@@ -6,9 +6,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,10 +29,14 @@ class AttendanceTimeValidatorTest {
 
     @Test
     void isCheckInAllowed_whenWithinWindow_shouldReturnTrue() {
-        LocalTime now = LocalTime.now();
+        ZoneId zone = ZoneId.systemDefault();
+        Instant now = Instant.now();
+        ZonedDateTime startAt = now.atZone(zone).plusMinutes(10);
+        ZonedDateTime endAt = startAt.plusMinutes(20);
         EventEntity event = EventEntity.builder()
-                .startAt(LocalDate.now().atTime(now.plusMinutes(10)).toInstant(ZoneOffset.UTC))
-                .endAt(LocalDate.now().atTime(now.plusMinutes(30)).toInstant(ZoneOffset.UTC))
+                .startAt(startAt.toInstant())
+                .endAt(endAt.toInstant())
+                .timezone(zone.getId())
                 .build();
 
         assertThat(validator.isCheckInAllowed(event)).isTrue();

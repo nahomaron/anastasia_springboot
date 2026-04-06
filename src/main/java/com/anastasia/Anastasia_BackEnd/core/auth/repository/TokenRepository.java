@@ -53,10 +53,10 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
     @Transactional
     @Modifying
     @Query("""
-        update Token t set t.expired = true, t.expiredAt = CURRENT_TIMESTAMP
-        where t.expiresAt < CURRENT_TIMESTAMP and t.expired = false
+        update Token t set t.expired = true, t.expiredAt = :now
+        where t.expiresAt < :now and t.expired = false
         """)
-    void markExpiredTokens();
+    void markExpiredTokens(@Param("now") Instant now);
 
     @Transactional
     @Modifying
@@ -173,6 +173,13 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
         WHERE t.id = :tokenId AND t.user.uuid = :userId
     """)
     Optional<Token> findByIdAndUserUuid(@Param("tokenId") Integer tokenId, @Param("userId") UUID userId);
+
+    Optional<Token> findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(String email, TokenType tokenType);
+
+    @Transactional
+    @Modifying
+    @Query("delete from Token t where t.user.uuid = :userId")
+    void deleteAllByUserUuid(@Param("userId") UUID userId);
 
 
 }

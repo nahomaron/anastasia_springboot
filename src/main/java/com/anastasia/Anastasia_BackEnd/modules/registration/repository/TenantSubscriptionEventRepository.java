@@ -1,10 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.repository;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEventEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEventType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,4 +20,6 @@ public interface TenantSubscriptionEventRepository extends JpaRepository<TenantS
         order by e.occurredAt desc
     """)
     List<TenantSubscriptionEventEntity> findByTenantIdOrderByOccurredAtDesc(@Param("tenantId") UUID tenantId);
+
+    List<TenantSubscriptionEventEntity> findByEventTypeInOrderByOccurredAtDesc(java.util.Collection<TenantSubscriptionEventType> eventTypes, Pageable pageable);
 }

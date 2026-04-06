@@ -76,6 +76,8 @@ public class AuthServiceImpl implements AuthService {
     private final EmailNotificationService emailNotificationService;
     private final EmailTemplateService emailTemplateService;
     private final LocalizedMessageService messageService;
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private final CacheWarmupService cacheWarmupService;
     private final RoleRepository roleRepository;
     private final UserProfileRepository userProfileRepository;
@@ -163,7 +165,7 @@ public class AuthServiceImpl implements AuthService {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
-            throw new InvalidCredentialsException(messageService.get("auth.login.invalidCredentials", "Invalid email or password"));
+            throw new InvalidCredentialsException(messageService.get("auth.login.invalidCredentials", "Unauthorized: Invalid email or password"));
         } catch (AuthenticationException e) {
             throw e;
         } catch (Exception e) {
@@ -560,7 +562,18 @@ public class AuthServiceImpl implements AuthService {
 
     // revoking the currently existing bearer tokens
     public void revokeAllValidUserTokens(UserEntity user){
-        tokenRepository.revokeAllActiveTokensByUserUuid(user.getUuid(), Instant.now());
+        List<Token> tokens = tokenRepository.findAllValidUserTokens(user.getUuid());
+        if (tokens.isEmpty()) {
+            return;
+        }
+        Instant now = Instant.now();
+        tokens.forEach(token -> {
+            token.setExpired(true);
+            token.setRevoked(true);
+            token.setExpiredAt(now);
+            token.setRevokedAt(now);
+        });
+        tokenRepository.saveAll(tokens);
     }
 
     public void revokeAllActiveUserTokens(UserEntity user) {
@@ -825,10 +838,9 @@ public class AuthServiceImpl implements AuthService {
     private String generateActivationCode(int length) {
         String characters = "01234456789";
         StringBuilder codeBuilder = new StringBuilder();
-        SecureRandom secureRandom = new SecureRandom();
 
         for (int i = 0; i < length; i++) {
-            int randomIndex = secureRandom.nextInt(characters.length());
+            int randomIndex = SECURE_RANDOM.nextInt(characters.length());
             codeBuilder.append(characters.charAt(randomIndex));
         }
 

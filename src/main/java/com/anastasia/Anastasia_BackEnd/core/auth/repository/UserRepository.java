@@ -21,6 +21,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
 
     // Basic lookups
     Optional<UserEntity> findByEmail(String email);
+    Optional<UserEntity> findByEmailIgnoreCase(String email);
     @Query("""
         SELECT u
         FROM UserEntity u
