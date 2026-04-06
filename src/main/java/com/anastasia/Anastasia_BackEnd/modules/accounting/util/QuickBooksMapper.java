@@ -26,9 +26,9 @@ public final class QuickBooksMapper {
     }
 
     public static void writeTransactionsAsIif(List<Transaction> transactions, Writer writer) throws IOException {
-        writer.write("!TRNS\tTRNSID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tMEMO\n");
-        writer.write("!SPL\tSPLID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tMEMO\n");
-        writer.write("!ENDTRNS\n");
+        writer.write(String.format("!TRNS\tTRNSID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tMEMO%n"));
+        writer.write(String.format("!SPL\tSPLID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tMEMO%n"));
+        writer.write(String.format("!ENDTRNS%n"));
 
         for (Transaction transaction : transactions) {
             List<LedgerEntry> entries = new ArrayList<>(transaction.getLedgerEntries());
@@ -41,7 +41,7 @@ public final class QuickBooksMapper {
                     .filter(entry -> entry != primary)
                     .collect(Collectors.toList());
 
-            writer.write(String.format("TRNS\t\t%s\t%s\t%s\t%s\t%s\n",
+            writer.write(String.format("TRNS\t\t%s\t%s\t%s\t%s\t%s%n",
                     TRNSTYPE,
                     IIF_DATE.format(transaction.getDate()),
                     sanitizeAccount(primary),
@@ -49,7 +49,7 @@ public final class QuickBooksMapper {
                     sanitizeMemo(transaction.getDescription())));
 
             for (LedgerEntry entry : remainder) {
-                writer.write(String.format("SPL\t\t%s\t%s\t%s\t%s\t%s\n",
+                writer.write(String.format("SPL\t\t%s\t%s\t%s\t%s\t%s%n",
                         TRNSTYPE,
                         IIF_DATE.format(transaction.getDate()),
                         sanitizeAccount(entry),
@@ -57,7 +57,7 @@ public final class QuickBooksMapper {
                         sanitizeMemo(transaction.getDescription())));
             }
 
-            writer.write("ENDTRNS\n");
+            writer.write(String.format("ENDTRNS%n"));
         }
     }
 
@@ -138,7 +138,7 @@ public final class QuickBooksMapper {
         }
 
         public List<Line> getLines() {
-            return lines;
+            return List.copyOf(lines);
         }
 
         public static class Line {

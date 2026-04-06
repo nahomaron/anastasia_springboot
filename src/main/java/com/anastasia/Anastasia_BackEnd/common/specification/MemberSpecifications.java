@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MemberSpecifications {
 
@@ -29,7 +30,7 @@ public class MemberSpecifications {
 
     public static Specification<Adult_MemberEntity> nameContains(String name){
         return (root, query, cb) -> {
-            String likePattern = "%" + name.toLowerCase() + "%";
+            String likePattern = "%" + name.toLowerCase(Locale.ROOT) + "%";
             return cb.or(
                     cb.like(cb.lower(root.get("firstName")), likePattern),
                     cb.like(cb.lower(root.get("fatherName")), likePattern),
@@ -43,7 +44,7 @@ public class MemberSpecifications {
 
     public static Specification<Adult_MemberEntity> motherNameContains(String motherName){
         return (root, query, cb) -> {
-            String likePattern = "%" + motherName.toLowerCase() + "%";
+            String likePattern = "%" + motherName.toLowerCase(Locale.ROOT) + "%";
             return cb.or(
                     cb.like(cb.lower(root.get("motherName")), likePattern),
                     cb.like(root.get("motherFullNameLocal"), likePattern)
@@ -78,12 +79,12 @@ public class MemberSpecifications {
     }
 
     public static Specification<Adult_MemberEntity> hasProfession(String profession){
-        String likePattern = "%" + profession.toLowerCase() + "%";
+        String likePattern = "%" + profession.toLowerCase(Locale.ROOT) + "%";
         return (root, query, cb) -> cb.like(cb.lower(root.get("profession")), likePattern);
     }
 
     public static Specification<Adult_MemberEntity> hasLevelOfEducation(String levelOfEducation){
-        String likePattern = "%" + levelOfEducation.toLowerCase() + "%";
+        String likePattern = "%" + levelOfEducation.toLowerCase(Locale.ROOT) + "%";
         return (root, query, cb) ->  cb.like(cb.lower(root.get("levelOfEducation")), likePattern);
     }
 

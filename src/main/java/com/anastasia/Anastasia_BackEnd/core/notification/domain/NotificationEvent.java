@@ -3,16 +3,15 @@ package com.anastasia.Anastasia_BackEnd.core.notification.domain;
 
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.Getter;
-import org.springframework.context.ApplicationEvent;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 @Getter
-public class NotificationEvent extends ApplicationEvent {
+public class NotificationEvent {
+    private final Object source;
     private final NotificationType type;
     private final UserEntity user;
     private final Map<String, Object> properties;
@@ -28,15 +27,15 @@ public class NotificationEvent extends ApplicationEvent {
                              UserEntity user,
                              Map<String, Object> properties,
                              Set<NotificationChannelType> channels) {
-        super(source);
+        this.source = Objects.requireNonNull(source, "source");
         this.type = Objects.requireNonNull(type, "type");
         this.user = user;
-        this.properties = properties == null ? Map.of() : Collections.unmodifiableMap(properties);
+        this.properties = properties == null ? Map.of() : Map.copyOf(properties);
         Set<NotificationChannelType> resolvedChannels =
                 (channels == null || channels.isEmpty())
                         ? EnumSet.of(NotificationChannelType.EMAIL, NotificationChannelType.IN_APP)
                         : EnumSet.copyOf(channels);
-        this.channels = Collections.unmodifiableSet(resolvedChannels);
+        this.channels = Set.copyOf(resolvedChannels);
         this.target = NotificationTarget.fromUser(user, this.properties);
     }
 

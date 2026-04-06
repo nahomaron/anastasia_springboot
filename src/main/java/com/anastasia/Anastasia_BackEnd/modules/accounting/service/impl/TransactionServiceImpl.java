@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Currency;
+import java.util.Locale;
 import java.math.RoundingMode;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -506,7 +507,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private String buildPaymentDescription(PaymentPurpose purpose, String paymentId) {
-        String base = "Captured " + purpose.name().replace('_', ' ').toLowerCase();
+        String base = "Captured " + purpose.name().replace('_', ' ').toLowerCase(Locale.ROOT);
         if (paymentId != null) {
             return base + " (payment " + paymentId + ")";
         }

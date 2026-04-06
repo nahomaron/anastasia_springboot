@@ -166,7 +166,7 @@ public class TenantDemoWorkspaceSeederService {
                 .birthday(birthday)
                 .nationality("Eritrean")
                 .placeOfBirth("Asmara")
-                .email((firstName + "." + fatherName + "@demo.anastasia.local").toLowerCase())
+                .email((firstName + "." + fatherName + "@demo.anastasia.local").toLowerCase(Locale.ROOT))
                 .phone("+291700000000")
                 .whatsApp("+291700000000")
                 .emergencyContactNumber("+291700000001")

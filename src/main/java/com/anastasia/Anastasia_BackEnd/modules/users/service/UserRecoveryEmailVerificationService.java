@@ -16,6 +16,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -115,7 +116,7 @@ public class UserRecoveryEmailVerificationService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException(messageService.get("validation.user.recoveryEmail.required", "Recovery email is required."));
         }
-        return email.trim().toLowerCase();
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     private String normalizeCode(String code) {

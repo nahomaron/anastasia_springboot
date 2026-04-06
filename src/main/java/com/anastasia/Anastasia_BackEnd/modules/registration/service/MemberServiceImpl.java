@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -330,7 +331,7 @@ public class MemberServiceImpl implements MemberService {
                 predicates.add(cb.equal(root.get("churchId"), churchId));
             }
             if (search != null && !search.isBlank()) {
-                String like = "%" + search.toLowerCase() + "%";
+                String like = "%" + search.toLowerCase(Locale.ROOT) + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("fatherName"), "")), like),
@@ -364,7 +365,7 @@ public class MemberServiceImpl implements MemberService {
                 predicates.add(cb.equal(root.get("churchId"), churchId));
             }
             if (search != null && !search.isBlank()) {
-                String like = "%" + search.toLowerCase() + "%";
+                String like = "%" + search.toLowerCase(Locale.ROOT) + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), like),
                         cb.like(cb.lower(cb.coalesce(root.get("fatherName"), "")), like),
@@ -695,8 +696,15 @@ public class MemberServiceImpl implements MemberService {
     }
 
     public void evictMemberCachesForTenant(String tenantId) {
-        cacheManager.getCache("members").invalidate(); // clear all if needed
-        cacheManager.getCache("members_all").invalidate();
+        org.springframework.cache.Cache membersCache = cacheManager.getCache("members");
+        if (membersCache != null) {
+            membersCache.invalidate();
+        }
+
+        org.springframework.cache.Cache membersAllCache = cacheManager.getCache("members_all");
+        if (membersAllCache != null) {
+            membersAllCache.invalidate();
+        }
     }
 
     private void updateApprovalStatus(Adult_MemberEntity member) {

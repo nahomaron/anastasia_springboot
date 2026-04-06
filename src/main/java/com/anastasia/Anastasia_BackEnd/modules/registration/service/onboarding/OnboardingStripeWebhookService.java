@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -91,7 +92,7 @@ public class OnboardingStripeWebhookService {
             verifyPriceMapping(onboardingSession, subscription);
             applySubscriptionRefs(onboardingSession, subscription);
 
-            String stripeStatus = subscription.getStatus() == null ? "" : subscription.getStatus().toLowerCase();
+            String stripeStatus = subscription.getStatus() == null ? "" : subscription.getStatus().toLowerCase(Locale.ROOT);
             if ("active".equals(stripeStatus) || "trialing".equals(stripeStatus)) {
                 onboardingSession.setStatus(OnboardingSessionStatus.PAYMENT_CONFIRMED);
                 if (onboardingSession.getPaymentConfirmedAt() == null) {

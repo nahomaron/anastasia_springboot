@@ -959,11 +959,12 @@ public class UserServiceImpl implements UserService {
         if (status == null) {
             return null;
         }
-        return switch (status.toUpperCase()) {
+        String normalizedStatus = status.toUpperCase(Locale.ROOT);
+        return switch (normalizedStatus) {
             case "PENDING" -> "PENDING";
             case "APPROVED", "ACTIVE" -> "ACTIVE";
             case "NON_ACTIVE", "DECEASED" -> "TERMINATED";
-            default -> status.toUpperCase();
+            default -> normalizedStatus;
         };
     }
 

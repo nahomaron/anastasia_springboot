@@ -18,7 +18,6 @@ import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.common.cache.CacheWarmupService;
@@ -73,7 +72,6 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
-    private final EmailNotificationService emailNotificationService;
     private final EmailTemplateService emailTemplateService;
     private final LocalizedMessageService messageService;
 
@@ -327,7 +325,7 @@ public class AuthServiceImpl implements AuthService {
         saveUserToken(jwtToken, user, TokenType.BEARER, sessionId, accessJwtId);
         saveUserToken(refreshToken, user, TokenType.REFRESH, sessionId, refreshJwtId);
 
-        if (userPrincipal.getRoles().stream().anyMatch(role -> "ADMIN".equals(role.getRoleName()) || "PRIMARY_ADMIN".equals(role.getRoleName()))
+        if (userPrincipal.getRoleNames().stream().anyMatch(role -> "ADMIN".equals(role) || "PRIMARY_ADMIN".equals(role))
                 && user.getTenant() != null) {
             UUID tenantId = user.getTenant().getId();
             cacheWarmupService.warmUpTenantCache(tenantId);

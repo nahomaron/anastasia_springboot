@@ -7,7 +7,6 @@ import com.anastasia.Anastasia_BackEnd.Api.services.TenantService;
 import com.anastasia.Anastasia_BackEnd.Api.factories.TenantDataFactory;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
@@ -50,12 +49,7 @@ public final class SubscriptionFlowHelper {
         String otp = fetchOtpWithRetry(tenantRequest.getPhoneNumber());
 
         // 3 Verify phone
-        PhoneVerificationRequest phoneVerificationRequest = PhoneVerificationRequest.builder()
-                .phone(tenantRequest.getPhoneNumber())
-                .otp(otp)
-                .build();
-
-        Response verifyResponse = tenantService.verifyPhone(phoneVerificationRequest);
+        Response verifyResponse = tenantService.verifyPhone(tenantRequest.getPhoneNumber(), otp);
         Assertions.assertEquals(200, verifyResponse.statusCode(),
                 "Phone verification failed: " + verifyResponse.asString());
 

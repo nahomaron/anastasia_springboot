@@ -7,7 +7,6 @@ import com.anastasia.Anastasia_BackEnd.Api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.Api.services.TenantService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -46,11 +45,7 @@ class TenantPositiveTests extends BaseApiTest {
                 .trim();
         assertThat(otp).isNotBlank();
 
-        PhoneVerificationRequest phoneVerificationRequest = PhoneVerificationRequest.builder()
-                .phone(tenant.getPhoneNumber())
-                .otp(otp)
-                .build();
-        Response verifyResponse = tenantService.verifyPhone(phoneVerificationRequest);
+        Response verifyResponse = tenantService.verifyPhone(tenant.getPhoneNumber(), otp);
         assertThat(verifyResponse.statusCode()).isEqualTo(200);
 
         String activationEndpoint = ConfigManager.get("test.activation.endpoint");

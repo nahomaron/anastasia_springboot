@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 
 public final class H2FlywayUtils {
 
@@ -15,8 +16,8 @@ public final class H2FlywayUtils {
     private static boolean columnExists(Connection connection, String table, String column) throws SQLException {
         try (PreparedStatement check = connection.prepareStatement(
                 "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=? AND COLUMN_NAME=?")) {
-            check.setString(1, table.toUpperCase());
-            check.setString(2, column.toUpperCase());
+            check.setString(1, table.toUpperCase(Locale.ROOT));
+            check.setString(2, column.toUpperCase(Locale.ROOT));
             try (ResultSet rs = check.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;
             }
@@ -26,7 +27,7 @@ public final class H2FlywayUtils {
     private static boolean indexExists(Connection connection, String indexName) throws SQLException {
         try (PreparedStatement check = connection.prepareStatement(
                 "SELECT COUNT(*) FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME=?")) {
-            check.setString(1, indexName.toUpperCase());
+            check.setString(1, indexName.toUpperCase(Locale.ROOT));
             try (ResultSet rs = check.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;
             }

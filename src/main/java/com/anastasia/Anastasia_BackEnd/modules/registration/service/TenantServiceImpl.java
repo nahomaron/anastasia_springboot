@@ -37,7 +37,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -45,6 +44,7 @@ import java.text.Normalizer;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -59,7 +59,6 @@ public class TenantServiceImpl implements TenantService {
     private final TenantMapper tenantMapper;
     private final ChurchMapper churchMapper;
     private final AuthService authService;
-    private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final SecurityUtils securityUtils;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
@@ -391,7 +390,7 @@ public class TenantServiceImpl implements TenantService {
     private String slugify(String value) {
         String normalized = Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
-                .toLowerCase()
+                .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("^-+|-+$", "");
         if (!StringUtils.hasText(normalized)) {
@@ -401,7 +400,7 @@ public class TenantServiceImpl implements TenantService {
     }
 
     private String normalizeOwnerEmail(String email) {
-        return email == null ? null : email.trim().toLowerCase();
+        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
     private String firstNonBlank(String preferred, String fallback) {

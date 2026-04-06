@@ -1,16 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.listener;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PaymentEventListener {
-
-    private final ApplicationEventPublisher publisher;
-
-    public PaymentEventListener(ApplicationEventPublisher publisher) {
-        this.publisher = publisher;
-    }
 
 //    @EventListener
 //    public void onPaymentReceived(PaymentCompletedEvent event) {
@@ -27,4 +20,3 @@ public class PaymentEventListener {
 //        );
 //    }
 }
-

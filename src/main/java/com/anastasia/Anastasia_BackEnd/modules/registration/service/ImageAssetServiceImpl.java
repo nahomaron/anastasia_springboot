@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -98,7 +99,7 @@ public class ImageAssetServiceImpl implements ImageAssetService{
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ownerType must not be blank");
         }
         try {
-            return ImageAssetType.valueOf(ownerType.trim().toUpperCase());
+            return ImageAssetType.valueOf(ownerType.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported image asset owner type: " + ownerType);
         }

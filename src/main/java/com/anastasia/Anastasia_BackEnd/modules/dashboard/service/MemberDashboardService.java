@@ -38,6 +38,7 @@ import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -149,7 +150,7 @@ public class MemberDashboardService {
         if (event.getType() == EventType.LITURGY) {
             return "MASS";
         }
-        String title = event.getTitle() == null ? "" : event.getTitle().toLowerCase();
+        String title = event.getTitle() == null ? "" : event.getTitle().toLowerCase(Locale.ROOT);
         if (title.contains("confession")) {
             return "CONFESSION";
         }
@@ -213,7 +214,7 @@ public class MemberDashboardService {
         if (status == null) {
             return "PENDING";
         }
-        String normalized = status.trim().toUpperCase();
+        String normalized = status.trim().toUpperCase(Locale.ROOT);
         return switch (normalized) {
             case "APPROVED", "ACTIVE" -> "ACTIVE";
             case "PENDING" -> "PENDING";

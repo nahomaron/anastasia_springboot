@@ -3,8 +3,6 @@ package com.anastasia.Anastasia_BackEnd.Api.tests.tenant;
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.factories.TenantDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.TenantService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.ResendOtpRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -48,8 +46,7 @@ class TenantNegativeTests extends BaseApiTest {
     @Test
     @Story("Resend OTP requires phone number")
     void resendOtpWithoutPhoneShouldFail() {
-        ResendOtpRequest request = new ResendOtpRequest();
-        Response response = tenantService.resendOtp(request);
+        Response response = tenantService.resendOtp(null);
         assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
     }
 }

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -285,7 +286,7 @@ public class TenantOnboardingBillingService {
 
             String subscriptionId = checkoutSession.getSubscription();
             if (subscriptionId == null || subscriptionId.isBlank()) {
-                String checkoutStatus = checkoutSession.getStatus() == null ? "" : checkoutSession.getStatus().toLowerCase();
+                String checkoutStatus = checkoutSession.getStatus() == null ? "" : checkoutSession.getStatus().toLowerCase(Locale.ROOT);
                 if ("expired".equals(checkoutStatus)) {
                     session.setStatus(OnboardingSessionStatus.EXPIRED);
                     session.setFailureReason(messageService.get(
@@ -303,7 +304,7 @@ public class TenantOnboardingBillingService {
                 session.setProviderCustomerId(subscription.getCustomer());
             }
 
-            String stripeStatus = subscription.getStatus() == null ? "" : subscription.getStatus().toLowerCase();
+            String stripeStatus = subscription.getStatus() == null ? "" : subscription.getStatus().toLowerCase(Locale.ROOT);
             switch (stripeStatus) {
                 case "active", "trialing" -> {
                     if (session.getPaymentConfirmedAt() == null) {
@@ -349,7 +350,7 @@ public class TenantOnboardingBillingService {
         }
 
         if (ex instanceof InvalidRequestException) {
-            String message = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+            String message = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase(Locale.ROOT);
             if (message.contains("no such price")) {
                 return new IllegalStateException(
                         messageService.get(

@@ -42,6 +42,7 @@ import org.springframework.util.StringUtils;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -292,7 +293,7 @@ public class TenantOnboardingProvisioningService {
     private String resolveUniqueSlug(String displayName) {
         String normalized = Normalizer.normalize(displayName == null ? "" : displayName, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
-                .toLowerCase()
+                .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("^-+|-+$", "");
         if (!StringUtils.hasText(normalized)) {

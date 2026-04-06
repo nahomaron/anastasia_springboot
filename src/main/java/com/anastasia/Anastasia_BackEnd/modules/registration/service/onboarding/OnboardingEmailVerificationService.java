@@ -17,6 +17,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
@@ -128,7 +129,7 @@ public class OnboardingEmailVerificationService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException(messageService.get("validation.auth.email.required", "Email is required."));
         }
-        String normalized = email.trim().toLowerCase();
+        String normalized = email.trim().toLowerCase(Locale.ROOT);
         if (!EMAIL_PATTERN.matcher(normalized).matches()) {
             throw new IllegalArgumentException(messageService.get("validation.auth.email.invalid", "Email format is invalid."));
         }

@@ -135,7 +135,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         logHandledClientException("Type mismatch", ex);
-        String expectedType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        Class<?> requiredType = ex.getRequiredType();
+        String expectedType = requiredType != null ? requiredType.getSimpleName() : "unknown";
         String propertyName = ex.getPropertyName() != null ? ex.getPropertyName() : "value";
         return bodyOnly(
                 buildResponse(

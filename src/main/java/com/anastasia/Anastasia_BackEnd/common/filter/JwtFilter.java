@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Locale;
 /*
 JwtFilter is a Spring Security filter that intercepts HTTP requests to:
 
@@ -53,7 +54,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
 
-        if (authHeader == null || !authHeader.toLowerCase().startsWith("bearer ")) {
+        if (authHeader == null || !authHeader.toLowerCase(Locale.ROOT).startsWith("bearer ")) {
             filterChain.doFilter(request, response);
             return; // Exit early
         }

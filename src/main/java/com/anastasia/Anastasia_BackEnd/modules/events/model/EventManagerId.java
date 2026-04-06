@@ -8,6 +8,8 @@ import java.util.UUID;
 
 @Embeddable
 public class EventManagerId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Long eventId;
     private UUID userId;
 

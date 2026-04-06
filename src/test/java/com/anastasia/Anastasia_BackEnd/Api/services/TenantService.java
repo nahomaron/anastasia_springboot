@@ -1,13 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.Api.services;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.ResendOtpRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
@@ -28,11 +27,11 @@ public class TenantService {
                 .response();
     }
 
-    @Step("Verify phone {request.phone}")
-    public Response verifyPhone(PhoneVerificationRequest request) {
+    @Step("Verify phone")
+    public Response verifyPhone(String phone, String otp) {
         return given()
                 .spec(RequestSpecFactory.anonymousSpec())
-                .body(request)
+                .body(Map.of("phone", phone, "otp", otp))
                 .when()
                 .post(BASE_PATH + "/verify-phone")
                 .then()
@@ -40,11 +39,11 @@ public class TenantService {
                 .response();
     }
 
-    @Step("Resend OTP to {request.phone}")
-    public Response resendOtp(ResendOtpRequest request) {
+    @Step("Resend OTP")
+    public Response resendOtp(String phone) {
         return given()
                 .spec(RequestSpecFactory.anonymousSpec())
-                .body(request)
+                .body(phone == null ? Map.of() : Map.of("phone", phone))
                 .when()
                 .post(BASE_PATH + "/resend-phone-otp")
                 .then()

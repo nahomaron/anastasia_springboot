@@ -1,12 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.Api.config;
 
-import java.io.IOException;
-import java.io.InputStream;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.core.io.ClassPathResource;
+
 import java.util.Properties;
 
 /**
- * Utility class for managing environment-specific configuration properties.
- * Picks the appropriate file from {@code src/test/resources/config} based on the active environment.
+ * Utility class for managing environment-specific test configuration.
+ * Picks the appropriate root-level {@code application-<env>.yml} file from {@code src/test/resources}.
  */
 public class ConfigManager {
 
@@ -15,15 +16,16 @@ public class ConfigManager {
 
     static {
         environment = resolveEnvironment();
-        String fileName = "config/" + environment + ".properties";
-        try (InputStream input = ConfigManager.class.getClassLoader().getResourceAsStream(fileName)) {
-            if (input == null) {
-                throw new RuntimeException(environment + ".properties not found in resources folder");
-            }
-            props.load(input);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load " + environment + ".properties", e);
+        String fileName = "application-" + environment + ".yml";
+
+        YamlPropertiesFactoryBean yamlFactory = new YamlPropertiesFactoryBean();
+        yamlFactory.setResources(new ClassPathResource(fileName));
+
+        Properties loaded = yamlFactory.getObject();
+        if (loaded == null) {
+            throw new RuntimeException(fileName + " not found in test resources");
         }
+        props.putAll(loaded);
     }
 
     public static String get(String key) {

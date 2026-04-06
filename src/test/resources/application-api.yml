@@ -39,6 +39,17 @@ auth:
 test:
   activation:
     endpoint: /auth/test/activation-token
+  tenant:
+    otp:
+      endpoint: /tenant/test/otp
+  cleanup:
+    endpoint: /test-utils/cleanup
+  refresh:
+    endpoint: /auth/test/refresh-token
+
+platform:
+  admin:
+    secret: dev-secret
 
 app:
   evn: api

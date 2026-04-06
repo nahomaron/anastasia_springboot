@@ -3,26 +3,35 @@ package com.anastasia.Anastasia_BackEnd.core.auth.principal;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.*;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class UserPrincipal implements UserDetails {
     private static final long serialVersionUID = 4584858096297851104L;
 
-    private final UserEntity user;
-
+    private final UUID userUuid;
+    private final String password;
+    private final String username;
+    private final boolean accountLocked;
+    private final Instant deletedAt;
+    private final UserStatus status;
 
     @Getter
     private final UUID tenantId;
 
     @Getter
-    private Set<Role> roles;
+    private final Set<String> roleNames;
 
-    private final Set<Permission> directPermissions;
+    private final Set<String> authorityNames;
 
     public UserPrincipal(UserEntity user) {
         this(user, user.getRoles(), Set.of());
@@ -33,57 +42,92 @@ public class UserPrincipal implements UserDetails {
     }
 
     public UserPrincipal(UserEntity user, Set<Role> roles, Set<Permission> directPermissions) {
-        this.user = user;
-        this.tenantId = (user.getTenant() != null) ? user.getTenant().getId() : null; //  Safe handling
-        this.roles = roles == null ? Set.of() : new LinkedHashSet<>(roles);
-        this.directPermissions = directPermissions == null ? Set.of() : new LinkedHashSet<>(directPermissions);
+        if (user == null) {
+            throw new IllegalArgumentException("user must not be null");
+        }
+        this.userUuid = user.getUuid();
+        this.password = user.getPassword();
+        this.username = user.getEmail();
+        this.accountLocked = user.isAccountLocked();
+        this.deletedAt = user.getDeletedAt();
+        this.status = user.getStatus();
+        this.tenantId = user.getTenant() != null ? user.getTenant().getId() : null;
+        this.roleNames = buildRoleNames(roles);
+        this.authorityNames = buildAuthorityNames(roles, directPermissions);
     }
 
+    private Set<String> buildRoleNames(Set<Role> roles) {
+        Set<String> names = new LinkedHashSet<>();
+        if (roles != null) {
+            for (Role role : roles) {
+                if (role != null && role.getRoleName() != null) {
+                    names.add(role.getRoleName());
+                }
+            }
+        }
+        return Set.copyOf(names);
+    }
 
+    private Set<String> buildAuthorityNames(Set<Role> roles, Set<Permission> directPermissions) {
+        Set<String> names = new LinkedHashSet<>();
 
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        Set<String> authorities = new LinkedHashSet<>();
+        if (roles != null) {
+            for (Role role : roles) {
+                if (role == null || role.getRoleName() == null) {
+                    continue;
+                }
 
-        for (Role role : roles) {
-            String roleName = role.getRoleName();
-            String authority = roleName != null && roleName.startsWith("ROLE_")
-                    ? roleName
-                    : "ROLE_" + roleName;
-            authorities.add(authority);
+                String roleName = role.getRoleName();
+                names.add(roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName);
 
-            for (Permission permission : role.getPermissions()) {
-                authorities.add(permission.getName().name());
+                if (role.getPermissions() != null) {
+                    for (Permission permission : role.getPermissions()) {
+                        if (permission != null && permission.getName() != null) {
+                            names.add(permission.getName().name());
+                        }
+                    }
+                }
             }
         }
 
-        for (Permission permission : directPermissions) {
-            authorities.add(permission.getName().name());
+        if (directPermissions != null) {
+            for (Permission permission : directPermissions) {
+                if (permission != null && permission.getName() != null) {
+                    names.add(permission.getName().name());
+                }
+            }
         }
 
-        return authorities.stream()
+        return Set.copyOf(names);
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorityNames.stream()
                 .map(SimpleGrantedAuthority::new)
                 .toList();
     }
 
     public boolean hasPermission(String permissionName) {
-        return getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equalsIgnoreCase(permissionName));
+        if (permissionName == null) {
+            return false;
+        }
+        return authorityNames.stream()
+                .anyMatch(authority -> authority.equalsIgnoreCase(permissionName));
     }
 
-
-
-    public UUID getUserUuid(){
-        return user.getUuid();
+    public UUID getUserUuid() {
+        return userUuid;
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return username;
     }
 
     @Override
@@ -93,7 +137,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !user.isAccountLocked();
+        return !accountLocked;
     }
 
     @Override
@@ -103,12 +147,11 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getDeletedAt() == null
-                && user.getStatus() != null
-                && switch (user.getStatus()) {
+        return deletedAt == null
+                && status != null
+                && switch (status) {
                     case ACTIVE -> true;
                     case PENDING_VERIFICATION, LOCKED, SUSPENDED, DISABLED, DELETED -> false;
                 };
     }
-
 }

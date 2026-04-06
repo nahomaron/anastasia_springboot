@@ -30,7 +30,6 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.TenantUsersPageResponse
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
-import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.TenantUserAccessService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import jakarta.validation.Valid;
@@ -56,7 +55,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1/users")
 public class UserController {
 
-    private final AuthService authService;
     private final UserService userService;
     private final TenantUserAccessService tenantUserAccessService;
 

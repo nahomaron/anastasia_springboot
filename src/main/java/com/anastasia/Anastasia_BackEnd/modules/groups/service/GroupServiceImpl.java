@@ -39,6 +39,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -712,11 +713,11 @@ public class GroupServiceImpl implements GroupService {
         List<UserEntity> usersToInvite = userRepository.findAllByEmailIn(emailSet);
 
         Set<String> foundEmails = usersToInvite.stream()
-                .map(user -> user.getEmail().toLowerCase())
+                .map(user -> user.getEmail().toLowerCase(Locale.ROOT))
                 .collect(Collectors.toSet());
 
         List<String> normalizedEmails = emailSet.stream()
-                .map(String::toLowerCase)
+                .map(email -> email.toLowerCase(Locale.ROOT))
                 .toList();
 
         List<String> notFoundEmails = normalizedEmails.stream()
@@ -726,7 +727,7 @@ public class GroupServiceImpl implements GroupService {
 
         List<String> tenantMismatchEmails = usersToInvite.stream()
                 .filter(user -> !belongsToTenant(user, tenantId))
-                .map(user -> user.getEmail().toLowerCase())
+                .map(user -> user.getEmail().toLowerCase(Locale.ROOT))
                 .toList();
 
         Set<UUID> existingUserIds = group.getUsers().stream()
@@ -741,7 +742,7 @@ public class GroupServiceImpl implements GroupService {
         List<String> skippedEmails = new ArrayList<>();
 
         for (UserEntity user : usersToInvite) {
-            String normalizedEmail = user.getEmail().toLowerCase();
+            String normalizedEmail = user.getEmail().toLowerCase(Locale.ROOT);
             if (tenantMismatchEmails.contains(normalizedEmail)) {
                 continue;
             }

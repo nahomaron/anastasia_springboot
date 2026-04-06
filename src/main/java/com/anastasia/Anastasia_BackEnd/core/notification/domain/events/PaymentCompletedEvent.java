@@ -1,15 +1,14 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.domain.events;
 
 import lombok.Getter;
-import org.springframework.context.ApplicationEvent;
 
 @Getter
-public class PaymentCompletedEvent extends ApplicationEvent {
+public class PaymentCompletedEvent {
+    private final Object source;
 //    private final PaymentEntity payment;
 
     public PaymentCompletedEvent(Object source) {
-        super(source);
+        this.source = source;
     }
 }
-
 

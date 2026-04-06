@@ -31,6 +31,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -433,7 +434,7 @@ public class MembershipCardService {
         if (format == null || format.isBlank()) {
             return "pdf";
         }
-        String normalized = format.toLowerCase();
+        String normalized = format.toLowerCase(Locale.ROOT);
         return "png".equals(normalized) ? "png" : "pdf";
     }
 

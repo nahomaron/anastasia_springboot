@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -201,7 +202,7 @@ public class TenantSubscriptionStripeWebhookService {
         if (stripeStatus == null) {
             return SubscriptionStatus.SUSPENDED;
         }
-        return switch (stripeStatus.toLowerCase()) {
+        return switch (stripeStatus.toLowerCase(Locale.ROOT)) {
             case "active" -> SubscriptionStatus.ACTIVE;
             case "trialing" -> SubscriptionStatus.TRIALING;
             case "past_due" -> SubscriptionStatus.PAST_DUE;

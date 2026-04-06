@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -19,7 +20,7 @@ public class NotificationIdempotencyService {
         StringBuilder data = new StringBuilder();
         data.append(event.getType().name()).append('|');
         data.append(channel.name()).append('|');
-        data.append(recipient == null ? "" : recipient.toLowerCase()).append('|');
+        data.append(recipient == null ? "" : recipient.toLowerCase(Locale.ROOT)).append('|');
         if (event.getUser() != null && event.getUser().getUuid() != null) {
             data.append(event.getUser().getUuid());
         }
