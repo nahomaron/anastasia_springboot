@@ -2,8 +2,8 @@ name: 🚀 Deploy to Staging (with Health Check & Rollback)
 
 on:
   workflow_dispatch:
-#  push:
-#    branches: [ main ]
+  push:
+    branches: [ main, dev ]
 
 jobs:
   deploy-staging:
@@ -23,7 +23,69 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Log in to GHCR
+      # 2️⃣ Ensure K6 performance gates finished
+      - name: 🔍 Wait for successful K6 performance run
+        if: ${{ github.event_name == 'push' }}
+        id: k6-check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 <<'PY'
+import json, os, sys, time, urllib.request, urllib.error
+
+repo = os.environ["GITHUB_REPOSITORY"]
+sha = os.environ["GITHUB_SHA"]
+token = os.environ["GITHUB_TOKEN"]
+output_path = os.environ["GITHUB_OUTPUT"]
+api_url = f"https://api.github.com/repos/{repo}/actions/workflows/k6-load.yml/runs?per_page=20"
+max_retries = 30
+sleep_seconds = 10
+
+for attempt in range(1, max_retries + 1):
+    try:
+        req = urllib.request.Request(api_url)
+        req.add_header("Authorization", f"Bearer {token}")
+        req.add_header("Accept", "application/vnd.github+json")
+        with urllib.request.urlopen(req) as resp:
+            data = json.load(resp)
+    except urllib.error.HTTPError as exc:
+        print(f"Failed to fetch workflow runs: HTTP {exc.code} {exc.reason}", file=sys.stderr)
+        sys.exit(1)
+
+    for run in data.get("workflow_runs", []):
+        if run.get("head_sha") != sha:
+            continue
+        status = run.get("status")
+        conclusion = run.get("conclusion")
+        print(f"Found K6 run {run.get('id')} → status={status} conclusion={conclusion}", file=sys.stderr)
+        if conclusion == "success":
+            with open(output_path, "a") as out:
+                print(f"k6_run_id={run['id']}", file=out)
+            sys.exit(0)
+        if status in ("queued", "in_progress"):
+            print("K6 run still in progress, waiting...", file=sys.stderr)
+            break
+        print(f"K6 run concluded as {conclusion}", file=sys.stderr)
+        sys.exit(1)
+    else:
+        print("No matching K6 run yet for this commit.", file=sys.stderr)
+
+    if attempt < max_retries:
+        time.sleep(sleep_seconds)
+
+print("Timed out waiting for a successful K6 workflow run.", file=sys.stderr)
+sys.exit(1)
+          PY
+
+      # 3️⃣ Download K6 artifacts for tracking
+      - name: 📥 Download K6 artifacts for tracking
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ steps.k6-check.outputs.k6_run_id }}
+          path: performance/results
+
+      # 4️⃣ Log in to GHCR
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -31,7 +93,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 3️⃣ Build & Push latest image
+      # 5️⃣ Build & Push latest image
       - name: Build and Push Docker image
         run: |
           set -euo pipefail
@@ -40,7 +102,7 @@ jobs:
           docker push "$IMAGE_REFERENCE"
           echo "IMAGE_REFERENCE=$IMAGE_REFERENCE" >> "$GITHUB_ENV"
 
-      # 4️⃣ Create .env.staging file
+      # 6️⃣ Create .env.staging file
       - name: 🧩 Create .env.staging from secrets
         run: |
           set -euo pipefail
@@ -56,7 +118,7 @@ jobs:
           echo "MAIL_API_KEY=${{ secrets.STAGING_MAIL_API_KEY }}" >> .env.staging
           echo "SERVER_PORT=8080" >> .env.staging
 
-      # 5️⃣ Ensure remote workspace exists
+      # 7️⃣ Ensure remote workspace exists
       - name: Prepare remote workspace
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -66,7 +128,7 @@ jobs:
           script: |
             mkdir -p /opt/anastasia
 
-      # 6️⃣ Upload compose bundle and environment
+      # 8️⃣ Upload compose bundle and environment
       - name: Upload compose bundle
         uses: appleboy/scp-action@v0.1.5
         with:
@@ -79,7 +141,7 @@ jobs:
             .env.staging
           target: /opt/anastasia
 
-      # 7️⃣ SSH into server and deploy stack
+      # 9️⃣ SSH into server and deploy stack
       - name: Deploy to Staging
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -101,7 +163,7 @@ jobs:
             echo "Listing running containers..."
             docker compose --env-file .env.staging -f compose.yaml -f docker-compose.staging.yml ps
 
-      # 8️⃣ Post-deploy Health Check
+      # 10️⃣ Post-deploy Health Check
       - name: Verify Staging Health
         id: healthcheck
         run: |
@@ -119,7 +181,7 @@ jobs:
           echo "❌ Health check failed after $((MAX_ATTEMPTS * 5))s"
           exit 1
 
-      # 9️⃣ Rollback on failure
+      # 11️⃣ Rollback on failure
       - name: Rollback to previous image
         if: failure()
         uses: appleboy/ssh-action@v1.1.0
@@ -136,7 +198,7 @@ jobs:
             docker compose --env-file .env.staging -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
             echo "Rollback complete."
 
-      # 🔟 Report health status
+      # 12️⃣ Report health status
       - name: Deployment summary
         if: always()
         run: |
