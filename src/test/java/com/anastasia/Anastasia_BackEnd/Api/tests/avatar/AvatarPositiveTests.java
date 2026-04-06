@@ -1,7 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.Api.tests.avatar;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
-import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.AvatarDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.ImageAssetService;
 import com.anastasia.Anastasia_BackEnd.Api.utils.SchemaValidator;
@@ -12,6 +11,7 @@ import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -28,20 +28,21 @@ class AvatarPositiveTests extends BaseApiTest {
     @Test
     @Story("User uploads and retrieves avatar successfully")
     void shouldGeneratePresignedUrlAndPersistAvatar() {
-        UUID userId = BaseApiTest.getCachedUserId();
+        RequestSpecification ownerSpec = getSpecForRole("OWNER");
+        UUID userId = BaseApiTest.getOwnerUserId();
 
-        Response urlResponse = avatarService.requestPresignedUrl(RequestSpecFactory.authenticatedSpec(), "profile.png");
+        Response urlResponse = avatarService.requestPresignedUrl(ownerSpec, "profile.png");
         assertThat(urlResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(urlResponse, "schemas/avatar-presigned-url-schema.json");
 
         ImageAssetDTO payload = AvatarDataFactory.newValidAvatar();
 
 
-        Response saveResponse = avatarService.saveAvatar(RequestSpecFactory.authenticatedSpec(), "USER", userId, payload);
+        Response saveResponse = avatarService.saveAvatar(ownerSpec, "USER", userId, payload);
         assertThat(saveResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(saveResponse, "schemas/avatar-schema.json");
 
-        Response fetchResponse = avatarService.getAvatar(RequestSpecFactory.authenticatedSpec(), "USER", userId);
+        Response fetchResponse = avatarService.getAvatar(ownerSpec, "USER", userId);
         assertThat(fetchResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(fetchResponse, "schemas/avatar-schema.json");
     }

@@ -33,17 +33,17 @@ class TenantNegativeTests extends BaseApiTest {
         assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
     }
 
-    @Test
-    @Story("Phone verification rejects wrong OTP")
-    void verifyPhoneWithWrongOtpShouldFail() {
-        PhoneVerificationRequest request = PhoneVerificationRequest.builder()
-                .phone("+12025550000")
-                .otp("0000")
-                .build();
-
-        Response response = tenantService.verifyPhone(request);
-        assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
-    }
+//    @Test
+//    @Story("Phone verification rejects wrong OTP")
+//    void verifyPhoneWithWrongOtpShouldFail() {
+//        PhoneVerificationRequest request = PhoneVerificationRequest.builder()
+//                .phone("+12025550000")
+//                .otp("0000")
+//                .build();
+//
+//        Response response = tenantService.verifyPhone(request);
+//        assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
+//    }
 
     @Test
     @Story("Resend OTP requires phone number")

@@ -45,6 +45,9 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
         log.info("➡️  [{}]  {}", requestSpec.getMethod(), requestSpec.getURI());
         if (requestSpec.getBody() != null)
             log.info("Request Body: {}", (Object) requestSpec.getBody());
+        if (!isPublicAuthRequest && requestSpec.getHeaders().hasHeaderWithName("Authorization")) {
+            log.debug("Request already carries Authorization header for {}", requestSpec.getURI());
+        }
 
         Response response = null;
 
@@ -53,22 +56,6 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
             if (response != null) {
                 log.info("⬅️  Status: {}", response.getStatusCode());
 //                log.info("Response Body: {}", response.asPrettyString());
-
-                // 3. Handle token expiration only if we have a real response
-                boolean hasAuthorizationHeader = requestSpec.getHeaders().hasHeaderWithName("Authorization");
-                if (!isPublicAuthRequest && hasAuthorizationHeader && response.getStatusCode() == 401) {
-                    log.warn("Token expired — refreshing...");
-                    initializeAuthenticationCache();
-                    requestSpec.header("Authorization", bearerToken());
-                    RequestTracker.record(requestSpec.getURI());
-                    response = ctx.next(requestSpec, responseSpec);
-                    if (response == null) {
-                        log.warn("Token refresh retry returned null for: {}", requestSpec.getURI());
-                        response = buildFailureResponse(503,
-                                "Received null response after token refresh attempt for "
-                                        + requestSpec.getMethod() + " " + requestSpec.getURI());
-                    }
-                }
 
             } else {
                 log.warn("Response was null for request: {}", requestSpec.getURI());
@@ -147,6 +134,13 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
                         "/tenant/test/otp",
                         "/auth/refresh-token",
                         "/auth/logout",
+                        "/auth/platform-admin/register",
+                        "/tenant/subscription",
+                        "/tenant/verify-phone",
+                        "/tenant/resend-phone-otp",
+                        "/onboarding/email-verification/send-code",
+                        "/onboarding/email-verification/verify-code",
+                        "/onboarding/billing/sessions",
                         "/test-utils"
                 )
                 .stream()
@@ -180,24 +174,26 @@ public class ApiInterceptor extends BaseApiTest implements Filter {
 
     private void attachRequestAndResponse(FilterableRequestSpecification req, Response res) {
         try {
-            if (req.getBody() != null) {
-                String body = formatJsonSafely(req.getBody().toString());
-                Allure.addAttachment(
-                        "📤 Request → " + req.getMethod() + " " + req.getURI(),
-                        "application/json",
-                        new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)),
-                        ".json"
-                );
-            }
+            if (Allure.getLifecycle().getCurrentTestCase().isPresent()) {
+                if (req.getBody() != null) {
+                    String body = formatJsonSafely(req.getBody().toString());
+                    Allure.addAttachment(
+                            "📤 Request → " + req.getMethod() + " " + req.getURI(),
+                            "application/json",
+                            new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)),
+                            ".json"
+                    );
+                }
 
-            if (res != null && res.getBody() != null) {
-                String body = formatJsonSafely(res.asPrettyString());
-                Allure.addAttachment(
-                        "📥 Response ← " + res.getStatusCode() + " " + req.getURI(),
-                        "application/json",
-                        new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)),
-                        ".json"
-                );
+                if (res != null && res.getBody() != null) {
+                    String body = formatJsonSafely(res.asPrettyString());
+                    Allure.addAttachment(
+                            "📥 Response ← " + res.getStatusCode() + " " + req.getURI(),
+                            "application/json",
+                            new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)),
+                            ".json"
+                    );
+                }
             }
         } catch (Exception e) {
             log.warn("Failed to attach Allure request/response: {}", e.getMessage());

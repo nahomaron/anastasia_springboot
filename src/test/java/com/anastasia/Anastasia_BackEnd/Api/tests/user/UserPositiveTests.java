@@ -1,7 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.Api.tests.user;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
-import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.AvatarDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.UserDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.UserService;
@@ -37,7 +36,7 @@ class UserPositiveTests extends BaseApiTest {
     @Story("User updates profile details")
     void userCanUpdateProfileDetails() {
         UserDTO payload = UserDataFactory.updatePayload();
-        RequestSpecification authSpec = RequestSpecFactory.authenticatedSpec();
+        RequestSpecification authSpec = getSpecForRole("USER");
 
         Response response = userService.updateDetails(authSpec, payload);
         assertThat(response.statusCode()).isIn(200, 202);
@@ -48,7 +47,8 @@ class UserPositiveTests extends BaseApiTest {
     @Story("User updates profile avatar")
     void userCanUpdateAvatar() {
         ImageAssetDTO payload = AvatarDataFactory.newValidAvatar();
-        Response response = userService.updateAvatar(RequestSpecFactory.authenticatedSpec(), payload);
+        RequestSpecification authSpec = getSpecForRole("USER");
+        Response response = userService.updateAvatar(authSpec, payload);
         assertThat(response.statusCode()).isEqualTo(200);
     }
 }

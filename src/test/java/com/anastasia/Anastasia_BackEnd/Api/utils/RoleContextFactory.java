@@ -2,8 +2,10 @@ package com.anastasia.Anastasia_BackEnd.Api.utils;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.flows.AuthFlowHelper;
+import com.anastasia.Anastasia_BackEnd.Api.flows.PlatformAdminFlowHelper;
 import com.anastasia.Anastasia_BackEnd.Api.flows.SubscriptionFlowHelper;
 import com.anastasia.Anastasia_BackEnd.Api.services.AuthService;
+import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import io.restassured.builder.RequestSpecBuilder;
@@ -16,6 +18,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -33,20 +36,35 @@ public final class RoleContextFactory {
 
     /** Entry point for provisioned RestAssured specifications by role. */
     public static RequestSpecification getSpecForRole(String roleName) {
-        return specCache.computeIfAbsent(roleName.toUpperCase(), RoleContextFactory::createSpecForRole);
+        String normalizedRole = roleName.toUpperCase();
+        if ("OWNER".equals(normalizedRole)) {
+            return buildOwnerSpec();
+        }
+        return specCache.computeIfAbsent(normalizedRole, RoleContextFactory::createSpecForRole);
+    }
+
+    private static RequestSpecification buildOwnerSpec() {
+        BaseApiTest.ensureOwnerAuthenticated();
+        String token = BaseApiTest.getOwnerAccessToken();
+        if (token == null || token.isBlank()) {
+            throw new IllegalStateException("Owner token is not initialized");
+        }
+        UUID tenantId = BaseApiTest.getCachedTenantId();
+        return buildSpec("OWNER", token, tenantId);
     }
 
     private static RequestSpecification createSpecForRole(String roleName) {
         log.info("🚀 Initializing RequestSpecification for role: {}", roleName);
 
         return switch (roleName.toUpperCase()) {
-            case "OWNER" -> {
-                var subscription = SubscriptionFlowHelper.subscribeTenantAndLoginOwner();
-                yield buildSpec(roleName, subscription.authResponse().getAccessToken());
-            }
             case "ADMIN" -> buildSpecForProvisionedUser(roleName, Set.of(requireRole("ADMIN")));
-            case "PLATFORM_ADMIN" ->
-                    buildSpecForProvisionedUser(roleName, Set.of(requireRole("PLATFORM_ADMIN")));
+            case "PLATFORM_ADMIN" -> {
+                AuthenticationResponse admin = PlatformAdminFlowHelper.registerAndLogin(
+                        DataGenerator.randomEmail(),
+                        DataGenerator.randomPassword());
+                UUID tenantId = admin.getSession() != null ? admin.getSession().getTenantId() : null;
+                yield buildSpec(roleName, admin.getAccessToken(), tenantId);
+            }
             case "PRIEST" -> buildSpecForProvisionedUser(roleName, Set.of(requireRole("PRIEST")));
             case "MEMBER" -> {
                 Set<Long> extras = new HashSet<>();
@@ -77,8 +95,9 @@ public final class RoleContextFactory {
         if (authRes == null || authRes.getAccessToken() == null) {
             throw new IllegalStateException("Failed to obtain access token for role " + roleName);
         }
+        UUID tenantId = authRes.getSession() != null ? authRes.getSession().getTenantId() : null;
 
-        return buildSpec(roleName, authRes.getAccessToken());
+        return buildSpec(roleName, authRes.getAccessToken(), tenantId);
     }
 
     private static void assignRolesIncludingUser(String email, Set<Long> additionalRoleIds) {
@@ -95,6 +114,7 @@ public final class RoleContextFactory {
     }
 
     static String ownerToken() {
+        BaseApiTest.ensureOwnerAuthenticated();
         String token = BaseApiTest.getOwnerAccessToken();
         if (token == null || token.isBlank()) {
             token = SubscriptionFlowHelper.subscribeTenantAndLoginOwner().accessToken();
@@ -102,11 +122,17 @@ public final class RoleContextFactory {
         return token;
     }
 
-    private static RequestSpecification buildSpec(String role, String token) {
+    private static RequestSpecification buildSpec(String role, String token, UUID tenantId) {
         log.info("✅ Cached token for role {} (len: {})", role, token != null ? token.length() : 0);
-        return new RequestSpecBuilder()
+        RequestSpecBuilder builder = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
+                .addHeader("Authorization", "Bearer " + token);
+
+        UUID tenantIdHeader = tenantId != null ? tenantId : BaseApiTest.getCachedTenantId();
+        if (tenantIdHeader != null) {
+            builder.addHeader("X-Tenant-ID", tenantIdHeader.toString());
+        }
+
+        return builder.build();
     }
 }

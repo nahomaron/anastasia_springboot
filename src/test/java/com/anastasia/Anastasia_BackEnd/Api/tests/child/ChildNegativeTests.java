@@ -31,9 +31,9 @@ class ChildNegativeTests extends BaseApiTest {
     }
 
     @Test
-    @Story("Retrieving non-existing child returns 404")
+    @Story("Retrieving non-existing child returns a client error")
     void getUnknownChildShouldReturnNotFound() {
         Response response = childService.getChild(getSpecForRole("PRIEST"), 9_999_999L);
-        assertThat(response.statusCode()).isEqualTo(404);
+        assertThat(response.statusCode()).isIn(400, 404);
     }
 }

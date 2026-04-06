@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.Api.tests.event;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.factories.EventDataFactory;
+import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.EventService;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import io.qameta.allure.Epic;
@@ -40,9 +41,9 @@ class EventNegativeTests extends BaseApiTest {
     }
 
     @Test
-    @Story("User without permissions cannot fetch visible events")
-    void userRoleCannotListVisibleEvents() {
-        Response response = eventService.listVisibleEvents(getSpecForRole("USER"));
+    @Story("Anonymous clients cannot list visible events")
+    void anonymousCannotListVisibleEvents() {
+        Response response = eventService.listVisibleEvents(RequestSpecFactory.anonymousSpec());
         assertThat(response.statusCode()).isEqualTo(403);
     }
 }

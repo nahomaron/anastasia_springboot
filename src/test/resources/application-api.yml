@@ -2,6 +2,32 @@
 base:
   url: http://localhost:8080
 
+rate-limiter:
+  enabled: false
+
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  flyway:
+    placeholders:
+      members_columns_sql: "CALL ensure_member_columns();"
+      children_columns_sql: "CALL ensure_child_columns();"
+      tenant_demo_template_sql: "CALL ensure_tenant_demo_template_columns();"
+      tenant_workspace_lifecycle_sql: "CALL ensure_tenant_workspace_columns();"
+      normalize_priest_languages_sql: ""
+    # Additional Flyway properties can be added here.
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+    open-in-view: false
+    
 auth:
   login:
     endpoint: /auth/login
@@ -26,3 +52,8 @@ logging:
 email:
   sending:
     enabled: false
+
+aws:
+  s3:
+    bucket: anastasia-app-bucket
+  region: us-east-1

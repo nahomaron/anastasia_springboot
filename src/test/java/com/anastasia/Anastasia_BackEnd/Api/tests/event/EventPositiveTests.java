@@ -1,11 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.Api.tests.event;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
-import com.anastasia.Anastasia_BackEnd.Api.factories.ChurchDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.EventDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.ChurchService;
 import com.anastasia.Anastasia_BackEnd.Api.services.EventService;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -30,21 +28,9 @@ class EventPositiveTests extends BaseApiTest {
     @Story("Owner creates an event")
     void ownerCanCreateEvent() {
         RequestSpecification ownerSpec = getSpecForRole("OWNER");
-        ChurchDTO churchPayload = ChurchDataFactory.newValidChurch();
-        Response churchResponse = churchService.registerChurch(ownerSpec, churchPayload);
-        assertThat(churchResponse.statusCode()).isEqualTo(201);
-
-        Response listResponse = churchService.listChurches(getSpecForRole("PLATFORM_ADMIN"));
-        assertThat(listResponse.statusCode()).isEqualTo(200);
-
-        System.out.println(listResponse.asString());
-
-        Long churchId = null;
-        try {
-            churchId = listResponse.jsonPath().getLong("content[0].churchId");
-        } catch (Exception ignored) {
-            // handled below
-        }
+        Response churchResponse = churchService.getCurrentTenantChurch(ownerSpec);
+        assertThat(churchResponse.statusCode()).isEqualTo(200);
+        Long churchId = churchResponse.jsonPath().getLong("id");
         assertThat(churchId)
                 .as("Church id available for event creation")
                 .isNotNull();

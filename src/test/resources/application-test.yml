@@ -52,7 +52,9 @@ spring:
 
 aws:
   s3:
-    bucket: test-bucket-name
+    bucket: anastasia-app-bucket
+    templates:
+      enabled: false
   region: us-east-1
 
 stripe:

@@ -21,7 +21,7 @@ public final class GroupDataFactory {
     public static GroupDTO newGroup(String churchId) {
         return GroupDTO.builder()
                 .churchId(churchId)
-                .groupName("Youth Choir " + System.currentTimeMillis())
+                .groupName("Youth Choir " + System.currentTimeMillis() + "-" + UUID.randomUUID())
                 .description("Music ministry serving the Sunday liturgy.")
                 .avatar("https://cdn.example.com/groups/choir.png")
                 .visibility("PUBLIC")

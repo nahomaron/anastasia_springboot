@@ -32,12 +32,11 @@ class PriestPositiveTests extends BaseApiTest {
     void ownerCanRegisterPriest() {
         RequestSpecification ownerSpec = getSpecForRole("OWNER");
 
-        ChurchDTO churchPayload = ChurchDataFactory.newValidChurch();
-        Response churchResponse = churchService.registerChurch(ownerSpec, churchPayload);
-        assertThat(churchResponse.statusCode()).isEqualTo(201);
+        Response churchList = churchService.listChurches(getSpecForRole("PLATFORM_ADMIN"));
+        assertThat(churchList.statusCode()).isEqualTo(200);
 
-        String churchNumber = churchResponse.asString();
-        Assumptions.assumeTrue(churchNumber != null && !churchNumber.isBlank(), "Church number generated");
+        String churchNumber = churchList.jsonPath().getString("content[0].churchNumber");
+        Assumptions.assumeTrue(churchNumber != null && !churchNumber.isBlank(), "Existing church number available");
 
         PriestDTO priestPayload = PriestDataFactory.newValidPriest(churchNumber.trim(), null);
         Response register = priestService.registerPriest(ownerSpec, priestPayload);

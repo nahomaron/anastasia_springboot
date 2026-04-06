@@ -12,7 +12,8 @@ import com.anastasia.Anastasia_BackEnd.Api.utils.TestDataManager;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
-import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -26,14 +27,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
 import java.net.URI;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 /**
@@ -46,12 +50,10 @@ import java.util.UUID;
 @Feature("External REST Layer")
 @ExtendWith(TestFailureWatcher.class)
 public class BaseApiTest {
-    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
-
     private static final Logger log = LoggerFactory.getLogger(BaseApiTest.class);
 
-    private static final JwtUtil jwtUtil = new JwtUtil(TEST_JWT_SECRET);
-    // The static AuthService field was removed as it was not being initialized by Spring (it was null).
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final AuthService AUTH_SERVICE = new AuthService();
 
     static {
         if (System.getProperty("environment") == null) {
@@ -68,7 +70,9 @@ public class BaseApiTest {
     protected static RequestSpecification authSpec;
 
     private static String ownerAccessToken;
+    private static UUID ownerUserId;
     private static TenantDTO cachedTenant;
+    private static UUID cachedTenantId;
     protected static String cachedAccessToken;
     protected static String cachedRefreshToken;
     protected static String cachedEmail;
@@ -109,7 +113,17 @@ public class BaseApiTest {
                 SubscriptionFlowHelper.subscribeTenantAndLoginOwner();
 
         ownerAccessToken = ownerResult.accessToken();
+        ownerUserId = ownerResult.authResponse() != null && ownerResult.authResponse().getSession() != null
+                ? ownerResult.authResponse().getSession().getUserId()
+                : null;
         cachedTenant = ownerResult.tenantRequest(); // optional if you need tenant info
+        if (ownerResult.authResponse() != null && ownerResult.authResponse().getSession() != null) {
+            cachedTenantId = ownerResult.authResponse().getSession().getTenantId();
+        } else if (ownerAccessToken != null) {
+            cachedTenantId = extractTenantIdFromToken(ownerAccessToken);
+        } else {
+            cachedTenantId = null;
+        }
         log.info("Seed OWNER tenant created: {}", cachedTenant.getOwnerName());
     }
 
@@ -249,22 +263,24 @@ public class BaseApiTest {
         cachedEmail = email;
         cachedPassword = password;
 
-        // Perform the full sign-up -> activate -> login flow.
         AuthenticationResponse loginResponse = AuthFlowHelper
                 .signUpAndActivateAndLogin(email, password);
 
-        cachedAuth = loginResponse;
-        cachedUserId = loginResponse.getSession() != null
-                ? loginResponse.getSession().getUserId()
-                : null;
-        cachedAccessToken = loginResponse.getAccessToken();
-        cachedRefreshToken = loginResponse.getRefreshToken();
+        cacheAuthentication(loginResponse);
+    }
 
-        // Build the authenticated spec
+    private static void cacheAuthentication(AuthenticationResponse authenticationResponse) {
+        cachedAuth = authenticationResponse;
+        cachedUserId = authenticationResponse.getSession() != null
+                ? authenticationResponse.getSession().getUserId()
+                : null;
+        cachedAccessToken = authenticationResponse.getAccessToken();
+        cachedRefreshToken = authenticationResponse.getRefreshToken();
+        ensureTenantIdFromToken(cachedAccessToken);
+
         authSpec = new RequestSpecBuilder()
                 .setContentType("application/json")
-                .addHeader("Authorization", "Bearer "
-                        + cachedAuth.getAccessToken())
+                .addHeader("Authorization", "Bearer " + cachedAuth.getAccessToken())
                 .build();
     }
 
@@ -274,26 +290,7 @@ public class BaseApiTest {
      * @return The authenticated RequestSpecification.
      */
     public static RequestSpecification getAuthenticatedSpec() {
-        if (cachedAuth == null) {
-            // Should not happen if @BeforeEach runs, but as a safeguard:
-            initializeAuthenticationCache();
-        }
-
-        if (jwtUtil.isTokenExpired(cachedAuth.getAccessToken())) {
-            String email = jwtUtil.extractUsername(cachedAuth.getAccessToken());
-            AuthenticationRequest request = new AuthenticationRequest(email, cachedPassword);
-            // FIX: Create local instance of AuthService as the static field was null
-            AuthService localAuthService = new AuthService();
-            AuthenticationResponse renewedAuth = localAuthService.loginAndExtractToken(request);
-            if (renewedAuth != null) {
-                cachedAuth = renewedAuth;
-            }
-            // Rebuild spec with new token
-            authSpec = new RequestSpecBuilder()
-                    .setContentType("application/json")
-                    .addHeader("Authorization", "Bearer " + cachedAuth.getAccessToken())
-                    .build();
-        }
+        ensureAuthenticated();
         return authSpec;
     }
 
@@ -318,6 +315,10 @@ public class BaseApiTest {
         return ownerAccessToken;
     }
 
+    public static UUID getOwnerUserId() {
+        return ownerUserId;
+    }
+
     public static String getCachedAccessToken() {
         return cachedAccessToken;
     }
@@ -338,34 +339,116 @@ public class BaseApiTest {
         return cachedUserId;
     }
 
+    public static UUID getCachedTenantId() {
+        return cachedTenantId;
+    }
+
+    private static void ensureTenantIdFromToken(String token) {
+        if (cachedTenantId != null || token == null || token.isBlank()) {
+            return;
+        }
+        cachedTenantId = extractTenantIdFromToken(token);
+    }
+
+    private static UUID extractTenantIdFromToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) {
+                return null;
+            }
+            byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
+            String payload = new String(decoded, StandardCharsets.UTF_8);
+            JsonNode claims = OBJECT_MAPPER.readTree(payload);
+            String tenantIdStr = claims.path("tenantId").asText(null);
+            return tenantIdStr == null || tenantIdStr.isBlank() ? null : UUID.fromString(tenantIdStr);
+        } catch (Exception ex) {
+            log.warn("Failed to extract tenantId from token: {}", ex.getMessage());
+            return null;
+        }
+    }
+
     /**
      * Ensures that the cached authentication is valid, refreshing it if necessary.
      * Logs the duration of the refresh operation to Allure and console.
      */
     public static void ensureAuthenticated() {
-        boolean needsAuth = (cachedAuth == null || cachedAccessToken == null || cachedAccessToken.isBlank());
-
-        if (!needsAuth && jwtUtil.isTokenExpired(cachedAccessToken)) {
-            needsAuth = true;
+        if (hasValidToken() && !isTokenExpiredIgnoringSignature(cachedAccessToken)) {
+            return;
         }
 
-        if (needsAuth) {
-            long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
+        String initStage = "login";
+        AuthenticationResponse loginResponse = null;
+        if (hasText(cachedEmail) && hasText(cachedPassword)) {
+            loginResponse = AUTH_SERVICE.loginAndExtractToken(
+                    new AuthenticationRequest(cachedEmail, cachedPassword));
+        }
+
+        if (loginResponse != null) {
+            cacheAuthentication(loginResponse);
+        } else {
+            initStage = "signup";
             initializeAuthenticationCache();
-            long duration = System.currentTimeMillis() - start;
+        }
 
-            // Write to Allure report and logs
-            String message = String.format("Initialized new authentication cache for email: %s (took %d ms)",
-                    cachedEmail, duration);
+        long duration = System.currentTimeMillis() - start;
+        String message = String.format("Initialized new authentication cache for email: %s via %s (took %d ms)",
+                cachedEmail, initStage, duration);
 
-            System.out.println("[Auth Refresh] " + message);
+        System.out.println("[Auth Refresh] " + message);
 
-            Allure.addAttachment(
-                    "Auth Cache Refreshed",
-                    "text/plain",
-                    new ByteArrayInputStream(message.getBytes()),
-                    ".txt"
-            );
+        Allure.addAttachment(
+                "Auth Cache Refreshed",
+                "text/plain",
+                new ByteArrayInputStream(message.getBytes()),
+                ".txt"
+        );
+    }
+
+    public static void ensureOwnerAuthenticated() {
+        if (hasText(ownerAccessToken) && !isTokenExpiredIgnoringSignature(ownerAccessToken)) {
+            return;
+        }
+
+        if (cachedTenant == null || !hasText(cachedTenant.getOwnerEmail()) || !hasText(cachedTenant.getPassword())) {
+            throw new IllegalStateException("Owner tenant bootstrap is not initialized");
+        }
+
+        AuthenticationResponse loginResponse = AUTH_SERVICE.loginAndExtractToken(
+                new AuthenticationRequest(cachedTenant.getOwnerEmail(), cachedTenant.getPassword()));
+
+        if (loginResponse == null || !hasText(loginResponse.getAccessToken())) {
+            throw new IllegalStateException("Failed to refresh owner authentication");
+        }
+
+        ownerAccessToken = loginResponse.getAccessToken();
+        ownerUserId = loginResponse.getSession() != null
+                ? loginResponse.getSession().getUserId()
+                : ownerUserId;
+        cachedTenantId = loginResponse.getSession() != null
+                ? loginResponse.getSession().getTenantId()
+                : extractTenantIdFromToken(ownerAccessToken);
+    }
+
+    private static boolean isTokenExpiredIgnoringSignature(String token) {
+        if (!hasText(token)) {
+            return true;
+        }
+        String[] parts = token.split("\\.");
+        if (parts.length < 2) {
+            return true;
+        }
+        try {
+            byte[] payload = Base64.getUrlDecoder().decode(parts[1]);
+            JsonNode claims = OBJECT_MAPPER.readTree(payload);
+            long exp = claims.path("exp").asLong(-1);
+            if (exp <= 0) {
+                return true;
+            }
+            return Instant.ofEpochSecond(exp).isBefore(Instant.now());
+        } catch (Exception ex) {
+            log.warn("Unable to decode token expiration: {}", ex.getMessage());
+            return true;
         }
     }
 

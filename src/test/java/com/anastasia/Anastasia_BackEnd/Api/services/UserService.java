@@ -19,12 +19,13 @@ import static io.restassured.RestAssured.given;
 public class UserService {
 
     private static final String BASE_PATH = "/users";
+    private static final String DASHBOARD_PATH = "/users/me/profile";
 
     public Response getDashboard(RequestSpecification spec) {
         return given()
                 .spec(spec)
                 .when()
-                .get(BASE_PATH + "/dashboard")
+                .get(DASHBOARD_PATH)
                 .then()
                 .extract()
                 .response();

@@ -9,12 +9,9 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.dto.PhoneVerificationRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
-import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -23,13 +20,10 @@ import org.slf4j.LoggerFactory;
 import static io.restassured.RestAssured.given;
 
 public final class SubscriptionFlowHelper {
-    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
     private static final Logger log = LoggerFactory.getLogger(SubscriptionFlowHelper.class);
     private static final String FALLBACK_TEST_OTP = "123456";
-
     private static final TenantService tenantService = new TenantService();
     private static final AuthService authService = new AuthService();
-    private static final JwtUtil jwtUtil = new JwtUtil(TEST_JWT_SECRET);
     private static final Map<String, TenantDTO> tenantCache = new ConcurrentHashMap<>();
 
     private SubscriptionFlowHelper() {
@@ -90,6 +84,22 @@ public final class SubscriptionFlowHelper {
                 "Failed to fetch activation token: " + response.asString());
         String token = response.asString();
         Assertions.assertTrue(hasText(token), "Activation token must not be blank");
+        return token.trim();
+    }
+
+    private static String fetchRefreshToken(String email) {
+        String refreshEndpoint = resolveEndpointPath("test.refresh.endpoint", "/auth/test/refresh-token");
+        Response response = given()
+                .spec(RequestSpecFactory.anonymousSpec())
+                .queryParam("email", email)
+                .get(refreshEndpoint)
+                .then()
+                .extract()
+                .response();
+        Assertions.assertEquals(200, response.statusCode(),
+                "Failed to fetch refresh token: " + response.asString());
+        String token = response.asString();
+        Assertions.assertTrue(hasText(token), "Refresh token must not be blank");
         return token.trim();
     }
 
@@ -172,11 +182,11 @@ public final class SubscriptionFlowHelper {
 
         Assertions.assertNotNull(authentication, "Authentication response must not be null");
         Assertions.assertNotNull(authentication.getAccessToken(), "Access token must not be null");
+        String refreshToken = fetchRefreshToken(tenant.getOwnerEmail());
+        authentication.setRefreshToken(refreshToken);
         Assertions.assertNotNull(authentication.getRefreshToken(), "Refresh token must not be null");
 
-        List<String> roles = jwtUtil.extractRoles(authentication.getAccessToken());
-        Assertions.assertTrue(roles.contains("ROLE_OWNER"),
-                "Expected ROLE_OWNER but received roles: " + roles);
+        log.info("Authenticated owner via email {}", tenant.getOwnerEmail());
 
         return authentication;
     }

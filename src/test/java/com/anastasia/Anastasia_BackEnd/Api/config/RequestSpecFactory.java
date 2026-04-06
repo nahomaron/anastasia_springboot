@@ -7,6 +7,7 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Factory for creating reusable RestAssured RequestSpecifications.
@@ -36,17 +37,21 @@ public final class RequestSpecFactory {
      * Suitable for any secured endpoints.
      */
     public static RequestSpecification authenticatedSpec() {
-        if (BaseApiTest.getCachedAccessToken() == null) {
-            BaseApiTest.ensureAuthenticated();
-        }
-        return new RequestSpecBuilder()
+        BaseApiTest.ensureAuthenticated();
+        RequestSpecBuilder builder = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .addHeader("Authorization", "Bearer " + BaseApiTest.getCachedAccessToken())
                 .log(LogDetail.METHOD)
                 .log(LogDetail.URI)
-                .log(LogDetail.BODY)
-                .build();
+                .log(LogDetail.BODY);
+
+        UUID tenantId = BaseApiTest.getCachedTenantId();
+        if (tenantId != null) {
+            builder.addHeader("X-Tenant-ID", tenantId.toString());
+        }
+
+        return builder.build();
     }
 
     /**

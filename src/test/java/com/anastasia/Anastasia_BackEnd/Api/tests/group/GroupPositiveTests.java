@@ -1,11 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.Api.tests.group;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
-import com.anastasia.Anastasia_BackEnd.Api.factories.ChurchDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.GroupDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.ChurchService;
 import com.anastasia.Anastasia_BackEnd.Api.services.GroupService;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.groups.dto.GroupDTO;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -27,23 +25,14 @@ class GroupPositiveTests extends BaseApiTest {
     private final ChurchService churchService = new ChurchService();
 
     @Test
-    @Story("Owner creates group successfully")
+    @Story("Owner creates group successfully for an existing church")
     void ownerCanCreateGroup() {
         RequestSpecification ownerSpec = getSpecForRole("OWNER");
 
-        ChurchDTO churchPayload = ChurchDataFactory.newValidChurch();
-        Response registerChurch = churchService.registerChurch(ownerSpec, churchPayload);
-        assertThat(registerChurch.statusCode()).isEqualTo(201);
+        Response registerResponse = churchService.getCurrentTenantChurch(ownerSpec);
+        assertThat(registerResponse.statusCode()).isEqualTo(200);
 
-        Response churches = churchService.listChurches(getSpecForRole("PLATFORM_ADMIN"));
-        assertThat(churches.statusCode()).isEqualTo(200);
-
-        String churchId = null;
-        try {
-            churchId = churches.jsonPath().getString("content[0].churchId");
-        } catch (Exception ignored) {
-            // handled below
-        }
+        String churchId = registerResponse.jsonPath().getString("id");
         assertThat(churchId)
                 .as("Church id available for group creation")
                 .isNotBlank();

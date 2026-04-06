@@ -25,7 +25,7 @@ class UserSecurityTests extends BaseApiTest {
     void anonymousCannotAccessDashboard() {
         var response = given()
                 .when()
-                .get("/users/dashboard")
+                .get("/users/me/profile")
                 .then()
                 .extract()
                 .response();

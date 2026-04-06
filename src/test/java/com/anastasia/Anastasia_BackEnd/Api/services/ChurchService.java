@@ -75,4 +75,14 @@ public class ChurchService {
                 .extract()
                 .response();
     }
+
+    public Response getCurrentTenantChurch(RequestSpecification spec) {
+        return given()
+                .spec(spec)
+                .when()
+                .get("/test/church/current")
+                .then()
+                .extract()
+                .response();
+    }
 }

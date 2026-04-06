@@ -37,6 +37,8 @@ public final class RoleSeeder {
             throw new RuntimeException("User not found for email: " + userEmail);
         }
 
+        ensureUserLinkedToTenant(adminOrOwnerToken, userEmail);
+
         String roleIdsBody = roleIds.stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining("\", \"", "\"", "\""));
@@ -78,6 +80,21 @@ public final class RoleSeeder {
         } else {
             throw new RuntimeException("Unexpected error while fetching user ID: "
                     + res.statusCode() + " " + res.asString());
+        }
+    }
+
+    private static void ensureUserLinkedToTenant(String ownerToken, String email) {
+        Response linkResponse = given()
+                .header("Authorization", "Bearer " + ownerToken)
+                .queryParam("email", email)
+                .post("/test/users/link-tenant")
+                .then()
+                .extract()
+                .response();
+
+        if (linkResponse.statusCode() >= 400) {
+            throw new RuntimeException("Failed to link user to tenant before assigning roles: "
+                    + linkResponse.statusCode() + " " + linkResponse.asString());
         }
     }
 }

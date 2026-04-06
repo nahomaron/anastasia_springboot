@@ -24,25 +24,14 @@ class ChurchPositiveTests extends BaseApiTest {
     private final ChurchService churchService = new ChurchService();
 
     @Test
-    @Story("Owner registers church and platform admin manages it")
-    void ownerCanRegisterAndPlatformAdminCanManageChurch() {
-        RequestSpecification ownerSpec = getSpecForRole("OWNER");
-        ChurchDTO newChurch = ChurchDataFactory.newValidChurch();
-
-        Response registerResponse = churchService.registerChurch(ownerSpec, newChurch);
-        assertThat(registerResponse.statusCode()).isEqualTo(201);
-        SchemaValidator.validate(registerResponse, "schemas/church-register-schema.json");
-
+    @Story("Platform admin manages an existing church")
+    void platformAdminCanManageExistingChurch() {
         RequestSpecification adminSpec = getSpecForRole("PLATFORM_ADMIN");
+
         Response listResponse = churchService.listChurches(adminSpec);
         assertThat(listResponse.statusCode()).isEqualTo(200);
 
-        Long churchId = null;
-        try {
-            churchId = listResponse.jsonPath().getLong("content[0].churchId");
-        } catch (Exception ignored) {
-            // handled below
-        }
+        Long churchId = listResponse.jsonPath().getLong("content[0].churchId");
         assertThat(churchId)
                 .as("Church id present in listing response")
                 .isNotNull();
@@ -53,7 +42,10 @@ class ChurchPositiveTests extends BaseApiTest {
         Response updateResponse = churchService.updateChurch(adminSpec, churchId, updatePayload);
         assertThat(updateResponse.statusCode()).isIn(200, 202);
 
-        Response deleteResponse = churchService.deleteChurch(adminSpec, churchId);
-        assertThat(deleteResponse.statusCode()).isIn(200, 204);
+        Response getResponse = churchService.getChurch(adminSpec, churchId);
+        assertThat(getResponse.statusCode()).isEqualTo(200);
+        SchemaValidator.validate(getResponse, "schemas/church-register-schema.json");
+        assertThat(getResponse.jsonPath().getString("churchNameLocal"))
+                .isEqualTo(updatePayload.getChurchNameLocal());
     }
 }

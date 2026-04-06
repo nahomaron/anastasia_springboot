@@ -85,7 +85,7 @@ public class AuthTests extends BaseApiTest {
         Response res = authService.login(request);
 
         Assertions.assertEquals(401, res.getStatusCode());
-        Assertions.assertTrue(res.asString().contains("Unauthorized"));
+        Assertions.assertTrue(res.asString().contains("Invalid email or password."));
 
     }
 }

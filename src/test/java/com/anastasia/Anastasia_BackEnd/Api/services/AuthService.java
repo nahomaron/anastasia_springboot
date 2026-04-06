@@ -97,12 +97,40 @@ public class AuthService {
         SchemaValidator.validate(response);
 
         if (response.statusCode() == 200 && !response.asString().isEmpty()) {
-            return response.as(AuthenticationResponse.class);
+            AuthenticationResponse authResponse = response.as(AuthenticationResponse.class);
+            if (authResponse.getRefreshToken() == null || authResponse.getRefreshToken().isBlank()) {
+                try {
+                    authResponse.setRefreshToken(fetchRefreshTokenForEmail(request.getEmail()));
+                } catch (Exception e) {
+                    log.warn("Unable to fetch refresh token for {}: {}", request.getEmail(), e.getMessage());
+                }
+            }
+            return authResponse;
         } else {
             System.out.println("Login failed (status " + response.statusCode() + "): " + response.asString());
             return null;
         }
 
+    }
+
+    private String fetchRefreshTokenForEmail(String email) {
+        String endpoint = ConfigManager.get("test.refresh.endpoint");
+        if (!hasText(endpoint)) {
+            endpoint = "/auth/test/refresh-token";
+        }
+        Response response = given()
+                .spec(RequestSpecFactory.anonymousSpec())
+                .queryParam("email", email)
+                .get(endpoint)
+                .then()
+                .statusCode(200)
+                .extract()
+                .response();
+        return response.asString().trim();
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
 

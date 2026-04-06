@@ -1,7 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.Api.tests.performance;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
+import com.anastasia.Anastasia_BackEnd.Api.flows.AuthFlowHelper;
 import com.anastasia.Anastasia_BackEnd.Api.services.AuthService;
+import com.anastasia.Anastasia_BackEnd.Api.utils.DataGenerator;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
@@ -28,7 +30,10 @@ public class PerformanceTests extends BaseApiTest {
     @DisplayName("Login Endpoint Performance")
     @Description("Measures latency for /auth/login")
     void measureLoginPerformance() {
-        AuthenticationRequest request = new AuthenticationRequest(cachedEmail, cachedPassword);
+        String email = DataGenerator.randomEmail();
+        String password = DataGenerator.randomPassword();
+        AuthFlowHelper.signUpAndActivateAndLogin(email, password);
+        AuthenticationRequest request = new AuthenticationRequest(email, password);
         measureEndpoint("POST /auth/login", () -> authService.login(request), 200);
     }
 
