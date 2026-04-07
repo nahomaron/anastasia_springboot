@@ -89,31 +89,23 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
     depends_on: [ kafka ]
 
-# ====================== BACKEND ==========================================
-#  backend:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#    env_file:
-#      - .env
-#    environment:
-#      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia_dev}
-#      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
-#      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
-#    ports:
-#      - "${SERVER_PORT:-8080}:8080"
-#    networks:
-#      - anastasia-net
-#    healthcheck:
-#      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 10
-#      start_period: 40s
+  backend:
+    image: ${BACKEND_IMAGE:-anastasia-backend:local}
+    container_name: anastasia_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia_dev}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    networks:
+      - anastasia-net
 
 # ====================== PERFORMANCE TESTING ==========================================
 #  k6:

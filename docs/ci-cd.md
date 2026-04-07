@@ -1,25 +1,219 @@
-# CI/CD Overview
+# CI/CD Runbook
 
-## Phase 1 – CI gate hardening
+## Workflow graph
 
-- `api-tests.yml` now runs Checkstyle and SpotBugs before the integration and black-box suites, so style or static-analysis regressions fail fast.
-- A dedicated `security-scan.yml` workflow executes OWASP Dependency-Check on every push/PR to `main` or `dev`, blocking merges when CVSS ≥ 7 vulnerabilities appear and surfacing the report at `target/dependency-check-reports`.
+The production-ready release path is now:
 
-## Phase 2 – Staging release automation
+- `ci.yml`
+- `security.yml`
+- `build-image.yml`
+- `deploy-staging.yml`
+- `k6-load.yml`
+- `promote-production.yml`
+- `rollback.yml`
 
-- `deploy-staging.yml` now fires on pushes to `main`/`dev` (in addition to manual dispatch) and blocks until the matching `⚡ K6 Load & Performance Dashboard` workflow finishes successfully for the same commit. Failure of that workflow or its thresholds halts the deployment.
-- The deployment downloads the resulting K6 summaries so the artifacts travel with the release, then proceeds with the existing image build/push, remote compose deployment, health check, and rollback guardrails.
+Flow:
 
-## Phase 3 – Production release orchestration
+1. `push` / `pull_request` to `main` or `dev` runs `CI` and `Security`.
+2. A successful `CI` run on `main` triggers `Build Image`.
+3. `Build Image` waits for `Security` to pass for the same commit, then pushes exactly one immutable GHCR image tagged by commit SHA and publishes `release-manifest.json`.
+4. A successful `Build Image` run triggers `Deploy Staging`.
+5. `Deploy Staging` downloads the manifest, deploys the exact image digest to staging, writes release state on the target host, and runs smoke tests.
+6. A successful `Deploy Staging` run triggers `K6 Load`.
+7. `Promote Production` is manual only. It reuses the same manifest and exact image digest after validating that staging and K6 both passed for that commit.
+8. `Rollback` is manual only and restores the previously deployed digest for staging or production.
 
-- `deploy-production.yml` now runs on annotated tags and manual dispatch, requires the `production` GitHub Environment (which enforces explicit approvers), and waits for the matching `⚡ K6 Load & Performance Dashboard` workflow to succeed for the commit before continuing.  
-- The production job builds/pushes a `:prod` Docker image, writes `.env.production` from the `PROD_*` secrets (`PROD_HOST`, `PROD_SSH_KEY`, `PROD_DB_*`, `PROD_JWT_SECRET`, `PROD_MAIL_API_KEY`, etc.), uploads the compose bundle, and deploys the stack the same way staging does.  
-- It reuses the health check and rollback guardrails from staging but pointed at the production host (health check runs for 200 HTTP responses); the job will fail or rollback if the service never becomes healthy.
-- The doc also now captures that release candidates must pass the CI gates, security scan, and performance load job before `deploy-production.yml` can fire.
+## Artifact model
 
-## Performance profile
+`build-image.yml` publishes `release-manifest.json` as the source of truth for a release candidate.
 
-- The `api` Spring profile is reserved for performance/load runs; it loads `application-api.yml`, which opt‑outs the limiter by setting `rate-limiter.enabled=false` so throttling does not block the load generators while other profiles retain the default bucket behaviour.
-- Run `./mvnw -Papi -Drate-limiter.enabled=false verify` (the same command is wired into the `K6 Load & Performance Dashboard` workflow) whenever you need to reproduce the performance suite without the rate limiter kicking in.
+Manifest fields:
 
-Further phases (production deployment, documentation, etc.) are tracked under `docs/to-do list`.
+- `git_sha`
+- `image_repo`
+- `image_tag`
+- `image_digest`
+- `workflow_run_id`
+- `built_at`
+
+Deploy workflows never rebuild an image. They resolve the runtime image as:
+
+- `ghcr.io/<owner>/anastasia-backend@sha256:...`
+
+That exact digest is written into release state on the server and is the artifact promoted from staging to production.
+
+## Remote release state
+
+Each deployment target keeps release state under:
+
+- `/opt/anastasia/releases/current.env`
+- `/opt/anastasia/releases/previous.env`
+
+Stored keys:
+
+- `BACKEND_IMAGE`
+- `GIT_SHA`
+- `DEPLOYED_AT`
+
+Deployment logic:
+
+1. Copy `current.env` to `previous.env` if it exists.
+2. Write the new `current.env` from the manifest.
+3. Run `docker compose` with the environment-specific application file plus `current.env`.
+
+Rollback logic:
+
+1. Copy `previous.env` back to `current.env`.
+2. Redeploy with the same compose files.
+3. Verify health and login smoke checks.
+
+## Compose layout
+
+Files:
+
+- `compose.yaml`: shared service definitions and the `BACKEND_IMAGE` parameter
+- `docker-compose.override.yml`: local developer build override
+- `docker-compose.staging.yml`: staging-only runtime settings
+- `docker-compose.production.yml`: production-only runtime settings
+
+The base compose file no longer hardcodes image builds inside deployment workflows. Staging and production consume `BACKEND_IMAGE` from release state instead.
+
+## CI gate behavior
+
+`ci.yml` is the authoritative quality gate for branch protection.
+
+Parallel jobs:
+
+- `compile`: `./mvnw -q -DskipTests compile`
+- `unit`: `./mvnw -q test jacoco:report -Dgroups=!experimental`
+- `integration`: `./mvnw -q -Ptest verify -DskipApiTests=true`
+- `checkstyle`: `./mvnw -q checkstyle:check`
+- `spotbugs`: `./mvnw -q -DskipTests compile spotbugs:check`
+- `api`: optional, enabled only when repository variable `CI_RUN_API_TESTS=true`
+
+Artifacts:
+
+- Surefire reports
+- Failsafe reports
+- JaCoCo report
+- Allure raw results
+
+`pom.xml` is aligned so:
+
+- Java stays on `21`
+- default `verify` runs unit tests plus stable integration tests
+- `-Ptest` is the integration-only CI slice
+- `-Papi-tests` is the black-box API slice
+- tests tagged `experimental` stay excluded by default
+
+## Security gate behavior
+
+`security.yml` has two roles:
+
+Push / PR gate:
+
+- OWASP Dependency-Check
+- Gitleaks secret scanning
+
+Post-image supply-chain scan:
+
+- Trivy scan against the pushed image digest
+- SBOM generation
+
+Artifacts:
+
+- dependency check reports
+- gitleaks SARIF
+- Trivy SARIF
+- SBOM JSON
+
+## Smoke checks
+
+Staging and production both run:
+
+1. `GET /actuator/health`
+2. `POST /api/v1/auth/login`
+3. `GET /api/v1/users/me/profile`
+4. one tenant-scoped request using `SMOKE_TENANT_PATH`
+
+The workflows intentionally use dedicated smoke credentials rather than test-only endpoints so the release gate checks real behavior.
+
+## Required GitHub configuration
+
+Use GitHub Environments for `staging` and `production`.
+
+Environment secrets required for both:
+
+- `DEPLOY_HOST`
+- `DEPLOY_USER`
+- `DEPLOY_SSH_KEY`
+- `APP_ENV_FILE`
+- `PUBLIC_BASE_URL`
+- `SMOKE_EMAIL`
+- `SMOKE_PASSWORD`
+- `SMOKE_TENANT_PATH`
+- `SMOKE_TENANT_ID` optional when the tenant endpoint requires the header
+
+Additional `staging` environment secrets:
+
+- `K6_OWNER_EMAIL`
+- `K6_OWNER_PASSWORD`
+- `K6_OWNER_PHONE` optional
+
+Repository variables:
+
+- `CI_RUN_API_TESTS`: set to `true` only when the CI host should run the API suite
+- `CI_API_BASE_URL`: required when `CI_RUN_API_TESTS=true`
+
+Branch protection on `main` should require:
+
+- `CI Gate`
+- `Security Gate`
+
+`production` environment approval should remain mandatory for `promote-production.yml`.
+
+## APP_ENV_FILE format
+
+`APP_ENV_FILE` should contain the complete runtime environment body for the target environment, for example:
+
+```dotenv
+SPRING_PROFILES_ACTIVE=staging
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=anastasia_staging
+DB_USER=...
+DB_PASSWORD=...
+JWT_SECRET=...
+AWS_ACCESS_KEY=...
+AWS_SECRET_KEY=...
+MAIL_API_KEY=...
+SERVER_PORT=8080
+```
+
+The workflow writes this value to `.env.staging` or `.env.production` on the runner, uploads it to the host, and never echoes the contents in logs.
+
+## Promotion process
+
+1. Merge the change to `main`.
+2. Wait for `CI`, `Security`, `Build Image`, `Deploy Staging`, and `K6 Load` to pass.
+3. Run `Promote Production`.
+4. Provide the `Build Image` run id.
+5. Approve the `production` environment deployment.
+6. Confirm the production smoke checks pass.
+
+## Rollback process
+
+1. Run `Rollback`.
+2. Choose `staging` or `production`.
+3. The workflow restores `previous.env`, redeploys the prior digest, and reruns health/login validation.
+
+## Failure diagnostics
+
+On deployment failure the workflows capture and upload:
+
+- `docker compose ps`
+- backend container logs (`--tail=200`)
+- actuator health payload
+- smoke-test response payloads
+
+That keeps staging and production failures diagnosable from Actions without logging into the server first.

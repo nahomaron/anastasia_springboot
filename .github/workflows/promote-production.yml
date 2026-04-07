@@ -1,53 +1,41 @@
-name: Deploy Staging
+name: Promote Production
 
 on:
-  workflow_run:
-    workflows: ["Build Image"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       build_run_id:
         description: Build Image workflow run id that produced release-manifest.json
         required: true
         type: string
+      release_version:
+        description: Optional release label or tag for the deployment summary
+        required: false
+        type: string
 
 permissions:
   contents: read
   actions: read
+  packages: read
 
 jobs:
-  deploy-staging:
-    if: >-
-      ${{
-        github.event_name == 'workflow_dispatch' ||
-        github.event.workflow_run.conclusion == 'success'
-      }}
+  promote-production:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    environment: staging
+    timeout-minutes: 40
+    environment: production
     concurrency:
-      group: deploy-staging
+      group: promote-production
       cancel-in-progress: false
     env:
       REMOTE_ROOT: /opt/anastasia
     steps:
       - uses: actions/checkout@v4
 
-      - name: Resolve build run id
-        id: run
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "build_run_id=${{ inputs.build_run_id }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "build_run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Download release manifest
         uses: actions/download-artifact@v4
         with:
           name: release-manifest
           path: artifacts/release-manifest
-          run-id: ${{ steps.run.outputs.build_run_id }}
+          run-id: ${{ inputs.build_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Parse manifest
@@ -65,22 +53,48 @@ jobs:
               fh.write(f"git_sha={manifest['git_sha']}\n")
               fh.write(f"image_ref={image_ref}\n")
               fh.write(f"built_at={manifest['built_at']}\n")
-          Path("staging-release.json").write_text(json.dumps({
-              "git_sha": manifest["git_sha"],
-              "build_run_id": os.environ["BUILD_RUN_ID"],
-              "staging_url": os.environ["PUBLIC_BASE_URL"],
-              "image_ref": image_ref,
-              "built_at": manifest["built_at"],
-          }, indent=2) + "\n", encoding="utf-8")
           PY
-        env:
-          BUILD_RUN_ID: ${{ steps.run.outputs.build_run_id }}
-          PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
 
-      - name: Write staging environment file
+      - name: Verify staging and k6 gates
+        uses: actions/github-script@v7
+        env:
+          TARGET_SHA: ${{ steps.manifest.outputs.git_sha }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = process.env.TARGET_SHA;
+            const workflows = ['deploy-staging.yml', 'k6-load.yml'];
+
+            for (const workflowId of workflows) {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflowId,
+                head_sha: sha,
+                per_page: 20,
+              });
+
+              const success = runs.data.workflow_runs.find((run) => run.conclusion === 'success');
+              if (!success) {
+                core.setFailed(`Required gate ${workflowId} has not succeeded for ${sha}`);
+                return;
+              }
+            }
+
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate published image digest
+        run: docker buildx imagetools inspect "${{ steps.manifest.outputs.image_ref }}"
+
+      - name: Write production environment file
         run: |
           test -n "${{ secrets.APP_ENV_FILE }}"
-          printf '%s\n' "${{ secrets.APP_ENV_FILE }}" > .env.staging
+          printf '%s\n' "${{ secrets.APP_ENV_FILE }}" > .env.production
 
       - name: Configure SSH
         run: |
@@ -92,10 +106,10 @@ jobs:
 
       - name: Upload compose bundle
         run: |
-          scp compose.yaml docker-compose.staging.yml .env.staging \
+          scp compose.yaml docker-compose.production.yml .env.production \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/"
 
-      - name: Deploy exact image digest to staging
+      - name: Promote exact image digest to production
         run: |
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "REMOTE_ROOT='${REMOTE_ROOT}' IMAGE_REF='${{ steps.manifest.outputs.image_ref }}' GIT_SHA='${{ steps.manifest.outputs.git_sha }}' BUILT_AT='${{ steps.manifest.outputs.built_at }}' bash -s" <<'EOF'
@@ -113,22 +127,11 @@ jobs:
             "DEPLOYED_AT=${BUILT_AT}" > releases/current.env
 
           docker pull "${IMAGE_REF}"
-          docker compose --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+          docker compose --env-file releases/current.env --env-file .env.production \
+            -f compose.yaml -f docker-compose.production.yml up -d postgres backend
           EOF
 
-      - name: Publish staging summary
-        run: |
-          {
-            echo "## Staging Deployment"
-            echo
-            echo "- Build run: ${{ steps.run.outputs.build_run_id }}"
-            echo "- Git SHA: ${{ steps.manifest.outputs.git_sha }}"
-            echo "- Image: \`${{ steps.manifest.outputs.image_ref }}\`"
-            echo "- URL: ${{ secrets.PUBLIC_BASE_URL }}"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Run staging smoke checks
+      - name: Run production smoke checks
         env:
           BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
           SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
@@ -137,21 +140,16 @@ jobs:
           SMOKE_TENANT_ID: ${{ secrets.SMOKE_TENANT_ID }}
         run: |
           mkdir -p diagnostics
-          HEALTH_BODY="diagnostics/staging-health.json"
-          LOGIN_BODY="diagnostics/staging-login.json"
-          PROFILE_BODY="diagnostics/staging-profile.json"
-          TENANT_BODY="diagnostics/staging-tenant.json"
-
-          curl -fsS "${BASE_URL}/actuator/health" -o "${HEALTH_BODY}"
+          curl -fsS "${BASE_URL}/actuator/health" -o diagnostics/production-health.json
 
           for required in SMOKE_EMAIL SMOKE_PASSWORD SMOKE_TENANT_PATH; do
             if [[ -z "${!required}" ]]; then
-              echo "Missing required staging smoke secret: ${required}" >&2
+              echo "Missing required production smoke secret: ${required}" >&2
               exit 1
             fi
           done
 
-          LOGIN_STATUS=$(curl -sS -o "${LOGIN_BODY}" -w "%{http_code}" \
+          LOGIN_STATUS=$(curl -sS -o diagnostics/production-login.json -w "%{http_code}" \
             -H "Content-Type: application/json" \
             -d "{\"email\":\"${SMOKE_EMAIL}\",\"password\":\"${SMOKE_PASSWORD}\"}" \
             "${BASE_URL}/api/v1/auth/login")
@@ -160,13 +158,13 @@ jobs:
           ACCESS_TOKEN=$(python3 - <<'PY'
           import json
           from pathlib import Path
-          data = json.loads(Path("diagnostics/staging-login.json").read_text())
+          data = json.loads(Path("diagnostics/production-login.json").read_text())
           print(data.get("accessToken", ""))
           PY
           )
           [[ -n "${ACCESS_TOKEN}" ]]
 
-          PROFILE_STATUS=$(curl -sS -o "${PROFILE_BODY}" -w "%{http_code}" \
+          PROFILE_STATUS=$(curl -sS -o diagnostics/production-profile.json -w "%{http_code}" \
             -H "Authorization: Bearer ${ACCESS_TOKEN}" \
             "${BASE_URL}/api/v1/users/me/profile")
           [[ "${PROFILE_STATUS}" == "200" ]]
@@ -175,7 +173,7 @@ jobs:
           if [[ -n "${SMOKE_TENANT_ID}" ]]; then
             TENANT_HEADERS+=(-H "X-Tenant-ID: ${SMOKE_TENANT_ID}")
           fi
-          TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
+          TENANT_STATUS=$(curl -sS -o diagnostics/production-tenant.json -w "%{http_code}" \
             "${TENANT_HEADERS[@]}" \
             "${BASE_URL}${SMOKE_TENANT_PATH}")
           [[ "${TENANT_STATUS}" == "200" ]]
@@ -188,15 +186,15 @@ jobs:
             "REMOTE_ROOT='${REMOTE_ROOT}' bash -s" <<'EOF'
           set -euo pipefail
           cd "${REMOTE_ROOT}"
-          docker compose --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml ps > diagnostics/compose-ps.txt || true
-          docker compose --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml logs --tail=200 backend > diagnostics/backend.log || true
+          docker compose --env-file releases/current.env --env-file .env.production \
+            -f compose.yaml -f docker-compose.production.yml ps > diagnostics/compose-ps.txt || true
+          docker compose --env-file releases/current.env --env-file .env.production \
+            -f compose.yaml -f docker-compose.production.yml logs --tail=200 backend > diagnostics/backend.log || true
           curl -sS http://localhost:8080/actuator/health > diagnostics/health.json || true
           EOF
           scp -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
 
-      - name: Roll back staging to previous release
+      - name: Roll back production to previous release
         if: failure()
         run: |
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
@@ -205,21 +203,26 @@ jobs:
           cd "${REMOTE_ROOT}"
           test -f releases/previous.env
           cp releases/previous.env releases/current.env
-          docker compose --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+          docker compose --env-file releases/current.env --env-file .env.production \
+            -f compose.yaml -f docker-compose.production.yml up -d postgres backend
           EOF
 
-      - name: Upload staging diagnostics
+      - name: Upload production diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deploy-staging-diagnostics-${{ steps.manifest.outputs.git_sha }}
+          name: promote-production-diagnostics-${{ steps.manifest.outputs.git_sha }}
           path: diagnostics
           if-no-files-found: ignore
 
-      - name: Upload staging release metadata
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-release
-          path: staging-release.json
+      - name: Publish production summary
+        run: |
+          {
+            echo "## Production Promotion"
+            echo
+            echo "- Release: ${{ inputs.release_version || 'manual' }}"
+            echo "- Build run: ${{ inputs.build_run_id }}"
+            echo "- Git SHA: ${{ steps.manifest.outputs.git_sha }}"
+            echo "- Image: \`${{ steps.manifest.outputs.image_ref }}\`"
+            echo "- URL: ${{ secrets.PUBLIC_BASE_URL }}"
+          } >> "$GITHUB_STEP_SUMMARY"

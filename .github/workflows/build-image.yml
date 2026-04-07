@@ -1,0 +1,116 @@
+name: Build Image
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  packages: write
+
+jobs:
+  build-image:
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main'
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/anastasia-backend
+    steps:
+      - name: Verify security gate succeeded
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const headSha = context.payload.workflow_run.head_sha;
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            for (let attempt = 1; attempt <= 30; attempt += 1) {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: 'security.yml',
+                head_sha: headSha,
+                per_page: 20,
+              });
+
+              const success = runs.data.workflow_runs.find((run) => run.conclusion === 'success');
+              if (success) {
+                return;
+              }
+
+              const pending = runs.data.workflow_runs.find((run) => ['queued', 'in_progress'].includes(run.status));
+              if (!pending) {
+                core.setFailed(`No successful security.yml run found for ${headSha}`);
+                return;
+              }
+
+              await sleep(20000);
+            }
+            core.setFailed(`Timed out waiting for security.yml to succeed for ${headSha}`);
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push immutable image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          provenance: false
+          tags: ${{ env.IMAGE_REPO }}:${{ github.event.workflow_run.head_sha }}
+          build-args: |
+            VCS_REF=${{ github.event.workflow_run.head_sha }}
+            BUILD_DATE=${{ github.event.workflow_run.updated_at }}
+            REPO_URL=${{ github.server_url }}/${{ github.repository }}
+      - name: Inspect pushed image
+        run: docker buildx imagetools inspect "${IMAGE_REPO}@${{ steps.build.outputs.digest }}"
+      - name: Create release manifest
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          manifest = {
+              "git_sha": os.environ["GIT_SHA"],
+              "image_repo": os.environ["IMAGE_REPO"],
+              "image_tag": os.environ["IMAGE_TAG"],
+              "image_digest": os.environ["IMAGE_DIGEST"],
+              "workflow_run_id": os.environ["WORKFLOW_RUN_ID"],
+              "built_at": datetime.now(timezone.utc).isoformat(),
+          }
+          Path("release-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          PY
+        env:
+          GIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          IMAGE_REPO: ${{ env.IMAGE_REPO }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+      - name: Upload release manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: release-manifest.json
+      - name: Publish job summary
+        run: |
+          {
+            echo "## Release Manifest"
+            echo
+            cat release-manifest.json
+          } >> "$GITHUB_STEP_SUMMARY"

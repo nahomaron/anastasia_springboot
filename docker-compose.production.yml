@@ -1,26 +1,28 @@
 services:
   postgres:
     env_file:
-      - .env.staging
+      - .env.production
     environment:
-      POSTGRES_DB: ${DB_NAME:-anastasia_staging}
+      POSTGRES_DB: ${DB_NAME:-anastasia}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports: []
-    restart: unless-stopped
+    restart: always
+    mem_limit: 1024m
+    cpus: 1.00
 
   backend:
     image: ${BACKEND_IMAGE:?Missing BACKEND_IMAGE}
     env_file:
-      - .env.staging
+      - .env.production
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-staging}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia_staging}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-production}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "${SERVER_PORT:-8080}:8080"
-    restart: unless-stopped
+    restart: always
     pull_policy: always
-    mem_limit: 768m
-    cpus: 1.00
+    mem_limit: 1024m
+    cpus: 1.50

@@ -1,0 +1,74 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment to roll back
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: ${{ inputs.environment }}
+    concurrency:
+      group: rollback-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      REMOTE_ROOT: /opt/anastasia
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Restore previous release state
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "REMOTE_ROOT='${REMOTE_ROOT}' TARGET_ENV='${{ inputs.environment }}' bash -s" <<'EOF'
+          set -euo pipefail
+          cd "${REMOTE_ROOT}"
+          test -f releases/previous.env
+          cp releases/previous.env releases/current.env
+          docker compose --env-file releases/current.env --env-file ".env.${TARGET_ENV}" \
+            -f compose.yaml -f "docker-compose.${TARGET_ENV}.yml" up -d postgres backend
+          EOF
+
+      - name: Verify rolled-back service
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+        run: |
+          mkdir -p diagnostics
+          curl -fsS "${BASE_URL}/actuator/health" -o diagnostics/rollback-health.json
+
+          LOGIN_STATUS=$(curl -sS -o diagnostics/rollback-login.json -w "%{http_code}" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${SMOKE_EMAIL}\",\"password\":\"${SMOKE_PASSWORD}\"}" \
+            "${BASE_URL}/api/v1/auth/login")
+          [[ "${LOGIN_STATUS}" == "200" ]]
+
+      - name: Capture rollback diagnostics
+        if: failure()
+        run: |
+          mkdir -p diagnostics/remote
+          scp -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
+
+      - name: Upload rollback diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-diagnostics-${{ inputs.environment }}-${{ github.run_id }}
+          path: diagnostics
+          if-no-files-found: ignore
