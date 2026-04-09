@@ -6,11 +6,12 @@ rate-limiter:
 
 spring:
   datasource:
-    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+    url: "jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
     driver-class-name: org.h2.Driver
     username: sa
     password: password
   flyway:
+    locations: classpath:db/migration-h2,classpath:db/migration
     placeholders:
       members_columns_sql: ""
       children_columns_sql: ""
