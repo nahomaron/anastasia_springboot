@@ -1,11 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.IntegrationTest.service;
 
+import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventManagerEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventVisibilityType;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -59,6 +61,9 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
         visibleUser = persistUser("visible+" + UUID.randomUUID() + "@it.com", ownerRole);
         outsiderUser = persistUser("outsider+" + UUID.randomUUID() + "@it.com", ownerRole);
         managerOnlyUser = persistUser("manager-only+" + UUID.randomUUID() + "@it.com", ownerRole);
+        attachMembershipToCurrentChurch(visibleUser);
+        attachMembershipToCurrentChurch(outsiderUser);
+        attachMembershipToCurrentChurch(managerOnlyUser);
 
         visibleGroup = createGroupWithMember("Visible Group", visibleUser);
         visibleGroup.getManagers().add(managerOnlyUser);
@@ -159,6 +164,20 @@ class EventVisibilityServiceIT extends ServiceIntegrationTestBase {
                 .build();
         group.addUser(member);
         return groupRepository.save(group);
+    }
+
+    private void attachMembershipToCurrentChurch(UserEntity user) {
+        Adult_MemberEntity membership = TestDataUtil.createTestMember(church);
+        membership.setEmail(user.getEmail());
+        membership.setChurch(church);
+        membership.setChurchId(church.getChurchId());
+        membership.setChurchNumber(church.getChurchNumber());
+        membership.setTenantId(tenant.getId());
+        membership = memberRepository.saveAndFlush(membership);
+        entityManager.refresh(membership);
+        user.assignMembership(membership);
+        userRepository.saveAndFlush(user);
+        entityManager.refresh(user);
     }
 
     private void assignManager(EventEntity event, UserEntity user, String role) {

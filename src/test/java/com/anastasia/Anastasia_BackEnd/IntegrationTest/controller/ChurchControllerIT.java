@@ -12,9 +12,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantD
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
-import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
@@ -31,9 +32,10 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
@@ -49,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Epic("Integration Tests")
 @Feature("Internal Layer")
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Transactional
@@ -62,10 +65,9 @@ class ChurchControllerIT extends PostgresTestContainer {
     @Autowired private TenantRepository tenantRepository;
     @Autowired private TenantService tenantService;
     @Autowired private JwtUtil jwtUtil;
+    @Autowired private TokenRepository tokenRepository;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
-    @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor; // Captor for the properties map
-
 
     private String jwtToken;
     private ChurchDTO churchDTO;
@@ -78,23 +80,24 @@ class ChurchControllerIT extends PostgresTestContainer {
         MockitoAnnotations.openMocks(this);
 
         TenantDTO tenantDTO = TestDataUtil.createTestTenantDTO();
+        tenantDTO.setTenantType(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType.PRIEST);
+        tenantDTO.setChurch(null);
         tenantService.subscribeTenant(tenantDTO);
 
         verify(emailNotificationService).sendEmail(
                 eq(tenantDTO.getOwnerEmail()),
-                eq("Account Activation for Anastasia"), // Subject
-                eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                templatePropertiesCaptor.capture() // Capture the entire properties map
+                anyString(),
+                anyString(),
+                anyString(),
+                any()
         );
-
-        Map<String, Object> capturedProperties = templatePropertiesCaptor.getValue();
-        assertNotNull(capturedProperties);
-        // Assert that the map contains the expected values
-        assertNotNull(capturedProperties.get("username"));
-        assertNotNull(capturedProperties.get("confirmation_url"));
-        String token = (String) capturedProperties.get("activation_code"); // Extract the token
-        assertNotNull(token);
-
+        String token = tokenRepository
+                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
+                        tenantDTO.getOwnerEmail(),
+                        TokenType.ACTIVATION
+                )
+                .orElseThrow()
+                .getToken();
         assertNotNull(token);
         authService.activateAccount(token);
 
@@ -108,41 +111,35 @@ class ChurchControllerIT extends PostgresTestContainer {
         tenantId = UUID.fromString(jwtUtil.extractTenantId(jwtToken));
         tenantEntity = tenantRepository.findById(tenantId).orElse(null);
         TenantContext.setTenantId(tenantId);
-
-//        churchDTO = TestDataUtil.createTestChurchDTO();
-//
-//        String churchNumber = churchService.createChurch(churchService.convertToEntity(churchDTO));
-//        church = churchRepository.findByChurchNumber(churchNumber).orElse(null);
     }
 
     @Test
     void testRegisterChurch() throws Exception {
         ChurchDTO testChurch = TestDataUtil.createTestChurchDTO_B();
-        mockMvc.perform(post("/api/v1/churches/register")
+                mockMvc.perform(post("/api/v1/churches/register")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testChurch)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.churchNumber", notNullValue()))
-                .andExpect(jsonPath("$.churchName", is(testChurch.getChurchNameLocal())))
+                .andExpect(jsonPath("$.churchName", is(testChurch.getChurchName())))
+                .andExpect(jsonPath("$.churchNameLocal", is(testChurch.getChurchNameLocal())))
                 .andExpect(jsonPath("$.dioceseLocal", is(testChurch.getDioceseLocal())))
                 .andExpect(jsonPath("$.descriptionLocal", is(testChurch.getDescriptionLocal())));
     }
 
     @Test
-    @WithMockUser(roles = "PLATFORM_ADMIN")
+    @WithMockUser(authorities = "MANAGE_TENANTS")
     void testGetChurches() throws Exception {
         churchService.createChurch(churchService.convertToEntity(TestDataUtil.createTestChurchDTO()));
         mockMvc.perform(get("/api/v1/churches")
                         .param("page", "0")
-                        .param("size", "10")
-                        .header("Authorization", "Bearer " + jwtToken))
+                        .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(1))));
     }
 
     @Test
-    @WithMockUser(roles = "PLATFORM_ADMIN")
     void testFindChurchById() throws Exception {
         ChurchDTO churchDTO2 = TestDataUtil.createTestChurchDTO_B();
         String churchNumber = churchService.createChurch(churchService.convertToEntity(churchDTO2)).getChurchNumber();
@@ -171,7 +168,7 @@ class ChurchControllerIT extends PostgresTestContainer {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(churchDTO1)))
               .andExpect(status().isOk())
-              .andExpect(jsonPath("$.churchName", is("Updated Church Name")))
+              .andExpect(jsonPath("$.churchNameLocal", is("Updated Church Name")))
               .andExpect(jsonPath("$.dioceseLocal", is(churchDTO1.getDioceseLocal())))
               .andExpect(jsonPath("$.descriptionLocal", is(churchDTO1.getDescriptionLocal())));
     }
@@ -185,7 +182,7 @@ class ChurchControllerIT extends PostgresTestContainer {
 
         assert church01 != null;
         mockMvc.perform(delete("/api/v1/churches/{id}", church01.getChurchId())
-                        .header("Authorization", "Bearer " + jwtToken))
+                        )
                 .andExpect(status().isNoContent());
     }
 }

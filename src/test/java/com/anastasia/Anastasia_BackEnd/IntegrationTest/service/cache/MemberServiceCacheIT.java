@@ -9,6 +9,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -22,6 +24,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -44,14 +47,25 @@ class MemberServiceCacheIT extends PostgresTestContainer {
     private MemberRepository memberRepository;
 
     @Autowired
+    private TenantRepository tenantRepository;
+
+    @Autowired
+    private ChurchRepository churchRepository;
+
+    @Autowired
     private CacheManager cacheManager;
+
+    @MockitoBean
+    private S3Client s3Client;
 
     private Adult_MemberEntity savedMember;
 
     @BeforeEach
     void setUp() {
-        TenantEntity tenant = TestDataUtil.createTestTenantEntity();
-        ChurchEntity church = TestDataUtil.createTestChurchEntity(tenant);
+        TenantEntity tenant = tenantRepository.save(TestDataUtil.createTestTenantEntity());
+        ChurchEntity church = churchRepository.save(TestDataUtil.createTestChurchEntity(tenant));
+        tenant.assignChurch(church);
+        tenantRepository.save(tenant);
         Adult_MemberEntity entity = TestDataUtil.createTestMember(church);
 
         Adult_MemberEntity saved = memberRepository.save(entity);
@@ -92,11 +106,10 @@ class MemberServiceCacheIT extends PostgresTestContainer {
         memberService.findMemberById(id);
         verify(memberRepository, times(1)).findByIdAndTenantId(id, TenantContext.getTenantId());
 
-        // Evict cache
-        memberService.deleteMembership(id);
+        // Evict the same tenant-aware cache key used by @Cacheable
         Cache membersCache = cacheManager.getCache("members");
         if (membersCache != null) {
-            membersCache.evict(id);
+            membersCache.evict("tenant:" + TenantContext.getTenantId() + ":" + id);
         }
 
         // Next call should hit DB again (since cache was evicted)
@@ -111,11 +124,6 @@ class MemberServiceCacheIT extends PostgresTestContainer {
         @Bean
         CacheManager cacheManager() {
             return new ConcurrentMapCacheManager("members", "members_all");
-        }
-
-        @Bean
-        S3Client s3Client() {
-            return Mockito.mock(S3Client.class);
         }
     }
 }

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import jakarta.transaction.Transactional;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -22,19 +23,25 @@ import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Epic("Integration Tests")
 @Feature("Internal Layer")
 @SpringBootTest(classes = AnastasiaBackEndApplication.class)
+@ActiveProfiles("test")
+@Import(TestDataSeeder.class)
 //@ExtendWith(SpringExtension.class)
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
@@ -42,11 +49,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthControllerIT extends PostgresTestContainer {
 
 
-    @Autowired private final MockMvc mockMvc;
-    @Autowired private final ObjectMapper objectMapper;
-    @Autowired private final TokenRepository tokenRepository;
-    @Autowired private final AuthService authService;
-    @Autowired private TestDataSeeder testDataSeeder;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
+    private final TokenRepository tokenRepository;
+    private final AuthService authService;
+
+    @Autowired
+    private TestDataSeeder testDataSeeder;
 
     @MockitoBean
     private RateLimiterService rateLimiterService;
@@ -101,14 +110,18 @@ public class AuthControllerIT extends PostgresTestContainer {
 
     @Test
     public void testThatActivateAccountReturnsHttpStatus200Ok() throws Exception {
-
-        UserEntity user = TestDataUtil.createTestUserEntityA();
-        authService.createUser(user);
-
         UserDTO testUserDTOA = TestDataUtil.createTestUserDTO();
+        String userJson = objectMapper.writeValueAsString(testUserDTOA);
 
-        Token token = tokenRepository.findByUserUuid(user.getUuid());
-        String verificationTokenCode = token.getToken();
+        mockMvc.perform(
+                post("/api/v1/auth/sign-up")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson)
+        ).andExpect(
+                status().isCreated()
+        );
+
+        String verificationTokenCode = fetchActivationToken(testUserDTOA.getEmail());
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/api/v1/auth/activate-account")
@@ -132,9 +145,7 @@ public class AuthControllerIT extends PostgresTestContainer {
                 status().isCreated()
         );
 
-        UserEntity createdUser  = authService.findUserByEmail(testUserDTOA.getEmail()).orElseThrow();
-        Token token = tokenRepository.findByUserUuid(createdUser.getUuid());
-        String verificationTokenCode = token.getToken();
+        String verificationTokenCode = fetchActivationToken(testUserDTOA.getEmail());
 
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/api/v1/auth/activate-account")
@@ -163,9 +174,11 @@ public class AuthControllerIT extends PostgresTestContainer {
     public void testThatRefreshTokenReturnsHttpStatus200Ok() throws Exception {
         when(rateLimiterService.tryConsume(eq("127.0.0.1"), eq(5L), eq(Duration.ofMinutes(1))))
                 .thenReturn(true);
+        Cookie refreshTokenCookie = loginAndGetRefreshCookie(TestDataSeeder.ADMIN_EMAIL, TestDataSeeder.ADMIN_PASSWORD);
         // should allow requests with in the limit
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")
+                            .cookie(refreshTokenCookie)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
@@ -176,18 +189,51 @@ public class AuthControllerIT extends PostgresTestContainer {
 
         when(rateLimiterService.tryConsume(eq("127.0.0.1"), eq(5L), eq(Duration.ofMinutes(1))))
                 .thenReturn(true, true, true, true, true, false);
+        Cookie refreshTokenCookie = loginAndGetRefreshCookie(TestDataSeeder.ADMIN_EMAIL, TestDataSeeder.ADMIN_PASSWORD);
 
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")
+                            .cookie(refreshTokenCookie)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
 
         // 6th request should be blocked
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")
+                        .cookie(refreshTokenCookie)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isTooManyRequests()) // 429
-                .andExpect(content().string("Too many requests, try again later"));
+                .andExpect(jsonPath("$.message").value("Too many requests, try again later"));
+    }
+
+    private String fetchActivationToken(String email) throws Exception {
+        MvcResult result = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/auth/test/activation-token")
+                                .param("email", email)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        return result.getResponse().getContentAsString().trim();
+    }
+
+    private Cookie loginAndGetRefreshCookie(String email, String password) throws Exception {
+        AuthenticationRequest testAuth = new AuthenticationRequest(email, password);
+        String testAuthJson = objectMapper.writeValueAsString(testAuth);
+
+        MvcResult result = mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(testAuthJson)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie refreshTokenCookie = result.getResponse().getCookie("anastasia_refresh_token");
+        if (refreshTokenCookie == null) {
+            throw new IllegalStateException("Refresh token cookie was not set by login");
+        }
+        return refreshTokenCookie;
     }
 
 }

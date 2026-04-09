@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Epic("Integration Tests")
 @Feature("Internal Layer")
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Transactional
@@ -63,11 +65,11 @@ public class TenantControllerIT extends PostgresTestContainer {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(tenantDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Password do not match"));
+                .andExpect(content().string("Passwords do not match."));
     }
 
     @Test
-    @WithMockUser(roles = "PLATFORM_ADMIN")
+    @WithMockUser(authorities = "MANAGE_TENANTS")
     void testListOfTenants() throws Exception {
         mockMvc.perform(get("/api/v1/tenant")
                         .param("page", "0")
@@ -77,14 +79,14 @@ public class TenantControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(roles = "PLATFORM_ADMIN")
+    @WithMockUser(authorities = "MANAGE_TENANTS")
     void testGetTenant_found() throws Exception {
         mockMvc.perform(get("/api/v1/tenant/{tenantId}", savedTenant.getId()))
                 .andExpect(status().isFound());
     }
 
     @Test
-    @WithMockUser(roles = "PLATFORM_ADMIN")
+    @WithMockUser(authorities = "MANAGE_TENANTS")
     void testGetTenant_notFound() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
 
@@ -93,7 +95,7 @@ public class TenantControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(roles = "OWNER")
+    @WithMockUser(authorities = "OWN_SUBSCRIPTION")
     void testUnsubscribeTenant_success() throws Exception {
         mockMvc.perform(post("/api/v1/tenant/unsubscribe/{tenantId}", savedTenant.getId()))
                 .andExpect(status().isOk());

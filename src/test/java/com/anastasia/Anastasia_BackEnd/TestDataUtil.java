@@ -286,6 +286,7 @@ public class TestDataUtil {
     public static Adult_MemberEntity createTestMember(ChurchEntity church) {
         return Adult_MemberEntity.builder()
                 .membershipNumber("MBR-" + uniqueSuffix())
+                .tenantId(church.getTenant() != null ? church.getTenant().getId() : null)
                 .church(church)
                 .churchNumber(church.getChurchNumber())
                 .statusValue(MemberLifecycleStatus.ACTIVE)
@@ -368,6 +369,7 @@ public class TestDataUtil {
     public static Child_MemberEntity createTestChild(ChurchEntity church) {
         return Child_MemberEntity.builder()
                 .membershipNumber("CHD-" + uniqueSuffix())
+                .tenantId(church.getTenant() != null ? church.getTenant().getId() : null)
                 .church(church)
                 .churchNumber(church.getChurchNumber())
                 .statusValue(MemberLifecycleStatus.ACTIVE)
