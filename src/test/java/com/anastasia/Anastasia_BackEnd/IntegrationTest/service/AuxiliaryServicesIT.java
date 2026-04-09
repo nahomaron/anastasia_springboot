@@ -7,10 +7,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OtpRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ImageAssetService;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
-import com.anastasia.Anastasia_BackEnd.TestSupport.TestSmsService;
 import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -27,9 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Feature("Service Layer - Auxiliary Services")
 class AuxiliaryServicesIT extends ServiceIntegrationTestBase {
 
-    @Autowired private PhoneVerificationService phoneVerificationService;
-    @Autowired private TestSmsService testSmsService;
-    @Autowired private OtpRepository otpRepository;
     @Autowired private ImageAssetService imageAssetService;
     @Autowired private ImageAssetRepository imageAssetRepository;
 
@@ -40,28 +34,6 @@ class AuxiliaryServicesIT extends ServiceIntegrationTestBase {
         MockitoAnnotations.openMocks(this);
         Role ownerRole = fetchRole(RoleType.OWNER);
         user = persistUser("aux+" + UUID.randomUUID() + "@integration.com", ownerRole);
-    }
-
-    @Test
-    void phoneVerification_handlesOtpLifecycle() {
-        String phone = "+1550" + UUID.randomUUID().toString().substring(0, 8);
-
-        phoneVerificationService.startVerification(phone);
-
-        String issuedOtp = testSmsService.getLastOtpForPhone(phone)
-                .orElseThrow(() -> new AssertionError("OTP not issued"));
-
-        boolean invalid = phoneVerificationService.confirmOtp(phone, "000000");
-        assertThat(invalid).isFalse();
-
-        boolean valid = phoneVerificationService.confirmOtp(phone, issuedOtp);
-        assertThat(valid).isTrue();
-        assertThat(otpRepository.findValid(phone, java.time.Instant.now())).isEmpty();
-
-        phoneVerificationService.resendOtp(phone);
-        String resentOtp = testSmsService.getLastOtpForPhone(phone)
-                .orElseThrow(() -> new AssertionError("Resent OTP missing"));
-        assertThat(resentOtp).isNotEqualTo(issuedOtp);
     }
 
     @Test

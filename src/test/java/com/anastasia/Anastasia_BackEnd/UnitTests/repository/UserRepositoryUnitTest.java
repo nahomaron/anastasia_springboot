@@ -32,7 +32,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ActiveProfiles({"test", "test-server"})
+@ActiveProfiles("test")
 @DataJpaTest(
         excludeAutoConfiguration = {
                 ApplicationConfig.class

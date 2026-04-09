@@ -12,8 +12,8 @@ spring:
     password: password
   flyway:
     placeholders:
-      members_columns_sql: "CALL ensure_member_columns();"
-      children_columns_sql: "CALL ensure_child_columns();"
+      members_columns_sql: ""
+      children_columns_sql: ""
       tenant_demo_template_sql: "CALL ensure_tenant_demo_template_columns();"
       tenant_workspace_lifecycle_sql: "CALL ensure_tenant_workspace_columns();"
       normalize_priest_languages_sql: ""
@@ -37,12 +37,7 @@ spring:
         max-idle: 8
         min-idle: 1
   cache:
-    type: redis
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 60000
+    type: simple
   kafka:
     listener:
       auto-startup: false
@@ -69,6 +64,8 @@ email:
 notification:
   email:
     enabled: false
+  sms:
+    enabled: true
 
 base:
   url: http://localhost:8080

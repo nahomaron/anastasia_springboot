@@ -6,7 +6,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
-@Profile({"test", "test-server", "api"})  // Only available in test profiles
+@Profile({"test", "api-tests"})  // Only available in test and API test profiles
 @RestController
 @RequestMapping("/api/v1/auth/test")
 public class TestAuthController {

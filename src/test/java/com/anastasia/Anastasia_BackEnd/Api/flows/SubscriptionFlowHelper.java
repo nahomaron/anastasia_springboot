@@ -20,7 +20,6 @@ import static io.restassured.RestAssured.given;
 
 public final class SubscriptionFlowHelper {
     private static final Logger log = LoggerFactory.getLogger(SubscriptionFlowHelper.class);
-    private static final String FALLBACK_TEST_OTP = "123456";
     private static final TenantService tenantService = new TenantService();
     private static final AuthService authService = new AuthService();
     private static final Map<String, TenantDTO> tenantCache = new ConcurrentHashMap<>();
@@ -45,21 +44,18 @@ public final class SubscriptionFlowHelper {
         Assertions.assertEquals(201, subscriptionResponse.statusCode(),
                 "Tenant subscription failed: " + subscriptionResponse.asString());
 
-        // 2 Capture OTP from test endpoint
-        String otp = fetchOtpWithRetry(tenantRequest.getPhoneNumber());
-
-        // 3 Verify phone
-        Response verifyResponse = tenantService.verifyPhone(tenantRequest.getPhoneNumber(), otp);
+        // 2 Keep the compatibility verification hook in the flow, even though OTP is disabled.
+        Response verifyResponse = tenantService.verifyPhone(tenantRequest.getPhoneNumber(), "disabled");
         Assertions.assertEquals(200, verifyResponse.statusCode(),
                 "Phone verification failed: " + verifyResponse.asString());
 
-        // 4️ Activate account
+        // 3 Activate account
         String activationToken = fetchActivationToken(tenantRequest.getOwnerEmail());
         Response activationResponse = authService.activateAccount(activationToken);
         Assertions.assertEquals(200, activationResponse.statusCode(),
                 "Account activation failed: " + activationResponse.asString());
 
-        // 5 Login as OWNER
+        // 4 Login as OWNER
         AuthenticationResponse authentication = authenticateOwner(tenantRequest);
         cacheTenant(tenantRequest);
         return new SubscriptionResult(tenantRequest, authentication);
@@ -95,34 +91,6 @@ public final class SubscriptionFlowHelper {
         String token = response.asString();
         Assertions.assertTrue(hasText(token), "Refresh token must not be blank");
         return token.trim();
-    }
-
-    private static String fetchOtpWithRetry(String phone) {
-        String otpEndpoint = resolveEndpointPath("test.tenant.otp.endpoint", "/tenant/test/otp");
-        int attempts = 0;
-        while (attempts < 5) {
-            Response response = given()
-                    .spec(RequestSpecFactory.anonymousSpec())
-                    .queryParam("phone", phone)
-                    .get(otpEndpoint)
-                    .then()
-                    .extract()
-                    .response();
-
-            if (response.statusCode() == 200 && hasText(response.asString())) {
-                return response.asString().trim();
-            }
-
-            try {
-                Thread.sleep(200L * (attempts + 1));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Interrupted while waiting for OTP", e);
-            }
-            attempts++;
-        }
-        log.warn("Failed to capture OTP for phone {} after {} attempts, falling back to {}", phone, attempts, FALLBACK_TEST_OTP);
-        return FALLBACK_TEST_OTP;
     }
 
     private static boolean hasText(String value) {

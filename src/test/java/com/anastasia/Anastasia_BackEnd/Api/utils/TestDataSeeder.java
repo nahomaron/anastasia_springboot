@@ -48,20 +48,34 @@ public class TestDataSeeder {
     }
 
     /**
-     * Creates a test tenant, an 'ADMIN' role linked to the tenant, and a User
-     * assigned that role.
+     * Creates or updates a test tenant admin user with PRIMARY_ADMIN permissions so
+     * controller integration tests exercise the privileged tenant-management paths.
      * @return The created UserEntity.
      */
     @Transactional
     public UserEntity createAdminUser() {
-        return userRepo.findByEmail(ADMIN_EMAIL).orElseGet(() -> {
+        Role adminRole = roleRepo.findByRoleName("PRIMARY_ADMIN")
+                .orElseThrow(() -> new IllegalStateException("Primary admin role not seeded"));
+
+        return userRepo.findByEmail(ADMIN_EMAIL).map(existing -> {
+            existing.setRoles(Set.of(adminRole));
+            existing.setVerified(true);
+            if (existing.getTenant() == null) {
+                TenantEntity tenant = tenantRepo.findAll().stream().findFirst()
+                        .orElseGet(() -> {
+                            TenantEntity createdTenant = tenantRepo.save(TestDataUtil.createTestTenantEntity());
+                            ChurchEntity createdChurch = churchRepo.save(TestDataUtil.createTestChurchEntity(createdTenant));
+                            createdTenant.assignChurch(createdChurch);
+                            return tenantRepo.save(createdTenant);
+                        });
+                existing.assignTenant(tenant);
+            }
+            return userRepo.save(existing);
+        }).orElseGet(() -> {
             TenantEntity tenant = tenantRepo.save(TestDataUtil.createTestTenantEntity());
             ChurchEntity church = churchRepo.save(TestDataUtil.createTestChurchEntity(tenant));
             tenant.assignChurch(church);
             tenantRepo.save(tenant);
-
-            Role adminRole = roleRepo.findByRoleName("ADMIN")
-                    .orElseThrow(() -> new IllegalStateException("Admin role not seeded"));
 
             UserEntity user = TestDataUtil.createTestUserEntityA();
             user.setEmail(ADMIN_EMAIL);

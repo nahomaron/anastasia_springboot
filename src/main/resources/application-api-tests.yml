@@ -1,10 +1,30 @@
+base:
+  url: http://localhost:8080
+
+rate-limiter:
+  enabled: false
+
 spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  flyway:
+    placeholders:
+      members_columns_sql: ""
+      children_columns_sql: ""
+      tenant_demo_template_sql: "CALL ensure_tenant_demo_template_columns();"
+      tenant_workspace_lifecycle_sql: "CALL ensure_tenant_workspace_columns();"
+      normalize_priest_languages_sql: ""
   jpa:
     hibernate:
       ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
     open-in-view: false
-  flyway:
-    enabled: false
   docker:
     compose:
       enabled: false
@@ -28,9 +48,45 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
+auth:
+  login:
+    endpoint: /auth/login
+  signup:
+    endpoint: /auth/sign-up
+  activate:
+    endpoint: /auth/activate-account
+
+test:
+  activation:
+    endpoint: /auth/test/activation-token
+  cleanup:
+    endpoint: /api/v1/test-utils/cleanup
+
+app:
+  evn: api-tests
+  seeding:
+    enabled: false
+  features:
+    messaging:
+      enabled: false
+  membership-card:
+    verify-base-url: http://localhost:8080
+  kafka:
+    enabled: false
+  security:
+    allow-anonymous: true
+    oauth2-enabled: false
+  platform-admin:
+    secret: dev-secret
+
+logging:
+  pattern:
+    console: "%clr(%5p) %clr(${PID}){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40c){cyan} %clr(:){faint} %m%n"
+
 email:
   sending:
     enabled: false
+
 notification:
   email:
     enabled: false
@@ -48,47 +104,16 @@ management:
   server:
     port: 8080
 
-base:
-  url: http://localhost:8080
-
-auth:
-  login:
-    endpoint: /auth/login
-  signup:
-    endpoint: /auth/sign-up
-  activate:
-    endpoint: /auth/activate-account
-
-test:
-  activation:
-    endpoint: /auth/test/activation-token
-  cleanup:
-    endpoint: /api/v1/test-utils/cleanup
-
-app:
-  evn: test-server
-  seeding:
-    enabled: false
-  features:
-    messaging:
-      enabled: false
-  membership-card:
-    verify-base-url: http://localhost:8080
-  kafka:
-    enabled: false
-  security:
-    allow-anonymous: true
-    oauth2-enabled: false
-
-aws:
-  s3:
-    bucket: anastasia-app-bucket
-
 stripe:
   api-key: stripe_test_placeholder_key
   webhook-secret: stripe_test_placeholder_webhook
   success-url: "http://localhost:4200/payments/success?pid={PAYMENT_ID}"
   cancel-url: "http://localhost:4200/payments/cancel?pid={PAYMENT_ID}"
+
+aws:
+  s3:
+    bucket: anastasia-app-bucket
+  region: us-east-1
 
 billing:
   tenant:

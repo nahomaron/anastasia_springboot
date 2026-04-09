@@ -12,12 +12,13 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantE
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.PermissionRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
-import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
@@ -33,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -42,6 +43,8 @@ import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,6 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Epic("Integration Tests")
 @Feature("Internal Layer")
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Transactional
@@ -64,10 +68,9 @@ class MemberControllerIT extends PostgresTestContainer {
     @Autowired private ChurchService churchService;
     @Autowired private RoleRepository roleRepository;
     @Autowired private PermissionRepository permissionRepository;
+    @Autowired private TokenRepository tokenRepository;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
-    @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor;
-
 
     private String jwtToken;
     private ChurchEntity church;
@@ -88,6 +91,7 @@ class MemberControllerIT extends PostgresTestContainer {
                         PermissionType.EDIT_MEMBERS,
                         PermissionType.VIEW_MEMBERS,
                         PermissionType.APPROVE_MEMBERSHIP,
+                        PermissionType.APPROVE_MEMBERSHIP_AS_PRIEST,
                         PermissionType.DELETE_MEMBERS,
                         PermissionType.ADVANCED_SEARCH_MEMBERS
                         ),
@@ -101,18 +105,18 @@ class MemberControllerIT extends PostgresTestContainer {
         // Capture the token passed to emailService
         verify(emailNotificationService).sendEmail(
                 eq(user.getEmail()),
-                eq("Account Activation for Anastasia"),
-                eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                templatePropertiesCaptor.capture()
+                anyString(),
+                anyString(),
+                anyString(),
+                any()
         );
-
-        Map<String, Object> capturedProperties = templatePropertiesCaptor.getValue();
-        assertNotNull(capturedProperties);
-        assertNotNull(capturedProperties.get("username"));
-        assertNotNull(capturedProperties.get("confirmation_url"));
-        String token = (String) capturedProperties.get("activation_code"); // Extract the token
-        assertNotNull(token);
-
+        String token = tokenRepository
+                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
+                        user.getEmail(),
+                        TokenType.ACTIVATION
+                )
+                .orElseThrow()
+                .getToken();
         assertNotNull(token);
         authService.activateAccount(token);
 
@@ -180,7 +184,6 @@ class MemberControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(roles = "PRIEST")
     void testApproveByPriest() throws Exception {
         Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 

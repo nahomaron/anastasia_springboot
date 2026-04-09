@@ -44,9 +44,9 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
 
 
     @Transactional
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-            delete from Token t where t.deletedAt is not null or (t.expired = true and t.revoked = true)
+            delete from Token t where t.deletedAt is not null or t.expired = true or t.revoked = true
             """)
     void deleteExpiredAndRevokedTokens();
 

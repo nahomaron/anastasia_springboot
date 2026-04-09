@@ -205,7 +205,6 @@ public class TenantServiceImpl implements TenantService {
                     .build();
             tenantAdminAssignmentRepository.save(primaryAdminAssignment);
         }
-
         return savedTenant;
     }
 
@@ -248,11 +247,13 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public boolean verifyTenantPhone(String phone, String rawOtp) {
         String normalizedPhone = PhoneNumberUtils.normalize(phone);
-        tenantRepository.findByPhoneNumber(normalizedPhone)
+        return tenantRepository.findByPhoneNumber(normalizedPhone)
                 .or(() -> tenantRepository.findByPhoneNumber(phone))
-                .ifPresent(tenant -> {
+                .map(tenant -> {
             tenant.setPhoneVerified(true);
-            tenant.setPhoneVerifiedAt(Instant.now());
+            if (tenant.getPhoneVerifiedAt() == null) {
+                tenant.setPhoneVerifiedAt(Instant.now());
+            }
             if (tenant.getStatus() == TenantStatus.DRAFT) {
                 tenant.setStatus(TenantStatus.ACTIVE);
                 if (tenant.getActivatedAt() == null) {
@@ -260,8 +261,9 @@ public class TenantServiceImpl implements TenantService {
                 }
             }
             tenantRepository.save(tenant);
-        });
-        return true;
+            return true;
+        })
+                .orElse(false);
     }
 
     @Cacheable(value = "tenants_page", keyGenerator = "tenantAwareKeyGenerator")

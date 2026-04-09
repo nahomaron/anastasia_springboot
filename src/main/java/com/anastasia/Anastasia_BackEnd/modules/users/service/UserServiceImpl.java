@@ -560,7 +560,7 @@ public class UserServiceImpl implements UserService {
     @Caching(
             evict = {
                     @CacheEvict(value = "users",
-                            key = "#root.target.getCurrentUserId()"
+                            key = "#root.target.getUserIdForCache(#connectedUser)"
                     )
             }
     )
@@ -598,6 +598,14 @@ public class UserServiceImpl implements UserService {
         user.setLastPasswordChangedAt(Instant.now());
         user.setMustChangePassword(false);
         userRepository.save(user);
+    }
+
+    public UUID getUserIdForCache(Principal connectedUser) {
+        if (connectedUser instanceof Authentication authentication
+                && authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
+            return userPrincipal.getUserUuid();
+        }
+        return getCurrentUserId();
     }
 
     @Caching(

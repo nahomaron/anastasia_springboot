@@ -26,9 +26,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
@@ -43,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Epic("Integration Tests")
 @Feature("Payments API")
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Tag("experimental")
 class PaymentControllerIT extends PostgresTestContainer {
@@ -115,6 +117,7 @@ class PaymentControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(post("/api/v1/payments/intents")
                         .header("Idempotency-Key", IDEMPOTENCY_INTENT)
+                        .header("X-Tenant-ID", tenantId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -161,6 +164,7 @@ class PaymentControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(post("/api/v1/payments/subscriptions")
                         .header("Idempotency-Key", IDEMPOTENCY_SUBSCRIPTION)
+                        .header("X-Tenant-ID", tenantId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

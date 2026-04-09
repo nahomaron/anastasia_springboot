@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Profile({"test", "test-server", "api"})  // Only available in test/api profiles
+@Profile({"test", "api-tests"})  // Only available in test and API test profiles
 @RestController
 @RequestMapping("/api/v1/test-utils/cleanup")
 @RequiredArgsConstructor

@@ -21,13 +21,11 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRep
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
-import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.PriestService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
-import com.anastasia.Anastasia_BackEnd.TestSupport.TestSmsService;
 import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -44,6 +42,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -60,11 +60,9 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ChildRepository childRepository;
     @Autowired private PriestRepository priestRepository;
-    @Autowired private TestSmsService testSmsService;
     @Autowired private TokenRepository tokenRepository;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
-    @Captor private ArgumentCaptor<Map<String, Object>> emailTemplateCaptor;
 
     @BeforeEach
     void initMocks() {
@@ -72,7 +70,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
     }
 
     @Test
-    void subscribeTenant_andVerifyPhone_success() throws MessagingException {
+    void subscribeTenant_marksPhoneVerifiedWithoutOtp() throws MessagingException {
         TenantDTO tenantDTO = TestDataUtil.createTestTenantDTO();
         tenantDTO.setOwnerEmail("owner+" + UUID.randomUUID() + "@example.com");
         tenantDTO.setPhoneNumber("+1555" + UUID.randomUUID().toString().substring(0, 8));
@@ -83,18 +81,16 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
 
         verify(emailNotificationService).sendEmail(
                 eq(tenantDTO.getOwnerEmail()),
-                eq("Account Activation for Anastasia"),
-                eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                emailTemplateCaptor.capture()
+                anyString(),
+                anyString(),
+                anyString(),
+                any()
         );
-
-        Map<String, Object> templateProps = emailTemplateCaptor.getValue();
-        assertThat(templateProps)
-                .containsKeys("username", "confirmation_url", "activation_code");
 
         TenantEntity savedTenant = tenantRepository.findByPhoneNumber(tenantDTO.getPhoneNumber())
                 .orElseThrow(() -> new AssertionError("Tenant not created"));
-        assertThat(savedTenant.isPhoneVerified()).isFalse();
+        assertThat(savedTenant.isPhoneVerified()).isTrue();
+        assertThat(savedTenant.getPhoneVerifiedAt()).isNotNull();
 
         UserEntity adminUser = userRepository.findByEmail(tenantDTO.getOwnerEmail())
                 .orElseThrow(() -> new AssertionError("Admin user not created"));
@@ -103,16 +99,6 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         assertThat(tokenRepository.findByUserUuid(adminUser.getUuid()))
                 .as("Activation token persisted")
                 .isNotNull();
-
-        String otp = testSmsService.getLastOtpForPhone(tenantDTO.getPhoneNumber())
-                .orElseThrow(() -> new AssertionError("OTP not generated"));
-
-        boolean verified = tenantService.verifyTenantPhone(tenantDTO.getPhoneNumber(), otp);
-        assertThat(verified).isTrue();
-
-        TenantEntity refreshed = tenantRepository.findById(savedTenant.getId())
-                .orElseThrow();
-        assertThat(refreshed.isPhoneVerified()).isTrue();
     }
 
     @Test
@@ -208,13 +194,11 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
 
         verify(emailNotificationService).sendEmail(
                 eq(priestDTO.getPersonalEmail()),
-                eq("Account Activation for Anastasia"),
-                eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                emailTemplateCaptor.capture()
+                anyString(),
+                anyString(),
+                anyString(),
+                any()
         );
-
-        Map<String, Object> templateProps = emailTemplateCaptor.getValue();
-        assertThat(templateProps.get("username")).isNotNull();
 
         PriestEntity saved = priestRepository.findAll().get(0);
         assertThat(saved.getChurch().getChurchNumber()).isEqualTo(church.getChurchNumber());

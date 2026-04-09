@@ -6,10 +6,12 @@ import io.qameta.allure.Feature;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @Epic("Integration Tests")
 @Feature("Internal Layer")
 @SpringBootTest
+@ActiveProfiles("test")
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
 @Transactional

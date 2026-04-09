@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@Profile({"test", "test-server", "api"})
+@Profile({"test", "api-tests"})
 @RequestMapping("/api/v1/test")
 @RequiredArgsConstructor
 public class TestLookupController {

@@ -1,5 +1,5 @@
 -- H2 compatibility helpers for Postgres-specific functions/types
-CREATE ALIAS IF NOT EXISTS gen_random_uuid FOR "java.util.UUID.randomUUID";
+-- H2 2.x already exposes gen_random_uuid in PostgreSQL mode.
 CREATE DOMAIN IF NOT EXISTS jsonb AS JSON;
 CREATE ALIAS IF NOT EXISTS ensure_member_columns FOR "com.anastasia.Anastasia_BackEnd.db.H2FlywayUtils.ensureMemberColumns";
 CREATE ALIAS IF NOT EXISTS ensure_child_columns FOR "com.anastasia.Anastasia_BackEnd.db.H2FlywayUtils.ensureChildColumns";

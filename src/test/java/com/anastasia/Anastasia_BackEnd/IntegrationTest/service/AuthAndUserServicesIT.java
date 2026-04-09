@@ -12,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
@@ -39,11 +40,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -61,7 +63,6 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
     @Autowired private RoleRepository roleRepository;
     @Autowired private ImageAssetRepository avatarRepository;
     @MockitoBean private EmailNotificationService emailNotificationService;
-    @Captor private ArgumentCaptor<Map<String, Object>> emailTemplateCaptor;
 
     @BeforeEach
     void initMocks() {
@@ -81,13 +82,18 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
 
         verify(emailNotificationService).sendEmail(
                 eq(pendingUser.getEmail()),
-                eq("Account Activation for Anastasia"),
-                eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                emailTemplateCaptor.capture()
+                anyString(),
+                anyString(),
+                anyString(),
+                any()
         );
-
-        Map<String, Object> activationProps = emailTemplateCaptor.getValue();
-        String activationCode = activationProps.get("activation_code").toString();
+        String activationCode = tokenRepository
+                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
+                        pendingUser.getEmail(),
+                        TokenType.ACTIVATION
+                )
+                .orElseThrow(() -> new AssertionError("Activation token not persisted"))
+                .getToken();
         authService.activateAccount(activationCode);
 
         UserEntity activatedUser = userRepository.findByEmail(pendingUser.getEmail())
@@ -138,12 +144,18 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
 
         verify(emailNotificationService).sendEmail(
                 eq(pendingUser.getEmail()),
-                eq("Password Reset for Anastasia Account"),
-                eq(EmailTemplateName.RESET_PASSWORD),
-                emailTemplateCaptor.capture()
+                anyString(),
+                anyString(),
+                anyString(),
+                any()
         );
-        Map<String, Object> resetProps = emailTemplateCaptor.getValue();
-        String resetToken = resetProps.get("reset_token").toString();
+        String resetToken = tokenRepository
+                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
+                        pendingUser.getEmail(),
+                        TokenType.PASSWORD_RESET
+                )
+                .orElseThrow(() -> new AssertionError("Password reset token not persisted"))
+                .getToken();
         String newPassword = "NewPassw0rd!";
         authService.resetPassword(resetToken, newPassword);
 

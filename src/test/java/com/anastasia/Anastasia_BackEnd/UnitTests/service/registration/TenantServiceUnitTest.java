@@ -14,7 +14,6 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantServiceImpl;
-import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.PhoneVerificationService;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
@@ -45,7 +44,6 @@ public class TenantServiceUnitTest {
     @Mock private AuthService authService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private RoleRepository roleRepository;
-    @Mock private PhoneVerificationService phoneVerificationService;
     @Mock private SecurityUtils securityUtils;
 
     @InjectMocks
@@ -109,8 +107,11 @@ public class TenantServiceUnitTest {
 
         verify(tenantRepository, times(2)).save(any(TenantEntity.class));
         verify(authService, times(1)).createUser(any(UserEntity.class));
+        verify(tenantRepository).save(argThat(saved ->
+                saved.isPhoneVerified() && saved.getPhoneVerifiedAt() != null
+        ));
         // Optionally, verify no other interactions if strict mocks are desired
-//         verifyNoMoreInteractions(tenantRepository, roleRepository, authService, phoneVerificationService);
+//         verifyNoMoreInteractions(tenantRepository, roleRepository, authService);
     }
 
     @Test

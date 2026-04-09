@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
@@ -241,7 +242,11 @@ public class ChurchServiceImpl implements ChurchService{
         target.setYoutube(incoming.getYoutube());
         target.setFacebook(incoming.getFacebook());
         target.setStatus(incoming.getStatus() != null ? incoming.getStatus() : target.getStatus());
-        target.setProfilePicture(incoming.getProfilePicture());
+        if (incoming.getProfilePicture() != null) {
+            target.setProfilePicture(mergeProfilePicture(target.getProfilePicture(), incoming.getProfilePicture()));
+        } else {
+            target.setProfilePicture(null);
+        }
 
         if (target.getProfilePicture() != null) {
             stampProfilePicture(target, target.getProfilePicture());
@@ -283,6 +288,28 @@ public class ChurchServiceImpl implements ChurchService{
         profilePicture.setImageAssetType(ImageAssetType.CHURCH);
         profilePicture.setOwnerId(church.getTenant().getId());
         profilePicture.setTenantId(church.getTenant().getId());
+    }
+
+    private ImageAssetEntity mergeProfilePicture(ImageAssetEntity existing, ImageAssetEntity incoming) {
+        if (incoming == null) {
+            return null;
+        }
+        ImageAssetEntity target = existing != null ? existing : incoming;
+        target.setImageUrl(incoming.getImageUrl());
+        target.setImageSize(incoming.getImageSize());
+        target.setStorageProvider(incoming.getStorageProvider());
+        target.setObjectKey(incoming.getObjectKey());
+        target.setOriginalFilename(incoming.getOriginalFilename());
+        target.setVisibility(incoming.getVisibility());
+        target.setUploadedAt(incoming.getUploadedAt());
+        target.setUploadedByUserId(incoming.getUploadedByUserId());
+        target.setChecksum(incoming.getChecksum());
+        target.setContentType(incoming.getContentType());
+        target.setFileSizeBytes(incoming.getFileSizeBytes());
+        target.setWidth(incoming.getWidth());
+        target.setHeight(incoming.getHeight());
+        target.setDeletedAt(incoming.getDeletedAt());
+        return target;
     }
 
     private String defaultTimezone(String candidate, String fallback) {

@@ -34,19 +34,9 @@ class TenantPositiveTests extends BaseApiTest {
         Response subscribeResponse = tenantService.subscribeTenant(tenant);
         assertThat(subscribeResponse.statusCode()).isEqualTo(201);
 
-        String otpEndpoint = ConfigManager.get("test.tenant.otp.endpoint");
-        String otp = given()
-                .queryParam("phone", tenant.getPhoneNumber())
-                .when()
-                .get(otpEndpoint != null ? otpEndpoint : "/tenant/test/otp")
-                .then()
-                .extract()
-                .asString()
-                .trim();
-        assertThat(otp).isNotBlank();
-
-        Response verifyResponse = tenantService.verifyPhone(tenant.getPhoneNumber(), otp);
+        Response verifyResponse = tenantService.verifyPhone(tenant.getPhoneNumber(), "disabled");
         assertThat(verifyResponse.statusCode()).isEqualTo(200);
+        assertThat(verifyResponse.asString()).contains("disabled");
 
         String activationEndpoint = ConfigManager.get("test.activation.endpoint");
         String token = given()

@@ -101,12 +101,7 @@ public class GroupServiceImpl implements GroupService {
                 .forEach(groupEntity::addUser);
 
         loadUsersForTenant(toNonNullSet(groupDTO.getManagers()), tenantId)
-                .forEach(manager -> addManagerAsMember(groupEntity, manager));
-
-        resolveCurrentUserId()
-                .flatMap(userRepository::findById)
-                .filter(user -> belongsToTenant(user, tenantId))
-                .ifPresent(groupEntity::addUser);
+                .forEach(manager -> addManager(groupEntity, manager));
 
         GroupEntity savedGroup = groupRepository.save(groupEntity);
 
@@ -187,7 +182,7 @@ public class GroupServiceImpl implements GroupService {
         if (request.getManagers() != null) {
             List<UserEntity> managers = loadUsersForTenant(request.getManagers(), tenantId);
             group.getManagers().clear();
-            managers.forEach(manager -> addManagerAsMember(group, manager));
+            managers.forEach(manager -> addManager(group, manager));
         }
 
         if (request.getUsers() != null) {
@@ -195,9 +190,6 @@ public class GroupServiceImpl implements GroupService {
             group.getUsers().clear();
             users.forEach(group::addUser);
         }
-
-        group.getManagers().forEach(group::addUser);
-
         GroupEntity savedGroup = groupRepository.save(group);
         return groupMapper.groupEntityToResponse(savedGroup);
     }
@@ -374,11 +366,9 @@ public class GroupServiceImpl implements GroupService {
             }
 
             UserEntity manager = fetchedUsers.get(managerId);
-            addManagerAsMember(group, manager);
+            addManager(group, manager);
             addedManagerIds.add(managerId);
         }
-
-        group.getManagers().forEach(group::addUser);
 
         groupRepository.save(group);
 
@@ -856,12 +846,11 @@ public class GroupServiceImpl implements GroupService {
         return source == null ? Collections.emptySet() : source;
     }
 
-    private void addManagerAsMember(GroupEntity group, UserEntity manager) {
+    private void addManager(GroupEntity group, UserEntity manager) {
         if (group == null || manager == null) {
             return;
         }
         group.getManagers().add(manager);
-        group.addUser(manager);
     }
 
     private <T> List<T> mergeLists(List<T> first, List<T> second) {

@@ -165,14 +165,14 @@ public class RoleService {
     }
 
     private boolean isSystemRoleName(String roleName) {
-        return SYSTEM_ROLE_NAMES.contains(roleName);
+        return roleName != null && SYSTEM_ROLE_NAMES.contains(roleName.trim().toUpperCase(Locale.ROOT));
     }
 
     private String normalizeRoleName(String roleName) {
         if (roleName == null || roleName.isBlank()) {
             throw new IllegalArgumentException(messageService.get("validation.role.name.required", "Role name is required"));
         }
-        return roleName.trim().toUpperCase(Locale.ROOT);
+        return roleName.trim();
     }
 
     private UUID requireTenantId() {

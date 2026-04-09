@@ -44,7 +44,7 @@ class TenantNegativeTests extends BaseApiTest {
 //    }
 
     @Test
-    @Story("Resend OTP requires phone number")
+    @Story("Disabled resend endpoint still requires phone number")
     void resendOtpWithoutPhoneShouldFail() {
         Response response = tenantService.resendOtp(null);
         assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);

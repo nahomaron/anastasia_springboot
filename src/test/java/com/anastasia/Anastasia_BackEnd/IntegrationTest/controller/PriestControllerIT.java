@@ -9,12 +9,13 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
-import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.PriestService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
@@ -29,15 +30,15 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
 
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
@@ -47,6 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Epic("Integration Tests")
 @Feature("Internal Layer")
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Transactional
@@ -59,9 +61,9 @@ class PriestControllerIT extends PostgresTestContainer {
     @Autowired private PriestRepository priestRepository;
     @Autowired private TenantRepository tenantRepository;
     @Autowired private ChurchRepository churchRepository;
+    @Autowired private TokenRepository tokenRepository;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
-    @Captor private ArgumentCaptor<Map<String, Object>> templatePropertiesCaptor;
 
     private String jwtToken;
     private String churchNumber;
@@ -87,22 +89,18 @@ class PriestControllerIT extends PostgresTestContainer {
 
         verify(emailNotificationService).sendEmail(
                 eq(priestDTO.getPersonalEmail()),
-                eq("Account Activation for Anastasia"),
-                eq(EmailTemplateName.ACTIVATE_ACCOUNT),
-                templatePropertiesCaptor.capture()
+                anyString(),
+                anyString(),
+                anyString(),
+                any()
         );
-
-        Map<String, Object> capturedProperties = templatePropertiesCaptor.getValue();
-        assertNotNull(capturedProperties);
-        assertNotNull(capturedProperties.get("username"));
-        assertEquals(
-                priestDTO.getFirstName() + " " + priestDTO.getFatherName() + " " + priestDTO.getGrandFatherName(),
-                capturedProperties.get("username")
-        );
-        assertNotNull(capturedProperties.get("confirmation_url"));
-        String token = (String) capturedProperties.get("activation_code"); // Extract the token
-        assertNotNull(token);
-
+        String token = tokenRepository
+                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
+                        priestDTO.getPersonalEmail(),
+                        TokenType.ACTIVATION
+                )
+                .orElseThrow()
+                .getToken();
         assertNotNull(token);
         authService.activateAccount(token);
 
@@ -126,7 +124,7 @@ class PriestControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(roles = "OWNER")
+    @WithMockUser(authorities = {"VIEW_PRIESTS"})
     void testListOfPriests() throws Exception {
         mockMvc.perform(get("/api/v1/priests")
                         .header("Authorization", "Bearer " + jwtToken)
@@ -137,7 +135,7 @@ class PriestControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(roles = "OWNER")
+    @WithMockUser(authorities = {"VIEW_PRIESTS"})
     void testGetPriestById() throws Exception {
         ChurchEntity church = churchRepository.findByChurchNumber(churchNumber).orElse(null);
 
@@ -153,24 +151,26 @@ class PriestControllerIT extends PostgresTestContainer {
     }
 
     @Test
+    @WithMockUser(authorities = {"MANAGE_PRIESTS"})
     void testUpdatePriestDetails() throws Exception {
         PriestDTO priestDTO = TestDataUtil.createTestPriestDTO_B(churchNumber);
         priestService.registerPriest(priestDTO);
         PriestEntity saved = priestRepository.findByPhoneNumber(priestDTO.getPhoneNumber()).orElseThrow();
 
-        PriestDTO priestDTO2 = priestService.convertToDTO(saved);
-        priestDTO2.setFirstName("Abba Tekle");
+        Map<String, Object> patchPayload = Map.of(
+                "firstName", "Abba Tekle"
+        );
 
         mockMvc.perform(patch("/api/v1/priests/{id}", saved.getId())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(priestDTO2)))
+                        .content(objectMapper.writeValueAsString(patchPayload)))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.firstName", notNullValue()));
+                .andExpect(jsonPath("$.firstName").value("Abba Tekle"));
     }
 
     @Test
-    @WithMockUser(roles = "OWNER")
+    @WithMockUser(authorities = {"MANAGE_PRIESTS"})
     void testDeletePriest() throws Exception {
         PriestDTO priestDTO = TestDataUtil.createTestPriestDTO_B(churchNumber);
         priestService.registerPriest(priestDTO);

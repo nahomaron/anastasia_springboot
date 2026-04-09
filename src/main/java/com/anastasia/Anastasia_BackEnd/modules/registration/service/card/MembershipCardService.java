@@ -53,7 +53,8 @@ public class MembershipCardService {
 
     @Transactional
     public void issueOrRefreshForApprovedMember(Adult_MemberEntity member) {
-        if (member == null || !MemberStatus.ACTIVE.name().equals(member.getStatus())) {
+        if (member == null || (!MemberStatus.ACTIVE.name().equals(member.getStatus())
+                && !MemberStatus.APPROVED.name().equals(member.getStatus()))) {
             return;
         }
         UUID tenantId = member.getTenantId();

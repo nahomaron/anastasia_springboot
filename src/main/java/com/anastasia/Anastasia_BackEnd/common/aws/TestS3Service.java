@@ -8,12 +8,12 @@ import java.util.UUID;
 
 @Service
 @Primary
-@Profile({"test", "test-server", "api"})
+@Profile({"test", "api-tests"})
 public class TestS3Service implements S3Service {
 
     @Override
     public PresignedUrlResponse generatePresignedUploadUrl(String fileName) {
-        String objectKey = "test-images/" + UUID.randomUUID() + "_" + fileName;
+        String objectKey = "test-imageAssets/" + UUID.randomUUID() + "_" + fileName;
         return new PresignedUrlResponse(objectKey, "http://localhost/mock-presigned-url");
     }
 }

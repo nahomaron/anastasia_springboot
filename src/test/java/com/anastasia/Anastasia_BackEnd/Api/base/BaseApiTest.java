@@ -58,8 +58,8 @@ public class BaseApiTest {
     static {
         if (System.getProperty("environment") == null) {
             String profiles = System.getProperty("spring.profiles.active");
-            if (profiles != null && profiles.contains("api")) {
-                System.setProperty("environment", "api");
+            if (profiles != null && profiles.contains("api-tests")) {
+                System.setProperty("environment", "api-tests");
             } else {
                 System.setProperty("environment", "test");
             }

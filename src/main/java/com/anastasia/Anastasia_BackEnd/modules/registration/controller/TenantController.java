@@ -63,11 +63,8 @@ public class TenantController {
     }
 
     /**
-     * Verifies the phone number of a tenant using an OTP (One Time Password).
-     * This endpoint is used to confirm the phone number during registration.
-     *
-     * @param request The request containing the phone number and OTP.
-     * @return ResponseEntity indicating success or failure of the verification.
+     * Phone verification is disabled for the first release. This endpoint remains as an idempotent
+     * compatibility hook and marks the tenant phone as verified when a matching tenant exists.
      */
     @PostMapping("/verify-phone")
     public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request,
@@ -91,11 +88,7 @@ public class TenantController {
     }
 
     /**
-     * Resends the OTP to the tenant's phone number for verification.
-     * This endpoint is used when the user requests a new OTP.
-     *
-     * @param request The request containing the phone number.
-     * @return ResponseEntity indicating success or failure of the resend operation.
+     * Phone verification is disabled for the first release. No OTP is sent.
      */
     @PostMapping("/resend-phone-otp")
     public ResponseEntity<?> resendPhoneOtp(@RequestBody ResendOtpRequest request,
@@ -141,7 +134,7 @@ public class TenantController {
         TenantEntity tenant = resolveCurrentTenant();
         return ResponseEntity.ok(Map.of(
                 "tenantId", tenant.getId(),
-                "phoneVerified", true
+                "phoneVerified", tenant.isPhoneVerified()
         ));
     }
 

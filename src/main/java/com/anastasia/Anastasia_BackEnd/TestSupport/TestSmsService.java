@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.TestSupport;
 
+import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.sms.service.SmsTemplateType;
 import org.slf4j.Logger;
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Primary
-@Profile({"test", "test-server", "api"})  // Active in test and API automation profiles
+@Profile({"test", "api-tests"})  // Active in test and API automation profiles
 public class TestSmsService implements SmsService {
 
     private static final Logger log = LoggerFactory.getLogger(TestSmsService.class);
@@ -27,17 +28,17 @@ public class TestSmsService implements SmsService {
         if (type == SmsTemplateType.OTP && templateProps != null) {
             Object rawCode = templateProps.get("otp_code");
             if (rawCode != null) {
-                phoneToOtp.put(to, rawCode.toString());
+                phoneToOtp.put(PhoneNumberUtils.normalize(to), rawCode.toString());
             }
         }
         return CompletableFuture.completedFuture(null);
     }
 
     public Optional<String> getLastOtpForPhone(String phone) {
-        return Optional.ofNullable(phoneToOtp.get(phone));
+        return Optional.ofNullable(phoneToOtp.get(PhoneNumberUtils.normalize(phone)));
     }
 
     public void clearOtp(String phone) {
-        phoneToOtp.remove(phone);
+        phoneToOtp.remove(PhoneNumberUtils.normalize(phone));
     }
 }

@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 //import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
+@SpringBootTest(classes = AnastasiaBackEndApplication.class)
 @ActiveProfiles("test")
 class AnastasiaBackEndApplicationTests {
 

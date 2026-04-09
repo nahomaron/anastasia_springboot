@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @TestConfiguration
-@Profile({"test", "test-server"})
+@Profile("test")
 public class TestAuditorAwareConfig {
 
     @Bean

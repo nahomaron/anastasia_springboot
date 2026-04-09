@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.Arrays;
@@ -18,7 +19,7 @@ public class ApplicationConfig {
     private static final UUID TEST_AUDITOR_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
 //    @Bean
-//    @Profile({"prod", "dev", "test-server"})
+//    @Profile({"prod", "dev", "api-tests"})
 //    public AuditorAware<UUID> auditorAware(){
 //        return new ApplicationAuditAware();
 //    }
@@ -32,7 +33,18 @@ public class ApplicationConfig {
     }
 
     @Bean(name = "taskExecutor")
+    public Executor taskExecutor(Environment environment) {
+        if (isTestProfile(environment)) {
+            return new SyncTaskExecutor();
+        }
+        return createAsyncTaskExecutor();
+    }
+
     public Executor taskExecutor() {
+        return createAsyncTaskExecutor();
+    }
+
+    private Executor createAsyncTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(8);  // Change based on expected load
         executor.setMaxPoolSize(10);

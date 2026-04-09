@@ -1,3 +1,4 @@
+# --- For purpose of API automation
 base:
   url: http://localhost:8080
 
@@ -12,12 +13,11 @@ spring:
     password: password
   flyway:
     placeholders:
-      members_columns_sql: "CALL ensure_member_columns();"
-      children_columns_sql: "CALL ensure_child_columns();"
+      members_columns_sql: ""
+      children_columns_sql: ""
       tenant_demo_template_sql: "CALL ensure_tenant_demo_template_columns();"
       tenant_workspace_lifecycle_sql: "CALL ensure_tenant_workspace_columns();"
       normalize_priest_languages_sql: ""
-    # Additional Flyway properties can be added here.
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -38,18 +38,22 @@ auth:
 test:
   activation:
     endpoint: /auth/test/activation-token
+  tenant:
+    otp:
+      endpoint: /tenant/test/otp
   cleanup:
-    endpoint: /api/v1/test-utils/cleanup
+    endpoint: /test-utils/cleanup
+  refresh:
+    endpoint: /auth/test/refresh-token
+
+platform:
+  admin:
+    secret: dev-secret
 
 app:
-  evn: api
+  evn: api-tests
   security:
     allow-anonymous: true
-    oauth2-enabled: false
-  kafka:
-    enabled: false
-  platform-admin:
-    secret: dev-secret
 
 logging:
   pattern:
@@ -63,11 +67,7 @@ notification:
   email:
     enabled: false
 
-stripe:
-  api-key: stripe_test_placeholder_key
-  webhook-secret: stripe_test_placeholder_webhook
-
-#aws:
-#  s3:
-#    bucket: anastasia-app-bucket
-#  region: us-east-1
+aws:
+  s3:
+    bucket: anastasia-app-bucket
+  region: us-east-1

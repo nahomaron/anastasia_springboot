@@ -21,11 +21,11 @@ import java.util.stream.Collectors;
 
 /**
  * Minimal data seeder that runs when the application is started with the
- * {@code test} or {@code test-server} profile. It ensures that permissions and
+ * {@code test} or {@code api-tests} profile. It ensures that permissions and
  * default roles required by the API automation suite exist before tests start.
  */
 @Component
-@Profile({"test", "test-server"})
+@Profile({"test", "api-tests"})
 @RequiredArgsConstructor
 public class TestProfileDataSeeder {
 

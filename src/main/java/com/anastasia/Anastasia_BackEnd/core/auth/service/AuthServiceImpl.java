@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
@@ -32,9 +33,11 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserTwoFactorBackupCodeEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffEntity;
 import com.anastasia.Anastasia_BackEnd.modules.staff.repository.StaffRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
@@ -82,6 +85,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final LoginTwoFactorChallengeRepository loginTwoFactorChallengeRepository;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
+    private final TenantRepository tenantRepository;
     private final StaffRepository staffRepository;
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
@@ -101,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
             if (userEntity.getUserType() == null) {
                 userEntity.setUserType(UserType.GUEST);
             }
+            attachTenantFromContextIfMissing(userEntity);
 
             if (userEntity.getRoles() == null || userEntity.getRoles().isEmpty()) {
                 Role userRole = roleRepository.findByRoleName("USER")
@@ -119,6 +124,22 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException(messageService.get("auth.user.creationFailed", "User creation failed: {0}", e.getMessage()));
         }
 
+    }
+
+    private void attachTenantFromContextIfMissing(UserEntity userEntity) {
+        if (userEntity == null || userEntity.getTenant() != null) {
+            return;
+        }
+
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            return;
+        }
+
+        TenantEntity tenant = tenantRepository.findById(tenantId).orElse(null);
+        if (tenant != null) {
+            userEntity.assignAffiliatedTenant(tenant);
+        }
     }
 
     @Override

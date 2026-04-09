@@ -452,7 +452,7 @@ public class MemberServiceImpl implements MemberService {
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
             Optional.ofNullable(request.getAvatar()).ifPresent(avatar -> {
-                memberEntity.setAvatar(mapAvatar(avatar));
+                memberEntity.setAvatar(mapAvatar(memberEntity.getAvatar(), avatar));
                 stampAvatar(memberEntity, memberEntity.getUserId());
             });
             Optional.ofNullable(request.getTermsVersion()).ifPresent(memberEntity::setTermsVersion);
@@ -500,17 +500,17 @@ public class MemberServiceImpl implements MemberService {
                 )));
 
         String previousStatus = member.getStatus();
-        boolean wasActive = MemberStatus.ACTIVE.name().equals(member.getStatus());
+        boolean wasApproved = isApprovedOrActive(member.getStatus());
         member.setApprovedByChurch(true);
         updateApprovalStatus(member);
-        if (!wasActive && MemberStatus.ACTIVE.name().equals(member.getStatus())) {
+        if (!wasApproved && isApprovedOrActive(member.getStatus())) {
             activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
         }
         assignMemberRoleIfApproved(member);
 
         Adult_MemberEntity saved = memberRepository.save(member);
-        if (!MemberStatus.ACTIVE.name().equals(previousStatus)
-                && MemberStatus.ACTIVE.name().equals(saved.getStatus())) {
+        if (!isApprovedOrActive(previousStatus)
+                && isApprovedOrActive(saved.getStatus())) {
             membershipCardService.issueOrRefreshForApprovedMember(saved);
         }
         return convertToResponse(saved);
@@ -530,11 +530,11 @@ public class MemberServiceImpl implements MemberService {
                 )));
         String previousStatus = member.getStatus();
         boolean wasApproved = member.isApprovedByPriest();
-        boolean wasActive = MemberStatus.ACTIVE.name().equals(member.getStatus());
+        boolean wasActive = isApprovedOrActive(member.getStatus());
         member.setApprovedByPriest(true);
 
         updateApprovalStatus(member);
-        if (!wasActive && MemberStatus.ACTIVE.name().equals(member.getStatus())) {
+        if (!wasActive && isApprovedOrActive(member.getStatus())) {
             activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
         }
         assignMemberRoleIfApproved(member);
@@ -546,8 +546,8 @@ public class MemberServiceImpl implements MemberService {
                     });
         }
         Adult_MemberEntity saved = memberRepository.save(member);
-        if (!MemberStatus.ACTIVE.name().equals(previousStatus)
-                && MemberStatus.ACTIVE.name().equals(saved.getStatus())) {
+        if (!isApprovedOrActive(previousStatus)
+                && isApprovedOrActive(saved.getStatus())) {
             membershipCardService.issueOrRefreshForApprovedMember(saved);
         }
         return convertToResponse(saved);
@@ -710,14 +710,14 @@ public class MemberServiceImpl implements MemberService {
     private void updateApprovalStatus(Adult_MemberEntity member) {
         boolean requiresPriestApproval = org.springframework.util.StringUtils.hasText(member.getPriestNumber());
         if (!requiresPriestApproval && member.isApprovedByChurch()) {
-            member.setStatus(MemberStatus.ACTIVE.name());
+            member.setStatus(MemberStatus.APPROVED.name());
             if (member.getApprovedAt() == null) {
                 member.setApprovedAt(LocalDateTime.now());
             }
             return;
         }
         if (requiresPriestApproval && member.isApprovedByChurch() && member.isApprovedByPriest()) {
-            member.setStatus(MemberStatus.ACTIVE.name());
+            member.setStatus(MemberStatus.APPROVED.name());
             if (member.getApprovedAt() == null) {
                 member.setApprovedAt(LocalDateTime.now());
             }
@@ -752,18 +752,18 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
-    private ImageAssetEntity mapAvatar(ImageAssetDTO avatar) {
+    private ImageAssetEntity mapAvatar(ImageAssetEntity existing, ImageAssetDTO avatar) {
         if (avatar == null) {
             return null;
         }
-        return ImageAssetEntity.builder()
-                .imageUrl(avatar.getImageUrl())
-                .imageSize(avatar.getImageSize())
-                .build();
+        ImageAssetEntity imageAsset = existing != null ? existing : new ImageAssetEntity();
+        imageAsset.setImageUrl(avatar.getImageUrl());
+        imageAsset.setImageSize(avatar.getImageSize());
+        return imageAsset;
     }
 
     private void assignMemberRoleIfApproved(Adult_MemberEntity member) {
-        if (!MemberStatus.ACTIVE.name().equals(member.getStatus())) {
+        if (!isApprovedOrActive(member.getStatus())) {
             return;
         }
         UserEntity user = member.getUser();
@@ -788,6 +788,10 @@ public class MemberServiceImpl implements MemberService {
         }
         user.getRoles().add(memberRole);
         userRepository.save(user);
+    }
+
+    private boolean isApprovedOrActive(String status) {
+        return MemberStatus.APPROVED.name().equals(status) || MemberStatus.ACTIVE.name().equals(status);
     }
 
     private UUID requireCurrentUserId() {
