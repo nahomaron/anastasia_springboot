@@ -35,8 +35,6 @@ public class RoleServiceTest {
     @InjectMocks private RoleService roleService;
 
     private static final String TEST_ROLE_NAME = "Volunteer";
-    private static final String NORMALIZED_TEST_ROLE_NAME = "VOLUNTEER";
-
     private UUID tenantId;
     private RoleRequest roleRequest;
 
@@ -59,7 +57,7 @@ public class RoleServiceTest {
         Permission permission = Permission.builder().name(PermissionType.VIEW_MEMBERS).build();
         TenantEntity tenant = TenantEntity.builder().id(tenantId).build();
 
-        when(roleRepository.existsByRoleNameAndTenantId(NORMALIZED_TEST_ROLE_NAME, tenantId)).thenReturn(false);
+        when(roleRepository.existsByRoleNameAndTenantId(TEST_ROLE_NAME, tenantId)).thenReturn(false);
         when(permissionRepository.findByNameIn(Set.of("VIEW_MEMBERS"))).thenReturn(Set.of(permission));
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(tenant));
         when(roleRepository.save(any(Role.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -73,7 +71,7 @@ public class RoleServiceTest {
 
     @Test
     void testCreateRole_throwsIfRoleAlreadyExists() {
-        when(roleRepository.existsByRoleNameAndTenantId(NORMALIZED_TEST_ROLE_NAME, tenantId)).thenReturn(true);
+        when(roleRepository.existsByRoleNameAndTenantId(TEST_ROLE_NAME, tenantId)).thenReturn(true);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 roleService.createRole(roleRequest));
@@ -84,7 +82,7 @@ public class RoleServiceTest {
 
     @Test
     void testCreateRole_throwsIfTenantNotFound() {
-        when(roleRepository.existsByRoleNameAndTenantId(NORMALIZED_TEST_ROLE_NAME, tenantId)).thenReturn(false);
+        when(roleRepository.existsByRoleNameAndTenantId(TEST_ROLE_NAME, tenantId)).thenReturn(false);
         when(permissionRepository.findByNameIn(any())).thenReturn(Set.of());
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.empty());
 

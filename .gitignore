@@ -109,15 +109,12 @@ application.yml
 application-dev.yml
 application-prod.yml
 application-test.yml
-application-api.yml
-application-test-server.yml
+application-api-tests.yml
 
-!src/main/resources/application-test-server.yml
 !src/main/resources/application-test.yml
-!src/main/resources/application-api.yml
+!src/main/resources/application-api-tests.yml
 !src/test/resources/application-test.yml
-!src/test/resources/application-api.yml
-!src/test/resources/application-test-server.yml
+!src/test/resources/application-api-tests.yml
 
 config/*.properties
 config/*.yml

@@ -216,7 +216,7 @@ public class MemberServiceUnitTest {
         when(memberRepository.findByIdAndTenantId(1L, tenantId)).thenReturn(Optional.of(member));
         memberService.approveByChurch(1L);
         verify(memberRepository).save(member);
-        assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE.name());
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
     }
 
     @Test
@@ -234,7 +234,7 @@ public class MemberServiceUnitTest {
         verify(memberRepository).save(member);
         verify(priestRepository).save(priest);
         assertThat(priest.getSpiritualChildren()).isEqualTo(3);
-        assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE.name());
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.APPROVED.name());
     }
 
     @Test

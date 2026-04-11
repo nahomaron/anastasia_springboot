@@ -6,7 +6,7 @@ Source lives under `src/main/java/com/anastasia/Anastasia_BackEnd`, grouped by c
 ## Build, Test, and Development Commands
 - `./mvnw clean verify` — compile, run unit/integration tests, and produce the JaCoCo report in `target/site/jacoco/`.
 - `./mvnw spring-boot:run` — start the API with the default profile.
-- `./mvnw spring-boot:run -Dspring-boot.run.profiles=api` — boot with the API profile to load `application-api.yml` overrides.
+- `./mvnw spring-boot:run -Dspring-boot.run.profiles=api-tests` — boot with the API test profile to load `application-api-tests.yml` overrides.
 - `docker compose -f compose.yaml up -d` — launch ancillary services (e.g., database, queues) expected by local development.
 
 ## Coding Style & Naming Conventions

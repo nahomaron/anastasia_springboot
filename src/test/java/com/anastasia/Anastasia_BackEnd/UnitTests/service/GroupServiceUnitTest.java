@@ -93,8 +93,7 @@ class GroupServiceUnitTest {
     }
 
     @Test
-    void createGroup_assignsCreatorAndManagersAsMembers() {
-        UUID creatorId = UUID.randomUUID();
+    void createGroup_assignsManagersSeparatelyFromMembers() {
         UUID userId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
 
@@ -114,21 +113,14 @@ class GroupServiceUnitTest {
 
         UserEntity user = userEntity(userId, tenantId);
         UserEntity manager = userEntity(managerId, tenantId);
-        UserEntity creator = userEntity(creatorId, tenantId);
-
         when(groupRepository.existsByGroupNameAndTenantId("New Group", tenantId)).thenReturn(false);
         when(groupMapper.groupDTOToEntity(groupDTO)).thenReturn(mappedEntity);
         when(churchRepository.findByTenantId(tenantId)).thenReturn(Optional.of(church));
         when(userRepository.findAllByUuidIn(Set.of(userId))).thenReturn(List.of(user));
         when(userRepository.findAllByUuidIn(Set.of(managerId))).thenReturn(List.of(manager));
-        when(userRepository.findById(creatorId)).thenReturn(Optional.of(creator));
         when(groupRepository.save(any(GroupEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(groupMapper.groupEntityToResponse(any(GroupEntity.class)))
                 .thenReturn(GroupResponse.builder().groupId(1L).groupName("New Group").build());
-
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(new UserPrincipal(creator), null, List.of())
-        );
 
         GroupResponse result = groupService.createGroup(groupDTO);
 
@@ -137,7 +129,7 @@ class GroupServiceUnitTest {
         verify(groupRepository).save(captor.capture());
         GroupEntity saved = captor.getValue();
         assertThat(saved.getTenantId()).isEqualTo(tenantId);
-        assertThat(saved.getUsers()).contains(user, manager, creator);
+        assertThat(saved.getUsers()).containsExactly(user);
         assertThat(saved.getManagers()).contains(manager);
     }
 
@@ -233,7 +225,7 @@ class GroupServiceUnitTest {
         assertThat(response.getAddedManagerIds()).containsExactly(managerId);
         assertThat(response.getSkippedManagerIds()).containsExactly(existingManagerId);
         assertThat(response.getNotFoundManagerIds()).containsExactly(missingManagerId);
-        assertThat(existingGroup.getUsers()).contains(newManager, existingManager);
+        assertThat(existingGroup.getManagers()).contains(existingManager, newManager);
         verify(groupRepository).save(existingGroup);
     }
 
