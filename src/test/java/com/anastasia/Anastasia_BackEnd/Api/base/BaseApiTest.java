@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.net.ConnectException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Base64;
@@ -95,36 +96,7 @@ public class BaseApiTest {
         log.info("----- Starting API Test Suite -----");
         configureRestAssuredBase();
         TestDataManager.resetAllTestData();
-
-        String baseUrl = System.getProperty("base.url", "http://localhost:8080");
-        try {
-            RestAssured.baseURI = baseUrl;
-            RestAssured.given()
-                    .basePath("")
-                    .get("/actuator/health")
-                    .then()
-                    .statusCode(200);
-        } catch (Exception e) {
-            Assumptions.abort("Backend not reachable at " + baseUrl + ". Skipping black-box tests.");
-        }
-
-        // Subscribe a new tenant (this will create an OWNER)
-        SubscriptionFlowHelper.SubscriptionResult ownerResult =
-                SubscriptionFlowHelper.subscribeTenantAndLoginOwner();
-
-        ownerAccessToken = ownerResult.accessToken();
-        ownerUserId = ownerResult.authResponse() != null && ownerResult.authResponse().getSession() != null
-                ? ownerResult.authResponse().getSession().getUserId()
-                : null;
-        cachedTenant = ownerResult.tenantRequest(); // optional if you need tenant info
-        if (ownerResult.authResponse() != null && ownerResult.authResponse().getSession() != null) {
-            cachedTenantId = ownerResult.authResponse().getSession().getTenantId();
-        } else if (ownerAccessToken != null) {
-            cachedTenantId = extractTenantIdFromToken(ownerAccessToken);
-        } else {
-            cachedTenantId = null;
-        }
-        log.info("Seed OWNER tenant created: {}", cachedTenant.getOwnerName());
+        verifyBackendReachable();
     }
 
     /**
@@ -250,6 +222,27 @@ public class BaseApiTest {
      */
     private static boolean hasText(String value) {
         return value != null && !value.trim().isEmpty();
+    }
+
+    private static void verifyBackendReachable() {
+        String baseUrl = resolveBaseUrl();
+        try {
+            RestAssured.given()
+                    .basePath("")
+                    .get("/")
+                    .then()
+                    .extract()
+                    .response();
+        } catch (Exception ex) {
+            Throwable root = ex;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            if (root instanceof ConnectException) {
+                Assumptions.abort("Backend not reachable at " + baseUrl + ". Skipping black-box tests.");
+            }
+            log.warn("Backend reachability probe at {} returned non-fatal error: {}", baseUrl, root.getMessage());
+        }
     }
 
     /**
@@ -396,16 +389,12 @@ public class BaseApiTest {
                 cachedEmail, initStage, duration);
 
         System.out.println("[Auth Refresh] " + message);
-
-        Allure.addAttachment(
-                "Auth Cache Refreshed",
-                "text/plain",
-                new ByteArrayInputStream(message.getBytes()),
-                ".txt"
-        );
+        attachTextIfTestRunning("Auth Cache Refreshed", message, ".txt");
     }
 
     public static void ensureOwnerAuthenticated() {
+        ensureOwnerBootstrap();
+
         if (hasText(ownerAccessToken) && !isTokenExpiredIgnoringSignature(ownerAccessToken)) {
             return;
         }
@@ -428,6 +417,68 @@ public class BaseApiTest {
         cachedTenantId = loginResponse.getSession() != null
                 ? loginResponse.getSession().getTenantId()
                 : extractTenantIdFromToken(ownerAccessToken);
+    }
+
+    private static void ensureOwnerBootstrap() {
+        if (cachedTenant != null && hasText(cachedTenant.getOwnerEmail()) && hasText(cachedTenant.getPassword())) {
+            return;
+        }
+
+        SubscriptionFlowHelper.SubscriptionResult ownerResult =
+                SubscriptionFlowHelper.subscribeTenantAndLoginOwner();
+
+        ownerAccessToken = ownerResult.accessToken();
+        ownerUserId = ownerResult.authResponse() != null && ownerResult.authResponse().getSession() != null
+                ? ownerResult.authResponse().getSession().getUserId()
+                : null;
+        cachedTenant = ownerResult.tenantRequest();
+        if (ownerResult.authResponse() != null && ownerResult.authResponse().getSession() != null) {
+            cachedTenantId = ownerResult.authResponse().getSession().getTenantId();
+        } else if (ownerAccessToken != null) {
+            cachedTenantId = extractTenantIdFromToken(ownerAccessToken);
+        } else {
+            cachedTenantId = null;
+        }
+
+        if (cachedTenant != null) {
+            log.info("Seed OWNER tenant created: {}", cachedTenant.getOwnerName());
+        }
+    }
+
+    public static void attachTextIfTestRunning(String title, String message, String extension) {
+        if (message == null) {
+            return;
+        }
+        try {
+            if (Allure.getLifecycle().getCurrentTestCase().isPresent()) {
+                Allure.addAttachment(
+                        title,
+                        "text/plain",
+                        new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)),
+                        extension
+                );
+            }
+        } catch (Exception ex) {
+            log.warn("Skipping Allure attachment '{}': {}", title, ex.getMessage());
+        }
+    }
+
+    public static void attachJsonIfTestRunning(String title, String content, String extension) {
+        if (content == null) {
+            return;
+        }
+        try {
+            if (Allure.getLifecycle().getCurrentTestCase().isPresent()) {
+                Allure.addAttachment(
+                        title,
+                        "application/json",
+                        new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)),
+                        extension
+                );
+            }
+        } catch (Exception ex) {
+            log.warn("Skipping Allure attachment '{}': {}", title, ex.getMessage());
+        }
     }
 
     private static boolean isTokenExpiredIgnoringSignature(String token) {

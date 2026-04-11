@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.Api.utils;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.ConfigManager;
+import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import io.qameta.allure.Allure;
 import io.restassured.response.Response;
@@ -94,7 +95,7 @@ public class TestDataManager {
     public static void resetAllTestData() {
         runCleanup("Global Reset", "All Entities", () ->
                 given()
-                        .spec(RequestSpecFactory.authenticatedSpec())
+                        .spec(RequestSpecFactory.anonymousSpec())
                         .when()
                         .post(buildPath("reset-all"))
                         .then()
@@ -142,12 +143,7 @@ public class TestDataManager {
                 json.append("  ").append(new LinkedHashMap<>(entry)).append(",\n"));
         json.append("]");
 
-        Allure.addAttachment(
-                "Cleanup Summary",
-                "application/json",
-                new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8)),
-                ".json"
-        );
+        BaseApiTest.attachJsonIfTestRunning("Cleanup Summary", json.toString(), ".json");
 
         log.info("Cleanup Summary exported to Allure:\n{}", json);
     }
@@ -193,10 +189,9 @@ public class TestDataManager {
 
     private static void attachCleanupResponse(String title, Response response) {
         try {
-            Allure.addAttachment(
+            BaseApiTest.attachJsonIfTestRunning(
                     title + " (Status: " + response.statusCode() + ")",
-                    "application/json",
-                    new ByteArrayInputStream(response.asPrettyString().getBytes(StandardCharsets.UTF_8)),
+                    response.asPrettyString(),
                     ".json"
             );
         } catch (Exception e) {
@@ -206,12 +201,7 @@ public class TestDataManager {
 
     private static void attachTextAttachment(String title, String message) {
         try {
-            Allure.addAttachment(
-                    title,
-                    "text/plain",
-                    new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)),
-                    ".txt"
-            );
+            BaseApiTest.attachTextIfTestRunning(title, message, ".txt");
         } catch (Exception ignored) {}
     }
 

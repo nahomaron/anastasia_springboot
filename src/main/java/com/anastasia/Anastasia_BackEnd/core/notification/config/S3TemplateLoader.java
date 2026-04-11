@@ -8,8 +8,10 @@ import org.springframework.util.StringUtils;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -52,8 +54,17 @@ public class S3TemplateLoader {
                 return new String(response.readAllBytes(), StandardCharsets.UTF_8);
             }
 
+        } catch (NoSuchKeyException e) {
+            log.warn("Template key {} was not found in S3 bucket {}", key, bucketName);
+            return null;
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                log.warn("Template key {} is missing in S3 bucket {}", key, bucketName);
+                return null;
+            }
+            throw e;
         } catch (SdkClientException | IOException e) {
-            log.warn("Template not found in S3: {}", key);
+            log.warn("Template could not be loaded from S3 key {}: {}", key, e.getMessage());
             return null;
         }
     }

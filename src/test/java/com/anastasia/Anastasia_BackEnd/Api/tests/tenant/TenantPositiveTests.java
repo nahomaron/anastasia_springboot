@@ -22,14 +22,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Epic("Tenant Subscription")
 @Feature("Happy flows")
 @Severity(SeverityLevel.CRITICAL)
-class TenantPositiveTests extends BaseApiTest {
+public class TenantPositiveTests extends BaseApiTest {
 
     private final TenantService tenantService = new TenantService();
     private final AuthService authService = new AuthService();
 
     @Test
     @Story("Tenant subscription end-to-end flow issues owner tokens")
-    void tenantSubscriptionFlowShouldIssueTokens() {
+    public void tenantSubscriptionFlowShouldIssueTokens() {
         TenantDTO tenant = TenantDataFactory.newValidTenant();
         Response subscribeResponse = tenantService.subscribeTenant(tenant);
         assertThat(subscribeResponse.statusCode()).isEqualTo(201);
@@ -61,7 +61,7 @@ class TenantPositiveTests extends BaseApiTest {
 
     @Test
     @Story("Platform admin can list tenants")
-    void platformAdminListsTenants() {
+    public void platformAdminListsTenants() {
         Response response = tenantService.listTenants(getSpecForRole("PLATFORM_ADMIN"));
         assertThat(response.statusCode()).isEqualTo(200);
     }

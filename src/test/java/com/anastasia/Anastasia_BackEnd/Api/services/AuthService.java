@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.Api.services;
 
 import com.anastasia.Anastasia_BackEnd.Api.config.ConfigManager;
 import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
+import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.utils.SchemaValidator;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
@@ -149,10 +150,7 @@ public class AuthService {
 
 
     private void attachResponse(String title, Response response) {
-        Allure.addAttachment(title,
-                "application/json",
-                new ByteArrayInputStream(response.asPrettyString().getBytes()),
-                ".json");
+        BaseApiTest.attachJsonIfTestRunning(title, response.asPrettyString(), ".json");
     }
 
 
