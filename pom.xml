@@ -606,6 +606,8 @@
 						<include>**/*Tests.java</include>
 					</includes>
 					<excludes>
+						<exclude>**/Api/tests/**/*Test.java</exclude>
+						<exclude>**/Api/tests/**/*Tests.java</exclude>
 						<exclude>**/*IT.java</exclude>
 					</excludes>
 

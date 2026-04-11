@@ -87,6 +87,7 @@ public abstract class PostgresTestContainer {
             registry.add("spring.flyway.placeholders.children_columns_sql", () -> POSTGRES_CHILDREN_COLUMNS_SQL);
             registry.add("spring.flyway.placeholders.tenant_demo_template_sql", () -> POSTGRES_TENANT_DEMO_TEMPLATE_SQL);
             registry.add("spring.flyway.placeholders.tenant_workspace_lifecycle_sql", () -> POSTGRES_TENANT_WORKSPACE_LIFECYCLE_SQL);
+            registry.add("spring.flyway.placeholders.normalize_priest_languages_sql", () -> "");
             registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         } else {
             registry.add("spring.datasource.url", () -> "jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
