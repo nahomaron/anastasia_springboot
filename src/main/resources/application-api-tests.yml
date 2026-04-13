@@ -65,8 +65,6 @@ test:
 
 app:
   evn: api-tests
-  auth:
-    jwt-current-secret: "REDACTED_TEST_JWT_SECRET="
   seeding:
     enabled: false
   features:

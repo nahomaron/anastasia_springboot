@@ -26,14 +26,15 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+      - name: Grant Maven wrapper permission
+        run: chmod +x ./mvnw
       - name: Run OWASP Dependency-Check
-        uses: owasp/dependency-check-action@v3
-        with:
-          project: anastasia-backend
-          scan-path: .
-          format: ALL
-          output-directory: target/dependency-check-reports
-          fail-on-cvss: 7
+        run: >
+          ./mvnw -q -DskipTests
+          org.owasp:dependency-check-maven:check
+          -Dformat=ALL
+          -DoutputDirectory=target/dependency-check-reports
+          -DfailBuildOnCVSS=7
       - name: Upload dependency check reports
         if: always()
         uses: actions/upload-artifact@v4

@@ -122,6 +122,8 @@ config/*.yml
 # Ignore database files
 /h2.db
 /data/
+/volume/cache/
+/performance/results/
 *.sqlite
 
 # Ignore Docker related files

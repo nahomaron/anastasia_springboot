@@ -1,7 +1,3 @@
-app:
-  auth:
-    jwt-current-secret: "REDACTED_TEST_JWT_SECRET="
-
 email:
   sending:
     enabled: false

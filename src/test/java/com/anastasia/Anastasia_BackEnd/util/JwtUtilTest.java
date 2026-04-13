@@ -16,9 +16,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JwtUtilTest {
-    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
-    private static final String PREVIOUS_JWT_SECRET = "REDACTED_PREVIOUS_TEST_JWT_SECRET=";
-
     private JwtUtil jwtUtil;
     private UserPrincipal userPrincipal;
     private final String username = "test@example.com";
@@ -30,7 +27,7 @@ public class JwtUtilTest {
                 .id(tenantId)
                 .build();
 
-        jwtUtil = new JwtUtil(TEST_JWT_SECRET);
+        jwtUtil = new JwtUtil(TestJwtSecrets.currentSecret());
 
         Role role = Role.builder()
                 .roleName("ADMIN")
@@ -97,8 +94,8 @@ public class JwtUtilTest {
 
     @Test
     void testValidationWithPreviousSecret() {
-        JwtUtil previousSigner = new JwtUtil(PREVIOUS_JWT_SECRET);
-        JwtUtil rotatingVerifier = JwtUtil.forSecrets(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
+        JwtUtil previousSigner = new JwtUtil(TestJwtSecrets.previousSecret());
+        JwtUtil rotatingVerifier = JwtUtil.forSecrets(TestJwtSecrets.currentSecret(), TestJwtSecrets.previousSecret());
 
         String token = previousSigner.generateAccessToken(userPrincipal);
 

@@ -27,15 +27,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtUtilTest {
-    private static final String TEST_JWT_SECRET = "REDACTED_TEST_JWT_SECRET=";
-    private static final String PREVIOUS_JWT_SECRET = "REDACTED_PREVIOUS_TEST_JWT_SECRET=";
-
     private JwtUtil jwtUtil;
     private UserPrincipal userPrincipal;
 
     @BeforeEach
     void setUp() {
-        jwtUtil = new JwtUtil(TEST_JWT_SECRET);
+        jwtUtil = new JwtUtil(com.anastasia.Anastasia_BackEnd.util.TestJwtSecrets.currentSecret());
 
         TenantEntity tenant = TenantEntity.builder()
                 .id(UUID.randomUUID())
@@ -104,8 +101,10 @@ class JwtUtilTest {
 
     @Test
     void extractAllClaims_shouldAcceptTokenSignedWithPreviousSecret() {
-        JwtUtil previousSigner = new JwtUtil(PREVIOUS_JWT_SECRET);
-        JwtUtil rotatingVerifier = JwtUtil.forSecrets(TEST_JWT_SECRET, PREVIOUS_JWT_SECRET);
+        String currentSecret = com.anastasia.Anastasia_BackEnd.util.TestJwtSecrets.currentSecret();
+        String previousSecret = com.anastasia.Anastasia_BackEnd.util.TestJwtSecrets.previousSecret();
+        JwtUtil previousSigner = new JwtUtil(previousSecret);
+        JwtUtil rotatingVerifier = JwtUtil.forSecrets(currentSecret, previousSecret);
 
         String token = previousSigner.generateAccessToken(userPrincipal);
 
