@@ -6,10 +6,10 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
-COPY src src
+COPY src/main src/main
 
-# Build the application (skip tests for faster image builds)
-RUN ./mvnw clean package -DskipTests
+# Build the application artifact only. Tests run in CI before this workflow.
+RUN ./mvnw -q clean package -Dmaven.test.skip=true
 
 # ========= Stage 2: Runtime =========
 FROM eclipse-temurin:21-jre
