@@ -8,10 +8,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.Function;
@@ -26,13 +28,19 @@ public class JwtUtil {
     private static final Long ACCESS_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24;
     private static final Long REFRESH_TOKEN_EXPIRATION_PERIOD = 1000L * 60 * 60 * 24 * 7;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final String TEST_FALLBACK_SECRET = Base64.getEncoder()
+            .encodeToString("anastasia-test-current-jwt-material-01".getBytes(StandardCharsets.UTF_8));
 
     @Autowired
     public JwtUtil(
-            @Value("${app.auth.jwt-current-secret}") String currentBase64Key,
-            @Value("${app.auth.jwt-previous-secret:}") String previousBase64Key
+            @Value("${app.auth.jwt-current-secret:}") String currentBase64Key,
+            @Value("${app.auth.jwt-previous-secret:}") String previousBase64Key,
+            Environment environment
     ) {
-        this(currentBase64Key, previousBase64Key, "app.auth.jwt-current-secret", "app.auth.jwt-previous-secret");
+        this(resolveCurrentSecret(currentBase64Key, environment),
+                previousBase64Key,
+                "app.auth.jwt-current-secret",
+                "app.auth.jwt-previous-secret");
     }
 
     public JwtUtil(String currentBase64Key) {
@@ -182,6 +190,22 @@ public class JwtUtil {
         byte[] key = new byte[32];
         SECURE_RANDOM.nextBytes(key);
         return Base64.getEncoder().encodeToString(key);
+    }
+
+    private static String resolveCurrentSecret(String currentBase64Key, Environment environment) {
+        if (currentBase64Key != null && !currentBase64Key.isBlank()) {
+            return currentBase64Key;
+        }
+
+        if (environment != null) {
+            for (String profile : environment.getActiveProfiles()) {
+                if ("test".equals(profile) || "api-tests".equals(profile)) {
+                    return TEST_FALLBACK_SECRET;
+                }
+            }
+        }
+
+        return currentBase64Key;
     }
 
     private static SecretKey decodeSecretKey(String base64Key, String propertyName) {
