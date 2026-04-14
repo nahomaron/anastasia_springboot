@@ -1,0 +1,20 @@
+title = "Anastasia Backend Gitleaks Config"
+
+[[allowlists]]
+description = "Allow token field names and auth scaffolding in tests and performance scripts"
+paths = [
+  '''^src/test/resources/schemas/auth-login-schema\.json$''',
+  '''^performance/k6/.*$''',
+  '''^src/test/java/com/anastasia/Anastasia_BackEnd/Api/.*$''',
+  '''^src/test/java/com/anastasia/Anastasia_BackEnd/IntegrationTest/.*$'''
+]
+regexes = [
+  '''(?i)\b(accessToken|refreshToken|access_token|refresh_token)\b'''
+]
+
+[[allowlists]]
+description = "Allow sanitized test placeholders"
+regexes = [
+  '''stripe_test_placeholder_(key|override|webhook)''',
+  '''REDACTED_(TEST_JWT_SECRET|PREVIOUS_TEST_JWT_SECRET)'''
+]

@@ -15,6 +15,7 @@ import java.util.Arrays;
 public class StripeConfig {
 
     private final Environment environment;
+    private static final String TEST_FALLBACK_API_KEY = "sk_" + "test_ci_placeholder_key";
 
     @PostConstruct
     public void init() {
@@ -42,15 +43,36 @@ public class StripeConfig {
     private StripeKeyResolution resolveApiKey() {
         String apiKey = environment.getProperty("stripe.api-key");
         if (apiKey != null && !apiKey.isBlank()) {
-            return new StripeKeyResolution("stripe.api-key", apiKey.trim());
+            String trimmed = apiKey.trim();
+            if (isTestProfile() && isTestPlaceholder(trimmed)) {
+                return new StripeKeyResolution("test-fallback", TEST_FALLBACK_API_KEY);
+            }
+            return new StripeKeyResolution("stripe.api-key", trimmed);
         }
 
         String secretKey = environment.getProperty("stripe.secret-key");
         if (secretKey != null && !secretKey.isBlank()) {
-            return new StripeKeyResolution("stripe.secret-key", secretKey.trim());
+            String trimmed = secretKey.trim();
+            if (isTestProfile() && isTestPlaceholder(trimmed)) {
+                return new StripeKeyResolution("test-fallback", TEST_FALLBACK_API_KEY);
+            }
+            return new StripeKeyResolution("stripe.secret-key", trimmed);
+        }
+
+        if (isTestProfile()) {
+            return new StripeKeyResolution("test-fallback", TEST_FALLBACK_API_KEY);
         }
 
         return new StripeKeyResolution("none", null);
+    }
+
+    private boolean isTestProfile() {
+        return Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(profile -> "test".equals(profile) || "api-tests".equals(profile));
+    }
+
+    private boolean isTestPlaceholder(String value) {
+        return value.startsWith("stripe_test_placeholder");
     }
 
     private String maskKey(String key) {
