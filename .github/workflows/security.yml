@@ -18,7 +18,7 @@ jobs:
   dependency-check:
     if: ${{ github.event_name != 'workflow_run' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       DC_DATA_DIR: ~/.m2/repository/org/owasp/dependency-check-data
@@ -40,7 +40,7 @@ jobs:
         run: chmod +x ./mvnw
       - name: Run OWASP Dependency-Check
         run: >
-          ./mvnw -q -DskipTests
+          ./mvnw --batch-mode -DskipTests
           org.owasp:dependency-check-maven:check
           -DnvdApiKey=${NVD_API_KEY}
           -DdataDirectory=${DC_DATA_DIR}
