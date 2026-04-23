@@ -48,7 +48,7 @@ public class MembershipCardService {
     private final MembershipCardRenderService renderService;
     private final LocalizedMessageService messageService;
 
-    @Value("${app.public.backend-base-url:http://192.168.1.79:8080}")
+    @Value("${app.public.backend-base-url:}")
     private String verifyBaseUrl;
 
     @Transactional
@@ -426,7 +426,7 @@ public class MembershipCardService {
 
     private String normalizeBaseUrl(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            return "http://192.168.1.79:8080";
+            throw new IllegalStateException("app.public.backend-base-url must be configured");
         }
         return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
     }

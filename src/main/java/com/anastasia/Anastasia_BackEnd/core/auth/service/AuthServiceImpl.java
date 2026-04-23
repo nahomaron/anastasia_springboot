@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    @Value("${app.public.frontend-base-url:http://192.168.1.79:4200}")
+    @Value("${app.public.frontend-base-url:}")
     private String frontendBaseUrl;
 
     private final JwtUtil jwtUtil;
@@ -849,7 +849,7 @@ public class AuthServiceImpl implements AuthService {
 
     private String normalizeBaseUrl(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            return "http://192.168.1.79:4200";
+            throw new IllegalStateException("app.public.frontend-base-url must be configured");
         }
         return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
     }

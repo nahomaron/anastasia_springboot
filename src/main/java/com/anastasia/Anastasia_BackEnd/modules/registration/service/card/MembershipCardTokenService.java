@@ -23,7 +23,10 @@ public class MembershipCardTokenService {
 
     private final SecretKey secretKey;
 
-    public MembershipCardTokenService(@Value("${jwt.secret:1d8nU4bfO1i+6NDAQ3t5w9cI0D7+x1FFDrcc+P2NJGU=}") String jwtSecret) {
+    public MembershipCardTokenService(@Value("${jwt.secret:}") String jwtSecret) {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("jwt.secret must be configured for membership card tokens");
+        }
         byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }

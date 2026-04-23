@@ -14,7 +14,7 @@ import java.io.IOException;
 @Component
 public class OAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
 
-    @Value("${app.public.frontend-base-url:http://localhost:4200}")
+    @Value("${app.public.frontend-base-url:}")
     private String frontendBaseUrl;
 
     @Override
@@ -34,7 +34,7 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
 
     private String normalizeBaseUrl(String value) {
         if (value == null || value.isBlank()) {
-            return "http://localhost:4200";
+            throw new IllegalStateException("app.public.frontend-base-url must be configured");
         }
         return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
     }
