@@ -9,6 +9,10 @@ on:
     workflows: ["Build Image"]
     types: [completed]
 
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.ref || github.run_id }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
   actions: read
@@ -18,7 +22,7 @@ jobs:
   dependency-check:
     if: ${{ github.event_name != 'workflow_run' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       DC_DATA_DIR: ~/.m2/repository/org/owasp/dependency-check-data
