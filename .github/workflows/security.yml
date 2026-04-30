@@ -26,6 +26,8 @@ jobs:
     env:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       DC_DATA_DIR: ~/.m2/repository/org/owasp/dependency-check-data
+      DC_SUPPRESSION_FILE: .github/dependency-check-suppressions.xml
+      DC_VERSION: 12.2.1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -37,26 +39,47 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.DC_DATA_DIR }}
-          key: ${{ runner.os }}-dependency-check-${{ hashFiles('pom.xml') }}
+          key: ${{ runner.os }}-dependency-check-v3
           restore-keys: |
             ${{ runner.os }}-dependency-check-
       - name: Grant Maven wrapper permission
         run: chmod +x ./mvnw
       - name: Run OWASP Dependency-Check
-        run: >
-          ./mvnw --batch-mode -DskipTests
-          org.owasp:dependency-check-maven:check
-          -DnvdApiKey=${NVD_API_KEY}
-          -DdataDirectory=${DC_DATA_DIR}
-          -Dformat=ALL
-          -DoutputDirectory=target/dependency-check-reports
-          -DfailBuildOnCVSS=7
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p target/dependency-check-reports
+
+          run_dc() {
+            ./mvnw --batch-mode -DskipTests \
+              org.owasp:dependency-check-maven:${DC_VERSION}:check \
+              -DnvdApiKey="${NVD_API_KEY}" \
+              -DdataDirectory="${DC_DATA_DIR}" \
+              -DsuppressionFiles="${DC_SUPPRESSION_FILE}" \
+              -Dformat=ALL \
+              -DoutputDirectory=target/dependency-check-reports \
+              -DfailBuildOnCVSS=7 \
+              "$@"
+          }
+
+          run_dc 2>&1 | tee target/dependency-check.log
+          status=${PIPESTATUS[0]}
+
+          if [[ ${status} -ne 0 ]] && grep -q 'Value too long for column "URL CHARACTER VARYING(1000)"' target/dependency-check.log; then
+            echo "Dependency-Check hit the known NVD/H2 URL-length issue; retrying with cached data and autoupdate disabled."
+            run_dc -Dautoupdate=false 2>&1 | tee target/dependency-check-fallback.log
+          else
+            exit ${status}
+          fi
       - name: Upload dependency check reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: security-dependency-check-reports
-          path: target/dependency-check-reports
+          path: |
+            target/dependency-check-reports
+            target/dependency-check.log
+            target/dependency-check-fallback.log
           if-no-files-found: ignore
 
   gitleaks:
