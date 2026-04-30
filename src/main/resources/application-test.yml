@@ -1,6 +1,16 @@
 email:
   sending:
     enabled: false
+spring:
+  mail:
+    host: localhost
+    port: 2525
+jwt:
+  secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
 notification:
   email:
     enabled: false
+app:
+  public:
+    backend-base-url: http://localhost:8080
+    frontend-base-url: http://localhost:4200

@@ -26,6 +26,12 @@ spring:
       hibernate:
         format_sql: false
     open-in-view: false
+  mail:
+    host: localhost
+    port: 2525
+
+jwt:
+  secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
 
 auth:
   login:
@@ -51,6 +57,9 @@ platform:
     secret: dev-secret
 
 app:
+  public:
+    backend-base-url: http://localhost:8080
+    frontend-base-url: http://localhost:4200
   evn: api-tests
   security:
     allow-anonymous: true
