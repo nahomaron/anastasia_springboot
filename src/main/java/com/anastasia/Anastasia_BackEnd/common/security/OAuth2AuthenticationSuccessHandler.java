@@ -20,7 +20,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    @Value("${app.public.frontend-base-url:http://localhost:4200}")
+    @Value("${app.public.frontend-base-url:}")
     private String frontendBaseUrl;
 
     private final AuthService authService;
@@ -71,7 +71,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     private String normalizeBaseUrl(String value) {
         if (value == null || value.isBlank()) {
-            return "http://localhost:4200";
+            throw new IllegalStateException("app.public.frontend-base-url must be configured");
         }
         return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
     }

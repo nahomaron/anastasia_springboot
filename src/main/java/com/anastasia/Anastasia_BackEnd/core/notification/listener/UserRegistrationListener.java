@@ -16,7 +16,7 @@ import java.util.Map;
 public class UserRegistrationListener {
 
     private final ApplicationEventPublisher publisher;
-    @Value("${app.public.frontend-base-url:http://192.168.1.79:4200}")
+    @Value("${app.public.frontend-base-url:}")
     private String frontendBaseUrl;
 
     public UserRegistrationListener(ApplicationEventPublisher publisher) {
@@ -40,7 +40,7 @@ public class UserRegistrationListener {
 
     private String normalizeBaseUrl(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            return "http://192.168.1.79:4200";
+            throw new IllegalStateException("app.public.frontend-base-url must be configured");
         }
         return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
     }

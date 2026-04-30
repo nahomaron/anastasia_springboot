@@ -42,6 +42,9 @@ spring:
   kafka:
     listener:
       auto-startup: false
+  mail:
+    host: localhost
+    port: 2525
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
@@ -52,6 +55,9 @@ aws:
     templates:
       enabled: false
   region: us-east-1
+
+jwt:
+  secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
 
 stripe:
   api-key: stripe_test_placeholder_override
@@ -108,6 +114,9 @@ management:
     port: 8080
 
 app:
+  public:
+    backend-base-url: http://localhost:8080
+    frontend-base-url: http://localhost:4200
   kafka:
     enabled: false
   evn: test

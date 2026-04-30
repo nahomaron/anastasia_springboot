@@ -36,6 +36,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.util.Locale;
@@ -88,6 +89,7 @@ public class AuthServiceUnitTest {
         lenient().when(messageService.get(any(), any())).thenAnswer(invocation -> invocation.getArgument(1));
         lenient().when(messageService.get(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(1));
         lenient().when(messageService.resolveLocaleForUser(any(UserEntity.class))).thenReturn(Locale.ENGLISH);
+        ReflectionTestUtils.setField(authService, "frontendBaseUrl", "http://localhost:4200");
     }
 
     @Test
