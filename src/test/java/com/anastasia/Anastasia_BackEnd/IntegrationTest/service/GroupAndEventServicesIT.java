@@ -45,6 +45,8 @@ import java.time.LocalDate;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -140,14 +142,17 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
         assertThat(inviteResponse.getInvitedUserIds()).containsExactly(qrUser.getUuid());
 
         // ---- Event lifecycle ----
+        ZoneId eventZone = ZoneId.of(church.getTimezone());
+        ZonedDateTime nowInEventZone = ZonedDateTime.now(eventZone);
         EventEntity event = EventEntity.builder()
                 .tenantId(tenant.getId())
                 .church(church)
                 .title("Integration Event")
                 .description("Full flow test")
                 .location("Main Hall")
-                .startAt(Instant.now().minusSeconds(10 * 60))
-                .endAt(Instant.now().plusSeconds(50 * 60))
+                .timezone(eventZone.getId())
+                .startAt(nowInEventZone.minusMinutes(10).toInstant())
+                .endAt(nowInEventZone.plusMinutes(50).toInstant())
                 .latitude(40.7128)
                 .longitude(-74.0060)
                 .build();

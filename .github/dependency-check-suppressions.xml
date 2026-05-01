@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <suppress>
+    <notes><![CDATA[
+      PDFBox is used only for in-process PDF rendering in MembershipCardRenderService.
+      The flagged CVEs target the ExtractEmbeddedFiles example code path, which this
+      application does not include or execute.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
+    <cve>CVE-2026-23907</cve>
+    <cve>CVE-2026-33929</cve>
+  </suppress>
+</suppressions>
