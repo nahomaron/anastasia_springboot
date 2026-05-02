@@ -102,7 +102,8 @@ public class SecurityConfig {
                                 "/api/v1/onboarding/billing/sessions/*/finalize",
                                 "/api/v1/onboarding/billing/sessions/*/auto-login",
                                 "/api/v1/priests/register",
-                                "/api/v1/auth/platform-admin/register"
+                                "/api/v1/auth/platform-admin/register",
+                                "/api/v1/email/ses-events"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/onboarding/billing/sessions/*",
