@@ -23,9 +23,9 @@ public class MembershipCardTokenService {
 
     private final SecretKey secretKey;
 
-    public MembershipCardTokenService(@Value("${jwt.secret:}") String jwtSecret) {
+    public MembershipCardTokenService(@Value("${app.auth.jwt-current-secret:}") String jwtSecret) {
         if (jwtSecret == null || jwtSecret.isBlank()) {
-            throw new IllegalStateException("jwt.secret must be configured for membership card tokens");
+            throw new IllegalStateException("app.auth.jwt-current-secret must be configured for membership card tokens");
         }
         byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);

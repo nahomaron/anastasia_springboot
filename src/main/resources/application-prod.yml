@@ -78,9 +78,6 @@ aws:
     templates:
       enabled: false
 
-jwt:
-  secret: ${JWT_SECRET:}
-
 stripe:
   api-key: ${STRIPE_API_KEY:}
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
@@ -121,7 +118,7 @@ app:
     frontend-base-url: ${APP_FRONTEND_BASE_URL:}
     backend-base-url: ${APP_BACKEND_BASE_URL:}
   auth:
-    jwt-current-secret: ${ANASTASIA_JWT_CURRENT_SECRET:${ANASTASIA_JWT_SECRET:}}
+    jwt-current-secret: ${ANASTASIA_JWT_CURRENT_SECRET:}
     jwt-previous-secret: ${ANASTASIA_JWT_PREVIOUS_SECRET:}
     refresh-cookie:
       secure: true
