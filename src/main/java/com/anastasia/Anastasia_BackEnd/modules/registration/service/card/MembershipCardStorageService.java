@@ -24,17 +24,21 @@ public class MembershipCardStorageService {
     @Value("${aws.s3.endpoint:http://localhost:4566}")
     private String s3Endpoint;
 
+    @Value("${aws.s3.prefix:}")
+    private String bucketPrefix;
+
     private final S3Client s3Client;
 
     public void upload(String objectKey, byte[] content, String contentType) {
         requireBucketName();
+        String resolvedObjectKey = prefixedKey(objectKey);
         if (isFallbackEnabled()) {
-            IN_MEMORY_OBJECTS.put(objectKey, content.clone());
+            IN_MEMORY_OBJECTS.put(resolvedObjectKey, content.clone());
             return;
         }
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(objectKey)
+                .key(resolvedObjectKey)
                 .contentType(contentType)
                 .contentLength((long) content.length)
                 .build();
@@ -43,18 +47,27 @@ public class MembershipCardStorageService {
 
     public byte[] read(String objectKey) {
         requireBucketName();
+        String resolvedObjectKey = prefixedKey(objectKey);
         if (isFallbackEnabled()) {
-            byte[] content = IN_MEMORY_OBJECTS.get(objectKey);
+            byte[] content = IN_MEMORY_OBJECTS.get(resolvedObjectKey);
             if (content == null) {
-                throw new IllegalStateException("Membership card object not found: " + objectKey);
+                throw new IllegalStateException("Membership card object not found: " + resolvedObjectKey);
             }
             return content.clone();
         }
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucketName)
-                .key(objectKey)
+                .key(resolvedObjectKey)
                 .build();
         return s3Client.getObjectAsBytes(request).asByteArray();
+    }
+
+    private String prefixedKey(String objectKey) {
+        if (!StringUtils.hasText(bucketPrefix)) {
+            return objectKey;
+        }
+        String normalizedPrefix = bucketPrefix.trim().replaceAll("^/+", "").replaceAll("/+$", "");
+        return normalizedPrefix + "/" + objectKey;
     }
 
     private void requireBucketName() {

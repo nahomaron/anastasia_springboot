@@ -2,11 +2,8 @@ services:
     # ====================== POSTGRESQL ==========================================
   postgres:
     image: postgres:16
-    container_name: anastasia_postgres
     ports:
       - "${DB_PORT:-5432}:5432"
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: ${DB_NAME:-anastasia_dev}
       POSTGRES_USER: ${DB_USER:-postgres}
@@ -24,7 +21,6 @@ services:
   # ====================== KAFKA & SCHEMA REGISTRY ==========================================
   kafka:
     image: apache/kafka:3.8.0
-    container_name: kafka-anastasia
     # CRITICAL: Map the broker port 9092 to your host machine
     ports:
       - "9092:9092"
@@ -91,12 +87,9 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE:-anastasia-backend:local}
-    container_name: anastasia_backend
     depends_on:
       postgres:
         condition: service_healthy
-    env_file:
-      - .env
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia_dev}
@@ -128,14 +121,12 @@ services:
 # ====================== REDIS ==========================================
   redis:
     image: redis:latest
-    container_name: anastasia_redis
     ports:
       - "6379:6379"
     networks:
       - anastasia-net
 
   localstack:
-    container_name: localstack_main
     image: localstack/localstack
     ports:
       - "4566:4566"            # LocalStack Gateway

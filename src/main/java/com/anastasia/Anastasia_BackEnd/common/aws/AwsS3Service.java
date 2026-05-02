@@ -13,18 +13,21 @@ import java.time.Duration;
 import java.util.UUID;
 
 @Service
-@Profile({"dev", "prod"})
+@Profile({"dev", "staging", "prod"})
 @RequiredArgsConstructor
 public class AwsS3Service implements S3Service {
 
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
+    @Value("${aws.s3.prefix:}")
+    private String bucketPrefix;
+
     private final S3Presigner presigner;
 
     @Override
     public PresignedUrlResponse generatePresignedUploadUrl(String fileName) {
-        String objectKey = "images/" + UUID.randomUUID() + "_" + fileName;
+        String objectKey = prefixedKey("images/" + UUID.randomUUID() + "_" + fileName);
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -40,5 +43,13 @@ public class AwsS3Service implements S3Service {
         PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(presignRequest);
 
         return new PresignedUrlResponse(objectKey, presignedRequest.url().toString());
+    }
+
+    private String prefixedKey(String objectKey) {
+        if (bucketPrefix == null || bucketPrefix.isBlank()) {
+            return objectKey;
+        }
+        String normalizedPrefix = bucketPrefix.trim().replaceAll("^/+", "").replaceAll("/+$", "");
+        return normalizedPrefix + "/" + objectKey;
     }
 }

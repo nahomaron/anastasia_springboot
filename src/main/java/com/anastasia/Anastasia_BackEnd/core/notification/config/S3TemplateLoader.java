@@ -23,13 +23,16 @@ public class S3TemplateLoader {
 
     private final S3Client s3Client;
     private final String bucketName;
+    private final String bucketPrefix;
     private final boolean enabled;
 
     public S3TemplateLoader(S3Client s3Client,
                             @Value("${aws.s3.bucket:}") String bucketName,
+                            @Value("${aws.s3.prefix:}") String bucketPrefix,
                             @Value("${aws.s3.templates.enabled:true}") boolean enabled) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
+        this.bucketPrefix = bucketPrefix;
         this.enabled = enabled;
     }
 
@@ -44,9 +47,10 @@ public class S3TemplateLoader {
         }
 
         try {
+            String resolvedKey = prefixedKey(key);
             GetObjectRequest request = GetObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(key)
+                    .key(resolvedKey)
                     .build();
 
             try (ResponseInputStream<GetObjectResponse> response =
@@ -67,5 +71,13 @@ public class S3TemplateLoader {
             log.warn("Template could not be loaded from S3 key {}: {}", key, e.getMessage());
             return null;
         }
+    }
+
+    private String prefixedKey(String key) {
+        if (!StringUtils.hasText(bucketPrefix)) {
+            return key;
+        }
+        String normalizedPrefix = bucketPrefix.trim().replaceAll("^/+", "").replaceAll("/+$", "");
+        return normalizedPrefix + "/" + key;
     }
 }

@@ -45,7 +45,7 @@ public class SecurityConfig {
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
-    @Value("${app.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200,http://192.168.1.79:4200}")
+    @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
     @Value("${app.security.oauth2-enabled:true}")
     private boolean oauth2Enabled;
