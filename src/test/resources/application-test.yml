@@ -114,6 +114,8 @@ management:
     port: 8080
 
 app:
+  auth:
+    jwt-current-secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
   public:
     backend-base-url: http://localhost:8080
     frontend-base-url: http://localhost:4200
