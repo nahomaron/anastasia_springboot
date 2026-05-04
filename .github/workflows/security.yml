@@ -36,11 +36,12 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
-      - name: Cache Dependency-Check data
-        uses: actions/cache@v4
+      - name: Restore Dependency-Check data
+        id: dependency-check-cache-restore
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.DC_DATA_DIR }}
-          key: ${{ runner.os }}-dependency-check-v3
+          key: ${{ runner.os }}-dependency-check-v4
           restore-keys: |
             ${{ runner.os }}-dependency-check-
       - name: Grant Maven wrapper permission
@@ -82,6 +83,12 @@ jobs:
             target/dependency-check.log
             target/dependency-check-fallback.log
           if-no-files-found: ignore
+      - name: Save Dependency-Check data
+        if: always() && steps.dependency-check-cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.DC_DATA_DIR }}
+          key: ${{ steps.dependency-check-cache-restore.outputs.cache-primary-key }}
 
   gitleaks:
     if: ${{ github.event_name != 'workflow_run' }}

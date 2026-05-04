@@ -53,7 +53,7 @@ public abstract class PostgresTestContainer {
     private static final String H2_TENANT_WORKSPACE_LIFECYCLE_SQL = "CALL ensure_tenant_workspace_columns();";
 
     private static final PostgreSQLContainer<?> POSTGRES_CONTAINER =
-            new PostgreSQLContainer<>("postgres:15-alpine")
+            new PostgreSQLContainer<>("postgres:16-alpine")
                     .withDatabaseName("testdb")
                     .withUsername("test")
                     .withPassword("test")
