@@ -79,7 +79,7 @@ aws:
       enabled: false
 
 stripe:
-  api-key: ${STRIPE_API_KEY:}
+  secret-key: ${STRIPE_SECRET_KEY:${STRIPE_API_KEY:}}
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
   success-url: ${STRIPE_SUCCESS_URL:${APP_FRONTEND_BASE_URL}/payments/success?pid={PAYMENT_ID}}
   cancel-url: ${STRIPE_CANCEL_URL:${APP_FRONTEND_BASE_URL}/payments/cancel?pid={PAYMENT_ID}}
