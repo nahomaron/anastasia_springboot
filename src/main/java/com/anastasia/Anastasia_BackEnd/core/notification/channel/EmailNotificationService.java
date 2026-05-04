@@ -4,8 +4,11 @@ import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChan
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationDeliveryStatus;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
+import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationPreferenceEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationType;
+import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationPreferenceRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.EmailSuppressionService;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationIdempotencyService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
@@ -24,6 +27,8 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -39,20 +44,26 @@ public class EmailNotificationService {
     private final JavaMailSender mailSender;
     private final TemplateService templateService;
     private final NotificationRepository notificationRepository;
+    private final NotificationPreferenceRepository notificationPreferenceRepository;
     private final NotificationIdempotencyService idempotencyService;
+    private final EmailSuppressionService emailSuppressionService;
     private final boolean emailSendingEnabled;
     private final String defaultSenderEmail;
 
     public EmailNotificationService(JavaMailSender mailSender,
                                     TemplateService templateService,
                                     NotificationRepository notificationRepository,
+                                    NotificationPreferenceRepository notificationPreferenceRepository,
                                     NotificationIdempotencyService idempotencyService,
+                                    EmailSuppressionService emailSuppressionService,
                                     @Value("${notification.email.enabled:${email.sending.enabled:true}}") boolean emailSendingEnabled,
                                     @Value("${spring.mail.from:info@anastasia.com}") String defaultSenderEmail) {
         this.mailSender = mailSender;
         this.templateService = templateService;
         this.notificationRepository = notificationRepository;
+        this.notificationPreferenceRepository = notificationPreferenceRepository;
         this.idempotencyService = idempotencyService;
+        this.emailSuppressionService = emailSuppressionService;
         this.emailSendingEnabled = emailSendingEnabled;
         this.defaultSenderEmail = defaultSenderEmail;
     }
@@ -138,6 +149,10 @@ public class EmailNotificationService {
             return;
         }
 
+        if (!isEmailDeliveryAllowed(to, eventContext)) {
+            return;
+        }
+
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
@@ -188,6 +203,48 @@ public class EmailNotificationService {
         return resolveTextBody(null, html);
     }
 
+    private boolean isEmailDeliveryAllowed(String to, NotificationEvent eventContext) {
+        if (!StringUtils.hasText(to)) {
+            return false;
+        }
+
+        if (emailSuppressionService.isSuppressed(to)) {
+            log.info("Skipping email delivery because recipient is suppressed");
+            return false;
+        }
+
+        if (eventContext == null || eventContext.getUser() == null) {
+            return true;
+        }
+
+        UUID userId = eventContext.getUser().getUuid();
+        if (userId == null) {
+            return true;
+        }
+
+        Optional<NotificationPreferenceEntity> preference = findPreference(eventContext.getUser().getTenantId(), userId);
+        if (preference.isEmpty()) {
+            return true;
+        }
+
+        NotificationPreferenceEntity pref = preference.get();
+        if (!pref.isEmailEnabled()) {
+            log.info("Skipping email delivery because user email notifications are disabled");
+            return false;
+        }
+
+        return pref.getMutedTypes() == null
+                || eventContext.getType() == null
+                || !pref.getMutedTypes().contains(eventContext.getType());
+    }
+
+    private Optional<NotificationPreferenceEntity> findPreference(UUID tenantId, UUID userId) {
+        if (tenantId == null) {
+            return notificationPreferenceRepository.findByTenantIdIsNullAndUserId(userId);
+        }
+        return notificationPreferenceRepository.findByTenantIdAndUserId(tenantId, userId);
+    }
+
     private void persistNotification(String recipient,
                                      String subject,
                                      String body,
@@ -204,7 +261,7 @@ public class EmailNotificationService {
         entity.setChannel(NotificationChannelType.EMAIL);
         entity.setType(resolveNotificationType(context, metadata));
         entity.setDeliveryStatus(success ? NotificationDeliveryStatus.SENT : NotificationDeliveryStatus.FAILED);
-        entity.setProvider("EMAIL");
+        entity.setProvider("AWS_SES");
         entity.setProviderStatus(success ? "DELIVERED" : "FAILED");
         entity.setErrorMessage(success ? null : error);
         entity.setErrorCode(success ? null : "EMAIL_DELIVERY_FAILED");

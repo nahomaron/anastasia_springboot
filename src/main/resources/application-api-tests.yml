@@ -52,9 +52,6 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
-jwt:
-  secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
-
 auth:
   login:
     endpoint: /auth/login
@@ -70,6 +67,8 @@ test:
     endpoint: /api/v1/test-utils/cleanup
 
 app:
+  auth:
+    jwt-current-secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
   public:
     backend-base-url: http://localhost:8080
     frontend-base-url: http://localhost:4200

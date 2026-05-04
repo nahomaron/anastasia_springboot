@@ -45,7 +45,7 @@ public class SecurityConfig {
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
-    @Value("${app.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200,http://192.168.1.79:4200}")
+    @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
     @Value("${app.security.oauth2-enabled:true}")
     private boolean oauth2Enabled;
@@ -102,7 +102,8 @@ public class SecurityConfig {
                                 "/api/v1/onboarding/billing/sessions/*/finalize",
                                 "/api/v1/onboarding/billing/sessions/*/auto-login",
                                 "/api/v1/priests/register",
-                                "/api/v1/auth/platform-admin/register"
+                                "/api/v1/auth/platform-admin/register",
+                                "/api/v1/email/ses-events"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/onboarding/billing/sessions/*",

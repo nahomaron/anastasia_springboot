@@ -26,7 +26,8 @@ jobs:
       group: promote-production
       cancel-in-progress: false
     env:
-      REMOTE_ROOT: /opt/anastasia
+      REMOTE_ROOT: /opt/anastasis-production
+      COMPOSE_PROJECT_NAME: anastasis-production
     steps:
       - uses: actions/checkout@v4
 
@@ -112,7 +113,7 @@ jobs:
       - name: Promote exact image digest to production
         run: |
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "REMOTE_ROOT='${REMOTE_ROOT}' IMAGE_REF='${{ steps.manifest.outputs.image_ref }}' GIT_SHA='${{ steps.manifest.outputs.git_sha }}' BUILT_AT='${{ steps.manifest.outputs.built_at }}' bash -s" <<'EOF'
+            "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' IMAGE_REF='${{ steps.manifest.outputs.image_ref }}' GIT_SHA='${{ steps.manifest.outputs.git_sha }}' BUILT_AT='${{ steps.manifest.outputs.built_at }}' bash -s" <<'EOF'
           set -euo pipefail
           mkdir -p "${REMOTE_ROOT}/releases" "${REMOTE_ROOT}/diagnostics"
           cd "${REMOTE_ROOT}"
@@ -127,7 +128,7 @@ jobs:
             "DEPLOYED_AT=${BUILT_AT}" > releases/current.env
 
           docker pull "${IMAGE_REF}"
-          docker compose --env-file releases/current.env --env-file .env.production \
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
             -f compose.yaml -f docker-compose.production.yml up -d postgres backend
           EOF
 
@@ -183,12 +184,12 @@ jobs:
         run: |
           mkdir -p diagnostics/remote
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "REMOTE_ROOT='${REMOTE_ROOT}' bash -s" <<'EOF'
+            "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' bash -s" <<'EOF'
           set -euo pipefail
           cd "${REMOTE_ROOT}"
-          docker compose --env-file releases/current.env --env-file .env.production \
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
             -f compose.yaml -f docker-compose.production.yml ps > diagnostics/compose-ps.txt || true
-          docker compose --env-file releases/current.env --env-file .env.production \
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
             -f compose.yaml -f docker-compose.production.yml logs --tail=200 backend > diagnostics/backend.log || true
           curl -sS http://localhost:8080/actuator/health > diagnostics/health.json || true
           EOF
@@ -198,12 +199,12 @@ jobs:
         if: failure()
         run: |
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "REMOTE_ROOT='${REMOTE_ROOT}' bash -s" <<'EOF'
+            "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' bash -s" <<'EOF'
           set -euo pipefail
           cd "${REMOTE_ROOT}"
           test -f releases/previous.env
           cp releases/previous.env releases/current.env
-          docker compose --env-file releases/current.env --env-file .env.production \
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
             -f compose.yaml -f docker-compose.production.yml up -d postgres backend
           EOF
 

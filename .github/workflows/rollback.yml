@@ -22,8 +22,6 @@ jobs:
     concurrency:
       group: rollback-${{ inputs.environment }}
       cancel-in-progress: false
-    env:
-      REMOTE_ROOT: /opt/anastasia
     steps:
       - name: Configure SSH
         run: |
@@ -35,12 +33,26 @@ jobs:
       - name: Restore previous release state
         run: |
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "REMOTE_ROOT='${REMOTE_ROOT}' TARGET_ENV='${{ inputs.environment }}' bash -s" <<'EOF'
+            "TARGET_ENV='${{ inputs.environment }}' bash -s" <<'EOF'
           set -euo pipefail
+          case "${TARGET_ENV}" in
+            staging)
+              REMOTE_ROOT="/opt/anastasis-staging"
+              COMPOSE_PROJECT_NAME="anastasis-staging"
+              ;;
+            production)
+              REMOTE_ROOT="/opt/anastasis-production"
+              COMPOSE_PROJECT_NAME="anastasis-production"
+              ;;
+            *)
+              echo "Unsupported environment: ${TARGET_ENV}" >&2
+              exit 1
+              ;;
+          esac
           cd "${REMOTE_ROOT}"
           test -f releases/previous.env
           cp releases/previous.env releases/current.env
-          docker compose --env-file releases/current.env --env-file ".env.${TARGET_ENV}" \
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file ".env.${TARGET_ENV}" \
             -f compose.yaml -f "docker-compose.${TARGET_ENV}.yml" up -d postgres backend
           EOF
 
@@ -63,6 +75,11 @@ jobs:
         if: failure()
         run: |
           mkdir -p diagnostics/remote
+          if [[ "${{ inputs.environment }}" == "staging" ]]; then
+            REMOTE_ROOT=/opt/anastasis-staging
+          else
+            REMOTE_ROOT=/opt/anastasis-production
+          fi
           scp -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
 
       - name: Upload rollback diagnostics

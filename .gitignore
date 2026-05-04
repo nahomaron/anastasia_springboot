@@ -113,6 +113,7 @@ application-api-tests.yml
 
 !src/main/resources/application-test.yml
 !src/main/resources/application-api-tests.yml
+!src/main/resources/application-staging.yml
 !src/test/resources/application-test.yml
 !src/test/resources/application-api-tests.yml
 

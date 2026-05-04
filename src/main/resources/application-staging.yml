@@ -45,13 +45,13 @@ spring:
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     protocol: ${MAIL_PROTOCOL:smtp}
-    from: ${MAIL_FROM:noreply@anastasisapp.com}
+    from: ${MAIL_FROM:noreply@staging.anastasisapp.com}
     properties:
       mail:
         smtp:
           auth: ${MAIL_SMTP_AUTH:true}
           starttls:
-            enable: ${MAIL_STARTTLS_ENABLE:${MAIL_SMTP_STARTTLS_ENABLE:true}}
+            enable: ${MAIL_STARTTLS_ENABLE:true}
             required: ${MAIL_STARTTLS_REQUIRED:true}
           timeout: ${MAIL_SMTP_TIMEOUT:3000}
 
@@ -74,7 +74,7 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET:}
     endpoint: ${AWS_S3_ENDPOINT:}
-    prefix: ${AWS_S3_PREFIX:production}
+    prefix: ${AWS_S3_PREFIX:staging}
     templates:
       enabled: false
 
@@ -113,7 +113,7 @@ notification:
     enabled: ${NOTIFICATION_WHATSAPP_ENABLED:false}
 
 app:
-  env: prod
+  env: staging
   public:
     frontend-base-url: ${APP_FRONTEND_BASE_URL:}
     backend-base-url: ${APP_BACKEND_BASE_URL:}
@@ -133,7 +133,7 @@ app:
       enabled: false
   kafka:
     enabled: false
-    topic-prefix: ${APP_KAFKA_TOPIC_PREFIX:prod.}
+    topic-prefix: ${APP_KAFKA_TOPIC_PREFIX:staging.}
     partitions: ${APP_KAFKA_PARTITIONS:3}
     replicas: ${APP_KAFKA_REPLICAS:1}
   security:

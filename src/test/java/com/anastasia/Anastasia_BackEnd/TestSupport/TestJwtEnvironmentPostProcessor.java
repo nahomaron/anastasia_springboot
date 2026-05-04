@@ -6,6 +6,7 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.util.StringUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,7 +15,7 @@ public class TestJwtEnvironmentPostProcessor implements EnvironmentPostProcessor
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        if (environment.containsProperty("app.auth.jwt-current-secret")) {
+        if (StringUtils.hasText(environment.getProperty("app.auth.jwt-current-secret"))) {
             return;
         }
         if (!isTestProfile(environment)) {

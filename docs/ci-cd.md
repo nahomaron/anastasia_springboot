@@ -46,8 +46,10 @@ That exact digest is written into release state on the server and is the artifac
 
 Each deployment target keeps release state under:
 
-- `/opt/anastasia/releases/current.env`
-- `/opt/anastasia/releases/previous.env`
+- staging: `/opt/anastasis-staging/releases/current.env`
+- staging: `/opt/anastasis-staging/releases/previous.env`
+- production: `/opt/anastasis-production/releases/current.env`
+- production: `/opt/anastasis-production/releases/previous.env`
 
 Stored keys:
 
@@ -75,8 +77,19 @@ Files:
 - `docker-compose.override.yml`: local developer build override
 - `docker-compose.staging.yml`: staging-only runtime settings
 - `docker-compose.production.yml`: production-only runtime settings
+- `src/main/resources/application-staging.yml`: staging Spring profile
+- `src/main/resources/application-prod.yml`: production Spring profile
 
 The base compose file no longer hardcodes image builds inside deployment workflows. Staging and production consume `BACKEND_IMAGE` from release state instead.
+Deployments use explicit compose project names so both environments can run on the same EC2 instance:
+
+- staging: `anastasis-staging`
+- production: `anastasis-production`
+
+Host ports on the shared EC2 instance:
+
+- staging backend: `8081`
+- production backend: `8080`
 
 ## CI gate behavior
 
@@ -178,19 +191,53 @@ Branch protection on `main` should require:
 
 ```dotenv
 SPRING_PROFILES_ACTIVE=staging
+COMPOSE_PROJECT_NAME=anastasis-staging
 DB_HOST=postgres
 DB_PORT=5432
 DB_NAME=anastasia_staging
-DB_USER=...
+DB_USER=anastasis_staging
 DB_PASSWORD=...
-JWT_SECRET=...
-AWS_ACCESS_KEY=...
-AWS_SECRET_KEY=...
-MAIL_API_KEY=...
-SERVER_PORT=8080
+SERVER_PORT=8081
+
+APP_FRONTEND_BASE_URL=https://staging.anastasisapp.com
+APP_BACKEND_BASE_URL=https://staging-api.anastasisapp.com
+APP_CORS_ALLOWED_ORIGINS=https://staging.anastasisapp.com
+APP_AUTH_REFRESH_COOKIE_DOMAIN=staging.anastasisapp.com
+APP_AUTH_REFRESH_COOKIE_SAME_SITE=None
+
+ANASTASIA_JWT_CURRENT_SECRET=...
+ANASTASIA_JWT_PREVIOUS_SECRET=
+PLATFORM_ADMIN_SECRET=...
+
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_REGION=us-east-2
+AWS_S3_BUCKET=anastasis-staging-assets
+AWS_S3_PREFIX=staging
+
+MAIL_HOST=email-smtp.us-east-2.amazonaws.com
+MAIL_PORT=587
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_FROM=noreply@staging.anastasisapp.com
+MAIL_PROTOCOL=smtp
+MAIL_SMTP_AUTH=true
+MAIL_STARTTLS_ENABLE=true
+MAIL_STARTTLS_REQUIRED=true
 ```
 
 The workflow writes this value to `.env.staging` or `.env.production` on the runner, uploads it to the host, and never echoes the contents in logs.
+
+Production should mirror the same structure with:
+
+- `SPRING_PROFILES_ACTIVE=prod`
+- `COMPOSE_PROJECT_NAME=anastasis-production`
+- `SERVER_PORT=8080`
+- `DB_NAME=anastasia`
+- `DB_USER=anastasis_prod`
+- `APP_BACKEND_BASE_URL=https://api.anastasisapp.com`
+- `AWS_S3_BUCKET=anastasis-production-assets`
+- `AWS_S3_PREFIX=production`
 
 ## Promotion process
 
@@ -205,7 +252,7 @@ The workflow writes this value to `.env.staging` or `.env.production` on the run
 
 1. Run `Rollback`.
 2. Choose `staging` or `production`.
-3. The workflow restores `previous.env`, redeploys the prior digest, and reruns health/login validation.
+3. The workflow selects the correct environment root (`/opt/anastasis-staging` or `/opt/anastasis-production`), restores that environment's `previous.env`, redeploys the prior digest, and reruns health/login validation.
 
 ## Failure diagnostics
 

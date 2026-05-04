@@ -176,7 +176,7 @@ public class StripeClient {
         String apiKey = resolveApiKey();
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException(
-                    "Stripe API key missing: configure stripe.api-key/stripe.secret-key or STRIPE_API_KEY"
+                    "Stripe secret key missing: configure stripe.secret-key or STRIPE_SECRET_KEY"
             );
         }
         if (!apiKey.startsWith("sk_")) {
@@ -193,7 +193,7 @@ public class StripeClient {
         String apiKey = resolveApiKey();
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException(
-                    "Stripe API key missing: configure stripe.api-key/stripe.secret-key or STRIPE_API_KEY"
+                    "Stripe secret key missing: configure stripe.secret-key or STRIPE_SECRET_KEY"
             );
         }
         if (!apiKey.startsWith("sk_")) {
@@ -205,13 +205,13 @@ public class StripeClient {
     }
 
     private String resolveApiKey() {
-        String apiKey = environment.getProperty("stripe.api-key");
-        if (apiKey != null && !apiKey.isBlank()) {
-            return apiKey.trim();
-        }
         String secretKey = environment.getProperty("stripe.secret-key");
         if (secretKey != null && !secretKey.isBlank()) {
             return secretKey.trim();
+        }
+        String apiKey = environment.getProperty("stripe.api-key");
+        if (apiKey != null && !apiKey.isBlank()) {
+            return apiKey.trim();
         }
         return null;
     }

@@ -23,7 +23,7 @@ public class StripeConfig {
         String apiKey = keyResolution.value();
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException(
-                    "Missing Stripe API key. Configure stripe.api-key/stripe.secret-key or set STRIPE_API_KEY."
+                    "Missing Stripe secret key. Configure stripe.secret-key or set STRIPE_SECRET_KEY."
             );
         }
         if (!apiKey.startsWith("sk_")) {
@@ -41,15 +41,6 @@ public class StripeConfig {
     }
 
     private StripeKeyResolution resolveApiKey() {
-        String apiKey = environment.getProperty("stripe.api-key");
-        if (apiKey != null && !apiKey.isBlank()) {
-            String trimmed = apiKey.trim();
-            if (isTestProfile() && isTestPlaceholder(trimmed)) {
-                return new StripeKeyResolution("test-fallback", TEST_FALLBACK_API_KEY);
-            }
-            return new StripeKeyResolution("stripe.api-key", trimmed);
-        }
-
         String secretKey = environment.getProperty("stripe.secret-key");
         if (secretKey != null && !secretKey.isBlank()) {
             String trimmed = secretKey.trim();
@@ -57,6 +48,15 @@ public class StripeConfig {
                 return new StripeKeyResolution("test-fallback", TEST_FALLBACK_API_KEY);
             }
             return new StripeKeyResolution("stripe.secret-key", trimmed);
+        }
+
+        String apiKey = environment.getProperty("stripe.api-key");
+        if (apiKey != null && !apiKey.isBlank()) {
+            String trimmed = apiKey.trim();
+            if (isTestProfile() && isTestPlaceholder(trimmed)) {
+                return new StripeKeyResolution("test-fallback", TEST_FALLBACK_API_KEY);
+            }
+            return new StripeKeyResolution("stripe.api-key", trimmed);
         }
 
         if (isTestProfile()) {

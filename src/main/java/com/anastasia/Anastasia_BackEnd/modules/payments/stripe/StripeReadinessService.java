@@ -41,7 +41,7 @@ public class StripeReadinessService {
 
         List<String> missing = new ArrayList<>();
         if (!apiKeyConfigured) {
-            missing.add("stripe.api-key (env: STRIPE_API_KEY)");
+            missing.add("stripe.secret-key (env: STRIPE_SECRET_KEY)");
         }
         if (!webhookSecretConfigured) {
             missing.add("stripe.webhook-secret (env: STRIPE_WEBHOOK_SECRET)");
@@ -60,11 +60,11 @@ public class StripeReadinessService {
     }
 
     private String resolveApiKey() {
-        String apiKey = environment.getProperty("stripe.api-key");
-        if (isSet(apiKey)) {
-            return apiKey;
+        String secretKey = environment.getProperty("stripe.secret-key");
+        if (isSet(secretKey)) {
+            return secretKey;
         }
-        return environment.getProperty("stripe.secret-key");
+        return environment.getProperty("stripe.api-key");
     }
 
     private boolean isSet(String value) {
