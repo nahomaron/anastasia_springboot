@@ -23,7 +23,7 @@ jobs:
   dependency-check:
     if: ${{ github.event_name != 'workflow_run' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     env:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       DC_DATA_DIR: ~/.m2/repository/org/owasp/dependency-check-data
