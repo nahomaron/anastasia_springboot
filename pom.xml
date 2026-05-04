@@ -34,9 +34,10 @@
 			<log4j2.version>2.25.4</log4j2.version>
 			<commons-lang3.version>3.19.0</commons-lang3.version>
 			<pdfbox.version>3.0.7</pdfbox.version>
+			<postgresql.version>42.7.11</postgresql.version>
 			<swagger-ui.version>5.32.5</swagger-ui.version>
 			<aws.sdk.version>2.25.68</aws.sdk.version>
-			<allure.version>2.27.0</allure.version>
+			<allure.version>2.17.0</allure.version>
 			<lombok.version>1.18.42</lombok.version>
 			<maven.surefire.version>3.5.2</maven.surefire.version>
 			<experimental.tests.tag>experimental</experimental.tests.tag>
@@ -139,7 +140,7 @@
 						<artifactId>allure-maven</artifactId>
 						<version>${allure.version}</version>
 						<configuration>
-							<reportVersion>2.27.0</reportVersion>
+							<reportVersion>2.17.0</reportVersion>
 							<resultsDirectory>${project.build.directory}/allure-results</resultsDirectory>
 							<reportDirectory>${project.build.directory}/site/allure-maven-plugin</reportDirectory>
 						</configuration>
