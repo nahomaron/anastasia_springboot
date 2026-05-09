@@ -2,12 +2,13 @@ name: K6 Load
 
 on:
   workflow_run:
-    workflows: ["Deploy Staging"]
+    workflows: ["Build Image"]
     types: [completed]
+    branches: [staging]
   workflow_dispatch:
     inputs:
-      staging_run_id:
-        description: Deploy Staging workflow run id that published the staging-release artifact
+      build_run_id:
+        description: Build Image workflow run id that published the staging-release artifact
         required: true
         type: string
 
@@ -20,7 +21,11 @@ jobs:
     if: >-
       ${{
         github.event_name == 'workflow_dispatch' ||
-        github.event.workflow_run.conclusion == 'success'
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'staging'
+        )
       }}
     runs-on: ubuntu-latest
     outputs:
@@ -28,20 +33,20 @@ jobs:
       git_sha: ${{ steps.release.outputs.git_sha }}
       build_run_id: ${{ steps.release.outputs.build_run_id }}
     steps:
-      - name: Resolve staging run id
+      - name: Resolve build run id
         id: run
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "staging_run_id=${{ inputs.staging_run_id }}" >> "$GITHUB_OUTPUT"
+            echo "build_run_id=${{ inputs.build_run_id }}" >> "$GITHUB_OUTPUT"
           else
-            echo "staging_run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+            echo "build_run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
           fi
       - name: Download staging release metadata
         uses: actions/download-artifact@v4
         with:
           name: staging-release
           path: artifacts/staging-release
-          run-id: ${{ steps.run.outputs.staging_run_id }}
+          run-id: ${{ steps.run.outputs.build_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Parse staging release metadata
         id: release

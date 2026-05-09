@@ -1,10 +1,6 @@
 name: Deploy Staging
 
 on:
-  workflow_run:
-    workflows: ["Build Image"]
-    types: [completed]
-    branches: [staging]
   workflow_dispatch:
     inputs:
       build_run_id:
@@ -18,15 +14,6 @@ permissions:
 
 jobs:
   deploy-staging:
-    if: >-
-      ${{
-        github.event_name == 'workflow_dispatch' ||
-        (
-          github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.event == 'push' &&
-          github.event.workflow_run.head_branch == 'staging'
-        )
-      }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     environment: staging
@@ -42,11 +29,7 @@ jobs:
       - name: Resolve build run id
         id: run
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "build_run_id=${{ inputs.build_run_id }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "build_run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "build_run_id=${{ inputs.build_run_id }}" >> "$GITHUB_OUTPUT"
 
       - name: Download release manifest
         uses: actions/download-artifact@v4
