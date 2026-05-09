@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 210
     env:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-      DC_DATA_DIR: ~/.m2/repository/org/owasp/dependency-check-data
+      DC_DATA_DIR: ${{ github.workspace }}/.cache/dependency-check-data
       DC_SUPPRESSION_FILE: .github/dependency-check-suppressions.xml
       DC_VERSION: 12.2.1
     steps:
@@ -36,6 +36,8 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+      - name: Prepare Dependency-Check data directory
+        run: mkdir -p "${DC_DATA_DIR}"
       - name: Restore Dependency-Check data
         id: dependency-check-cache-restore
         uses: actions/cache/restore@v4
