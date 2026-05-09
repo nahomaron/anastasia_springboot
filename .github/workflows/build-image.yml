@@ -183,6 +183,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "mkdir -p '${REMOTE_ROOT}'"
 
@@ -227,10 +228,14 @@ jobs:
       - name: Run staging smoke checks
         env:
           BASE_URL: ${{ vars.APP_BACKEND_BASE_URL }}
-          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
-          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
-          SMOKE_TENANT_PATH: ${{ secrets.SMOKE_TENANT_PATH }}
-          SMOKE_TENANT_ID: ${{ secrets.SMOKE_TENANT_ID }}
+          SMOKE_EMAIL_SECRET: ${{ secrets.SMOKE_EMAIL }}
+          SMOKE_EMAIL_VAR: ${{ vars.SMOKE_EMAIL }}
+          SMOKE_PASSWORD_SECRET: ${{ secrets.SMOKE_PASSWORD }}
+          SMOKE_PASSWORD_VAR: ${{ vars.SMOKE_PASSWORD }}
+          SMOKE_TENANT_PATH_SECRET: ${{ secrets.SMOKE_TENANT_PATH }}
+          SMOKE_TENANT_PATH_VAR: ${{ vars.SMOKE_TENANT_PATH }}
+          SMOKE_TENANT_ID_SECRET: ${{ secrets.SMOKE_TENANT_ID }}
+          SMOKE_TENANT_ID_VAR: ${{ vars.SMOKE_TENANT_ID }}
         run: |
           mkdir -p diagnostics
           HEALTH_BODY="diagnostics/staging-health.json"
@@ -238,13 +243,29 @@ jobs:
           PROFILE_BODY="diagnostics/staging-profile.json"
           TENANT_BODY="diagnostics/staging-tenant.json"
 
-          curl -fsS "${BASE_URL}/actuator/health" -o "${HEALTH_BODY}"
+          SMOKE_EMAIL="${SMOKE_EMAIL_SECRET:-${SMOKE_EMAIL_VAR:-}}"
+          SMOKE_PASSWORD="${SMOKE_PASSWORD_SECRET:-${SMOKE_PASSWORD_VAR:-}}"
+          SMOKE_TENANT_PATH="${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-}}"
+          SMOKE_TENANT_ID="${SMOKE_TENANT_ID_SECRET:-${SMOKE_TENANT_ID_VAR:-}}"
 
           for required in SMOKE_EMAIL SMOKE_PASSWORD SMOKE_TENANT_PATH; do
             if [[ -z "${!required}" ]]; then
-              echo "Missing required staging smoke secret: ${required}" >&2
+              echo "Missing required staging smoke configuration: ${required}" >&2
               exit 1
             fi
+          done
+
+          for attempt in {1..18}; do
+            HEALTH_STATUS=$(curl -sS -o "${HEALTH_BODY}" -w "%{http_code}" \
+              "${BASE_URL}/actuator/health" || true)
+            if [[ "${HEALTH_STATUS}" == "200" ]]; then
+              break
+            fi
+            if [[ "${attempt}" == "18" ]]; then
+              echo "Staging health check did not become ready; last status=${HEALTH_STATUS}" >&2
+              exit 1
+            fi
+            sleep 10
           done
 
           LOGIN_STATUS=$(curl -sS -o "${LOGIN_BODY}" -w "%{http_code}" \
