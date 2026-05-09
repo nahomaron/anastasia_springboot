@@ -72,14 +72,14 @@ jobs:
           Path("staging-release.json").write_text(json.dumps({
               "git_sha": manifest["git_sha"],
               "build_run_id": os.environ["BUILD_RUN_ID"],
-              "staging_url": os.environ["PUBLIC_BASE_URL"],
+              "staging_url": os.environ["APP_BACKEND_BASE_URL"],
               "image_ref": image_ref,
               "built_at": manifest["built_at"],
           }, indent=2) + "\n", encoding="utf-8")
           PY
         env:
           BUILD_RUN_ID: ${{ steps.run.outputs.build_run_id }}
-          PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          APP_BACKEND_BASE_URL: ${{ vars.APP_BACKEND_BASE_URL }}
 
       - name: Write staging environment file
         run: |
@@ -129,12 +129,12 @@ jobs:
             echo "- Build run: ${{ steps.run.outputs.build_run_id }}"
             echo "- Git SHA: ${{ steps.manifest.outputs.git_sha }}"
             echo "- Image: \`${{ steps.manifest.outputs.image_ref }}\`"
-            echo "- URL: ${{ secrets.PUBLIC_BASE_URL }}"
+            echo "- URL: ${{ vars.APP_BACKEND_BASE_URL }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run staging smoke checks
         env:
-          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          BASE_URL: ${{ vars.APP_BACKEND_BASE_URL }}
           SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
           SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
           SMOKE_TENANT_PATH: ${{ secrets.SMOKE_TENANT_PATH }}

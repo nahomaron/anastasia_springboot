@@ -145,7 +145,7 @@ jobs:
               fh.write(f"git_sha={manifest['git_sha']}\n")
           PY
       - name: Run Trivy image scan
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ steps.manifest.outputs.image_ref }}
           format: sarif
