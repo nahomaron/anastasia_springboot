@@ -20,17 +20,25 @@ jobs:
   build-image:
     if: >-
       ${{
-        github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.event == 'push' &&
+        github.event_name == 'workflow_dispatch' ||
         (
-          github.event.workflow_run.head_branch == 'staging' ||
-          github.event.workflow_run.head_branch == 'main'
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          (
+            github.event.workflow_run.head_branch == 'staging' ||
+            github.event.workflow_run.head_branch == 'main'
+          )
         )
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 240
     env:
       IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/anastasia-backend
+    outputs:
+      git_sha: ${{ steps.release.outputs.git_sha }}
+      image_ref: ${{ steps.release.outputs.image_ref }}
+      built_at: ${{ steps.release.outputs.built_at }}
+      build_run_id: ${{ steps.release.outputs.build_run_id }}
     steps:
       - name: Resolve build metadata
         id: meta
@@ -102,6 +110,7 @@ jobs:
       - name: Inspect pushed image
         run: docker buildx imagetools inspect "${IMAGE_REPO}@${{ steps.build.outputs.digest }}"
       - name: Create release manifest
+        id: release
         run: |
           python3 - <<'PY'
           import json
@@ -118,6 +127,11 @@ jobs:
               "built_at": datetime.now(timezone.utc).isoformat(),
           }
           Path("release-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"git_sha={manifest['git_sha']}\n")
+              fh.write(f"image_ref={manifest['image_repo']}@{manifest['image_digest']}\n")
+              fh.write(f"built_at={manifest['built_at']}\n")
+              fh.write(f"build_run_id={manifest['workflow_run_id']}\n")
           PY
         env:
           GIT_SHA: ${{ steps.meta.outputs.git_sha }}
@@ -137,3 +151,186 @@ jobs:
             echo
             cat release-manifest.json
           } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-staging:
+    needs: build-image
+    if: >-
+      ${{
+        github.event_name != 'workflow_dispatch' &&
+        github.event.workflow_run.head_branch == 'staging'
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    env:
+      REMOTE_ROOT: /opt/anastasis-staging
+      COMPOSE_PROJECT_NAME: anastasis-staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build-image.outputs.git_sha }}
+
+      - name: Write staging environment file
+        run: |
+          test -n "${{ secrets.APP_ENV_FILE }}"
+          printf '%s\n' "${{ secrets.APP_ENV_FILE }}" > .env.staging
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "mkdir -p '${REMOTE_ROOT}'"
+
+      - name: Upload compose bundle
+        run: |
+          scp compose.yaml docker-compose.staging.yml .env.staging \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/"
+
+      - name: Deploy exact image digest to staging
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' IMAGE_REF='${{ needs.build-image.outputs.image_ref }}' GIT_SHA='${{ needs.build-image.outputs.git_sha }}' BUILT_AT='${{ needs.build-image.outputs.built_at }}' bash -s" <<'EOF'
+          set -euo pipefail
+          mkdir -p "${REMOTE_ROOT}/releases" "${REMOTE_ROOT}/diagnostics"
+          cd "${REMOTE_ROOT}"
+
+          if [ -f releases/current.env ]; then
+            cp releases/current.env releases/previous.env
+          fi
+
+          printf '%s\n' \
+            "BACKEND_IMAGE=${IMAGE_REF}" \
+            "GIT_SHA=${GIT_SHA}" \
+            "DEPLOYED_AT=${BUILT_AT}" > releases/current.env
+
+          docker pull "${IMAGE_REF}"
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+          EOF
+
+      - name: Publish staging summary
+        run: |
+          {
+            echo "## Staging Deployment"
+            echo
+            echo "- Build run: ${{ needs.build-image.outputs.build_run_id }}"
+            echo "- Git SHA: ${{ needs.build-image.outputs.git_sha }}"
+            echo "- Image: \`${{ needs.build-image.outputs.image_ref }}\`"
+            echo "- URL: ${{ vars.APP_BACKEND_BASE_URL }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run staging smoke checks
+        env:
+          BASE_URL: ${{ vars.APP_BACKEND_BASE_URL }}
+          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+          SMOKE_TENANT_PATH: ${{ secrets.SMOKE_TENANT_PATH }}
+          SMOKE_TENANT_ID: ${{ secrets.SMOKE_TENANT_ID }}
+        run: |
+          mkdir -p diagnostics
+          HEALTH_BODY="diagnostics/staging-health.json"
+          LOGIN_BODY="diagnostics/staging-login.json"
+          PROFILE_BODY="diagnostics/staging-profile.json"
+          TENANT_BODY="diagnostics/staging-tenant.json"
+
+          curl -fsS "${BASE_URL}/actuator/health" -o "${HEALTH_BODY}"
+
+          for required in SMOKE_EMAIL SMOKE_PASSWORD SMOKE_TENANT_PATH; do
+            if [[ -z "${!required}" ]]; then
+              echo "Missing required staging smoke secret: ${required}" >&2
+              exit 1
+            fi
+          done
+
+          LOGIN_STATUS=$(curl -sS -o "${LOGIN_BODY}" -w "%{http_code}" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${SMOKE_EMAIL}\",\"password\":\"${SMOKE_PASSWORD}\"}" \
+            "${BASE_URL}/api/v1/auth/login")
+          [[ "${LOGIN_STATUS}" == "200" ]]
+
+          ACCESS_TOKEN=$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("diagnostics/staging-login.json").read_text())
+          print(data.get("accessToken", ""))
+          PY
+          )
+          [[ -n "${ACCESS_TOKEN}" ]]
+
+          PROFILE_STATUS=$(curl -sS -o "${PROFILE_BODY}" -w "%{http_code}" \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            "${BASE_URL}/api/v1/users/me/profile")
+          [[ "${PROFILE_STATUS}" == "200" ]]
+
+          TENANT_HEADERS=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
+          if [[ -n "${SMOKE_TENANT_ID}" ]]; then
+            TENANT_HEADERS+=(-H "X-Tenant-ID: ${SMOKE_TENANT_ID}")
+          fi
+          TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
+            "${TENANT_HEADERS[@]}" \
+            "${BASE_URL}${SMOKE_TENANT_PATH}")
+          [[ "${TENANT_STATUS}" == "200" ]]
+
+      - name: Capture remote diagnostics before rollback
+        if: failure()
+        run: |
+          mkdir -p diagnostics/remote
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' bash -s" <<'EOF'
+          set -euo pipefail
+          cd "${REMOTE_ROOT}"
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml ps > diagnostics/compose-ps.txt || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml logs --tail=200 backend > diagnostics/backend.log || true
+          curl -sS http://localhost:8081/actuator/health > diagnostics/health.json || true
+          EOF
+          scp -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
+
+      - name: Roll back staging to previous release
+        if: failure()
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' bash -s" <<'EOF'
+          set -euo pipefail
+          cd "${REMOTE_ROOT}"
+          test -f releases/previous.env
+          cp releases/previous.env releases/current.env
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+          EOF
+
+      - name: Upload staging diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-staging-diagnostics-${{ needs.build-image.outputs.git_sha }}
+          path: diagnostics
+          if-no-files-found: ignore
+
+      - name: Upload staging release metadata
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          Path("staging-release.json").write_text(json.dumps({
+              "git_sha": "${{ needs.build-image.outputs.git_sha }}",
+              "build_run_id": "${{ needs.build-image.outputs.build_run_id }}",
+              "staging_url": "${{ vars.APP_BACKEND_BASE_URL }}",
+              "image_ref": "${{ needs.build-image.outputs.image_ref }}",
+              "built_at": "${{ needs.build-image.outputs.built_at }}",
+          }, indent=2) + "\n", encoding="utf-8")
+          PY
+      - name: Upload staging release artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-release
+          path: staging-release.json
