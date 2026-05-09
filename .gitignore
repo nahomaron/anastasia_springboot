@@ -91,6 +91,7 @@ ajcore.*
 *.ear
 *.zip
 *.tar.gz
+!.mvn/wrapper/maven-wrapper.jar
 
 # Ignore environment variables and sensitive data
 .env
