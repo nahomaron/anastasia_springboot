@@ -140,3 +140,10 @@ allure-report/
 target/allure-results/
 target/site/allure-maven-plugin/
 .allure/
+
+
+github-actions-staging
+github-actions-staging.pub
+global-bundle.pem
+*.pem
+*.pub

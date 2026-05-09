@@ -7,10 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 @Component
 public class AttendanceTimeValidator {
@@ -37,24 +33,10 @@ public class AttendanceTimeValidator {
             return false;
         }
 
-        ZoneId zoneId = resolveZone(event.getTimezone());
-        ZonedDateTime startAtLocal = startAt.atZone(zoneId);
-        ZonedDateTime endAtLocal = endAt.atZone(zoneId);
-        LocalDate today = LocalDate.now(zoneId);
-        LocalTime now = LocalTime.now(zoneId);
-
-        if (!today.isEqual(startAtLocal.toLocalDate())) return false;
-
-        LocalTime allowedStart = startAtLocal.toLocalTime().minus(graceBefore);
-        LocalTime allowedEnd = endAtLocal.toLocalTime().plus(graceAfter);
+        Instant now = Instant.now();
+        Instant allowedStart = startAt.minus(graceBefore);
+        Instant allowedEnd = endAt.plus(graceAfter);
 
         return !now.isBefore(allowedStart) && !now.isAfter(allowedEnd);
-    }
-
-    private ZoneId resolveZone(String timezone) {
-        if (timezone == null || timezone.isBlank()) {
-            return ZoneId.of("UTC");
-        }
-        return ZoneId.of(timezone);
     }
 }
