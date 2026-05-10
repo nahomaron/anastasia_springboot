@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Currency;
+import java.util.List;
 import java.util.Locale;
 import java.math.RoundingMode;
 import java.util.UUID;
@@ -318,6 +319,27 @@ public class TransactionServiceImpl implements TransactionService {
 
         postTransaction(transaction);
         return toDto(transaction);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TransactionDto getTransactionById(Long transactionId, UUID tenantId) {
+        Transaction transaction = transactionRepository.findByIdAndTenantId(transactionId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
+        transaction.getLedgerEntries().size();
+        return toDto(transaction);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TransactionDto> getTransactions(UUID tenantId, LocalDate startDate, LocalDate endDate, Long accountId) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date must be on or before end date");
+        }
+
+        return transactionRepository.findVisibleTransactions(tenantId, startDate, endDate, accountId).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /**

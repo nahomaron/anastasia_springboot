@@ -9,6 +9,10 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransactionDto;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransferFundsRequest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Transaction;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
 public interface TransactionService {
 
     /**
@@ -41,6 +45,10 @@ public interface TransactionService {
      * Records a general journal entry comprised of arbitrary debit and credit lines.
      */
     TransactionDto recordJournalEntry(java.util.UUID tenantId, java.time.LocalDate date, String description, java.util.List<JournalEntryLine> lines);
+
+    TransactionDto getTransactionById(Long transactionId, UUID tenantId);
+
+    List<TransactionDto> getTransactions(UUID tenantId, LocalDate startDate, LocalDate endDate, Long accountId);
 
     // Helper to convert entity to DTO
     TransactionDto toDto(Transaction transaction);

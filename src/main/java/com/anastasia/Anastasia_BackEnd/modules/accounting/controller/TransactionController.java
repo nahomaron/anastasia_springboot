@@ -8,6 +8,8 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransferFundsReque
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.TransactionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,11 +17,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/accounting/transactions")
 @RequiredArgsConstructor
 @RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
 @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS')")
+@Tag(name = "Accounting Transactions")
 public class TransactionController {
 
     private final TransactionService transactionService;
@@ -42,5 +49,23 @@ public class TransactionController {
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
 
-    // TODO: Add GET endpoints to retrieve transactions (by ID, by date range, by account)
+    @GetMapping("/{transactionId}")
+    @Operation(summary = "Retrieve a single transaction by tenant-scoped id")
+    public ResponseEntity<TransactionDto> getTransactionById(
+            @PathVariable Long transactionId,
+            @RequestParam UUID tenantId
+    ) {
+        return ResponseEntity.ok(transactionService.getTransactionById(transactionId, tenantId));
+    }
+
+    @GetMapping
+    @Operation(summary = "List tenant transactions with optional date and account filters")
+    public ResponseEntity<List<TransactionDto>> getTransactions(
+            @RequestParam UUID tenantId,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) Long accountId
+    ) {
+        return ResponseEntity.ok(transactionService.getTransactions(tenantId, startDate, endDate, accountId));
+    }
 }
