@@ -5,7 +5,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantD
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeReadinessService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.OnboardingBillingReadinessService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantOnboardingBillingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -29,10 +32,12 @@ import java.util.Map;
 @Validated
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/onboarding/billing")
+@Tag(name = "Tenant Onboarding Billing")
 public class TenantOnboardingBillingController {
 
     private final TenantOnboardingBillingService onboardingBillingService;
     private final StripeReadinessService stripeReadinessService;
+    private final OnboardingBillingReadinessService onboardingBillingReadinessService;
     private final RefreshTokenCookieService refreshTokenCookieService;
 
     @PostMapping("/sessions")
@@ -71,8 +76,16 @@ public class TenantOnboardingBillingController {
 
     @GetMapping("/health/stripe")
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @Operation(summary = "Inspect Stripe onboarding readiness for platform administrators")
     public ResponseEntity<Map<String, Object>> stripeHealth() {
         return ResponseEntity.ok(stripeReadinessService.onboardingReadiness());
+    }
+
+    @GetMapping("/health/runtime")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @Operation(summary = "Inspect runtime readiness for staging onboarding flows")
+    public ResponseEntity<Map<String, Object>> runtimeHealth() {
+        return ResponseEntity.ok(onboardingBillingReadinessService.runtimeReadiness());
     }
 
     @PostMapping("/sessions/{sessionId}/auto-login")

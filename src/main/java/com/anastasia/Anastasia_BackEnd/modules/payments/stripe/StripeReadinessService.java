@@ -1,10 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.stripe;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.core.env.Environment;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -17,27 +15,14 @@ public class StripeReadinessService {
 
     private final Environment environment;
 
-    @Value("${stripe.webhook-secret:}")
-    private String stripeWebhookSecret;
-
-    @Value("${billing.tenant.plans.BASIC.price-id:}")
-    private String basicPriceId;
-
-    @Value("${billing.tenant.plans.ADVANCED.price-id:}")
-    private String advancedPriceId;
-
-    @Value("${billing.tenant.plans.PREMIUM.price-id:}")
-    private String premiumPriceId;
-
     public Map<String, Object> onboardingReadiness() {
-        String resolvedApiKey = resolveApiKey();
-        boolean apiKeyConfigured = isSet(resolvedApiKey);
-        boolean webhookSecretConfigured = isSet(stripeWebhookSecret);
+        boolean apiKeyConfigured = isSet(resolveApiKey());
+        boolean webhookSecretConfigured = isSet(environment.getProperty("stripe.webhook-secret"));
 
         Map<String, Boolean> planPriceIdsConfigured = new LinkedHashMap<>();
-        planPriceIdsConfigured.put("BASIC", isSet(basicPriceId));
-        planPriceIdsConfigured.put("ADVANCED", isSet(advancedPriceId));
-        planPriceIdsConfigured.put("PREMIUM", isSet(premiumPriceId));
+        planPriceIdsConfigured.put("BASIC", isSet(environment.getProperty("billing.tenant.plans.BASIC.price-id")));
+        planPriceIdsConfigured.put("ADVANCED", isSet(environment.getProperty("billing.tenant.plans.ADVANCED.price-id")));
+        planPriceIdsConfigured.put("PREMIUM", isSet(environment.getProperty("billing.tenant.plans.PREMIUM.price-id")));
 
         List<String> missing = new ArrayList<>();
         if (!apiKeyConfigured) {
@@ -48,6 +33,12 @@ public class StripeReadinessService {
         }
         if (!planPriceIdsConfigured.get("BASIC")) {
             missing.add("billing.tenant.plans.BASIC.price-id (env: STRIPE_TENANT_BASIC_PRICE_ID)");
+        }
+        if (!planPriceIdsConfigured.get("ADVANCED")) {
+            missing.add("billing.tenant.plans.ADVANCED.price-id (env: STRIPE_TENANT_ADVANCED_PRICE_ID)");
+        }
+        if (!planPriceIdsConfigured.get("PREMIUM")) {
+            missing.add("billing.tenant.plans.PREMIUM.price-id (env: STRIPE_TENANT_PREMIUM_PRICE_ID)");
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
