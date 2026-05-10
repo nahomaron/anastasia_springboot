@@ -18,7 +18,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByTenantIdAndDateBetween(UUID tenantId, LocalDate startDate, LocalDate endDate);
 
-    Optional<Transaction> findByIdAndTenantId(Long id, UUID tenantId);
+    @Query("""
+            select distinct t
+            from Transaction t
+            left join fetch t.ledgerEntries le
+            left join fetch le.account
+            left join fetch le.fund
+            where t.id = :id
+              and t.tenantId = :tenantId
+            """)
+    Optional<Transaction> findDetailedByIdAndTenantId(@Param("id") Long id, @Param("tenantId") UUID tenantId);
 
     @Query("""
             select distinct t

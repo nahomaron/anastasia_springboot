@@ -324,9 +324,8 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional(readOnly = true)
     public TransactionDto getTransactionById(Long transactionId, UUID tenantId) {
-        Transaction transaction = transactionRepository.findByIdAndTenantId(transactionId, tenantId)
+        Transaction transaction = transactionRepository.findDetailedByIdAndTenantId(transactionId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
-        transaction.getLedgerEntries().size();
         return toDto(transaction);
     }
 
