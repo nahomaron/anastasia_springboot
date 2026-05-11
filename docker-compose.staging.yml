@@ -6,7 +6,6 @@ services:
       POSTGRES_DB: ${DB_NAME:-anastasia_staging}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-    ports: []
     restart: unless-stopped
 
   backend:
@@ -18,8 +17,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia_staging}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+      SERVER_PORT: 8080
     ports:
-      - "${SERVER_PORT:-8081}:8080"
+      - "${BACKEND_HOST_PORT:-8081}:8080"
     restart: unless-stopped
     pull_policy: always
     mem_limit: 768m
