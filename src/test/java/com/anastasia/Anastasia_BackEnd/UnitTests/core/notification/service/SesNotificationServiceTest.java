@@ -5,7 +5,6 @@ import com.anastasia.Anastasia_BackEnd.core.notification.domain.EmailSuppression
 import com.anastasia.Anastasia_BackEnd.core.notification.service.EmailSuppressionService;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.SesNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.http.ResponseEntity;
@@ -25,31 +24,28 @@ class SesNotificationServiceTest {
     @Mock
     private EmailSuppressionService emailSuppressionService;
 
-    private SesNotificationService sesNotificationService;
-
-    @BeforeEach
-    void setUp() {
-        sesNotificationService = new SesNotificationService(new ObjectMapper(), restOperations, emailSuppressionService);
-    }
-
     @Test
     void handlesSubscriptionConfirmationByCallingSubscribeUrl() {
+        SesNotificationService sesNotificationService =
+                new SesNotificationService(new ObjectMapper(), restOperations, emailSuppressionService);
         String rawBody = """
                 {
                   "Type": "SubscriptionConfirmation",
-                  "SubscribeURL": "https://sns.example.com/confirm"
+                  "SubscribeURL": "https://sns.us-east-1.amazonaws.com/confirm"
                 }
                 """;
-        when(restOperations.getForEntity("https://sns.example.com/confirm", String.class))
+        when(restOperations.getForEntity("https://sns.us-east-1.amazonaws.com/confirm", String.class))
                 .thenReturn(ResponseEntity.ok("ok"));
 
         sesNotificationService.handleSnsMessage(rawBody, "SubscriptionConfirmation");
 
-        verify(restOperations).getForEntity("https://sns.example.com/confirm", String.class);
+        verify(restOperations).getForEntity("https://sns.us-east-1.amazonaws.com/confirm", String.class);
     }
 
     @Test
     void suppressesBouncedRecipients() {
+        SesNotificationService sesNotificationService =
+                new SesNotificationService(new ObjectMapper(), restOperations, emailSuppressionService);
         String rawBody = """
                 {
                   "Type": "Notification",
@@ -65,6 +61,8 @@ class SesNotificationServiceTest {
 
     @Test
     void suppressesComplainedRecipients() {
+        SesNotificationService sesNotificationService =
+                new SesNotificationService(new ObjectMapper(), restOperations, emailSuppressionService);
         String rawBody = """
                 {
                   "Type": "Notification",
@@ -79,7 +77,42 @@ class SesNotificationServiceTest {
     }
 
     @Test
+    void ignoresSubscriptionConfirmationWithUntrustedUrl() {
+        SesNotificationService sesNotificationService =
+                new SesNotificationService(new ObjectMapper(), restOperations, emailSuppressionService);
+        String rawBody = """
+                {
+                  "Type": "SubscriptionConfirmation",
+                  "SubscribeURL": "http://malicious.example.com/confirm"
+                }
+                """;
+
+        sesNotificationService.handleSnsMessage(rawBody, "SubscriptionConfirmation");
+
+        verify(restOperations, never()).getForEntity(eq("http://malicious.example.com/confirm"), eq(String.class));
+    }
+
+    @Test
+    void ignoresSubscriptionConfirmationWithUntrustedSigningCertUrl() {
+        SesNotificationService sesNotificationService =
+                new SesNotificationService(new ObjectMapper(), restOperations, emailSuppressionService);
+        String rawBody = """
+                {
+                  "Type": "SubscriptionConfirmation",
+                  "SubscribeURL": "https://sns.us-east-1.amazonaws.com/confirm",
+                  "SigningCertURL": "https://evil.example.com/cert.pem"
+                }
+                """;
+
+        sesNotificationService.handleSnsMessage(rawBody, "SubscriptionConfirmation");
+
+        verify(restOperations, never()).getForEntity(eq("https://sns.us-east-1.amazonaws.com/confirm"), eq(String.class));
+    }
+
+    @Test
     void ignoresUnsupportedMessageTypesSafely() {
+        SesNotificationService sesNotificationService =
+                new SesNotificationService(new ObjectMapper(), restOperations, emailSuppressionService);
         String rawBody = """
                 {
                   "Type": "UnsubscribeConfirmation"

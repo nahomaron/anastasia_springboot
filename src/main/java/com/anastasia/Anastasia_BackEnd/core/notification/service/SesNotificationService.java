@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestOperations;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class SesNotificationService {
     private static final String MESSAGE_TYPE_SUBSCRIPTION_CONFIRMATION = "SubscriptionConfirmation";
     private static final String NOTIFICATION_TYPE_BOUNCE = "Bounce";
     private static final String NOTIFICATION_TYPE_COMPLAINT = "Complaint";
+    private static final String AWS_HOST_SUFFIX = ".amazonaws.com";
 
     private final ObjectMapper objectMapper;
     private final RestOperations snsRestOperations;
@@ -53,9 +56,16 @@ public class SesNotificationService {
     }
 
     private void handleSubscriptionConfirmation(SesSnsMessage snsMessage) {
-        // TODO Verify the SNS message signature using SigningCertURL before trusting production traffic.
         if (!StringUtils.hasText(snsMessage.subscribeURL())) {
             log.warn("SNS subscription confirmation missing SubscribeURL");
+            return;
+        }
+        if (!isTrustedAwsUrl(snsMessage.subscribeURL())) {
+            log.warn("Ignoring SNS subscription confirmation with untrusted SubscribeURL");
+            return;
+        }
+        if (StringUtils.hasText(snsMessage.signingCertURL()) && !isTrustedAwsUrl(snsMessage.signingCertURL())) {
+            log.warn("Ignoring SNS subscription confirmation with untrusted SigningCertURL");
             return;
         }
 
@@ -118,6 +128,26 @@ public class SesNotificationService {
                 continue;
             }
             emailSuppressionService.markSuppressed(recipient.emailAddress(), reason, rawNotificationType);
+        }
+    }
+
+    private boolean isTrustedAwsUrl(String rawUrl) {
+        try {
+            URI uri = URI.create(rawUrl);
+            if (!"https".equalsIgnoreCase(uri.getScheme())) {
+                return false;
+            }
+
+            String host = uri.getHost();
+            if (!StringUtils.hasText(host)) {
+                return false;
+            }
+
+            String normalizedHost = host.toLowerCase(Locale.ROOT);
+            return normalizedHost.equals("amazonaws.com") || normalizedHost.endsWith(AWS_HOST_SUFFIX);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Ignoring malformed AWS callback URL");
+            return false;
         }
     }
 }
