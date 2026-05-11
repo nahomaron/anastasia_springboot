@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload compose bundle
         run: |
-          scp compose.yaml docker-compose.staging.yml .env.staging \
+          scp compose.yaml docker-compose.staging.yml .env.staging scripts/prune_backend_images.sh \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/"
 
       - name: Deploy exact image digest to staging
@@ -189,6 +189,14 @@ jobs:
             "${TENANT_HEADERS[@]}" \
             "${BASE_URL}${SMOKE_TENANT_PATH}")
           [[ "${TENANT_STATUS}" == "200" ]]
+
+      - name: Prune stale backend images on staging host
+        if: success()
+        env:
+          IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/anastasia-backend
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "chmod +x '${REMOTE_ROOT}/prune_backend_images.sh' && '${REMOTE_ROOT}/prune_backend_images.sh' '${IMAGE_REPO}'"
 
       - name: Capture remote diagnostics before rollback
         if: failure()

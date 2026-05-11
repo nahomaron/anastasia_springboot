@@ -19,9 +19,10 @@ Flow:
 3. `Build Image` waits for `Security` to pass for the same commit, then pushes exactly one immutable GHCR image tagged by commit SHA and publishes `release-manifest.json`.
 4. A successful `Build Image` run triggers `Deploy Staging`.
 5. `Deploy Staging` downloads the manifest, deploys the exact image digest to staging, writes release state on the target host, and runs smoke tests.
-6. A successful `Deploy Staging` run triggers `K6 Load`.
-7. `Promote Production` is manual only. It reuses the same manifest and exact image digest after validating that staging and K6 both passed for that commit.
-8. `Rollback` is manual only and restores the previously deployed digest for staging or production.
+6. After successful smoke checks, the deployment prunes stale backend images from the shared host while preserving any digest referenced by staging or production `current.env` / `previous.env`.
+7. A successful `Deploy Staging` run triggers `K6 Load`.
+8. `Promote Production` is manual only. It reuses the same manifest and exact image digest after validating that staging and K6 both passed for that commit.
+9. `Rollback` is manual only and restores the previously deployed digest for staging or production.
 
 ## Artifact model
 
