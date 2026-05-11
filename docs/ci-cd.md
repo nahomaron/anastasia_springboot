@@ -197,7 +197,7 @@ DB_PORT=5432
 DB_NAME=anastasia_staging
 DB_USER=anastasis_staging
 DB_PASSWORD=...
-SERVER_PORT=8081
+BACKEND_HOST_PORT=8081
 
 APP_FRONTEND_BASE_URL=https://staging.anastasisapp.com
 APP_BACKEND_BASE_URL=https://staging-api.anastasisapp.com
@@ -226,13 +226,15 @@ MAIL_STARTTLS_ENABLE=true
 MAIL_STARTTLS_REQUIRED=true
 ```
 
+`BACKEND_HOST_PORT` controls the host port exposed by Docker. The backend process inside the container remains pinned to `8080`, so deployment env files should not override `SERVER_PORT`.
+
 The workflow writes this value to `.env.staging` or `.env.production` on the runner, uploads it to the host, and never echoes the contents in logs.
 
 Production should mirror the same structure with:
 
 - `SPRING_PROFILES_ACTIVE=prod`
 - `COMPOSE_PROJECT_NAME=anastasis-production`
-- `SERVER_PORT=8080`
+- `BACKEND_HOST_PORT=8080`
 - `DB_NAME=anastasia`
 - `DB_USER=anastasis_prod`
 - `APP_BACKEND_BASE_URL=https://api.anastasisapp.com`
