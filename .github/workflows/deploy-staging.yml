@@ -71,6 +71,20 @@ jobs:
           test -n "${{ secrets.APP_ENV_FILE }}"
           printf '%s\n' "${{ secrets.APP_ENV_FILE }}" > .env.staging
 
+      - name: Validate staging database target
+        run: |
+          DB_HOST_VALUE="$(grep '^DB_HOST=' .env.staging | cut -d= -f2- || true)"
+          if [[ -z "${DB_HOST_VALUE}" ]]; then
+            echo "DB_HOST is missing from staging APP_ENV_FILE" >&2
+            exit 1
+          fi
+          case "${DB_HOST_VALUE}" in
+            postgres|localhost|127.0.0.1)
+              echo "Staging DB_HOST must point to RDS, not ${DB_HOST_VALUE}" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -104,7 +118,9 @@ jobs:
 
           docker pull "${IMAGE_REF}"
           docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+            -f compose.yaml -f docker-compose.staging.yml rm -sf postgres || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml up -d --no-deps backend
           EOF
 
       - name: Publish staging summary
@@ -198,6 +214,12 @@ jobs:
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "chmod +x '${REMOTE_ROOT}/prune_backend_images.sh' && '${REMOTE_ROOT}/prune_backend_images.sh' '${IMAGE_REPO}'"
 
+      - name: Disable EC2 staging postgres container
+        if: success()
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${REMOTE_ROOT}' && docker compose -p '${COMPOSE_PROJECT_NAME}' --env-file releases/current.env --env-file .env.staging -f compose.yaml -f docker-compose.staging.yml rm -sf postgres || true"
+
       - name: Capture remote diagnostics before rollback
         if: failure()
         run: |
@@ -224,7 +246,9 @@ jobs:
           test -f releases/previous.env
           cp releases/previous.env releases/current.env
           docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+            -f compose.yaml -f docker-compose.staging.yml rm -sf postgres || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml up -d --no-deps backend
           EOF
 
       - name: Upload staging diagnostics
