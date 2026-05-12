@@ -148,3 +148,4 @@ github-actions-staging.pub
 global-bundle.pem
 *.pem
 *.pub
+.m2-wrapper/

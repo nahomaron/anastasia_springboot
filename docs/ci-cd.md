@@ -23,6 +23,7 @@ Flow:
 7. A successful `Deploy Staging` run triggers `K6 Load`.
 8. `Promote Production` is manual only. It reuses the same manifest and exact image digest after validating that staging and K6 both passed for that commit.
 9. `Rollback` is manual only and restores the previously deployed digest for staging or production.
+10. Staging and production must use external RDS-style database hosts; the workflows now fail fast if `DB_HOST` is `postgres`, `localhost`, or `127.0.0.1`.
 
 ## Artifact model
 
@@ -62,7 +63,7 @@ Deployment logic:
 
 1. Copy `current.env` to `previous.env` if it exists.
 2. Write the new `current.env` from the manifest.
-3. Run `docker compose` with the environment-specific application file plus `current.env`.
+3. Run `docker compose` with the environment-specific application file plus `current.env`, starting only the backend service.
 
 Rollback logic:
 
@@ -228,6 +229,8 @@ MAIL_STARTTLS_REQUIRED=true
 ```
 
 `BACKEND_HOST_PORT` controls the host port exposed by Docker. The backend process inside the container remains pinned to `8080`, so deployment env files should not override `SERVER_PORT`.
+
+`DB_HOST` in staging and production must point to the managed database endpoint. Do not set it to `postgres`, `localhost`, or `127.0.0.1`, because the EC2-local Postgres container is no longer part of the deploy path.
 
 The workflow writes this value to `.env.staging` or `.env.production` on the runner, uploads it to the host, and never echoes the contents in logs.
 
