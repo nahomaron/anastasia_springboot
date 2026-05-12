@@ -203,6 +203,13 @@ jobs:
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "chmod +x '${REMOTE_ROOT}/prune_backend_images.sh' && '${REMOTE_ROOT}/prune_backend_images.sh' '${IMAGE_REPO}'"
 
+      - name: Capture production disk diagnostics
+        if: always()
+        run: |
+          mkdir -p diagnostics
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "df -h / && echo && docker system df" > diagnostics/production-disk-usage.txt || true
+
       - name: Disable EC2 production postgres container
         if: success()
         run: |

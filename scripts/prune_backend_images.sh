@@ -41,5 +41,10 @@ for image_ref in "${CANDIDATES[@]}"; do
   docker image rm "${image_ref}" >/dev/null 2>&1 || true
 done
 
+# Remove stopped containers and unused networks/build cache after each deploy.
+docker container prune -f >/dev/null 2>&1 || true
+docker network prune -f >/dev/null 2>&1 || true
+docker builder prune -af >/dev/null 2>&1 || true
+
 # Clean up untagged layers that are no longer referenced by any image.
 docker image prune -f >/dev/null 2>&1 || true

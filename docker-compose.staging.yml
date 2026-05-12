@@ -14,6 +14,12 @@ services:
     env_file:
       - .env.staging
     environment:
+      JAVA_TOOL_OPTIONS: >-
+        -XX:MaxRAMPercentage=60
+        -XX:InitialRAMPercentage=25
+        -XX:MaxMetaspaceSize=192m
+        -XX:ReservedCodeCacheSize=64m
+        -XX:+UseSerialGC
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-staging}
       SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:?Missing DB_HOST}:${DB_PORT:-5432}/${DB_NAME:?Missing DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:?Missing DB_USER}
@@ -23,5 +29,10 @@ services:
       - "${BACKEND_HOST_PORT:-8081}:8080"
     restart: unless-stopped
     pull_policy: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     mem_limit: 768m
     cpus: 1.00
