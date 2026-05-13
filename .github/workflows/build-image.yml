@@ -264,6 +264,15 @@ jobs:
           PROFILE_BODY="diagnostics/staging-profile.json"
           TENANT_BODY="diagnostics/staging-tenant.json"
 
+          BASE_URL="$(printf '%s' "${BASE_URL}" | tr -d '\r')"
+          case "${BASE_URL}" in
+            http://*|https://*) ;;
+            *)
+              echo "BASE_URL must start with http:// or https://, got '${BASE_URL}'" >&2
+              exit 1
+              ;;
+          esac
+
           SMOKE_EMAIL="${SMOKE_EMAIL_SECRET:-${SMOKE_EMAIL_VAR:-}}"
           SMOKE_PASSWORD="${SMOKE_PASSWORD_SECRET:-${SMOKE_PASSWORD_VAR:-}}"
           SMOKE_TENANT_PATH="${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-}}"
