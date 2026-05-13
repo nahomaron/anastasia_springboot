@@ -19,9 +19,11 @@ Flow:
 3. `Build Image` waits for `Security` to pass for the same commit, then pushes exactly one immutable GHCR image tagged by commit SHA and publishes `release-manifest.json`.
 4. A successful `Build Image` run triggers `Deploy Staging`.
 5. `Deploy Staging` downloads the manifest, deploys the exact image digest to staging, writes release state on the target host, and runs smoke tests.
-6. A successful `Deploy Staging` run triggers `K6 Load`.
-7. `Promote Production` is manual only. It reuses the same manifest and exact image digest after validating that staging and K6 both passed for that commit.
-8. `Rollback` is manual only and restores the previously deployed digest for staging or production.
+6. After successful smoke checks, the deployment prunes stale backend images from the shared host while preserving any digest referenced by staging or production `current.env` / `previous.env`.
+7. A successful `Deploy Staging` run triggers `K6 Load`.
+8. `Promote Production` is manual only. It reuses the same manifest and exact image digest after validating that staging and K6 both passed for that commit.
+9. `Rollback` is manual only and restores the previously deployed digest for staging or production.
+10. Staging and production must use external RDS-style database hosts; the workflows now fail fast if `DB_HOST` is `postgres`, `localhost`, or `127.0.0.1`.
 
 ## Artifact model
 
@@ -61,7 +63,7 @@ Deployment logic:
 
 1. Copy `current.env` to `previous.env` if it exists.
 2. Write the new `current.env` from the manifest.
-3. Run `docker compose` with the environment-specific application file plus `current.env`.
+3. Run `docker compose` with the environment-specific application file plus `current.env`, starting only the backend service.
 
 Rollback logic:
 
@@ -227,6 +229,8 @@ MAIL_STARTTLS_REQUIRED=true
 ```
 
 `BACKEND_HOST_PORT` controls the host port exposed by Docker. The backend process inside the container remains pinned to `8080`, so deployment env files should not override `SERVER_PORT`.
+
+`DB_HOST` in staging and production must point to the managed database endpoint. Do not set it to `postgres`, `localhost`, or `127.0.0.1`, because the EC2-local Postgres container is no longer part of the deploy path.
 
 The workflow writes this value to `.env.staging` or `.env.production` on the runner, uploads it to the host, and never echoes the contents in logs.
 

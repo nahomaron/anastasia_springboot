@@ -71,6 +71,20 @@ jobs:
           test -n "${{ secrets.APP_ENV_FILE }}"
           printf '%s\n' "${{ secrets.APP_ENV_FILE }}" > .env.staging
 
+      - name: Validate staging database target
+        run: |
+          DB_HOST_VALUE="$(grep '^DB_HOST=' .env.staging | cut -d= -f2- || true)"
+          if [[ -z "${DB_HOST_VALUE}" ]]; then
+            echo "DB_HOST is missing from staging APP_ENV_FILE" >&2
+            exit 1
+          fi
+          case "${DB_HOST_VALUE}" in
+            postgres|localhost|127.0.0.1)
+              echo "Staging DB_HOST must point to RDS, not ${DB_HOST_VALUE}" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -82,7 +96,7 @@ jobs:
 
       - name: Upload compose bundle
         run: |
-          scp compose.yaml docker-compose.staging.yml .env.staging \
+          scp compose.yaml docker-compose.staging.yml .env.staging scripts/prune_backend_images.sh \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/"
 
       - name: Deploy exact image digest to staging
@@ -104,7 +118,9 @@ jobs:
 
           docker pull "${IMAGE_REF}"
           docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+            -f compose.yaml -f docker-compose.staging.yml rm -sf postgres || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml up -d --no-deps backend
           EOF
 
       - name: Publish staging summary
@@ -125,6 +141,8 @@ jobs:
           SMOKE_EMAIL_VAR: ${{ vars.SMOKE_EMAIL }}
           SMOKE_PASSWORD_SECRET: ${{ secrets.SMOKE_PASSWORD }}
           SMOKE_PASSWORD_VAR: ${{ vars.SMOKE_PASSWORD }}
+          SMOKE_TENANT_SLUG_SECRET: ${{ secrets.SMOKE_TENANT_SLUG }}
+          SMOKE_TENANT_SLUG_VAR: ${{ vars.SMOKE_TENANT_SLUG }}
           SMOKE_TENANT_PATH_SECRET: ${{ secrets.SMOKE_TENANT_PATH }}
           SMOKE_TENANT_PATH_VAR: ${{ vars.SMOKE_TENANT_PATH }}
           SMOKE_TENANT_ID_SECRET: ${{ secrets.SMOKE_TENANT_ID }}
@@ -135,18 +153,40 @@ jobs:
           LOGIN_BODY="diagnostics/staging-login.json"
           PROFILE_BODY="diagnostics/staging-profile.json"
           TENANT_BODY="diagnostics/staging-tenant.json"
+          TENANT_CONTEXT_PATH="/api/v1/tenant/current/verification-status"
+
+          BASE_URL="$(printf '%s' "${BASE_URL}" | tr -d '\r')"
+          case "${BASE_URL}" in
+            http://*|https://*) ;;
+            *)
+              echo "BASE_URL must start with http:// or https://, got '${BASE_URL}'" >&2
+              exit 1
+              ;;
+          esac
 
           SMOKE_EMAIL="${SMOKE_EMAIL_SECRET:-${SMOKE_EMAIL_VAR:-}}"
           SMOKE_PASSWORD="${SMOKE_PASSWORD_SECRET:-${SMOKE_PASSWORD_VAR:-}}"
-          SMOKE_TENANT_PATH="${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-}}"
+          SMOKE_TENANT_SLUG="${SMOKE_TENANT_SLUG_SECRET:-${SMOKE_TENANT_SLUG_VAR:-${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-}}}}"
           SMOKE_TENANT_ID="${SMOKE_TENANT_ID_SECRET:-${SMOKE_TENANT_ID_VAR:-}}"
 
-          for required in SMOKE_EMAIL SMOKE_PASSWORD SMOKE_TENANT_PATH; do
+          for required in SMOKE_EMAIL SMOKE_PASSWORD SMOKE_TENANT_SLUG; do
             if [[ -z "${!required}" ]]; then
               echo "Missing required staging smoke configuration: ${required}" >&2
               exit 1
             fi
           done
+
+          SMOKE_TENANT_SLUG="$(printf '%s' "${SMOKE_TENANT_SLUG}" | tr -d '\r' | tr '[:upper:]' '[:lower:]')"
+          case "${SMOKE_TENANT_SLUG}" in
+            *[!a-z0-9-]*|""|-*|*-)
+              echo "SMOKE_TENANT_SLUG must be a slug like 'smoke-tenant-staging', got '${SMOKE_TENANT_SLUG}'" >&2
+              exit 1
+              ;;
+            *--*)
+              echo "SMOKE_TENANT_SLUG must not contain consecutive hyphens, got '${SMOKE_TENANT_SLUG}'" >&2
+              exit 1
+              ;;
+          esac
 
           for attempt in {1..18}; do
             HEALTH_STATUS=$(curl -sS -o "${HEALTH_BODY}" -w "%{http_code}" \
@@ -187,8 +227,42 @@ jobs:
           fi
           TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
             "${TENANT_HEADERS[@]}" \
-            "${BASE_URL}${SMOKE_TENANT_PATH}")
+            "${BASE_URL}${TENANT_CONTEXT_PATH}")
           [[ "${TENANT_STATUS}" == "200" ]]
+
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          body = json.loads(Path("diagnostics/staging-tenant.json").read_text())
+          tenant_id = os.environ.get("SMOKE_TENANT_ID", "").strip()
+          if tenant_id and str(body.get("tenantId", "")).strip() != tenant_id:
+              raise SystemExit(
+                  f"Tenant context mismatch: expected tenantId {tenant_id}, got {body.get('tenantId')}"
+              )
+          PY
+
+      - name: Prune stale backend images on staging host
+        if: success()
+        env:
+          IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/anastasia-backend
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "chmod +x '${REMOTE_ROOT}/prune_backend_images.sh' && '${REMOTE_ROOT}/prune_backend_images.sh' '${IMAGE_REPO}'"
+
+      - name: Capture staging disk diagnostics
+        if: always()
+        run: |
+          mkdir -p diagnostics
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "df -h / && echo && docker system df" > diagnostics/staging-disk-usage.txt || true
+
+      - name: Disable EC2 staging postgres container
+        if: success()
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${REMOTE_ROOT}' && docker compose -p '${COMPOSE_PROJECT_NAME}' --env-file releases/current.env --env-file .env.staging -f compose.yaml -f docker-compose.staging.yml rm -sf postgres || true"
 
       - name: Capture remote diagnostics before rollback
         if: failure()
@@ -216,7 +290,9 @@ jobs:
           test -f releases/previous.env
           cp releases/previous.env releases/current.env
           docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
-            -f compose.yaml -f docker-compose.staging.yml up -d postgres backend
+            -f compose.yaml -f docker-compose.staging.yml rm -sf postgres || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+            -f compose.yaml -f docker-compose.staging.yml up -d --no-deps backend
           EOF
 
       - name: Upload staging diagnostics

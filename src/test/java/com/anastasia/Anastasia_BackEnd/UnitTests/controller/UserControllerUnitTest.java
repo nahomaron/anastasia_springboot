@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -114,6 +115,20 @@ class UserControllerUnitTest {
         ResponseEntity<SimpleUserDTO> response = userController.getUser(userId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void getMyProfile_shouldReturnCurrentUserProfile() {
+        UserProfileResponse expected = UserProfileResponse.builder()
+                .fullName("Controller User")
+                .email("controller@example.com")
+                .build();
+        when(userService.getCurrentUserProfile()).thenReturn(expected);
+
+        ResponseEntity<UserProfileResponse> response = userController.getMyProfile();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expected);
     }
 
     @Test

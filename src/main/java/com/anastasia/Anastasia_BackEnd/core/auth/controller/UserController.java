@@ -32,6 +32,8 @@ import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserMembershipsResponse
 import com.anastasia.Anastasia_BackEnd.modules.users.dto.UserProfileResponse;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.TenantUserAccessService;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -53,6 +55,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
+@Tag(name = "Users")
 public class UserController {
 
     private final UserService userService;
@@ -121,6 +124,7 @@ public class UserController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/profile")
+    @Operation(summary = "Get the authenticated user's profile")
     public ResponseEntity<UserProfileResponse> getMyProfile() {
         return ResponseEntity.ok(userService.getCurrentUserProfile());
     }

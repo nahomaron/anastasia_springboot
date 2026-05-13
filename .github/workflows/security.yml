@@ -66,15 +66,66 @@ jobs:
               "$@"
           }
 
-          run_dc 2>&1 | tee target/dependency-check.log
-          status=${PIPESTATUS[0]}
+          has_cached_dc_data() {
+            find "${DC_DATA_DIR}" -mindepth 1 -print -quit 2>/dev/null | grep -q .
+          }
 
-          if [[ ${status} -ne 0 ]] && grep -q 'Value too long for column "URL CHARACTER VARYING(1000)"' target/dependency-check.log; then
-            echo "Dependency-Check hit the known NVD/H2 URL-length issue; retrying with cached data and autoupdate disabled."
+          fallback_to_cached_data() {
+            echo "Dependency-Check retrying with cached data and autoupdate disabled."
             run_dc -Dautoupdate=false 2>&1 | tee target/dependency-check-fallback.log
-          else
+          }
+
+          reset_dc_cache() {
+            echo "Dependency-Check cache appears corrupted; clearing ${DC_DATA_DIR}."
+            rm -rf "${DC_DATA_DIR}"
+            mkdir -p "${DC_DATA_DIR}"
+          }
+
+          cache_corruption_detected() {
+            grep -Eq \
+              'MVStoreException|ClosedChannelException|Data source is closed|NoDataException: No documents exist|connectionPool" is null' \
+              target/dependency-check.log
+          }
+
+          max_attempts=3
+          attempt=1
+          cache_reset_attempted=0
+          while true; do
+            run_dc 2>&1 | tee target/dependency-check.log
+            status=${PIPESTATUS[0]}
+            [[ ${status} -eq 0 ]] && break
+
+            if grep -q 'Value too long for column "URL CHARACTER VARYING(1000)"' target/dependency-check.log; then
+              fallback_to_cached_data
+              exit $?
+            fi
+
+            if grep -q 'NVD Returned Status Code: 503' target/dependency-check.log; then
+              if (( attempt < max_attempts )); then
+                sleep_seconds=$(( attempt * 30 ))
+                echo "Dependency-Check hit transient NVD 503, retrying in ${sleep_seconds}s (attempt ${attempt}/${max_attempts})."
+                sleep "${sleep_seconds}"
+                attempt=$(( attempt + 1 ))
+                continue
+              fi
+
+              if has_cached_dc_data; then
+                fallback_to_cached_data
+                exit $?
+              fi
+            fi
+
+            if cache_corruption_detected; then
+              if (( cache_reset_attempted == 0 )); then
+                cache_reset_attempted=1
+                reset_dc_cache
+                attempt=1
+                continue
+              fi
+            fi
+
             exit ${status}
-          fi
+          done
       - name: Upload dependency check reports
         if: always()
         uses: actions/upload-artifact@v4

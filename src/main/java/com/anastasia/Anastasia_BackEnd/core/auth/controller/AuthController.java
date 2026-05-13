@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
@@ -29,6 +31,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication")
 public class AuthController {
 
     Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -68,6 +71,7 @@ public class AuthController {
      * @throws MessagingException If there's an issue sending the activation email.
      */
     @PostMapping("/login")
+    @Operation(summary = "Authenticate a user and issue access credentials")
     public ResponseEntity<AuthenticationResponse> login(
             @Valid @RequestBody AuthenticationRequest request,
             HttpServletRequest httpRequest,
@@ -120,6 +124,7 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @PostMapping("/refresh-token")
+    @Operation(summary = "Refresh an access token using the refresh cookie")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response){
         String clientIP = request.getRemoteAddr();
         if (rateLimiterService.tryConsume(clientIP, 5, Duration.ofMinutes(1))) {

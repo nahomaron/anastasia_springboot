@@ -97,6 +97,20 @@ jobs:
           test -n "${{ secrets.APP_ENV_FILE }}"
           printf '%s\n' "${{ secrets.APP_ENV_FILE }}" > .env.production
 
+      - name: Validate production database target
+        run: |
+          DB_HOST_VALUE="$(grep '^DB_HOST=' .env.production | cut -d= -f2- || true)"
+          if [[ -z "${DB_HOST_VALUE}" ]]; then
+            echo "DB_HOST is missing from production APP_ENV_FILE" >&2
+            exit 1
+          fi
+          case "${DB_HOST_VALUE}" in
+            postgres|localhost|127.0.0.1)
+              echo "Production DB_HOST must point to RDS, not ${DB_HOST_VALUE}" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -107,7 +121,7 @@ jobs:
 
       - name: Upload compose bundle
         run: |
-          scp compose.yaml docker-compose.production.yml .env.production \
+          scp compose.yaml docker-compose.production.yml .env.production scripts/prune_backend_images.sh \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/"
 
       - name: Promote exact image digest to production
@@ -129,7 +143,9 @@ jobs:
 
           docker pull "${IMAGE_REF}"
           docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
-            -f compose.yaml -f docker-compose.production.yml up -d postgres backend
+            -f compose.yaml -f docker-compose.production.yml rm -sf postgres || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
+            -f compose.yaml -f docker-compose.production.yml up -d --no-deps backend
           EOF
 
       - name: Run production smoke checks
@@ -179,6 +195,27 @@ jobs:
             "${BASE_URL}${SMOKE_TENANT_PATH}")
           [[ "${TENANT_STATUS}" == "200" ]]
 
+      - name: Prune stale backend images on remote host
+        if: success()
+        env:
+          IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/anastasia-backend
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "chmod +x '${REMOTE_ROOT}/prune_backend_images.sh' && '${REMOTE_ROOT}/prune_backend_images.sh' '${IMAGE_REPO}'"
+
+      - name: Capture production disk diagnostics
+        if: always()
+        run: |
+          mkdir -p diagnostics
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "df -h / && echo && docker system df" > diagnostics/production-disk-usage.txt || true
+
+      - name: Disable EC2 production postgres container
+        if: success()
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${REMOTE_ROOT}' && docker compose -p '${COMPOSE_PROJECT_NAME}' --env-file releases/current.env --env-file .env.production -f compose.yaml -f docker-compose.production.yml rm -sf postgres || true"
+
       - name: Capture remote diagnostics before rollback
         if: failure()
         run: |
@@ -205,7 +242,9 @@ jobs:
           test -f releases/previous.env
           cp releases/previous.env releases/current.env
           docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
-            -f compose.yaml -f docker-compose.production.yml up -d postgres backend
+            -f compose.yaml -f docker-compose.production.yml rm -sf postgres || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.production \
+            -f compose.yaml -f docker-compose.production.yml up -d --no-deps backend
           EOF
 
       - name: Upload production diagnostics

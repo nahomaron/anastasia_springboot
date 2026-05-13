@@ -16,6 +16,8 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
 
     List<LedgerEntry> findByAccountId(Long accountId);
 
+    boolean existsByFundId(Long fundId);
+
     @Query("""
             select le.account.id as accountId,
                    sum(le.debit) as totalDebit,

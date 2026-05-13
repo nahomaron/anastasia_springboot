@@ -53,7 +53,9 @@ jobs:
           test -f releases/previous.env
           cp releases/previous.env releases/current.env
           docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file ".env.${TARGET_ENV}" \
-            -f compose.yaml -f "docker-compose.${TARGET_ENV}.yml" up -d postgres backend
+            -f compose.yaml -f "docker-compose.${TARGET_ENV}.yml" rm -sf postgres || true
+          docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file ".env.${TARGET_ENV}" \
+            -f compose.yaml -f "docker-compose.${TARGET_ENV}.yml" up -d --no-deps backend
           EOF
 
       - name: Verify rolled-back service

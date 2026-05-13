@@ -1,5 +1,6 @@
 services:
   postgres:
+    profiles: ["local-db"]
     env_file:
       - .env.production
     environment:
@@ -15,14 +16,25 @@ services:
     env_file:
       - .env.production
     environment:
+      JAVA_TOOL_OPTIONS: >-
+        -XX:MaxRAMPercentage=60
+        -XX:InitialRAMPercentage=25
+        -XX:MaxMetaspaceSize=192m
+        -XX:ReservedCodeCacheSize=64m
+        -XX:+UseSerialGC
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:?Missing DB_HOST}:${DB_PORT:-5432}/${DB_NAME:?Missing DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:?Missing DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Missing DB_PASSWORD}
       SERVER_PORT: 8080
     ports:
       - "${BACKEND_HOST_PORT:-8080}:8080"
     restart: always
     pull_policy: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     mem_limit: 1024m
     cpus: 1.50

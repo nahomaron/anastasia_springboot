@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.service.impl;
 
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.CreateFundRequest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.FundDto;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.UpdateFundRequest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.enums.AccountType;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.exception.InvalidTransactionException;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.exception.ResourceNotFoundException;
@@ -9,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Account;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Fund;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.AccountRepository;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.FundRepository;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.LedgerEntryRepository;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.FundService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class FundServiceImpl implements FundService {
 
     private final FundRepository fundRepository;
     private final AccountRepository accountRepository;
+    private final LedgerEntryRepository ledgerEntryRepository;
 
     @Override
     @Transactional
@@ -79,6 +82,49 @@ public class FundServiceImpl implements FundService {
         return fundRepository.findByTenantId(tenantId).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public FundDto updateFund(Long id, UpdateFundRequest request) {
+        Fund fund = fundRepository.findByIdAndTenantId(id, request.getTenantId())
+                .orElseThrow(() -> new ResourceNotFoundException("Fund not found with id: " + id));
+
+        boolean duplicateNameExists = fundRepository.existsByTenantIdAndNameIgnoreCase(request.getTenantId(), request.getName())
+                && !fund.getName().equalsIgnoreCase(request.getName());
+        if (duplicateNameExists) {
+            throw new InvalidTransactionException("Fund with the same name already exists for tenant.");
+        }
+
+        fund.setName(request.getName());
+        fund.setDescription(request.getDescription());
+        fund.setGoalAmount(request.getGoalAmount());
+
+        Account equityAccount = fund.getAssociatedEquityAccount();
+        if (equityAccount != null) {
+            equityAccount.setName(request.getName() + " Fund");
+            equityAccount.setDescription(request.getDescription());
+        }
+
+        return toDto(fundRepository.save(fund));
+    }
+
+    @Override
+    @Transactional
+    public void deleteFund(Long id, UUID tenantId) {
+        Fund fund = fundRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fund not found with id: " + id));
+
+        if (ledgerEntryRepository.existsByFundId(id)) {
+            throw new InvalidTransactionException("Fund cannot be deleted because it is referenced by ledger entries.");
+        }
+
+        Account equityAccount = fund.getAssociatedEquityAccount();
+        if (equityAccount != null && equityAccount.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new InvalidTransactionException("Fund cannot be deleted while its balance is not zero.");
+        }
+
+        fundRepository.delete(fund);
     }
 
     private String generateFundAccountCode(UUID tenantId) {
