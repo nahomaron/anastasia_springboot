@@ -161,8 +161,14 @@ jobs:
     needs: build-image
     if: >-
       ${{
-        github.event_name != 'workflow_dispatch' &&
-        github.event.workflow_run.head_branch == 'staging'
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.ref_name == 'staging'
+        ) ||
+        (
+          github.event_name != 'workflow_dispatch' &&
+          github.event.workflow_run.head_branch == 'staging'
+        )
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
