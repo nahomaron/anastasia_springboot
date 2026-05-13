@@ -131,7 +131,7 @@ public class PlatformAdminController {
     }
 
     @PutMapping("/settings")
-    public ResponseEntity<PlatformAdminSettingsResponse> updateSettings(@Valid PlatformAdminSettingsUpdateRequest request) {
+    public ResponseEntity<PlatformAdminSettingsResponse> updateSettings(@Valid @RequestBody PlatformAdminSettingsUpdateRequest request) {
         return ResponseEntity.ok(settingsService.updateSettings(request));
     }
 
