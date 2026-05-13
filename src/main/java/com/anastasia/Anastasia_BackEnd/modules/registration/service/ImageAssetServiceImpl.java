@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -32,6 +33,7 @@ public class ImageAssetServiceImpl implements ImageAssetService{
 
     private final S3Service s3Service;
     private final ImageAssetRepository imageAssetRepository;
+    private final Environment environment;
 
     @Value("${aws.s3.endpoint:http://localhost:4566}")
     private String s3Endpoint;
@@ -162,7 +164,20 @@ public class ImageAssetServiceImpl implements ImageAssetService{
     }
 
     private boolean isFallbackEnabled() {
-        return s3Endpoint != null && (s3Endpoint.contains("localhost") || s3Endpoint.contains("127.0.0.1") || s3Endpoint.contains("0.0.0.0"));
+        return isDevProfileActive()
+                && s3Endpoint != null
+                && (s3Endpoint.contains("localhost")
+                || s3Endpoint.contains("127.0.0.1")
+                || s3Endpoint.contains("0.0.0.0"));
+    }
+
+    private boolean isDevProfileActive() {
+        for (String activeProfile : environment.getActiveProfiles()) {
+            if ("dev".equalsIgnoreCase(activeProfile)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private PresignedUrlResponse mockPresignedUrl(String fileName) {
