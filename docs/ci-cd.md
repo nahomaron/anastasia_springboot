@@ -88,10 +88,12 @@ Deployments use explicit compose project names so both environments can run on t
 - staging: `anastasis-staging`
 - production: `anastasis-production`
 
-Host ports on the shared EC2 instance:
+Private host ports on the shared EC2 instance:
 
 - staging backend: `8081`
 - production backend: `8080`
+
+These are not the public API ports. Public traffic should enter on HTTPS `443` through nginx, a load balancer, or Cloudflare, then proxy to these internal host ports.
 
 ## CI gate behavior
 
@@ -228,7 +230,9 @@ MAIL_STARTTLS_ENABLE=true
 MAIL_STARTTLS_REQUIRED=true
 ```
 
-`BACKEND_HOST_PORT` controls the host port exposed by Docker. The backend process inside the container remains pinned to `8080`, so deployment env files should not override `SERVER_PORT`.
+`BACKEND_HOST_PORT` controls the private Docker host port exposed on the EC2 instance. The backend process inside the container remains pinned to internal HTTP `8080`, so deployment env files should not set `SERVER_PORT`.
+
+Public HTTPS should stay on `443` at the reverse proxy or CDN layer. Do not point browsers to `:8080` or `:8081`, and do not treat either port as the public API contract.
 
 `DB_HOST` in staging and production must point to the managed database endpoint. Do not set it to `postgres`, `localhost`, or `127.0.0.1`, because the EC2-local Postgres container is no longer part of the deploy path.
 
@@ -244,6 +248,8 @@ Production should mirror the same structure with:
 - `APP_BACKEND_BASE_URL=https://api.anastasisapp.com`
 - `AWS_S3_BUCKET=anastasis-production-assets`
 - `AWS_S3_PREFIX=production`
+
+If both environments run on the same EC2 instance, keep separate internal host ports such as `8081` for staging and `8080` for production, but route both public domains over HTTPS `443` at the proxy layer.
 
 ## Promotion process
 
