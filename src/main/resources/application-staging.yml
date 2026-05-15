@@ -4,7 +4,7 @@ server:
 
 spring:
   config:
-    import: optional:file:.env[.properties]
+    import: optional:file:.env[.properties],optional:file:.env.staging[.properties]
   flyway:
     placeholders:
       members_columns_sql: |
