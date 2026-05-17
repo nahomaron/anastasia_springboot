@@ -129,7 +129,7 @@ class ChurchControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(authorities = "MANAGE_TENANTS")
+    @WithMockUser(roles = "USER")
     void testGetChurches() throws Exception {
         churchService.createChurch(churchService.convertToEntity(TestDataUtil.createTestChurchDTO()));
         mockMvc.perform(get("/api/v1/churches")
