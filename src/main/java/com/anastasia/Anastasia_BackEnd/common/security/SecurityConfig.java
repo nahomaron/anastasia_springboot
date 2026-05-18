@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -34,6 +35,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -45,6 +49,7 @@ public class SecurityConfig {
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
+    private final Environment environment;
     @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
     @Value("${app.security.oauth2-enabled:true}")
@@ -174,11 +179,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 1. Allow frontend origin
-        configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(origin -> !origin.isBlank())
-                .collect(Collectors.toList()));
+        configuration.setAllowedOrigins(resolveAllowedOrigins());
 
         // 2. Allow specific HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -201,6 +202,26 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    private List<String> resolveAllowedOrigins() {
+        Set<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        if (isLocalProfileActive()) {
+            origins.add("http://localhost:4200");
+            origins.add("http://127.0.0.1:4200");
+            origins.add("http://192.168.1.79:4200");
+        }
+
+        return List.copyOf(origins);
+    }
+
+    private boolean isLocalProfileActive() {
+        return Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(profile -> "dev".equalsIgnoreCase(profile) || "test".equalsIgnoreCase(profile));
     }
 
 }

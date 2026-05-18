@@ -206,7 +206,7 @@ BACKEND_HOST_PORT=8081
 APP_FRONTEND_BASE_URL=https://staging.anastasisapp.com
 APP_BACKEND_BASE_URL=https://staging-api.anastasisapp.com
 APP_CORS_ALLOWED_ORIGINS=https://staging.anastasisapp.com
-APP_AUTH_REFRESH_COOKIE_DOMAIN=staging.anastasisapp.com
+APP_AUTH_REFRESH_COOKIE_DOMAIN=anastasisapp.com
 APP_AUTH_REFRESH_COOKIE_SAME_SITE=None
 
 ANASTASIA_JWT_CURRENT_SECRET=...
