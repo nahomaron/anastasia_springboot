@@ -68,7 +68,7 @@ public class TestDataSeederConfig {
         // 3. Build and create church using service (to trigger full logic)
         ChurchEntity church = ChurchEntity.builder()
 //                .churchId(11L)
-                .churchNumber("M1234")
+                .churchNumber("M12345")
                 .tenant(savedTenant)
                 .prefix("St.")
                 .prefixLocal("ቅዱስ")
