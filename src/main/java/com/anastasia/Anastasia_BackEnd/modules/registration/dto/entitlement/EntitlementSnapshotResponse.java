@@ -19,6 +19,7 @@ public class EntitlementSnapshotResponse {
     private UUID tenantId;
     private SubscriptionPlan basePlan;
     private SubscriptionPlan effectivePlan;
+    private Set<TenantFeature> availableFeatures;
     private Set<TenantFeature> features;
     private Map<String, Integer> limits;
 }
