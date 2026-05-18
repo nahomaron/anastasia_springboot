@@ -11,18 +11,24 @@ import com.anastasia.Anastasia_BackEnd.core.notification.repository.Notification
 import com.anastasia.Anastasia_BackEnd.core.notification.service.EmailSuppressionService;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationIdempotencyService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateService;
+import jakarta.mail.Address;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import java.util.Properties;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -64,6 +70,23 @@ class EmailNotificationServiceTest {
                 true,
                 "noreply@example.com"
         );
+    }
+
+    @Test
+    void sendsBrandedFromHeaderForOutgoingEmail() throws Exception {
+        MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
+
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(emailSuppressionService.isSuppressed("user@example.com")).thenReturn(false);
+
+        emailNotificationService.sendEmail("user@example.com", "Subject", "<p>Hello</p>", "Hello", null);
+
+        ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+
+        Address[] from = messageCaptor.getValue().getFrom();
+        assertThat(from).hasSize(1);
+        assertThat(from[0].toString()).isEqualTo("Anastasis <noreply@example.com>");
     }
 
     @Test

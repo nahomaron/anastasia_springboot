@@ -23,7 +23,7 @@ class OnboardingBillingReadinessServiceTest {
                 .withProperty("app.platform-admin.secret", "platform-secret")
                 .withProperty("app.auth.refresh-cookie.secure", "true")
                 .withProperty("app.auth.refresh-cookie.same-site", "None")
-                .withProperty("spring.mail.from", "noreply@staging.anastasisapp.com")
+                .withProperty("spring.mail.from", "noreply@anastasisapp.com")
                 .withProperty("spring.mail.username", "smtp-user")
                 .withProperty("spring.mail.password", "smtp-pass")
                 .withProperty("aws.s3.bucket", "staging-assets")
