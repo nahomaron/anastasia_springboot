@@ -19,6 +19,10 @@ public interface TenantRepository extends JpaRepository<TenantEntity, UUID> {
 
     Optional<TenantEntity> findByPhoneNumber(String phone);
 
+    Optional<TenantEntity> findBySlug(String slug);
+
+    Optional<TenantEntity> findByOwnerEmailIgnoreCase(String ownerEmail);
+
     Optional<TenantEntity> findFirstByDemoTemplateTrueAndDeletedAtIsNull();
 
     @Modifying

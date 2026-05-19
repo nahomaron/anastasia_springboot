@@ -177,6 +177,15 @@ public class TenantWorkspaceLifecycleService {
         return tenantRepository.save(tenant);
     }
 
+    @Transactional
+    public void clearWorkspaceContent(UUID tenantId, UUID actorUserId) {
+        TenantEntity tenant = tenantRepository.findWithSubscriptionById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found"));
+        UserEntity owner = resolveWorkspaceOwner(tenant, actorUserId);
+        clearWorkspaceData(tenant, owner);
+        log.info("Cleared workspace content for tenant {}", tenantId);
+    }
+
     @Transactional(readOnly = true)
     public boolean isRetentionWarningActive(TenantEntity tenant, TenantSubscriptionEntity subscription, Instant now) {
         Instant threshold = null;
