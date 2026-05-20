@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -76,7 +77,7 @@ class SecurityConfigTest {
         when(environment.getActiveProfiles()).thenReturn(new String[]{"dev"});
 
         CorsConfigurationSource source = securityConfig.corsConfigurationSource();
-        CorsConfiguration configuration = source.getCorsConfiguration(null);
+        CorsConfiguration configuration = source.getCorsConfiguration(new MockHttpServletRequest());
 
         assertThat(configuration).isNotNull();
         assertThat(configuration.getAllowedOrigins()).contains(
