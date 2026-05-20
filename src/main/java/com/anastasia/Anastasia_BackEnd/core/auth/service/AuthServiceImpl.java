@@ -520,6 +520,9 @@ public class AuthServiceImpl implements AuthService {
 
         // Hash the new password and save it
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(false);
+        user.setTemporaryPasswordIssuedAt(null);
+        user.setLastPasswordChangedAt(Instant.now());
         userRepository.save(user);
         revokeAllActiveUserTokens(user);
 

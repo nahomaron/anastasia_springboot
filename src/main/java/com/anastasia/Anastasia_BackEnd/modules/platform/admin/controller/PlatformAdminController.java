@@ -3,6 +3,9 @@ package com.anastasia.Anastasia_BackEnd.modules.platform.admin.controller;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminSettingsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminSettingsUpdateRequest;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminInviteRequest;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminInviteResponse;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminStatusUpdateRequest;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformPaymentRecordResponse;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformPaymentStatusUpdateRequest;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformPriestApplicationResponse;
@@ -11,8 +14,10 @@ import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformPriest
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformSupportTicketResponse;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformTenantRowResponse;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformTenantStatusUpdateRequest;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminUserResponse;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminActionService;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminIdentityService;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminReportService;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminSettingsService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
@@ -45,6 +50,7 @@ public class PlatformAdminController {
     private final PlatformAdminReportService reportService;
     private final PlatformAdminSettingsService settingsService;
     private final PlatformAdminActionService actionService;
+    private final PlatformAdminIdentityService identityService;
 
     @GetMapping("/summary")
     public ResponseEntity<PlatformAdminSummaryResponse> summary() {
@@ -133,6 +139,29 @@ public class PlatformAdminController {
     @PutMapping("/settings")
     public ResponseEntity<PlatformAdminSettingsResponse> updateSettings(@Valid @RequestBody PlatformAdminSettingsUpdateRequest request) {
         return ResponseEntity.ok(settingsService.updateSettings(request));
+    }
+
+    @GetMapping("/admins")
+    public ResponseEntity<List<PlatformAdminUserResponse>> admins() {
+        return ResponseEntity.ok(identityService.listAdmins());
+    }
+
+    @PostMapping("/admins")
+    public ResponseEntity<PlatformAdminInviteResponse> inviteAdmin(@Valid @RequestBody PlatformAdminInviteRequest request) {
+        return ResponseEntity.ok(identityService.inviteAdmin(request));
+    }
+
+    @PostMapping("/admins/{userId}/onboarding")
+    public ResponseEntity<PlatformAdminInviteResponse> resendOnboarding(@PathVariable UUID userId) {
+        return ResponseEntity.ok(identityService.resendOnboarding(userId));
+    }
+
+    @PutMapping("/admins/{userId}/status")
+    public ResponseEntity<PlatformAdminUserResponse> updateAdminStatus(
+            @PathVariable UUID userId,
+            @Valid @RequestBody PlatformAdminStatusUpdateRequest request
+    ) {
+        return ResponseEntity.ok(identityService.updateStatus(userId, request.getStatus(), currentActorUserId()));
     }
 
     private UUID currentActorUserId() {
