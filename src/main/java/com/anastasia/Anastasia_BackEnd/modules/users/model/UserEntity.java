@@ -211,7 +211,9 @@ public class UserEntity extends Auditable {
     }
 
     public UUID getTenantId() {
-        return affiliatedTenantId;
+        return affiliatedTenantId != null
+                ? affiliatedTenantId
+                : affiliatedTenant != null ? affiliatedTenant.getId() : null;
     }
 
     public void setTenantId(UUID tenantId) {

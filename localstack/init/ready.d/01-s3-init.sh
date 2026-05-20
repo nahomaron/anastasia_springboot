@@ -9,7 +9,10 @@ cat > /tmp/cors.json <<'CORS'
 {
   "CORSRules": [
     {
-      "AllowedOrigins": ["http://localhost:4200"],
+      "AllowedOrigins": [
+        "http://localhost:4200",
+        "https://staging.anastasisapp.com"
+      ],
       "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
       "AllowedHeaders": ["*"],
       "ExposeHeaders": ["ETag"],

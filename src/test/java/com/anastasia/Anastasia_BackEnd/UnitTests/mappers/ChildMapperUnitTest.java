@@ -23,6 +23,8 @@ public class ChildMapperUnitTest {
                 null, // churchRepository not needed
                 null, // userRepository not needed
                 null, // memberRepository not needed
+                null, // priestRepository not needed
+                null, // tenantAdminAssignmentRepository not needed
                 new ChildMapper(), // use real mapper
                 null,  // securityUtils not needed
                 null,  // tenantAdminNotificationService not needed

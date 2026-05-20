@@ -60,9 +60,11 @@ public class EntitlementResolverService {
             }
         }
 
+        Set<TenantFeature> availableFeatures = EnumSet.noneOf(TenantFeature.class);
         Set<TenantFeature> features = EnumSet.noneOf(TenantFeature.class);
         if (subscriptionAccessActive) {
-            features.addAll(catalog.definitionFor(effectivePlan).features());
+            availableFeatures.addAll(catalog.definitionFor(effectivePlan).features());
+            features.addAll(availableFeatures);
 
             List<PromoRedemptionEntity> redemptions = promoRedemptionRepository.findByTenant_IdOrderByCreatedAtDesc(tenantId);
             for (PromoRedemptionEntity redemption : redemptions) {
@@ -70,6 +72,7 @@ public class EntitlementResolverService {
                     continue;
                 }
                 if (redemption.getPromoCode().getGrantedFeatures() != null) {
+                    availableFeatures.addAll(redemption.getPromoCode().getGrantedFeatures());
                     features.addAll(redemption.getPromoCode().getGrantedFeatures());
                 }
                 if (redemption.getPromoCode().getActiveMemberLimitOverride() != null) {
@@ -104,6 +107,7 @@ public class EntitlementResolverService {
                 .tenantId(tenantId)
                 .basePlan(basePlan)
                 .effectivePlan(effectivePlan)
+                .availableFeatures(availableFeatures)
                 .features(features)
                 .limits(limits)
                 .build();

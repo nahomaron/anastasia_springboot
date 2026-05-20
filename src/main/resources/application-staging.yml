@@ -1,9 +1,10 @@
 server:
   address: 0.0.0.0
+  forward-headers-strategy: framework
 
 spring:
   config:
-    import: optional:file:.env[.properties]
+    import: optional:file:.env[.properties],optional:file:.env.staging[.properties]
   flyway:
     placeholders:
       members_columns_sql: |
@@ -127,7 +128,7 @@ spring:
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     protocol: ${MAIL_PROTOCOL:smtp}
-    from: ${MAIL_FROM:noreply@staging.anastasisapp.com}
+    from: ${MAIL_FROM:noreply@anastasisapp.com}
     properties:
       mail:
         smtp:

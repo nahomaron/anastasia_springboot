@@ -22,6 +22,8 @@ public interface MemberService {
 
     Adult_MemberResponse registerMember(Adult_MemberEntity adultMemberEntity);
 
+    Adult_MemberResponse registerMemberAsAdmin(Adult_MemberEntity adultMemberEntity);
+
     Adult_MemberDTO convertToDTO(Adult_MemberEntity savedMember);
 
     Adult_MemberResponse convertToResponse(Adult_MemberEntity adultMemberEntity);

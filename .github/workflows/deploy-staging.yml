@@ -179,7 +179,7 @@ jobs:
           SMOKE_TENANT_SLUG="$(printf '%s' "${SMOKE_TENANT_SLUG}" | tr -d '\r' | tr '[:upper:]' '[:lower:]')"
           case "${SMOKE_TENANT_SLUG}" in
             *[!a-z0-9-]*|""|-*|*-)
-              echo "SMOKE_TENANT_SLUG must be a slug like 'smoke-tenant-staging', got '${SMOKE_TENANT_SLUG}'" >&2
+              echo "SMOKE_TENANT_SLUG must be a slug like 'anastasis-staging', got '${SMOKE_TENANT_SLUG}'" >&2
               exit 1
               ;;
             *--*)

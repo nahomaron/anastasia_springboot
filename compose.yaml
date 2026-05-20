@@ -6,6 +6,8 @@ services:
       POSTGRES_DB: ${DB_NAME:-anastasia_dev}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -85,6 +87,8 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE:-anastasia-backend:local}
+    profiles:
+      - containerized
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-anastasia_dev}

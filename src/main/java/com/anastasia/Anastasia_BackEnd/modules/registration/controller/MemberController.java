@@ -49,6 +49,14 @@ public class MemberController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADD_MEMBERS')")
+    @PostMapping("/admin/register-member")
+    public ResponseEntity<Adult_MemberResponse> registerMemberAsAdmin(@Valid @RequestBody Adult_MemberDTO adultMemberDTO) {
+        Adult_MemberEntity adultMemberEntity = memberService.convertToEntity(adultMemberDTO);
+        Adult_MemberResponse response = memberService.registerMemberAsAdmin(adultMemberEntity);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_MEMBERS')")
     @GetMapping
     public ResponseEntity<Page<Adult_MemberSummaryResponse>> listOfMembers(

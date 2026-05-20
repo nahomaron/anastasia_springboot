@@ -6,15 +6,20 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @LenientMockitoTest
 class SecurityConfigTest {
@@ -25,6 +30,8 @@ class SecurityConfigTest {
     private JwtFilter jwtFilter;
     @Mock
     private LogoutHandler logoutHandler;
+    @Mock
+    private Environment environment;
 
     @InjectMocks
     private SecurityConfig securityConfig;
@@ -62,5 +69,21 @@ class SecurityConfigTest {
     @Test
     void oauth2UserService_shouldReturnNonNullService() {
         assertThat(securityConfig.oauth2UserService()).isInstanceOf(DefaultOAuth2UserService.class);
+    }
+
+    @Test
+    void corsConfigurationSource_shouldIncludeLocalOriginsForDevProfile() {
+        ReflectionTestUtils.setField(securityConfig, "allowedOrigins", "https://staging.anastasisapp.com");
+        when(environment.getActiveProfiles()).thenReturn(new String[]{"dev"});
+
+        CorsConfigurationSource source = securityConfig.corsConfigurationSource();
+        CorsConfiguration configuration = source.getCorsConfiguration(new MockHttpServletRequest());
+
+        assertThat(configuration).isNotNull();
+        assertThat(configuration.getAllowedOrigins()).contains(
+                "https://staging.anastasisapp.com",
+                "http://localhost:4200",
+                "http://127.0.0.1:4200"
+        );
     }
 }

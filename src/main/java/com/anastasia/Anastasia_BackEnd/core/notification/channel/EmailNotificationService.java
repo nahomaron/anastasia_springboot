@@ -13,6 +13,7 @@ import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationIde
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateService;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class EmailNotificationService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailNotificationService.class);
+    private static final String DEFAULT_SENDER_NAME = "Anastasis";
 
     private final JavaMailSender mailSender;
     private final TemplateService templateService;
@@ -57,7 +59,7 @@ public class EmailNotificationService {
                                     NotificationIdempotencyService idempotencyService,
                                     EmailSuppressionService emailSuppressionService,
                                     @Value("${notification.email.enabled:${email.sending.enabled:true}}") boolean emailSendingEnabled,
-                                    @Value("${spring.mail.from:info@anastasia.com}") String defaultSenderEmail) {
+                                    @Value("${spring.mail.from:noreply@anastasisapp.com}") String defaultSenderEmail) {
         this.mailSender = mailSender;
         this.templateService = templateService;
         this.notificationRepository = notificationRepository;
@@ -157,7 +159,7 @@ public class EmailNotificationService {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
             helper.setTo(to);
-            helper.setFrom(defaultSenderEmail);
+            helper.setFrom(new InternetAddress(defaultSenderEmail.trim(), DEFAULT_SENDER_NAME, UTF_8.name()));
             helper.setSubject(subject);
             helper.setText(resolveTextBody(text, html), html);
 

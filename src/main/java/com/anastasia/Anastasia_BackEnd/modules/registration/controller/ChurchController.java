@@ -34,7 +34,6 @@ public class ChurchController {
                 .body(churchResponse);
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANTS', 'VIEW_ALL_DATA')")
     @GetMapping
     public ResponseEntity<Page<ChurchResponse>> getChurches(
             Pageable pageable,

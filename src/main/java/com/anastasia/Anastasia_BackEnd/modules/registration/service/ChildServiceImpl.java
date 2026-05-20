@@ -17,9 +17,15 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ParentSummary;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.ApprovalStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.ActiveMemberLimitPolicy;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +52,8 @@ public class ChildServiceImpl implements ChildService{
     private final ChurchRepository churchRepository;
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
+    private final PriestRepository priestRepository;
+    private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final ChildMapper childMapper;
     private final SecurityUtils securityUtils;
     private final TenantAdminNotificationService tenantAdminNotificationService;
@@ -114,6 +122,38 @@ public class ChildServiceImpl implements ChildService{
         Child_MemberEntity membership = childRepository.save(childMemberEntity);
         tenantAdminNotificationService.notifyChildRegistrationSubmitted(membership, user.getUuid());
 
+        return convertToResponse(membership);
+    }
+
+    @Caching(
+            evict = {@CacheEvict(value = "children_all",
+                    keyGenerator = "tenantAwareKeyGenerator",
+                    allEntries = true)
+            }
+    )
+    @Override
+    public Child_MemberResponse registerChildAsAdmin(Child_MemberEntity childMemberEntity) {
+        UUID tenantId = requireTenantId();
+        requireActiveTenantAdmin(tenantId);
+
+        ChurchEntity church = resolveAdminChurch(childMemberEntity.getChurchNumber(), tenantId);
+        PriestEntity assignedPriest = resolveAdminPriestForChurch(childMemberEntity.getPriestNumber(), church);
+        boolean requiresPriestApproval = assignedPriest != null;
+        if (!requiresPriestApproval) {
+            activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
+        }
+
+        childMemberEntity.setChurchNumber(church.getChurchNumber());
+        childMemberEntity.setChurch(church);
+        childMemberEntity.setTenantId(tenantId);
+        childMemberEntity.setMembershipNumber(generateUniqueChildMembershipNumber(6, childMemberEntity.isDeacon()));
+        childMemberEntity.setUser(null);
+        childMemberEntity.setPriestNumber(requiresPriestApproval ? assignedPriest.getPriestNumber() : null);
+        childMemberEntity.setApprovedByChurch(true);
+        childMemberEntity.setChurchApprovalStatus(ApprovalStatus.APPROVED);
+        childMemberEntity.setStatus(requiresPriestApproval ? ChildStatus.PENDING.name() : ChildStatus.ACTIVE.name());
+
+        Child_MemberEntity membership = childRepository.save(childMemberEntity);
         return convertToResponse(membership);
     }
 
@@ -422,6 +462,65 @@ public class ChildServiceImpl implements ChildService{
             ));
         }
         return tenantId;
+    }
+
+    private UserEntity requireActiveTenantAdmin(UUID tenantId) {
+        UserEntity user = requireCurrentUserEntity();
+        TenantAdminAssignmentEntity assignment = tenantAdminAssignmentRepository
+                .findByTenant_IdAndUserId(tenantId, user.getUuid())
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "registration.admin.assignment.missing",
+                        "Active tenant admin assignment is required"
+                )));
+        if (assignment.getStatus() != MembershipStatus.ACTIVE) {
+            throw new IllegalStateException(messageService.get(
+                    "registration.admin.assignment.inactive",
+                    "Active tenant admin assignment is required"
+            ));
+        }
+        return user;
+    }
+
+    private UserEntity requireCurrentUserEntity() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)){
+            throw new IllegalStateException(messageService.get(
+                    "auth.user.notAuthenticated",
+                    "User not authenticated"
+            ));
+        }
+        return userRepository.findById(userPrincipal.getUserUuid())
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "auth.user.notAuthenticated",
+                        "Authenticated user not found"
+                )));
+    }
+
+    private ChurchEntity resolveAdminChurch(String requestedChurchNumber, UUID tenantId) {
+        ChurchEntity church = churchRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "registration.admin.churchContext.missing",
+                        "Current tenant does not have a church context"
+                )));
+        if (!StringUtils.hasText(requestedChurchNumber)
+                || !church.getChurchNumber().equalsIgnoreCase(requestedChurchNumber.trim())) {
+            throw new IllegalStateException(messageService.get(
+                    "registration.admin.churchContext.invalid",
+                    "Registration church must match the current tenant church"
+            ));
+        }
+        return church;
+    }
+
+    private PriestEntity resolveAdminPriestForChurch(String priestNumber, ChurchEntity church) {
+        if (!StringUtils.hasText(priestNumber) || church == null || church.getChurchId() == null) {
+            return null;
+        }
+        return priestRepository.findByPriestNumber(priestNumber.trim())
+                .filter(priest -> priest.getStatus() == PriestStatus.ACTIVE)
+                .filter(priest -> priest.getChurch() != null)
+                .filter(priest -> church.getChurchId().equals(priest.getChurch().getChurchId()))
+                .orElse(null);
     }
 
     private ChurchEntity resolveChurch(String churchNumber) {

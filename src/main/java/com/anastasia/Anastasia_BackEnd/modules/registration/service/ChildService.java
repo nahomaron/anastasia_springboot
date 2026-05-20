@@ -21,6 +21,8 @@ public interface ChildService {
 
     Child_MemberResponse registerChild(Child_MemberEntity childMemberEntity);
 
+    Child_MemberResponse registerChildAsAdmin(Child_MemberEntity childMemberEntity);
+
     Page<Child_MemberResponse> findAll(Pageable pageable);
     Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable, String language);
 

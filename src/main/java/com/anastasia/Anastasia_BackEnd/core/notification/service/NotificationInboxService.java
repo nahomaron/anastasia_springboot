@@ -20,10 +20,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.EnumSet;
@@ -216,21 +218,46 @@ public class NotificationInboxService {
 
     private ActorScope resolveActorScope() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
-            throw new IllegalStateException("No authenticated user found");
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("No authenticated user found");
         }
 
+        UserPrincipal principal = auth.getPrincipal() instanceof UserPrincipal userPrincipal
+                ? userPrincipal
+                : null;
+        UserEntity user = resolveAuthenticatedUser(auth, principal);
+
+        UUID tenantId = resolveTenantId(principal, user);
+        if (tenantId != null && user.getTenantId() != null && !tenantId.equals(user.getTenantId())) {
+            throw new AccessDeniedException("Authenticated user is not in tenant scope");
+        }
+
+        return new ActorScope(tenantId, user.getUuid());
+    }
+
+    private UserEntity resolveAuthenticatedUser(Authentication auth, UserPrincipal principal) {
+        if (principal != null && principal.getUserUuid() != null) {
+            return userRepository.findById(principal.getUserUuid())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        }
+
+        if (StringUtils.hasText(auth.getName())) {
+            return userRepository.findByEmailIgnoreCase(auth.getName())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        }
+
+        throw new AccessDeniedException("No authenticated user found");
+    }
+
+    private UUID resolveTenantId(UserPrincipal principal, UserEntity user) {
         UUID tenantId = TenantContext.getTenantId();
-        UUID userId = principal.getUserUuid();
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        // If tenant context is provided, enforce strict tenant scope.
-        if (tenantId != null && (user.getTenantId() == null || !tenantId.equals(user.getTenantId()))) {
-            throw new IllegalStateException("Authenticated user is not in tenant scope");
+        if (tenantId != null) {
+            return tenantId;
         }
-
-        return new ActorScope(tenantId, userId);
+        if (principal != null && principal.getTenantId() != null) {
+            return principal.getTenantId();
+        }
+        return user.getTenantId();
     }
 
     private record ActorScope(UUID tenantId, UUID userId) {

@@ -43,6 +43,14 @@ public class ChildController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADD_MEMBERS')")
+    @PostMapping("/admin/register-child")
+    public ResponseEntity<Child_MemberResponse> registerChildAsAdmin(@Valid @RequestBody Child_MemberDTO childMemberDTO) {
+        Child_MemberEntity childMemberEntity = childService.convertToEntity(childMemberDTO);
+        Child_MemberResponse response = childService.registerChildAsAdmin(childMemberEntity);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'VIEW_CHILDREN')")
     @GetMapping
     public ResponseEntity<Page<Child_MemberSummaryResponse>> listOfChildren(
