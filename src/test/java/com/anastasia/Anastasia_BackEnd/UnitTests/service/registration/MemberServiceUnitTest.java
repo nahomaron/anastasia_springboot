@@ -12,7 +12,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
@@ -20,9 +23,12 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRep
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.FamilyRelationshipRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyRelationshipType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.card.MembershipCardService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.ActiveMemberLimitPolicy;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.MemberServiceImpl;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -56,6 +62,7 @@ public class MemberServiceUnitTest {
     @Mock private ChurchRepository churchRepository;
     @Mock private UserRepository userRepository;
     @Mock private PriestRepository priestRepository;
+    @Mock private TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     @Mock private RoleRepository roleRepository;
     @Mock private MemberMapper memberMapper;
     @Mock private SecurityUtils securityUtils;
@@ -65,6 +72,8 @@ public class MemberServiceUnitTest {
     @Mock private OutboxPublisher outboxPublisher;
     @Mock private TenantAdminNotificationService tenantAdminNotificationService;
     @Mock private LocalizedMessageService messageService;
+    @Mock private ActiveMemberLimitPolicy activeMemberLimitPolicy;
+    @Mock private MembershipCardService membershipCardService;
 
     @InjectMocks
     private MemberServiceImpl memberService;
@@ -245,5 +254,88 @@ public class MemberServiceUnitTest {
         when(memberMapper.memberEntityToResponse(member)).thenReturn(response);
         Page<Adult_MemberResponse> result = memberService.findAllBySpecification(mock(Specification.class), PageRequest.of(0, 10));
         assertThat(result.getContent()).hasSize(1);
+    }
+
+    @Test
+    void registerMemberAsAdmin_activatesDirectlyWhenPriestIsInvalid() {
+        user.setUuid(UUID.randomUUID());
+        user.setUserType(UserType.GUEST);
+
+        ChurchEntity church = TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity());
+        church.setChurchId(101L);
+        church.getTenant().setId(tenantId);
+        member.setChurchNumber(church.getChurchNumber());
+        member.setPriestNumber("PRIEST-404");
+
+        UserPrincipal principal = new UserPrincipal(user);
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(principal);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
+        when(tenantAdminAssignmentRepository.findByTenant_IdAndUserId(tenantId, user.getUuid()))
+                .thenReturn(Optional.of(TenantAdminAssignmentEntity.builder()
+                        .tenant(church.getTenant())
+                        .userId(user.getUuid())
+                        .status(MembershipStatus.ACTIVE)
+                        .build()));
+        when(churchRepository.findByTenantId(tenantId)).thenReturn(Optional.of(church));
+        when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("M654321");
+        when(memberRepository.existsByMembershipNumber(anyString())).thenReturn(false);
+        when(memberRepository.save(any(Adult_MemberEntity.class))).thenAnswer(i -> {
+            Adult_MemberEntity saved = i.getArgument(0);
+            saved.setId(9L);
+            return saved;
+        });
+
+        Adult_MemberResponse response = memberService.registerMemberAsAdmin(member);
+
+        assertThat(response).isNotNull();
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE.name());
+        assertThat(member.isApprovedByChurch()).isTrue();
+        assertThat(member.getPriestNumber()).isNull();
+        verify(activeMemberLimitPolicy).assertCanActivateMembers(tenantId, 1);
+        verify(membershipCardService).issueOrRefreshForApprovedMember(member);
+        verify(userRepository, never()).save(user);
+    }
+
+    @Test
+    void registerMemberAsAdmin_keepsPendingWhenPriestBelongsToChurch() {
+        user.setUuid(UUID.randomUUID());
+        ChurchEntity church = TestDataUtil.createTestChurchEntity(TestDataUtil.createTestTenantEntity());
+        church.setChurchId(102L);
+        church.getTenant().setId(tenantId);
+        member.setChurchNumber(church.getChurchNumber());
+        member.setPriestNumber("PR12345");
+
+        PriestEntity priest = PriestEntity.builder()
+                .priestNumber("PR12345")
+                .status(PriestStatus.ACTIVE)
+                .church(church)
+                .build();
+
+        UserPrincipal principal = new UserPrincipal(user);
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(principal);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
+        when(tenantAdminAssignmentRepository.findByTenant_IdAndUserId(tenantId, user.getUuid()))
+                .thenReturn(Optional.of(TenantAdminAssignmentEntity.builder()
+                        .tenant(church.getTenant())
+                        .userId(user.getUuid())
+                        .status(MembershipStatus.ACTIVE)
+                        .build()));
+        when(churchRepository.findByTenantId(tenantId)).thenReturn(Optional.of(church));
+        when(priestRepository.findByPriestNumber("PR12345")).thenReturn(Optional.of(priest));
+        when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("M111111");
+        when(memberRepository.existsByMembershipNumber(anyString())).thenReturn(false);
+
+        memberService.registerMemberAsAdmin(member);
+
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.PENDING.name());
+        assertThat(member.isApprovedByChurch()).isTrue();
+        assertThat(member.isApprovedByPriest()).isFalse();
+        assertThat(member.getPriestNumber()).isEqualTo("PR12345");
+        verify(activeMemberLimitPolicy, never()).assertCanActivateMembers(any(), anyInt());
+        verify(membershipCardService, never()).issueOrRefreshForApprovedMember(any());
     }
 }

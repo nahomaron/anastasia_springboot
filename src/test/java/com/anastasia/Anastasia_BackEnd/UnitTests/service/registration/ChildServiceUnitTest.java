@@ -9,6 +9,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.ChildStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -18,6 +22,9 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantAdminNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.ActiveMemberLimitPolicy;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChildServiceImpl;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import org.junit.jupiter.api.*;
@@ -41,10 +48,13 @@ public class ChildServiceUnitTest {
     @Mock private ChurchRepository churchRepository;
     @Mock private UserRepository userRepository;
     @Mock private MemberRepository memberRepository;
+    @Mock private PriestRepository priestRepository;
+    @Mock private TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     @Mock private ChildMapper childMapper;
     @Mock private SecurityUtils securityUtils;
     @Mock private TenantAdminNotificationService tenantAdminNotificationService;
     @Mock private LocalizedMessageService messageService;
+    @Mock private ActiveMemberLimitPolicy activeMemberLimitPolicy;
 
     @InjectMocks
     private ChildServiceImpl childService;
@@ -78,10 +88,12 @@ public class ChildServiceUnitTest {
                 .build();
 
         church = new ChurchEntity();
+        church.setChurchId(101L);
         church.setChurchNumber("CH123");
         church.setTenant(TenantEntity.builder().id(tenantId).build());
 
         updateChurch = new ChurchEntity();
+        updateChurch.setChurchId(202L);
         updateChurch.setChurchNumber("NEW_CH");
         updateChurch.setTenant(TenantEntity.builder().id(tenantId).build());
         principal = new UserPrincipal(user);
@@ -235,5 +247,59 @@ public class ChildServiceUnitTest {
 
         assertThrows(IllegalArgumentException.class, () -> childService.updateChildDetails(99L, Child_MemberDTO.builder().build()));
         verify(childRepository, never()).save(any());
+    }
+
+    @Test
+    void registerChildAsAdmin_activatesDirectlyWhenPriestIsInvalid() {
+        child.setChurchNumber(church.getChurchNumber());
+        child.setPriestNumber("PRIEST-404");
+        when(authentication.getPrincipal()).thenReturn(principal);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
+        when(tenantAdminAssignmentRepository.findByTenant_IdAndUserId(tenantId, user.getUuid()))
+                .thenReturn(Optional.of(TenantAdminAssignmentEntity.builder()
+                        .tenant(church.getTenant())
+                        .userId(user.getUuid())
+                        .status(MembershipStatus.ACTIVE)
+                        .build()));
+        when(churchRepository.findByTenantId(tenantId)).thenReturn(Optional.of(church));
+        when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("C12345");
+
+        childService.registerChildAsAdmin(child);
+
+        assertEquals(ChildStatus.ACTIVE.name(), child.getStatus());
+        assertTrue(child.isApprovedByChurch());
+        assertNull(child.getPriestNumber());
+        verify(activeMemberLimitPolicy).assertCanActivateMembers(tenantId, 1);
+    }
+
+    @Test
+    void registerChildAsAdmin_keepsPendingWhenPriestBelongsToChurch() {
+        child.setChurchNumber(church.getChurchNumber());
+        child.setPriestNumber("PR12345");
+        PriestEntity priest = PriestEntity.builder()
+                .priestNumber("PR12345")
+                .status(PriestStatus.ACTIVE)
+                .church(church)
+                .build();
+        when(authentication.getPrincipal()).thenReturn(principal);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
+        when(tenantAdminAssignmentRepository.findByTenant_IdAndUserId(tenantId, user.getUuid()))
+                .thenReturn(Optional.of(TenantAdminAssignmentEntity.builder()
+                        .tenant(church.getTenant())
+                        .userId(user.getUuid())
+                        .status(MembershipStatus.ACTIVE)
+                        .build()));
+        when(churchRepository.findByTenantId(tenantId)).thenReturn(Optional.of(church));
+        when(priestRepository.findByPriestNumber("PR12345")).thenReturn(Optional.of(priest));
+        when(securityUtils.generateUniqueIDNumber(anyInt(), anyString())).thenReturn("C54321");
+
+        childService.registerChildAsAdmin(child);
+
+        assertEquals(ChildStatus.PENDING.name(), child.getStatus());
+        assertTrue(child.isApprovedByChurch());
+        assertEquals("PR12345", child.getPriestNumber());
+        verify(activeMemberLimitPolicy, never()).assertCanActivateMembers(any(), anyInt());
     }
 }

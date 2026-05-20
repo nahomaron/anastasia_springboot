@@ -23,6 +23,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyRelationshipEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyRelationshipType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.MyFamilyResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChildRepository;
@@ -31,6 +35,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.FamilyRel
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.ActiveMemberLimitPolicy;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.card.MembershipCardService;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
@@ -83,6 +88,7 @@ public class MemberServiceImpl implements MemberService {
     private final ApplicationEventPublisher publisher;
     private final CacheManager cacheManager;
     private final PriestRepository priestRepository;
+    private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final ActiveMemberLimitPolicy activeMemberLimitPolicy;
     private final MembershipCardService membershipCardService;
 
@@ -231,6 +237,48 @@ public class MemberServiceImpl implements MemberService {
         tenantAdminNotificationService.notifyMemberRegistrationSubmitted(membership, user.getUuid());
 
        return convertToResponse(membership);
+    }
+
+    @CacheEvict(
+            value = "members_all",
+            keyGenerator = "tenantAwareKeyGenerator",
+            allEntries = true)
+    @Override
+    public Adult_MemberResponse registerMemberAsAdmin(Adult_MemberEntity adultMemberEntity) {
+        UUID tenantId = requireTenantId();
+        UserEntity adminUser = requireActiveTenantAdmin(tenantId);
+        ChurchEntity church = resolveAdminChurch(adultMemberEntity.getChurchNumber(), tenantId);
+        PriestEntity assignedPriest = resolveAdminPriestForChurch(adultMemberEntity.getPriestNumber(), church);
+
+        boolean requiresPriestApproval = assignedPriest != null;
+        if (!requiresPriestApproval) {
+            activeMemberLimitPolicy.assertCanActivateMembers(tenantId, 1);
+        }
+
+        adultMemberEntity.setMembershipNumber(generateUniqueMembershipNumber(6, adultMemberEntity.isDeacon()));
+        adultMemberEntity.setUser(null);
+        adultMemberEntity.setChurch(church);
+        adultMemberEntity.setTenantId(tenantId);
+        adultMemberEntity.setChurchNumber(church.getChurchNumber());
+        adultMemberEntity.setPriestNumber(requiresPriestApproval ? assignedPriest.getPriestNumber() : null);
+        stampAvatar(adultMemberEntity, adminUser.getUuid());
+        adultMemberEntity.setApprovedByChurch(true);
+        adultMemberEntity.setApprovedByPriest(false);
+
+        if (requiresPriestApproval) {
+            adultMemberEntity.setStatus(MemberStatus.PENDING.name());
+        } else {
+            adultMemberEntity.setStatus(MemberStatus.ACTIVE.name());
+            if (adultMemberEntity.getApprovedAt() == null) {
+                adultMemberEntity.setApprovedAt(LocalDateTime.now());
+            }
+        }
+
+        Adult_MemberEntity membership = memberRepository.save(adultMemberEntity);
+        if (!requiresPriestApproval) {
+            membershipCardService.issueOrRefreshForApprovedMember(membership);
+        }
+        return convertToResponse(membership);
     }
 
 
@@ -738,6 +786,50 @@ public class MemberServiceImpl implements MemberService {
                 )));
     }
 
+    private UserEntity requireActiveTenantAdmin(UUID tenantId) {
+        UserEntity user = requireCurrentUserEntity();
+        TenantAdminAssignmentEntity assignment = tenantAdminAssignmentRepository
+                .findByTenant_IdAndUserId(tenantId, user.getUuid())
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "registration.admin.assignment.missing",
+                        "Active tenant admin assignment is required"
+                )));
+        if (assignment.getStatus() != MembershipStatus.ACTIVE) {
+            throw new IllegalStateException(messageService.get(
+                    "registration.admin.assignment.inactive",
+                    "Active tenant admin assignment is required"
+            ));
+        }
+        return user;
+    }
+
+    private ChurchEntity resolveAdminChurch(String requestedChurchNumber, UUID tenantId) {
+        ChurchEntity church = churchRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "registration.admin.churchContext.missing",
+                        "Current tenant does not have a church context"
+                )));
+        if (!StringUtils.hasText(requestedChurchNumber)
+                || !church.getChurchNumber().equalsIgnoreCase(requestedChurchNumber.trim())) {
+            throw new IllegalStateException(messageService.get(
+                    "registration.admin.churchContext.invalid",
+                    "Registration church must match the current tenant church"
+            ));
+        }
+        return church;
+    }
+
+    private PriestEntity resolveAdminPriestForChurch(String priestNumber, ChurchEntity church) {
+        if (!StringUtils.hasText(priestNumber) || church == null || church.getChurchId() == null) {
+            return null;
+        }
+        return priestRepository.findByPriestNumber(priestNumber.trim())
+                .filter(priest -> priest.getStatus() == PriestStatus.ACTIVE)
+                .filter(priest -> priest.getChurch() != null)
+                .filter(priest -> Objects.equals(priest.getChurch().getChurchId(), church.getChurchId()))
+                .orElse(null);
+    }
+
     private void stampAvatar(Adult_MemberEntity member, UUID uploadedByUserId) {
         if (member.getAvatar() == null) {
             return;
@@ -803,6 +895,15 @@ public class MemberServiceImpl implements MemberService {
             ));
         }
         return principal.getUserUuid();
+    }
+
+    private UserEntity requireCurrentUserEntity() {
+        UUID userId = requireCurrentUserId();
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException(messageService.get(
+                        "auth.user.notAuthenticated",
+                        "Authenticated user not found"
+                )));
     }
 
     private Adult_MemberEntity requireCurrentMember() {
