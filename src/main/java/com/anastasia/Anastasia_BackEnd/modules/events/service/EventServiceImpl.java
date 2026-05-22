@@ -22,6 +22,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -245,6 +246,7 @@ public class EventServiceImpl implements EventService {
             ));
         }
         event.setChurch(resolvedChurch);
+        normalizeTitle(event);
         if (event.getTimezone() == null || event.getTimezone().isBlank()) {
             event.setTimezone(resolvedChurch.getTimezone());
         }
@@ -258,8 +260,32 @@ public class EventServiceImpl implements EventService {
         normalizeInviteEmails(event);
         resolveInvitedEntities(event, tenantId);
         normalizeDateTimes(event);
+        validateUniqueEventTitle(event, tenantId);
         validateGeoSettings(event);
         validateManagersScope(event);
+    }
+
+    private void normalizeTitle(EventEntity event) {
+        if (event.getTitle() != null) {
+            event.setTitle(event.getTitle().trim());
+        }
+    }
+
+    private void validateUniqueEventTitle(EventEntity event, UUID tenantId) {
+        String title = event.getTitle();
+        Long churchId = event.getChurch() != null ? event.getChurch().getChurchId() : null;
+        if (churchId == null || title == null || title.isBlank()) {
+            return;
+        }
+
+        eventRepository.findFirstByTenantIdAndChurch_ChurchIdAndTitleIgnoreCase(tenantId, churchId, title)
+                .filter(existing -> !Objects.equals(existing.getEventId(), event.getEventId()))
+                .ifPresent(existing -> {
+                    throw new EntityExistsException(messageService.get(
+                            "events.title.duplicate",
+                            "An event with this title already exists for this church"
+                    ));
+                });
     }
 
     private void resolveInvitedEntities(EventEntity event, UUID tenantId) {
