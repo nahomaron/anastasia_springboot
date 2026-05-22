@@ -23,6 +23,8 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.annotation.Transactional;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -189,5 +191,14 @@ class ChurchServiceUnitTest {
         when(churchRepository.findAll()).thenReturn(List.of(church));
         List<ChurchEntity> result = churchService.getChurches();
         assertThat(result).containsExactly(church);
+    }
+
+    @Test
+    void mappedReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        Method method = ChurchServiceImpl.class.getMethod("findAll", org.springframework.data.domain.Pageable.class, String.class, Boolean.class);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional).isNotNull();
+        assertThat(transactional.readOnly()).isTrue();
     }
 }

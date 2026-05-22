@@ -25,7 +25,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -306,5 +308,23 @@ class EventServiceImplUnitTest {
         verify(eventMapper).eventEntityToDTO(eventEntity);
         verify(eventManagerMapper).eventManagerDTOToEntity(managerDTO);
         verify(eventManagerMapper).eventManagerEntityToDTO(managerEntity);
+    }
+
+    @Test
+    void visibleReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        assertTransactionalReadOnly("getVisibleEventsForUser", UUID.class);
+        assertTransactionalReadOnly("getEventByIdForUser", UUID.class, Long.class);
+    }
+
+    private void assertTransactionalReadOnly(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+        Method method = EventServiceImpl.class.getMethod(methodName, parameterTypes);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional)
+                .as("%s should be transactional", methodName)
+                .isNotNull();
+        assertThat(transactional.readOnly())
+                .as("%s should be read-only transactional", methodName)
+                .isTrue();
     }
 }

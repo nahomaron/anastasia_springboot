@@ -23,6 +23,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
@@ -122,6 +123,7 @@ public class ChurchServiceImpl implements ChurchService{
 
 //    @Cacheable(value = "churches_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public Page<ChurchResponse> findAll(Pageable pageable, String query, Boolean usesOurServices) {
         String normalizedQuery = (query == null || query.isBlank()) ? null : query.trim();
         if (normalizedQuery == null) {

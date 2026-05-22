@@ -34,7 +34,9 @@ import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -301,5 +303,26 @@ public class ChildServiceUnitTest {
         assertTrue(child.isApprovedByChurch());
         assertEquals("PR12345", child.getPriestNumber());
         verify(activeMemberLimitPolicy, never()).assertCanActivateMembers(any(), anyInt());
+    }
+
+    @Test
+    void mappedReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        assertTransactionalReadOnly("findAll", Pageable.class);
+        assertTransactionalReadOnly("findAllSummary", Pageable.class, String.class);
+        assertTransactionalReadOnly("findByTenantAndPriestNumber", UUID.class, String.class, Pageable.class);
+        assertTransactionalReadOnly("findByTenantAndPriestNumberSummary", UUID.class, String.class, Pageable.class, String.class);
+        assertTransactionalReadOnly("findPending", Pageable.class);
+        assertTransactionalReadOnly("searchNonPending", Pageable.class, String.class);
+        assertTransactionalReadOnly("searchNonPendingSummary", Pageable.class, String.class, String.class);
+        assertTransactionalReadOnly("findChildById", Long.class);
+        assertTransactionalReadOnly("findAllBySpecification", org.springframework.data.jpa.domain.Specification.class, Pageable.class);
+    }
+
+    private void assertTransactionalReadOnly(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+        Method method = ChildServiceImpl.class.getMethod(methodName, parameterTypes);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertNotNull(transactional);
+        assertTrue(transactional.readOnly());
     }
 }

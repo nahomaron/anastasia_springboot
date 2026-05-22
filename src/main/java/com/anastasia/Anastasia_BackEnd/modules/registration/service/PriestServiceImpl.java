@@ -216,6 +216,7 @@ public class PriestServiceImpl implements PriestService{
 
 //    @Cacheable(value = "priests_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public Page<PriestResponse> findAllPriests(Pageable pageable) {
         return priestRepository.findAll(pageable)
                 .map(priestMapper::priestEntityToResponse);
@@ -223,6 +224,7 @@ public class PriestServiceImpl implements PriestService{
 
 //    @Cacheable(value = "priests", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public Optional<PriestResponse> findPriestById(Long priestId) {
         return priestRepository.findById(priestId)
                 .map(priestMapper::priestEntityToResponse);
@@ -230,6 +232,7 @@ public class PriestServiceImpl implements PriestService{
 
 //    @Cacheable(value = "priests_by_church", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public List<PriestResponse> findPriestsByChurchId(Long churchId) {
         return priestRepository.findByChurch_ChurchId(churchId)
                 .stream()
@@ -238,6 +241,7 @@ public class PriestServiceImpl implements PriestService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PriestResponse> findActivePriestsByChurchId(Long churchId) {
         return priestRepository.findByChurch_ChurchIdAndStatus(churchId, PriestStatus.ACTIVE)
                 .stream()

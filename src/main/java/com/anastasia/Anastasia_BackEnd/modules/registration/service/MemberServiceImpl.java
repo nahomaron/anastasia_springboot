@@ -283,6 +283,7 @@ public class MemberServiceImpl implements MemberService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberResponse> findAll(Pageable pageable) {
         UUID tenantId = requireTenantId();
         Page<Adult_MemberEntity> members = memberRepository.findByStatusValueNotAndTenantId(
@@ -293,6 +294,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberSummaryResponse> findAllSummary(Pageable pageable, String language) {
         return memberRepository.findByStatusValueNotAndTenantId(
                         MemberLifecycleStatus.PENDING,
@@ -309,6 +311,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         Page<Adult_MemberEntity> members = memberRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable);
@@ -316,6 +319,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable, String language) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return memberRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
@@ -323,6 +327,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberResponse> findByTenantAndPriestNumberAndStatus(UUID tenantId, String priestNumber, String status, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         Page<Adult_MemberEntity> members = memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
@@ -334,6 +339,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberSummaryResponse> findByTenantAndPriestNumberAndStatusSummary(UUID tenantId, String priestNumber, String status, Pageable pageable, String language) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
@@ -345,6 +351,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberResponse> findPending(Pageable pageable) {
         UUID tenantId = requireTenantId();
         Page<Adult_MemberEntity> members = memberRepository.findByStatusValueAndTenantId(
@@ -355,6 +362,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberResponse> findPendingByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         Page<Adult_MemberEntity> members = memberRepository.findByTenantIdAndPriestNumberAndStatusValue(
@@ -366,6 +374,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberResponse> searchNonPending(Pageable pageable, String query) {
         UUID tenantId = requireTenantId();
         Long churchId = resolveCurrentChurchId();
@@ -400,6 +409,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query, String language) {
         UUID tenantId = requireTenantId();
         Long churchId = resolveCurrentChurchId();
@@ -435,6 +445,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Cacheable(value = "members", keyGenerator = "tenantAwareKeyGenerator", unless = "#result == null")
     @Override
+    @Transactional(readOnly = true)
     public Optional<Adult_MemberResponse> findMemberById(Long memberId) {
         return memberRepository.findByIdAndTenantId(memberId, requireTenantId())
                 .map(this::convertToResponse);
@@ -602,6 +613,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Adult_MemberResponse> findAllBySpecification(Specification<Adult_MemberEntity> spec, Pageable pageable) {
         Specification<Adult_MemberEntity> tenantSpec = (root, query, cb) ->
                 cb.equal(root.get("tenantId"), requireTenantId());

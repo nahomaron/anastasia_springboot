@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.groups;
 import com.anastasia.Anastasia_BackEnd.modules.groups.model.GroupEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,9 @@ public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
     long countByTenantId(UUID tenantId);
 
     List<GroupEntity> findByTenantId(UUID tenantId);
+
+    @EntityGraph(attributePaths = {"church", "managers", "users"})
+    Optional<GroupEntity> findByGroupIdAndTenantId(Long groupId, UUID tenantId);
 
     Page<GroupEntity> findAllByTenantId(UUID tenantId, Pageable pageable);
 
@@ -57,6 +61,7 @@ public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
             or m.uuid is not null
           )
     """)
+    @EntityGraph(attributePaths = {"church", "managers", "users"})
     Optional<GroupEntity> findVisibleByIdForUser(@Param("tenantId") UUID tenantId,
                                                  @Param("groupId") Long groupId,
                                                  @Param("userId") UUID userId);

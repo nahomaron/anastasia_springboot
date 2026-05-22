@@ -28,6 +28,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -83,6 +84,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventDTO> getVisibleEventsForUser(UUID userId) {
         if (userId == null) {
             throw new IllegalArgumentException(messageService.get(
@@ -104,6 +106,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventDTO getEventByIdForUser(UUID userId, Long eventId) {
         if (eventId == null) {
             throw new IllegalArgumentException(messageService.get(

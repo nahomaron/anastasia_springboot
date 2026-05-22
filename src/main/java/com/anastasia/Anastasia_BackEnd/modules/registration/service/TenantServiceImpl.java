@@ -29,7 +29,6 @@ import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.ChurchNumberUtils;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -38,6 +37,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.text.Normalizer;
@@ -268,6 +268,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Cacheable(value = "tenants_page", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public Page<TenantDTO> findAll(Pageable pageable) {
         return tenantRepository.findAll(pageable).map(this::convertTenantToDTO);
     }
@@ -283,6 +284,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Cacheable(value = "tenants", key = "#tenantId")
     @Override
+    @Transactional(readOnly = true)
     public Optional<TenantDTO> findTenantDtoById(UUID tenantId) {
         return tenantRepository.findById(tenantId).map(this::convertTenantToDTO);
     }
@@ -294,6 +296,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Cacheable(value = "tenants_by_phone", key = "#root.target.normalizeTenantPhoneCacheKey(#phone)")
     @Override
+    @Transactional(readOnly = true)
     public Optional<TenantDTO> findTenantDtoByPhoneNumber(String phone) {
         return tenantRepository.findByPhoneNumber(PhoneNumberUtils.normalize(phone)).map(this::convertTenantToDTO);
     }

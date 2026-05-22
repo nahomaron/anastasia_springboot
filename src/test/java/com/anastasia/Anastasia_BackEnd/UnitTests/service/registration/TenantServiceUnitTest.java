@@ -24,7 +24,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -166,5 +168,20 @@ public class TenantServiceUnitTest {
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.empty());
 
         assertThrows(SecurityException.class, () -> tenantService.unsubscribeTenant(tenantId));
+    }
+
+    @Test
+    void mappedReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        assertTransactionalReadOnly("findAll", org.springframework.data.domain.Pageable.class);
+        assertTransactionalReadOnly("findTenantDtoById", UUID.class);
+        assertTransactionalReadOnly("findTenantDtoByPhoneNumber", String.class);
+    }
+
+    private void assertTransactionalReadOnly(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+        Method method = TenantServiceImpl.class.getMethod(methodName, parameterTypes);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional).isNotNull();
+        assertThat(transactional.readOnly()).isTrue();
     }
 }

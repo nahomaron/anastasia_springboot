@@ -26,7 +26,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -169,5 +171,21 @@ public class PriestServiceUnitTest {
     void testFindPriestById_notFound() {
         when(priestRepository.findById(1L)).thenReturn(Optional.empty());
         assertFalse(priestService.findPriestById(1L).isPresent());
+    }
+
+    @Test
+    void mappedReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        assertTransactionalReadOnly("findAllPriests", org.springframework.data.domain.Pageable.class);
+        assertTransactionalReadOnly("findPriestById", Long.class);
+        assertTransactionalReadOnly("findPriestsByChurchId", Long.class);
+        assertTransactionalReadOnly("findActivePriestsByChurchId", Long.class);
+    }
+
+    private void assertTransactionalReadOnly(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+        Method method = PriestServiceImpl.class.getMethod(methodName, parameterTypes);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertNotNull(transactional);
+        assertTrue(transactional.readOnly());
     }
 }
