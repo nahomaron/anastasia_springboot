@@ -25,6 +25,10 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
+    private static final Set<String> PRESERVED_PLATFORM_ROLE_NAMES = Set.of(
+            "PLATFORM_ADMIN",
+            "DEVELOPER_SUPER_USER"
+    );
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -56,6 +60,7 @@ public class CustomUserDetailService implements UserDetailsService {
 
     private Set<Role> resolveEffectiveRoles(UserEntity user) {
         Set<Role> roles = new LinkedHashSet<>(accessPolicy.explicitRolesForTenant(user, user.getTenantId()));
+        preserveAssignedPlatformRoles(user, roles);
         Optional<TenantAdminAssignmentEntity> activeAssignment = resolveActiveTenantAdminAssignment(user);
         if (activeAssignment.isEmpty()) {
             return roles;
@@ -94,6 +99,16 @@ public class CustomUserDetailService implements UserDetailsService {
         };
 
         return roleName == null ? Optional.empty() : roleRepository.findByRoleName(roleName);
+    }
+
+    private void preserveAssignedPlatformRoles(UserEntity user, Set<Role> resolvedRoles) {
+        if (user == null || user.getRoles() == null || user.getRoles().isEmpty()) {
+            return;
+        }
+
+        user.getRoles().stream()
+                .filter(role -> role != null && PRESERVED_PLATFORM_ROLE_NAMES.contains(role.getRoleName()))
+                .forEach(resolvedRoles::add);
     }
 
     private Set<Permission> resolveDirectPermissions(UserEntity user) {
