@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 /*
 TenantFilter is a servlet filter responsible for resolving the tenant identifier for multi-tenant request
@@ -25,12 +26,25 @@ This enables tenant-based data isolation across the application.
 @Component
 @RequiredArgsConstructor
 public class TenantFilter implements Filter {
+    private static final String PLATFORM_ADMIN_PATH_PREFIX = "/api/v1/platform/admin";
+    private static final String PLATFORM_ADMIN_AUTHORITY = "ROLE_PLATFORM_ADMIN";
 
     private final JwtUtil jwtUtil;
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+
+        if (isPlatformAdminRequest(httpServletRequest)) {
+            TenantContext.setTenantId(null);
+            try {
+                filterChain.doFilter(servletRequest, servletResponse);
+            } finally {
+                TenantContext.clear();
+            }
+            return;
+        }
+
         String tenantIdString = httpServletRequest.getHeader("X-Tenant-ID");
         String alternateTenantHeader = httpServletRequest.getHeader("X-Tenant-Id");
         if ((tenantIdString == null || tenantIdString.isEmpty()) && alternateTenantHeader != null && !alternateTenantHeader.isEmpty()) {
@@ -93,6 +107,33 @@ public class TenantFilter implements Filter {
             return principal.getTenantId();
         }
         return null;
+    }
+
+    private boolean isPlatformAdminRequest(HttpServletRequest request) throws ServletException {
+        if (!request.getRequestURI().startsWith(PLATFORM_ADMIN_PATH_PREFIX)) {
+            return false;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getAuthorities() != null) {
+            boolean hasPlatformAdminAuthority = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> PLATFORM_ADMIN_AUTHORITY.equals(authority.getAuthority()));
+            if (hasPlatformAdminAuthority) {
+                return true;
+            }
+        }
+
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return false;
+        }
+
+        try {
+            List<String> tokenRoles = jwtUtil.extractRoles(authHeader.substring(7));
+            return tokenRoles != null && tokenRoles.stream().anyMatch(PLATFORM_ADMIN_AUTHORITY::equals);
+        } catch (Exception ex) {
+            throw new ServletException("Invalid JWT token: " + ex.getMessage(), ex);
+        }
     }
 
 

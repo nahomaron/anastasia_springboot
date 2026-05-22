@@ -3,6 +3,10 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.filter;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.filter.TenantFilter;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
@@ -12,8 +16,12 @@ import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +42,7 @@ class TenantFilterTest {
     @AfterEach
     void cleanup() {
         TenantContext.clear();
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -91,5 +100,48 @@ class TenantFilterTest {
         tenantFilter.doFilter(request, new MockHttpServletResponse(), chain);
 
         assertThat(TenantContext.getTenantId()).isNull();
+    }
+
+    @Test
+    void doFilter_whenPlatformAdminPathAndTokenRolePresent_shouldBypassTenantContext() throws ServletException, IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/platform/admin/summary");
+        request.addHeader("Authorization", "Bearer token");
+        request.addHeader("X-Tenant-ID", UUID.randomUUID().toString());
+        when(jwtUtil.extractRoles("token")).thenReturn(List.of("ROLE_PLATFORM_ADMIN"));
+
+        FilterChain chain = (servletRequest, servletResponse) ->
+                assertThat(TenantContext.getTenantId()).isNull();
+
+        tenantFilter.doFilter(request, new MockHttpServletResponse(), chain);
+
+        assertThat(TenantContext.hasTenantId()).isFalse();
+    }
+
+    @Test
+    void doFilter_whenTenantScopedUserRequestsDifferentTenant_shouldReturnForbidden() throws ServletException, IOException {
+        UUID principalTenantId = UUID.randomUUID();
+        UUID requestedTenantId = UUID.randomUUID();
+
+        UserEntity user = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("tenant-user@example.com")
+                .password("secret")
+                .fullName("Tenant User")
+                .build();
+        user.setTenant(TenantEntity.builder().id(principalTenantId).build());
+
+        UserPrincipal principal = new UserPrincipal(user, Set.of(Role.builder().roleName("USER").build()));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())
+        );
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/tenant/users");
+        request.addHeader("X-Tenant-ID", requestedTenantId.toString());
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        tenantFilter.doFilter(request, response, mock(FilterChain.class));
+
+        assertThat(response.getStatus()).isEqualTo(MockHttpServletResponse.SC_FORBIDDEN);
+        assertThat(response.getErrorMessage()).isEqualTo("Tenant access denied");
     }
 }
