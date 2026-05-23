@@ -126,9 +126,27 @@ public class PriestServiceImpl implements PriestService{
                 ));
             }
         } else {
+            if (priestUser.isVerified()) {
+                throw new IllegalStateException(messageService.get(
+                        "registration.priest.user.alreadyVerified",
+                        "An account with this email already exists. Please login or use a different email."
+                ));
+            }
             priestUser.setPriestNumber(priestNumber);
+            priestUser.setPassword(passwordEncoder.encode(priestDTO.getPassword()));
+            priestUser.setUserType(UserType.PRIEST);
+            priestUser.getRoles().add(priestRole);
             ensureBackendManagedUserStatus(priestUser);
-            userRepository.save(priestUser);
+            try {
+                priestUser = userRepository.save(priestUser);
+                authService.sendValidationEmail(priestUser);
+            } catch (Exception e) {
+                throw new RuntimeException(messageService.get(
+                        "auth.user.activationEmailFailed",
+                        "Unable to prepare priest verification email: {0}",
+                        e.getMessage()
+                ));
+            }
         }
 
 
