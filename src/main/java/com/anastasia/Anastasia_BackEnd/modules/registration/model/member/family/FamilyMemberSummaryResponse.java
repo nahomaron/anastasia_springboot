@@ -15,6 +15,7 @@ public class FamilyMemberSummaryResponse {
     private FamilyMemberSourceType sourceType;
     private Long sourceId;
     private String fullName;
+    private String avatarUrl;
     private String relationship;
     private String membershipStatus;
     private boolean canManage;
