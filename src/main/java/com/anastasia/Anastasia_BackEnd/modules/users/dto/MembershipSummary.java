@@ -14,6 +14,8 @@ public class MembershipSummary {
     private String fullName;
     private String relationshipToUser;
     private String status;
+    private String churchPrefix;
     private String churchName;
+    private String churchNeighborhood;
     private boolean isPrimaryGuardian;
 }
