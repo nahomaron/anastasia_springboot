@@ -111,6 +111,8 @@ public class SecurityConfig {
                                 "/api/v1/email/ses-events"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
+                                "/api/v1/churches",
+                                "/api/v1/churches/by-number/*",
                                 "/api/v1/onboarding/billing/sessions/*",
                                 "/api/v1/membership-cards/verify/*"
                         ).permitAll()

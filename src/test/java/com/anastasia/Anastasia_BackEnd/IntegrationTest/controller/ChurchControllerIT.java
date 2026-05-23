@@ -129,14 +129,30 @@ class ChurchControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void testGetChurches() throws Exception {
-        churchService.createChurch(churchService.convertToEntity(TestDataUtil.createTestChurchDTO()));
+    void testGetChurchesAllowsAnonymousLookup() throws Exception {
+        ChurchDTO churchDTO = TestDataUtil.createTestChurchDTO();
+        churchDTO.setUsesOurServices(true);
+        churchService.createChurch(churchService.convertToEntity(churchDTO));
+
         mockMvc.perform(get("/api/v1/churches")
+                        .param("q", churchDTO.getChurchName())
+                        .param("usesOurServices", "true")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(1))));
+    }
+
+    @Test
+    void testFindChurchByNumberAllowsAnonymousLookup() throws Exception {
+        ChurchDTO churchDTO = TestDataUtil.createTestChurchDTO_B();
+        churchDTO.setUsesOurServices(true);
+        ChurchResponse createdChurch = churchService.createChurch(churchService.convertToEntity(churchDTO));
+
+        mockMvc.perform(get("/api/v1/churches/by-number/{churchNumber}", createdChurch.getChurchNumber())
+                        .param("usesOurServicesOnly", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.churchNumber", is(createdChurch.getChurchNumber())));
     }
 
     @Test
