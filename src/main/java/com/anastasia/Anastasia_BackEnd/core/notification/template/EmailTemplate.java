@@ -81,6 +81,16 @@ public enum EmailTemplate {
             "Send when member status transitions to approved.",
             key -> new Object[]{key.getOrDefault("churchName", "Your Church")}
     ),
+    ADMIN_MEMBER_NOTIFICATION(
+            "email/scenarios/member/admin-member-notification",
+            "email.subject.admin-member-notification",
+            EmailAudienceType.MEMBER,
+            EmailCategory.MEMBER,
+            List.of("memberName", "messageTitle", "messageContent"),
+            List.of("emailSubject"),
+            "Send when an admin or priest contacts a member directly from member management.",
+            key -> new Object[]{key.getOrDefault("emailSubject", key.getOrDefault("messageTitle", "Message from your church"))}
+    ),
     EVENT_INVITATION(
             "email/scenarios/events/event-invitation",
             "email.subject.event-invitation",

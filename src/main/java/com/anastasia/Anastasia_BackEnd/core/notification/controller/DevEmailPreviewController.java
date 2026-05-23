@@ -79,6 +79,11 @@ public class DevEmailPreviewController {
             case MEMBER_APPROVED -> {
                 common.put("portalUrl", "https://app.anastasia.com/portal");
             }
+            case ADMIN_MEMBER_NOTIFICATION -> {
+                common.put("emailSubject", "A message from St. Raphael Cathedral");
+                common.put("messageTitle", "Liturgy schedule update");
+                common.put("messageContent", "Peace be with you.\n\nPlease arrive 20 minutes early for Sunday's service.\n\nThank you.");
+            }
             case EVENT_INVITATION, EVENT_REMINDER -> {
                 common.put("eventTitle", "Young Families Fellowship");
                 common.put("date", "Sunday, March 15, 2026");

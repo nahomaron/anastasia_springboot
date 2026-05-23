@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layouts/base :: emailLayout(${subjectLine}, ${messageTitle}, ~{::bodyContent})}">
+    <th:block th:fragment="bodyContent">
+        <h1 style="margin:0 0 12px 0; font-size:22px; color:#0F172A;" th:text="${messageTitle}">Message from your church</h1>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">Hello <span th:text="${memberName}">Member</span>,</p>
+        <p style="margin:0 0 12px 0; font-size:15px; color:#334155;">
+            <span th:text="${churchName}">Your Church</span> sent you the following message:
+        </p>
+        <div
+            style="margin:16px 0; padding:18px; border:1px solid #E2E8F0; border-radius:16px; background:#F8FAFC; color:#0F172A; font-size:15px; line-height:24px; white-space:pre-line;"
+            th:text="${messageContent}"
+        >
+            Message body
+        </div>
+        <p style="margin:0; font-size:13px; line-height:20px; color:#64748B;">
+            You are receiving this message because your account is connected to <span th:text="${churchName}">Your Church</span> in Anastasia.
+        </p>
+    </th:block>
+</th:block>
+</body>
+</html>
