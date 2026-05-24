@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.MemberEffectivePermissionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.TenantUserPermissionGrantRepository;
@@ -29,6 +30,7 @@ class CustomUserDetailServiceTest {
         TenantAdminAssignmentRepository assignmentRepository = mock(TenantAdminAssignmentRepository.class);
         TenantUserPermissionGrantRepository permissionGrantRepository = mock(TenantUserPermissionGrantRepository.class);
         LocalizedMessageService messageService = mock(LocalizedMessageService.class);
+        MemberEffectivePermissionService memberEffectivePermissionService = mock(MemberEffectivePermissionService.class);
 
         CustomUserDetailService service = new CustomUserDetailService(
                 userRepository,
@@ -36,7 +38,8 @@ class CustomUserDetailServiceTest {
                 assignmentRepository,
                 permissionGrantRepository,
                 new TenantUserAccessPolicy(),
-                messageService
+                messageService,
+                memberEffectivePermissionService
         );
 
         Role platformAdminRole = Role.builder()
@@ -55,6 +58,7 @@ class CustomUserDetailServiceTest {
 
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
         when(permissionGrantRepository.findByUserIdAndTenantId(user.getUuid(), null)).thenReturn(java.util.List.of());
+        when(memberEffectivePermissionService.resolvePermissions(user)).thenReturn(Set.of());
 
         UserPrincipal principal = (UserPrincipal) service.loadUserByUsername(user.getEmail());
 

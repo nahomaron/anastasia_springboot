@@ -87,6 +87,7 @@ public class AuthServiceImpl implements AuthService {
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final TenantRepository tenantRepository;
     private final StaffRepository staffRepository;
+    private final MemberEffectivePermissionService memberEffectivePermissionService;
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
@@ -333,7 +334,11 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         touchStaffLoginAudit(user);
 
-        UserPrincipal userPrincipal = new UserPrincipal(user, resolveEffectiveRoles(user));
+        UserPrincipal userPrincipal = new UserPrincipal(
+                user,
+                resolveEffectiveRoles(user),
+                memberEffectivePermissionService.resolvePermissions(user)
+        );
         AuthSessionResponse session = buildAuthSessionResponse(user, showWelcomeMessage);
         String sessionId = UUID.randomUUID().toString();
         String accessJwtId = UUID.randomUUID().toString();
@@ -407,7 +412,11 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
         }
 
-        UserPrincipal userPrincipal = new UserPrincipal(user, resolveEffectiveRoles(user));
+        UserPrincipal userPrincipal = new UserPrincipal(
+                user,
+                resolveEffectiveRoles(user),
+                memberEffectivePermissionService.resolvePermissions(user)
+        );
 
         if (!jwtUtil.isTokenValid(refreshToken, userPrincipal)) {
             throw new IllegalArgumentException(messageService.get("auth.refreshToken.invalid", "Refresh token is invalid or expired."));
@@ -684,6 +693,10 @@ public class AuthServiceImpl implements AuthService {
         activeTenantAdminAssignment
                 .map(TenantAdminAssignmentEntity::getRole)
                 .ifPresent(role -> permissionKeys.addAll(resolveTenantAdminPermissionKeys(role)));
+
+        memberEffectivePermissionService.resolvePermissionTypes(user).stream()
+                .map(PermissionType::getName)
+                .forEach(permissionKeys::add);
 
         return permissionKeys;
     }

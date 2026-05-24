@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.MemberEffectivePermissionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
@@ -36,6 +37,7 @@ public class CustomUserDetailService implements UserDetailsService {
     private final TenantUserPermissionGrantRepository permissionGrantRepository;
     private final TenantUserAccessPolicy accessPolicy;
     private final LocalizedMessageService messageService;
+    private final MemberEffectivePermissionService memberEffectivePermissionService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -112,12 +114,18 @@ public class CustomUserDetailService implements UserDetailsService {
     }
 
     private Set<Permission> resolveDirectPermissions(UserEntity user) {
+        Set<Permission> directPermissions = new LinkedHashSet<>(
+                memberEffectivePermissionService.resolvePermissions(user)
+        );
+
         if (user.getUuid() == null || user.getTenantId() == null) {
-            return Set.of();
+            return directPermissions;
         }
 
-        return permissionGrantRepository.findByUserIdAndTenantId(user.getUuid(), user.getTenantId()).stream()
+        directPermissions.addAll(permissionGrantRepository.findByUserIdAndTenantId(user.getUuid(), user.getTenantId()).stream()
                 .map(grant -> grant.getPermission())
-                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)));
+
+        return directPermissions;
     }
 }
