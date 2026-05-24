@@ -131,10 +131,10 @@ class GenericNotificationProcessorTest {
                 .containsEntry("footerAddress", "12 Church Street, Boston, MA, USA");
 
         verify(emailTemplateService).sendEmail(
-                "member@example.com",
-                "A message from St. Raphael Cathedral",
-                "<html>rendered</html>",
-                "rendered",
+                eq("member@example.com"),
+                eq("A message from St. Raphael Cathedral"),
+                eq("<html>rendered</html>"),
+                eq("rendered"),
                 any()
         );
         verify(smsNotificationService).send(eq(event), eq(SmsTemplateType.CUSTOM), any(Map.class));

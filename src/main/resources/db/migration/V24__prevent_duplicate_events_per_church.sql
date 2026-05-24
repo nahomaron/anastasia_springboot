@@ -1,9 +1,8 @@
-WITH ranked_events AS (
+CREATE TEMPORARY TABLE duplicate_events_tmp AS
+SELECT ranked.event_id, ranked.survivor_event_id
+FROM (
     SELECT
         event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
         MIN(event_id) OVER (
             PARTITION BY tenant_id, church_id, lower(btrim(title))
         ) AS survivor_event_id,
@@ -14,102 +13,48 @@ WITH ranked_events AS (
     FROM events
     WHERE title IS NOT NULL
       AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
+) ranked
+WHERE ranked.row_num > 1;
+
 INSERT INTO invited_groups (event_id, group_id)
 SELECT DISTINCT d.survivor_event_id, ig.group_id
-FROM duplicate_events d
+FROM duplicate_events_tmp d
 JOIN invited_groups ig ON ig.event_id = d.event_id
-ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM invited_groups existing
+    WHERE existing.event_id = d.survivor_event_id
+      AND existing.group_id = ig.group_id
+);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
 INSERT INTO invited_users (event_id, user_id)
 SELECT DISTINCT d.survivor_event_id, iu.user_id
-FROM duplicate_events d
+FROM duplicate_events_tmp d
 JOIN invited_users iu ON iu.event_id = d.event_id
-ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM invited_users existing
+    WHERE existing.event_id = d.survivor_event_id
+      AND existing.user_id = iu.user_id
+);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
 INSERT INTO event_invited_emails (event_id, email)
 SELECT DISTINCT d.survivor_event_id, eie.email
-FROM duplicate_events d
+FROM duplicate_events_tmp d
 JOIN event_invited_emails eie ON eie.event_id = d.event_id
-ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM event_invited_emails existing
+    WHERE existing.event_id = d.survivor_event_id
+      AND existing.email = eie.email
+);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
-INSERT INTO event_managers (event_id, user_id, role)
-SELECT DISTINCT ON (d.survivor_event_id, em.user_id)
+CREATE TEMPORARY TABLE event_manager_candidates_tmp AS
+SELECT
     d.survivor_event_id,
     em.user_id,
-    em.role
-FROM duplicate_events d
+    MIN(em.event_id) AS source_event_id
+FROM duplicate_events_tmp d
 JOIN event_managers em ON em.event_id = d.event_id
 WHERE NOT EXISTS (
     SELECT 1
@@ -117,192 +62,47 @@ WHERE NOT EXISTS (
     WHERE existing.event_id = d.survivor_event_id
       AND existing.user_id = em.user_id
 )
-ORDER BY d.survivor_event_id, em.user_id, em.event_id;
+GROUP BY d.survivor_event_id, em.user_id;
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
+INSERT INTO event_managers (event_id, user_id, role)
+SELECT c.survivor_event_id, c.user_id, em.role
+FROM event_manager_candidates_tmp c
+JOIN event_managers em
+  ON em.event_id = c.source_event_id
+ AND em.user_id = c.user_id;
+
+UPDATE event_attendance
+SET event_id = (
+    SELECT d.survivor_event_id
+    FROM duplicate_events_tmp d
+    WHERE d.event_id = event_attendance.event_id
 )
-UPDATE event_attendance ea
-SET event_id = d.survivor_event_id
-FROM duplicate_events d
-WHERE ea.event_id = d.event_id;
+WHERE event_id IN (SELECT event_id FROM duplicate_events_tmp);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
+UPDATE calendar_parish_events
+SET event_id = (
+    SELECT d.survivor_event_id
+    FROM duplicate_events_tmp d
+    WHERE d.event_id = calendar_parish_events.event_id
 )
-UPDATE calendar_parish_events cpe
-SET event_id = d.survivor_event_id
-FROM duplicate_events d
-WHERE cpe.event_id = d.event_id;
+WHERE event_id IN (SELECT event_id FROM duplicate_events_tmp);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
-DELETE FROM invited_groups ig
-USING duplicate_events d
-WHERE ig.event_id = d.event_id;
+DELETE FROM invited_groups
+WHERE event_id IN (SELECT event_id FROM duplicate_events_tmp);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
-DELETE FROM invited_users iu
-USING duplicate_events d
-WHERE iu.event_id = d.event_id;
+DELETE FROM invited_users
+WHERE event_id IN (SELECT event_id FROM duplicate_events_tmp);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
-DELETE FROM event_invited_emails eie
-USING duplicate_events d
-WHERE eie.event_id = d.event_id;
+DELETE FROM event_invited_emails
+WHERE event_id IN (SELECT event_id FROM duplicate_events_tmp);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id, survivor_event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
-DELETE FROM event_managers em
-USING duplicate_events d
-WHERE em.event_id = d.event_id;
+DELETE FROM event_managers
+WHERE event_id IN (SELECT event_id FROM duplicate_events_tmp);
 
-WITH ranked_events AS (
-    SELECT
-        event_id,
-        tenant_id,
-        church_id,
-        lower(btrim(title)) AS normalized_title,
-        MIN(event_id) OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-        ) AS survivor_event_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY tenant_id, church_id, lower(btrim(title))
-            ORDER BY event_id
-        ) AS row_num
-    FROM events
-    WHERE title IS NOT NULL
-      AND btrim(title) <> ''
-),
-duplicate_events AS (
-    SELECT event_id
-    FROM ranked_events
-    WHERE row_num > 1
-)
-DELETE FROM events e
-USING duplicate_events d
-WHERE e.event_id = d.event_id;
+DELETE FROM events
+WHERE event_id IN (SELECT event_id FROM duplicate_events_tmp);
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_events_tenant_church_title_ci
-    ON events (tenant_id, church_id, lower(btrim(title)))
-    WHERE title IS NOT NULL AND btrim(title) <> '';
+DROP TABLE event_manager_candidates_tmp;
+DROP TABLE duplicate_events_tmp;
+
+${event_title_unique_index_sql}
