@@ -2,16 +2,22 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.auth;
 
 
 import com.anastasia.Anastasia_BackEnd.common.cache.CacheWarmupService;
+import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.model.LoginTwoFactorChallengeEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.LoginTwoFactorChallengeRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.MemberEffectivePermissionService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserPreferencesEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
@@ -22,6 +28,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthServiceImpl;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.staff.repository.StaffRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserPreferencesRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.util.JwtUtilTest;
@@ -29,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -64,11 +72,15 @@ public class AuthServiceUnitTest {
     @Mock private CacheWarmupService cacheWarmupService;
     @Mock private RoleRepository roleRepository;
     @Mock private UserProfileRepository userProfileRepository;
+    @Mock private UserPreferencesRepository userPreferencesRepository;
     @Mock private UserTwoFactorBackupCodeRepository backupCodeRepository;
     @Mock private LoginTwoFactorChallengeRepository loginTwoFactorChallengeRepository;
     @Mock private TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     @Mock private StaffRepository staffRepository;
+    @Mock private TenantRepository tenantRepository;
+    @Mock private MemberEffectivePermissionService memberEffectivePermissionService;
 
+    @Spy
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -206,5 +218,68 @@ public class AuthServiceUnitTest {
         when(tokenRepository.findAllValidUserTokens(user.getUuid())).thenReturn(List.of());
         authService.revokeAllValidUserTokens(user);
         verify(tokenRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void authenticateGoogleUser_ShouldCreateMissingProfileAndPreferencesForNewUser() {
+        Role userRole = Role.builder().id(1L).roleName("USER").build();
+        UserEntity savedUser = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("test@example.com")
+                .fullName("Test User")
+                .googleId("google-123")
+                .status(UserStatus.ACTIVE)
+                .emailVerifiedAt(Instant.now())
+                .roles(java.util.Set.of(userRole))
+                .build();
+
+        when(userRepository.findByGoogleId("google-123")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.empty());
+        when(roleRepository.findByRoleName("USER")).thenReturn(Optional.of(userRole));
+        when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
+        when(userProfileRepository.findById(savedUser.getUuid())).thenReturn(Optional.empty());
+        when(userPreferencesRepository.findById(savedUser.getUuid())).thenReturn(Optional.empty());
+        when(userProfileRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        doReturn(AuthenticationResponse.builder().accessToken("access").refreshToken("refresh").build())
+                .when(authService).issueSessionForUser(savedUser.getUuid());
+
+        AuthenticationResponse response = authService.authenticateGoogleUser("google-123", "Test@Example.com", "Test User");
+
+        assertEquals("access", response.getAccessToken());
+        verify(userRepository).findByEmailIgnoreCase("test@example.com");
+        verify(userProfileRepository).save(any(UserProfileEntity.class));
+        verify(userPreferencesRepository).save(any(UserPreferencesEntity.class));
+    }
+
+    @Test
+    void authenticateGoogleUser_ShouldLinkExistingManualAccountByEmailIgnoringCase() {
+        UserEntity existingUser = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("ManualUser@Example.com")
+                .fullName("Manual User")
+                .status(UserStatus.PENDING_VERIFICATION)
+                .roles(java.util.Set.of(Role.builder().id(1L).roleName("USER").build()))
+                .build();
+
+        when(userRepository.findByGoogleId("google-456")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("manualuser@example.com")).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(existingUser)).thenReturn(existingUser);
+        when(userProfileRepository.findById(existingUser.getUuid())).thenReturn(Optional.of(UserProfileEntity.builder().user(existingUser).build()));
+        when(userPreferencesRepository.findById(existingUser.getUuid())).thenReturn(Optional.of(UserPreferencesEntity.builder().user(existingUser).build()));
+
+        doReturn(AuthenticationResponse.builder().accessToken("access").refreshToken("refresh").build())
+                .when(authService).issueSessionForUser(existingUser.getUuid());
+
+        authService.authenticateGoogleUser("google-456", "ManualUser@Example.com", "Manual User Updated");
+
+        assertEquals("google-456", existingUser.getGoogleId());
+        assertEquals("manualuser@example.com", existingUser.getEmail());
+        assertTrue(existingUser.isVerified());
+        assertEquals(UserStatus.ACTIVE, existingUser.getStatus());
+        assertEquals("Manual User Updated", existingUser.getFullName());
+        verify(userProfileRepository, never()).save(any(UserProfileEntity.class));
+        verify(userPreferencesRepository, never()).save(any(UserPreferencesEntity.class));
     }
 }

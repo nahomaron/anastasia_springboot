@@ -30,6 +30,7 @@ import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateS
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserPreferencesEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserTwoFactorBackupCodeEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
@@ -40,6 +41,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdm
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffEntity;
 import com.anastasia.Anastasia_BackEnd.modules.staff.repository.StaffRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserPreferencesRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
@@ -82,6 +84,7 @@ public class AuthServiceImpl implements AuthService {
     private final CacheWarmupService cacheWarmupService;
     private final RoleRepository roleRepository;
     private final UserProfileRepository userProfileRepository;
+    private final UserPreferencesRepository userPreferencesRepository;
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final LoginTwoFactorChallengeRepository loginTwoFactorChallengeRepository;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
@@ -236,7 +239,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserEntity user = userRepository.findByGoogleId(normalizedGoogleId)
-                .orElseGet(() -> userRepository.findByEmail(normalizedEmail).orElse(null));
+                .orElseGet(() -> userRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null));
 
         if (user == null) {
             Role userRole = roleRepository.findByRoleName("USER")
@@ -256,6 +259,7 @@ public class AuthServiceImpl implements AuthService {
                     .userType(UserType.GUEST)
                     .roles(Set.of(userRole))
                     .build();
+            attachTenantFromContextIfMissing(user);
         } else {
             if (user.getGoogleId() != null && !user.getGoogleId().equals(normalizedGoogleId)) {
                 throw new IllegalStateException(messageService.get(
@@ -265,6 +269,7 @@ public class AuthServiceImpl implements AuthService {
             }
 
             user.setGoogleId(normalizedGoogleId);
+            user.setEmail(normalizedEmail);
             if (resolvedName != null && !resolvedName.isBlank()) {
                 user.setFullName(resolvedName);
             }
@@ -272,9 +277,12 @@ public class AuthServiceImpl implements AuthService {
                 user.setVerified(true);
                 user.setStatus(UserStatus.ACTIVE);
             }
+            attachTenantFromContextIfMissing(user);
         }
 
         UserEntity savedUser = userRepository.save(user);
+        ensureUserProfileExists(savedUser);
+        ensureUserPreferencesExist(savedUser);
 
         if (isTwoFactorRequired(savedUser)) {
             return createTwoFactorChallenge(savedUser);
@@ -385,6 +393,39 @@ public class AuthServiceImpl implements AuthService {
         if (changed) {
             staffRepository.save(staffProfile);
         }
+    }
+
+    private void ensureUserProfileExists(UserEntity user) {
+        if (user == null || user.getUuid() == null || userProfileRepository.findById(user.getUuid()).isPresent()) {
+            return;
+        }
+
+        userProfileRepository.save(UserProfileEntity.builder()
+                .user(user)
+                .phoneVerified(false)
+                .twoFactorEnabled(false)
+                .build());
+    }
+
+    private void ensureUserPreferencesExist(UserEntity user) {
+        if (user == null || user.getUuid() == null || userPreferencesRepository.findById(user.getUuid()).isPresent()) {
+            return;
+        }
+
+        userPreferencesRepository.save(UserPreferencesEntity.builder()
+                .user(user)
+                .themeMode("SYSTEM")
+                .language("en")
+                .locale("en-US")
+                .dateFormat("MMM d, yyyy")
+                .firstDayOfWeek("SUNDAY")
+                .emailNotifications(true)
+                .pushNotifications(true)
+                .marketingNotifications(false)
+                .sharePresence(true)
+                .analyticsOptIn(true)
+                .autoDetectLocation(true)
+                .build());
     }
 
     @Override
