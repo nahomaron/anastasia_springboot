@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.events.repository;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendance;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,6 +17,15 @@ public interface EventAttendanceRepository extends JpaRepository<EventAttendance
     List<EventAttendance> findByEventId(Long eventId);
 
     List<EventAttendance> findByUserUuid(UUID userId);
+
+    @Query("""
+            select attendance
+            from EventAttendance attendance
+            join fetch attendance.event event
+            where attendance.user.uuid = :userId
+            order by event.startAt desc, attendance.id desc
+            """)
+    List<EventAttendance> findDetailedByUserUuid(UUID userId);
 
     List<EventAttendance> findByEventIdAndStatus(Long eventId, AttendanceStatus status);
 

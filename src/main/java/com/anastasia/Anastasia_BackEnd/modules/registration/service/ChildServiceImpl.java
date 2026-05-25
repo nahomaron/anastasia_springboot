@@ -262,6 +262,13 @@ public class ChildServiceImpl implements ChildService{
                 .map(childMapper::childEntityToResponse);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Child_MemberResponse> findChildByIdForPriest(UUID tenantId, String priestNumber, Long childId) {
+        return childRepository.findByIdAndTenantIdAndPriestNumber(childId, tenantId, priestNumber)
+                .map(childMapper::childEntityToResponse);
+    }
+
     @Caching(
             evict = {@CacheEvict( value = "children_all",
                         keyGenerator = "tenantAwareKeyGenerator",  allEntries = true),

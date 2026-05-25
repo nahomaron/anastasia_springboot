@@ -37,6 +37,7 @@ public interface ChildService {
     Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query, String language);
 
     Optional<Child_MemberResponse> findChildById(Long memberId);
+    Optional<Child_MemberResponse> findChildByIdForPriest(UUID tenantId, String priestNumber, Long memberId);
 
     Child_MemberResponse updateChildDetails(Long memberId, Child_MemberDTO request);
 

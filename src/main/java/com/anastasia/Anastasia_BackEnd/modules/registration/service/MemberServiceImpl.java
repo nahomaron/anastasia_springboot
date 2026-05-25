@@ -451,6 +451,13 @@ public class MemberServiceImpl implements MemberService {
                 .map(this::convertToResponse);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Adult_MemberResponse> findMemberByIdForPriest(UUID tenantId, String priestNumber, Long memberId) {
+        return memberRepository.findByIdAndTenantIdAndPriestNumber(memberId, tenantId, priestNumber)
+                .map(this::convertToResponse);
+    }
+
     @Caching(
             put = {@CachePut(value = "members", key = "#root.target.memberCacheKey(#memberId)")},
             evict = {@CacheEvict(value = "members_all",

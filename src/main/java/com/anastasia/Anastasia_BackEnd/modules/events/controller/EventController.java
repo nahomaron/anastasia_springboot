@@ -157,6 +157,12 @@ public class EventController {
         return ResponseEntity.ok(attendanceService.getAttendanceByUser(userId).stream().map(attendanceService::toResponse).toList());
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS', 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'VIEW_CHILDREN', 'VIEW_PRIEST_ASSIGNMENTS', 'VIEW_ALL_DATA')")
+    @GetMapping("/by-user/{userId}/report")
+    public ResponseEntity<List<MemberAttendanceReportResponse>> getAttendanceReportByUser(@PathVariable UUID userId) {
+        return ResponseEntity.ok(attendanceService.getAttendanceReportByUser(userId));
+    }
+
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/by-user/{userId}/status/{status}")
     public ResponseEntity<List<EventAttendanceResponse>> getByUserAndStatus(@PathVariable UUID userId,
