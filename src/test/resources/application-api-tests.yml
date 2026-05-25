@@ -12,6 +12,7 @@ spring:
     username: sa
     password: password
   flyway:
+    enabled: false
     placeholders:
       members_columns_sql: ""
       children_columns_sql: ""

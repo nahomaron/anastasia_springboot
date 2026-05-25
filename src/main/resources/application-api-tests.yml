@@ -11,6 +11,7 @@ spring:
     username: sa
     password: password
   flyway:
+    enabled: false
     locations: classpath:db/migration-h2,classpath:db/migration
     placeholders:
       members_columns_sql: ""
