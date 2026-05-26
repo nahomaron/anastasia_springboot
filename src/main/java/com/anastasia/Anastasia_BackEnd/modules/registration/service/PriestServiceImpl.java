@@ -126,9 +126,27 @@ public class PriestServiceImpl implements PriestService{
                 ));
             }
         } else {
+            if (priestUser.isVerified()) {
+                throw new IllegalStateException(messageService.get(
+                        "registration.priest.user.alreadyVerified",
+                        "An account with this email already exists. Please login or use a different email."
+                ));
+            }
             priestUser.setPriestNumber(priestNumber);
+            priestUser.setPassword(passwordEncoder.encode(priestDTO.getPassword()));
+            priestUser.setUserType(UserType.PRIEST);
+            priestUser.getRoles().add(priestRole);
             ensureBackendManagedUserStatus(priestUser);
-            userRepository.save(priestUser);
+            try {
+                priestUser = userRepository.save(priestUser);
+                authService.sendValidationEmail(priestUser);
+            } catch (Exception e) {
+                throw new RuntimeException(messageService.get(
+                        "auth.user.activationEmailFailed",
+                        "Unable to prepare priest verification email: {0}",
+                        e.getMessage()
+                ));
+            }
         }
 
 
@@ -216,6 +234,7 @@ public class PriestServiceImpl implements PriestService{
 
 //    @Cacheable(value = "priests_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public Page<PriestResponse> findAllPriests(Pageable pageable) {
         return priestRepository.findAll(pageable)
                 .map(priestMapper::priestEntityToResponse);
@@ -223,6 +242,7 @@ public class PriestServiceImpl implements PriestService{
 
 //    @Cacheable(value = "priests", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public Optional<PriestResponse> findPriestById(Long priestId) {
         return priestRepository.findById(priestId)
                 .map(priestMapper::priestEntityToResponse);
@@ -230,6 +250,7 @@ public class PriestServiceImpl implements PriestService{
 
 //    @Cacheable(value = "priests_by_church", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public List<PriestResponse> findPriestsByChurchId(Long churchId) {
         return priestRepository.findByChurch_ChurchId(churchId)
                 .stream()
@@ -238,6 +259,7 @@ public class PriestServiceImpl implements PriestService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PriestResponse> findActivePriestsByChurchId(Long churchId) {
         return priestRepository.findByChurch_ChurchIdAndStatus(churchId, PriestStatus.ACTIVE)
                 .stream()

@@ -28,6 +28,8 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
 
     Optional<Adult_MemberEntity> findByIdAndTenantId(Long id, UUID tenantId);
 
+    Optional<Adult_MemberEntity> findByIdAndTenantIdAndPriestNumber(Long id, UUID tenantId, String priestNumber);
+
     Optional<Adult_MemberEntity> findByMembershipNumberAndTenantId(String membershipNumber, UUID tenantId);
 
     List<Adult_MemberEntity> findAllByIdInAndTenantId(Set<Long> ids, UUID tenantId);

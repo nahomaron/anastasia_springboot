@@ -22,17 +22,32 @@ jobs:
     concurrency:
       group: rollback-${{ inputs.environment }}
       cancel-in-progress: false
+    env:
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
     steps:
       - name: Configure SSH
+        env:
+          EXPECTED_HOST_KEY_FINGERPRINT: ${{ secrets.DEPLOY_HOST_KEY_FINGERPRINT }}
         run: |
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          test -n "${EXPECTED_HOST_KEY_FINGERPRINT}"
+          HOST_KEY="$(ssh-keyscan -p "${DEPLOY_PORT}" -t ed25519 "${{ secrets.DEPLOY_HOST }}" 2>/dev/null)"
+          test -n "${HOST_KEY}"
+          SCANNED_FINGERPRINT="$(printf '%s\n' "${HOST_KEY}" | ssh-keygen -lf - | awk 'NR==1 {print $2}')"
+          [[ "${SCANNED_FINGERPRINT}" == "${EXPECTED_HOST_KEY_FINGERPRINT}" ]]
+          printf '%s\n' "${HOST_KEY}" >> ~/.ssh/known_hosts
 
       - name: Restore previous release state
         run: |
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          ssh -p "${DEPLOY_PORT}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "TARGET_ENV='${{ inputs.environment }}' bash -s" <<'EOF'
           set -euo pipefail
           case "${TARGET_ENV}" in
@@ -76,13 +91,14 @@ jobs:
       - name: Capture rollback diagnostics
         if: failure()
         run: |
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
           mkdir -p diagnostics/remote
           if [[ "${{ inputs.environment }}" == "staging" ]]; then
             REMOTE_ROOT=/opt/anastasis-staging
           else
             REMOTE_ROOT=/opt/anastasis-production
           fi
-          scp -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
+          scp -P "${DEPLOY_PORT}" -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
 
       - name: Upload rollback diagnostics
         if: always()

@@ -47,6 +47,7 @@ public interface MemberService {
     Page<Adult_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query, String language);
 
     Optional<Adult_MemberResponse> findMemberById(Long memberId);
+    Optional<Adult_MemberResponse> findMemberByIdForPriest(UUID tenantId, String priestNumber, Long memberId);
 
     Adult_MemberResponse updateMembershipDetails(Long memberId, Adult_MemberDTO request);
 

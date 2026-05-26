@@ -44,6 +44,8 @@ public interface AuthService {
 
     void resetPassword(String token, String newPassword);
 
+    void revokeAllActiveUserTokens(UserEntity user);
+
     boolean isEmailRegistered(String email);
 
 }

@@ -39,6 +39,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
@@ -165,6 +166,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberResponse> findAll(Pageable pageable) {
         return childRepository.findByStatusValueNotAndTenantId(
                 MemberLifecycleStatus.PENDING,
@@ -174,6 +176,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberSummaryResponse> findAllSummary(Pageable pageable, String language) {
         return childRepository.findByStatusValueNotAndTenantId(
                 MemberLifecycleStatus.PENDING,
@@ -190,6 +193,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberResponse> findByTenantAndPriestNumber(UUID tenantId, String priestNumber, Pageable pageable) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return childRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
@@ -197,6 +201,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberSummaryResponse> findByTenantAndPriestNumberSummary(UUID tenantId, String priestNumber, Pageable pageable, String language) {
         UUID effectiveTenantId = tenantId != null ? tenantId : requireTenantId();
         return childRepository.findByTenantIdAndPriestNumber(effectiveTenantId, priestNumber, pageable)
@@ -204,6 +209,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberResponse> findPending(Pageable pageable) {
         return childRepository.findByStatusValueAndTenantId(
                 MemberLifecycleStatus.PENDING,
@@ -213,6 +219,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberResponse> searchNonPending(Pageable pageable, String query) {
         if (query == null || query.isBlank()) {
             return childRepository.findByStatusValueNotAndTenantId(
@@ -230,6 +237,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberSummaryResponse> searchNonPendingSummary(Pageable pageable, String query, String language) {
         if (query == null || query.isBlank()) {
             return childRepository.findByStatusValueNotAndTenantId(
@@ -248,8 +256,16 @@ public class ChildServiceImpl implements ChildService{
 
     @Cacheable(value = "children", keyGenerator = "tenantAwareKeyGenerator")
     @Override
+    @Transactional(readOnly = true)
     public Optional<Child_MemberResponse> findChildById(Long childId) {
         return childRepository.findByIdAndTenantId(childId, requireTenantId())
+                .map(childMapper::childEntityToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Child_MemberResponse> findChildByIdForPriest(UUID tenantId, String priestNumber, Long childId) {
+        return childRepository.findByIdAndTenantIdAndPriestNumber(childId, tenantId, priestNumber)
                 .map(childMapper::childEntityToResponse);
     }
 
@@ -334,6 +350,7 @@ public class ChildServiceImpl implements ChildService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Child_MemberResponse> findAllBySpecification(Specification<Child_MemberEntity> spec, Pageable pageable) {
         Specification<Child_MemberEntity> tenantSpec = (root, query, cb) ->
                 cb.equal(root.get("tenantId"), requireTenantId());

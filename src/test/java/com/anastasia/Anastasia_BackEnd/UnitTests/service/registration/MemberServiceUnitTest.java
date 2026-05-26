@@ -45,7 +45,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -337,5 +339,29 @@ public class MemberServiceUnitTest {
         assertThat(member.getPriestNumber()).isEqualTo("PR12345");
         verify(activeMemberLimitPolicy, never()).assertCanActivateMembers(any(), anyInt());
         verify(membershipCardService, never()).issueOrRefreshForApprovedMember(any());
+    }
+
+    @Test
+    void mappedReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        assertTransactionalReadOnly("findAll", org.springframework.data.domain.Pageable.class);
+        assertTransactionalReadOnly("findAllSummary", org.springframework.data.domain.Pageable.class, String.class);
+        assertTransactionalReadOnly("findByTenantAndPriestNumber", UUID.class, String.class, org.springframework.data.domain.Pageable.class);
+        assertTransactionalReadOnly("findByTenantAndPriestNumberSummary", UUID.class, String.class, org.springframework.data.domain.Pageable.class, String.class);
+        assertTransactionalReadOnly("findByTenantAndPriestNumberAndStatus", UUID.class, String.class, String.class, org.springframework.data.domain.Pageable.class);
+        assertTransactionalReadOnly("findByTenantAndPriestNumberAndStatusSummary", UUID.class, String.class, String.class, org.springframework.data.domain.Pageable.class, String.class);
+        assertTransactionalReadOnly("findPending", org.springframework.data.domain.Pageable.class);
+        assertTransactionalReadOnly("findPendingByTenantAndPriestNumber", UUID.class, String.class, org.springframework.data.domain.Pageable.class);
+        assertTransactionalReadOnly("searchNonPending", org.springframework.data.domain.Pageable.class, String.class);
+        assertTransactionalReadOnly("searchNonPendingSummary", org.springframework.data.domain.Pageable.class, String.class, String.class);
+        assertTransactionalReadOnly("findMemberById", Long.class);
+        assertTransactionalReadOnly("findAllBySpecification", Specification.class, org.springframework.data.domain.Pageable.class);
+    }
+
+    private void assertTransactionalReadOnly(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+        Method method = MemberServiceImpl.class.getMethod(methodName, parameterTypes);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional).isNotNull();
+        assertThat(transactional.readOnly()).isTrue();
     }
 }

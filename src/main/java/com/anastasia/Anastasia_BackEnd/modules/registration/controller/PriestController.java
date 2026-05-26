@@ -153,6 +153,32 @@ public class PriestController {
         return new ResponseEntity<>(children, HttpStatus.OK);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_PRIEST_ASSIGNMENTS', 'MANAGE_MEMBERS', 'VIEW_MEMBERS', 'VIEW_ALL_DATA')")
+    @GetMapping("/{priestNumber}/members/{memberId}")
+    public ResponseEntity<Adult_MemberResponse> getMemberByPriest(
+            @PathVariable String priestNumber,
+            @PathVariable Long memberId,
+            @RequestParam(required = false) UUID tenantId
+    ) {
+        UUID effectiveTenantId = resolveTenantId(tenantId);
+        return memberService.findMemberByIdForPriest(effectiveTenantId, priestNumber, memberId)
+                .map(member -> new ResponseEntity<>(member, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_PRIEST_ASSIGNMENTS', 'MANAGE_MEMBERS', 'VIEW_CHILDREN', 'VIEW_ALL_DATA')")
+    @GetMapping("/{priestNumber}/children/{memberId}")
+    public ResponseEntity<Child_MemberResponse> getChildByPriest(
+            @PathVariable String priestNumber,
+            @PathVariable Long memberId,
+            @RequestParam(required = false) UUID tenantId
+    ) {
+        UUID effectiveTenantId = resolveTenantId(tenantId);
+        return childService.findChildByIdForPriest(effectiveTenantId, priestNumber, memberId)
+                .map(child -> new ResponseEntity<>(child, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     private UUID resolveTenantId(UUID tenantId) {
         UUID effectiveTenantId = tenantId != null ? tenantId : TenantContext.getTenantId();
         if (effectiveTenantId == null) {

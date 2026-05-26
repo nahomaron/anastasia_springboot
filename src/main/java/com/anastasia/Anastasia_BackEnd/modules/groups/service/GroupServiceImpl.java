@@ -18,7 +18,6 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRep
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -29,6 +28,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -109,6 +109,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<GroupResponse> findAll(Pageable pageable) {
         UUID tenantId = requireTenantId();
         return groupRepository.findAllByTenantId(tenantId, pageable)
@@ -116,6 +117,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<GroupResponse> findAllByCreatedBy(UUID createdBy, Pageable pageable) {
         UUID tenantId = requireTenantId();
         return groupRepository.findAllByCreatedByAndTenantId(createdBy, tenantId, pageable)
@@ -123,6 +125,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<GroupResponse> findVisibleForUser(UUID userId, Pageable pageable) {
         UUID tenantId = requireTenantId();
         if (userId == null) {
@@ -133,15 +136,14 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<GroupEntity> findOne(Long groupId) {
-        try {
-            return Optional.of(loadGroupForTenant(groupId));
-        } catch (EntityNotFoundException ex) {
-            return Optional.empty();
-        }
+        UUID tenantId = requireTenantId();
+        return groupRepository.findByGroupIdAndTenantId(groupId, tenantId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<GroupEntity> findOneVisibleForUser(Long groupId, UUID userId) {
         UUID tenantId = requireTenantId();
         if (userId == null) {

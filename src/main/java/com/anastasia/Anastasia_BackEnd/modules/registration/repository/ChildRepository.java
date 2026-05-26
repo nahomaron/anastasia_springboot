@@ -32,6 +32,8 @@ public interface ChildRepository extends JpaRepository<Child_MemberEntity, Long>
 
     Optional<Child_MemberEntity> findByIdAndTenantId(Long id, UUID tenantId);
 
+    Optional<Child_MemberEntity> findByIdAndTenantIdAndPriestNumber(Long id, UUID tenantId, String priestNumber);
+
     List<Child_MemberEntity> findAllByIdInAndTenantId(Set<Long> ids, UUID tenantId);
 
     Page<Child_MemberEntity> findByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId, Pageable pageable);

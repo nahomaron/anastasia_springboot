@@ -31,7 +31,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -479,6 +481,13 @@ class GroupServiceUnitTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    void readPageMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        assertTransactionalReadOnly("findAll", Pageable.class);
+        assertTransactionalReadOnly("findAllByCreatedBy", UUID.class, Pageable.class);
+        assertTransactionalReadOnly("findVisibleForUser", UUID.class, Pageable.class);
+    }
+
     private UserEntity userEntity(UUID userId, UUID tenantId) {
         return UserEntity.builder()
                 .uuid(userId)
@@ -486,5 +495,17 @@ class GroupServiceUnitTest {
                 .email(userId + "@example.com")
                 .groups(new HashSet<>())
                 .build();
+    }
+
+    private void assertTransactionalReadOnly(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+        Method method = GroupServiceImpl.class.getMethod(methodName, parameterTypes);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional)
+                .as("%s should be transactional", methodName)
+                .isNotNull();
+        assertThat(transactional.readOnly())
+                .as("%s should keep the Hibernate session open only for reads", methodName)
+                .isTrue();
     }
 }

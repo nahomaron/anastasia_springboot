@@ -32,6 +32,15 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
     Optional<UserEntity> findByGoogleId(String googleId);
     boolean existsByEmail(String email);
 
+    @Query("""
+        SELECT DISTINCT u
+        FROM UserEntity u
+        JOIN u.roles r
+        WHERE r.roleName IN :roleNames
+        ORDER BY u.createdAt DESC, u.fullName ASC
+    """)
+    List<UserEntity> findAllByRoleNames(@Param("roleNames") Set<String> roleNames);
+
     // Find users by group
 //    @Query("SELECT u FROM UserEntity u JOIN u.groups g WHERE g.groupId = :groupId")
 //    Page<UserEntity> findUsersByGroupId(@Param("groupId") Long groupId, Pageable pageable);

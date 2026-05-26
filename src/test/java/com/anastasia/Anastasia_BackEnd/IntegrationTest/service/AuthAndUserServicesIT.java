@@ -13,6 +13,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ImageAssetRepository;
@@ -40,6 +42,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -238,5 +241,30 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
                 .orElseThrow(() -> new AssertionError("Avatar not persisted"));
         assertThat(storedAvatar.getImageUrl()).isEqualTo("https://cdn.example.com/avatar.png");
         assertThat(storedAvatar.getImageAssetType()).isEqualTo(ImageAssetType.USER);
+    }
+
+    @Test
+    void activeMemberSessionIncludesFeaturePermissions() {
+        Role memberRole = fetchRole(com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType.MEMBER);
+        UserEntity memberUser = persistUser("member+" + UUID.randomUUID() + "@example.com", memberRole);
+
+        Adult_MemberEntity membership = TestDataUtil.createTestMember(church);
+        membership.setStatus(MemberStatus.ACTIVE.name());
+        Adult_MemberEntity savedMembership = memberRepository.save(membership);
+
+        memberUser.assignMembership(savedMembership);
+        memberUser.setUserType(com.anastasia.Anastasia_BackEnd.modules.users.model.UserType.MEMBER);
+        memberUser.setEmailVerifiedAt(Instant.now());
+        userRepository.save(memberUser);
+
+        AuthenticationResponse authResponse = authService.issueSessionForUser(memberUser.getUuid());
+
+        assertThat(authResponse.getSession().getMembershipStatus()).isEqualTo(MemberStatus.ACTIVE.name());
+        assertThat(authResponse.getSession().getPermissions()).contains(
+                PermissionType.VIEW_EVENTS.getName(),
+                PermissionType.VIEW_GROUPS.getName(),
+                PermissionType.BOOK_APPOINTMENT.getName(),
+                PermissionType.CANCEL_APPOINTMENT.getName()
+        );
     }
 }

@@ -109,6 +109,9 @@ class EmailTemplateServiceRenderTest {
         model.put("memberId", "M-1001");
         model.put("reviewUrl", "https://app.anastasia.com/admin/member/M-1001");
         model.put("portalUrl", "https://app.anastasia.com/portal");
+        model.put("emailSubject", "A message from St. Raphael Cathedral");
+        model.put("messageTitle", "Liturgy schedule update");
+        model.put("messageContent", "Please arrive early for Sunday's service.");
         model.put("eventTitle", "Community Gathering");
         model.put("date", "2026-03-08");
         model.put("time", "18:00");

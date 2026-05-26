@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -15,6 +16,10 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
     long countByTenantId(UUID tenantId);
 
     List<EventEntity> findByTenantId(UUID tenantId);
+
+    Optional<EventEntity> findFirstByTenantIdAndChurch_ChurchIdAndTitleIgnoreCase(UUID tenantId,
+                                                                                  Long churchId,
+                                                                                  String title);
 
     List<EventManagerEntity> findAllManagersByEventId(Long eventId);
 

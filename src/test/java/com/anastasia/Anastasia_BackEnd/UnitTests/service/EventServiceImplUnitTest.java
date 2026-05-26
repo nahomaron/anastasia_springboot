@@ -17,6 +17,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.events.service.EventServiceImpl;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -221,6 +224,8 @@ class EventServiceImplUnitTest {
         manager.setUser(user);
         event.getEventManagers().add(manager);
 
+        when(eventRepository.findFirstByTenantIdAndChurch_ChurchIdAndTitleIgnoreCase(any(), anyLong(), anyString()))
+                .thenReturn(Optional.empty());
         when(eventRepository.save(event)).thenReturn(event);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -248,11 +253,16 @@ class EventServiceImplUnitTest {
         Instant newStart = Instant.now().plusSeconds(7200);
         EventEntity update = EventEntity.builder()
                 .church(church)
+                .title("Updated Event")
                 .timezone("UTC")
                 .startAt(newStart)
                 .endAt(newStart.plusSeconds(3600))
                 .build();
-        when(eventRepository.existsById(event.getEventId())).thenReturn(true);
+        when(eventRepository.findFirstByTenantIdAndChurch_ChurchIdAndTitleIgnoreCase(
+                tenantId,
+                church.getChurchId(),
+                "Updated Event"))
+                .thenReturn(Optional.empty());
         when(eventRepository.save(update)).thenAnswer(invocation -> invocation.getArgument(0));
 
         EventEntity result = eventService.updateEvent(event.getEventId(), update);
@@ -306,5 +316,77 @@ class EventServiceImplUnitTest {
         verify(eventMapper).eventEntityToDTO(eventEntity);
         verify(eventManagerMapper).eventManagerDTOToEntity(managerDTO);
         verify(eventManagerMapper).eventManagerEntityToDTO(managerEntity);
+    }
+
+    @Test
+    void createEvent_whenChurchAlreadyHasSameTitle_throwsConflict() {
+        event.setTitle("Parish Feast");
+
+        EventEntity existing = EventEntity.builder()
+                .eventId(99L)
+                .tenantId(tenantId)
+                .church(church)
+                .title("Parish Feast")
+                .build();
+
+        when(eventRepository.findFirstByTenantIdAndChurch_ChurchIdAndTitleIgnoreCase(
+                tenantId,
+                church.getChurchId(),
+                "Parish Feast"))
+                .thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> eventService.createEvent(event))
+                .isInstanceOf(EntityExistsException.class)
+                .hasMessageContaining("already exists");
+
+        verify(eventRepository, never()).save(any());
+    }
+
+    @Test
+    void updateEvent_whenAnotherEventInChurchHasSameTitle_throwsConflict() {
+        EventEntity update = EventEntity.builder()
+                .church(church)
+                .title("Parish Feast")
+                .timezone("UTC")
+                .startAt(event.getStartAt())
+                .endAt(event.getEndAt())
+                .build();
+
+        EventEntity existing = EventEntity.builder()
+                .eventId(99L)
+                .tenantId(tenantId)
+                .church(church)
+                .title("Parish Feast")
+                .build();
+
+        when(eventRepository.findFirstByTenantIdAndChurch_ChurchIdAndTitleIgnoreCase(
+                tenantId,
+                church.getChurchId(),
+                "Parish Feast"))
+                .thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> eventService.updateEvent(event.getEventId(), update))
+                .isInstanceOf(EntityExistsException.class)
+                .hasMessageContaining("already exists");
+
+        verify(eventRepository, never()).save(update);
+    }
+
+    @Test
+    void visibleReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        assertTransactionalReadOnly("getVisibleEventsForUser", UUID.class);
+        assertTransactionalReadOnly("getEventByIdForUser", UUID.class, Long.class);
+    }
+
+    private void assertTransactionalReadOnly(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+        Method method = EventServiceImpl.class.getMethod(methodName, parameterTypes);
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional)
+                .as("%s should be transactional", methodName)
+                .isNotNull();
+        assertThat(transactional.readOnly())
+                .as("%s should be read-only transactional", methodName)
+                .isTrue();
     }
 }

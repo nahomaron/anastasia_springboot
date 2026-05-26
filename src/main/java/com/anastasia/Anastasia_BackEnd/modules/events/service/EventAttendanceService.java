@@ -7,6 +7,7 @@ import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInRe
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendance;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendanceResponse;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MarkAbsentRequestDTO;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.MemberAttendanceReportResponse;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.UpdateAttendanceStatusRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventAttendanceRepository;
@@ -105,6 +106,23 @@ public class EventAttendanceService {
 
     public List<EventAttendance> getAttendanceByUser(UUID userId) {
         return attendanceRepository.findByUserUuid(userId);
+    }
+
+    public List<MemberAttendanceReportResponse> getAttendanceReportByUser(UUID userId) {
+        return attendanceRepository.findDetailedByUserUuid(userId).stream()
+                .map(attendance -> MemberAttendanceReportResponse.builder()
+                        .id(attendance.getId())
+                        .eventId(attendance.getEventId())
+                        .eventTitle(attendance.getEvent().getTitle())
+                        .eventType(attendance.getEvent().getType())
+                        .eventStartAt(attendance.getEvent().getStartAt())
+                        .eventTimezone(attendance.getEvent().getTimezone())
+                        .location(attendance.getEvent().getLocation())
+                        .checkInTime(attendance.getCheckInTime())
+                        .checkInMethod(attendance.getCheckInMethod())
+                        .status(attendance.getStatus())
+                        .build())
+                .toList();
     }
 
     public List<EventAttendance> getAttendanceByEventAndStatus(Long eventId, AttendanceStatus status) {

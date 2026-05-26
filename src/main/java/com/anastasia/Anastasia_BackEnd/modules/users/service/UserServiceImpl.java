@@ -951,14 +951,18 @@ public class UserServiceImpl implements UserService {
                 nullToEmpty(member.getGrandFatherName())
         ).trim();
 
-        String churchName = member.getChurch() != null ? member.getChurch().getChurchNameLocal() : null;
+        String churchPrefix = member.getChurch() != null ? member.getChurch().getPrefix() : null;
+        String churchName = member.getChurch() != null ? member.getChurch().getChurchName() : null;
+        String churchNeighborhood = member.getChurch() != null ? member.getChurch().getNeighborhood() : null;
 
         return MembershipSummary.builder()
                 .memberId(member.getMembershipNumber())
                 .fullName(fullName.isBlank() ? null : fullName)
                 .relationshipToUser(relationshipToUser)
                 .status(mapMembershipStatus(member.getStatus()))
+                .churchPrefix(churchPrefix)
                 .churchName(churchName)
+                .churchNeighborhood(churchNeighborhood)
                 .isPrimaryGuardian(isPrimaryGuardian)
                 .build();
     }

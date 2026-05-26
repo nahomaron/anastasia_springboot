@@ -23,6 +23,7 @@ jobs:
     env:
       REMOTE_ROOT: /opt/anastasis-staging
       COMPOSE_PROJECT_NAME: anastasis-staging
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
     steps:
       - uses: actions/checkout@v4
 
@@ -67,9 +68,11 @@ jobs:
           APP_BACKEND_BASE_URL: ${{ vars.APP_BACKEND_BASE_URL }}
 
       - name: Write staging environment file
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
         run: |
-          test -n "${{ secrets.APP_ENV_FILE }}"
-          printf '%s\n' "${{ secrets.APP_ENV_FILE }}" > .env.staging
+          test -n "$APP_ENV_FILE"
+          printf '%s\n' "$APP_ENV_FILE" > .env.staging
 
       - name: Validate staging database target
         run: |
@@ -86,22 +89,35 @@ jobs:
           esac
 
       - name: Configure SSH
+        env:
+          EXPECTED_HOST_KEY_FINGERPRINT: ${{ secrets.DEPLOY_HOST_KEY_FINGERPRINT }}
         run: |
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "mkdir -p '${REMOTE_ROOT}'"
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          test -n "${EXPECTED_HOST_KEY_FINGERPRINT}"
+          HOST_KEY="$(ssh-keyscan -p "${DEPLOY_PORT}" -t ed25519 "${{ secrets.DEPLOY_HOST }}" 2>/dev/null)"
+          test -n "${HOST_KEY}"
+          SCANNED_FINGERPRINT="$(printf '%s\n' "${HOST_KEY}" | ssh-keygen -lf - | awk 'NR==1 {print $2}')"
+          [[ "${SCANNED_FINGERPRINT}" == "${EXPECTED_HOST_KEY_FINGERPRINT}" ]]
+          printf '%s\n' "${HOST_KEY}" >> ~/.ssh/known_hosts
+          ssh -p "${DEPLOY_PORT}" -o BatchMode=yes "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "mkdir -p '${REMOTE_ROOT}'"
 
       - name: Upload compose bundle
         run: |
-          scp compose.yaml docker-compose.staging.yml .env.staging scripts/prune_backend_images.sh \
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          scp -P "${DEPLOY_PORT}" compose.yaml docker-compose.staging.yml .env.staging scripts/prune_backend_images.sh \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/"
 
       - name: Deploy exact image digest to staging
         run: |
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          ssh -p "${DEPLOY_PORT}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' IMAGE_REF='${{ steps.manifest.outputs.image_ref }}' GIT_SHA='${{ steps.manifest.outputs.git_sha }}' BUILT_AT='${{ steps.manifest.outputs.built_at }}' bash -s" <<'EOF'
           set -euo pipefail
           mkdir -p "${REMOTE_ROOT}/releases" "${REMOTE_ROOT}/diagnostics"
@@ -251,24 +267,47 @@ jobs:
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "chmod +x '${REMOTE_ROOT}/prune_backend_images.sh' && '${REMOTE_ROOT}/prune_backend_images.sh' '${IMAGE_REPO}'"
 
+      - name: Ensure SSH for diagnostics and rollback
+        if: always()
+        env:
+          EXPECTED_HOST_KEY_FINGERPRINT: ${{ secrets.DEPLOY_HOST_KEY_FINGERPRINT }}
+        run: |
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          test -n "${EXPECTED_HOST_KEY_FINGERPRINT}"
+          HOST_KEY="$(ssh-keyscan -p "${DEPLOY_PORT}" -t ed25519 "${{ secrets.DEPLOY_HOST }}" 2>/dev/null)"
+          test -n "${HOST_KEY}"
+          SCANNED_FINGERPRINT="$(printf '%s\n' "${HOST_KEY}" | ssh-keygen -lf - | awk 'NR==1 {print $2}')"
+          [[ "${SCANNED_FINGERPRINT}" == "${EXPECTED_HOST_KEY_FINGERPRINT}" ]]
+          printf '%s\n' "${HOST_KEY}" >> ~/.ssh/known_hosts
+
       - name: Capture staging disk diagnostics
         if: always()
         run: |
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
           mkdir -p diagnostics
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+          ssh -p "${DEPLOY_PORT}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "df -h / && echo && docker system df" > diagnostics/staging-disk-usage.txt || true
 
       - name: Disable EC2 staging postgres container
         if: success()
         run: |
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          ssh -p "${DEPLOY_PORT}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "cd '${REMOTE_ROOT}' && docker compose -p '${COMPOSE_PROJECT_NAME}' --env-file releases/current.env --env-file .env.staging -f compose.yaml -f docker-compose.staging.yml rm -sf postgres || true"
 
       - name: Capture remote diagnostics before rollback
         if: failure()
         run: |
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
           mkdir -p diagnostics/remote
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+          ssh -p "${DEPLOY_PORT}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' bash -s" <<'EOF'
           set -euo pipefail
           cd "${REMOTE_ROOT}"
@@ -278,12 +317,13 @@ jobs:
             -f compose.yaml -f docker-compose.staging.yml logs --tail=200 backend > diagnostics/backend.log || true
           curl -sS http://localhost:8081/actuator/health > diagnostics/health.json || true
           EOF
-          scp -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
+          scp -P "${DEPLOY_PORT}" -r "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${REMOTE_ROOT}/diagnostics/." diagnostics/remote/ || true
 
       - name: Roll back staging to previous release
         if: failure()
         run: |
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          ssh -p "${DEPLOY_PORT}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' bash -s" <<'EOF'
           set -euo pipefail
           cd "${REMOTE_ROOT}"
