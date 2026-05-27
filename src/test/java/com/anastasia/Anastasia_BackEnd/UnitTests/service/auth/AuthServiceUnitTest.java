@@ -34,6 +34,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBac
 import com.anastasia.Anastasia_BackEnd.util.JwtUtilTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -47,6 +48,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Locale;
 import java.util.List;
 import java.util.Optional;
@@ -133,6 +135,41 @@ public class AuthServiceUnitTest {
         user.setVerified(true);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         assertThrows(IllegalStateException.class, () -> authService.resendActivationEmail(email));
+    }
+
+    @Test
+    void initiatePasswordReset_shouldReturnSilentlyWhenUserMissing() throws Exception {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        authService.initiatePasswordReset(email);
+
+        verify(tokenRepository, never()).save(any());
+        verify(emailTemplateService, never()).sendTemplateEmail(any(), any(), any(), any());
+    }
+
+    @Test
+    void initiatePasswordReset_shouldStoreHashedTokenAndEmailRawToken() throws Exception {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(tokenRepository.findAllValidTokensByUser(user.getUuid(), TokenType.PASSWORD_RESET)).thenReturn(List.of());
+        when(tokenRepository.save(any(Token.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        authService.initiatePasswordReset(email);
+
+        ArgumentCaptor<Token> tokenCaptor = ArgumentCaptor.forClass(Token.class);
+        verify(tokenRepository).save(tokenCaptor.capture());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> propertiesCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(emailTemplateService).sendTemplateEmail(eq(email), any(), propertiesCaptor.capture(), any());
+
+        Token savedToken = tokenCaptor.getValue();
+        String resetUrl = propertiesCaptor.getValue().get("resetUrl").toString();
+        String rawToken = resetUrl.substring(resetUrl.indexOf("token=") + "token=".length());
+
+        assertEquals(TokenType.PASSWORD_RESET, savedToken.getTokenType());
+        assertEquals(64, savedToken.getToken().length());
+        assertNotEquals(rawToken, savedToken.getToken());
+        assertTrue(rawToken.length() >= 40);
     }
 
     @Test
