@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
@@ -28,7 +29,7 @@ public class PasswordResetTokenService {
     public IssuedPasswordResetToken issueForUser(UserEntity user) {
         String rawToken = generatePasswordResetToken();
         String tokenHash = hashToken(rawToken);
-        Instant now = Instant.now();
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
         List<Token> existingResetTokens = tokenRepository.findAllValidTokensByUser(user.getUuid(), TokenType.PASSWORD_RESET);
         existingResetTokens.forEach(token -> {

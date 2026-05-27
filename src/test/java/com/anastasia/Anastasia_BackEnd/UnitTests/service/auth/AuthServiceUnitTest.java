@@ -12,6 +12,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.LoginTwoFactorChalle
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.IssuedPasswordResetToken;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.PasswordResetTokenService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.MemberEffectivePermissionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -68,6 +70,7 @@ public class AuthServiceUnitTest {
     @Mock private AuthenticationManager authenticationManager;
     @Mock private RefreshTokenCookieService refreshTokenCookieService;
     @Mock private TokenRepository tokenRepository;
+    @Mock private PasswordResetTokenService passwordResetTokenService;
     @Mock private EmailNotificationService emailNotificationService;
     @Mock private EmailTemplateService emailTemplateService;
     @Mock private LocalizedMessageService messageService;
@@ -150,25 +153,23 @@ public class AuthServiceUnitTest {
     @Test
     void initiatePasswordReset_shouldStoreHashedTokenAndEmailRawToken() throws Exception {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(tokenRepository.findAllValidTokensByUser(user.getUuid(), TokenType.PASSWORD_RESET)).thenReturn(List.of());
-        when(tokenRepository.save(any(Token.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(passwordResetTokenService.issueForUser(user)).thenReturn(
+                new IssuedPasswordResetToken(42, "raw-reset-token-value-with-sufficient-length", Instant.now().plusSeconds(3600))
+        );
 
         authService.initiatePasswordReset(email);
 
-        ArgumentCaptor<Token> tokenCaptor = ArgumentCaptor.forClass(Token.class);
-        verify(tokenRepository).save(tokenCaptor.capture());
+        verify(passwordResetTokenService).issueForUser(user);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, Object>> propertiesCaptor = ArgumentCaptor.forClass(Map.class);
         verify(emailTemplateService).sendTemplateEmail(eq(email), any(), propertiesCaptor.capture(), any());
 
-        Token savedToken = tokenCaptor.getValue();
         String resetUrl = propertiesCaptor.getValue().get("resetUrl").toString();
         String rawToken = resetUrl.substring(resetUrl.indexOf("token=") + "token=".length());
 
-        assertEquals(TokenType.PASSWORD_RESET, savedToken.getTokenType());
-        assertEquals(64, savedToken.getToken().length());
-        assertNotEquals(rawToken, savedToken.getToken());
+        verify(tokenRepository, never()).save(any(Token.class));
+        assertEquals("raw-reset-token-value-with-sufficient-length", rawToken);
         assertTrue(rawToken.length() >= 40);
     }
 
