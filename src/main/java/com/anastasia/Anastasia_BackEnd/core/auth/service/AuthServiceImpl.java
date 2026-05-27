@@ -59,9 +59,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -81,6 +78,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
+    private final PasswordResetTokenService passwordResetTokenService;
     private final EmailTemplateService emailTemplateService;
     private final LocalizedMessageService messageService;
 
@@ -99,9 +97,6 @@ public class AuthServiceImpl implements AuthService {
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
     private static final int ACTIVATION_TOKEN_MINUTES = 10;
-    private static final int PASSWORD_RESET_TOKEN_BYTES = 32;
-    private static final long PASSWORD_RESET_TOKEN_TTL_SECONDS = 60L * 60L;
-
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
         // todo -> make role fetching and assigning method
@@ -527,32 +522,11 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
 
-        String resetTokenValue = generatePasswordResetToken();
-        String resetTokenHash = hashToken(resetTokenValue);
-        Instant now = Instant.now();
-        List<Token> existingResetTokens = tokenRepository.findAllValidTokensByUser(user.getUuid(), TokenType.PASSWORD_RESET);
-        existingResetTokens.forEach(token -> {
-            token.setExpired(true);
-            token.setRevoked(true);
-            token.setExpiredAt(now);
-            token.setRevokedAt(now);
-        });
-        if (!existingResetTokens.isEmpty()) {
-            tokenRepository.saveAll(existingResetTokens);
-        }
-
-        Token resetToken = Token.builder()
-                .token(resetTokenHash)
-                .tokenType(TokenType.PASSWORD_RESET)
-                .createdAt(now)
-                .expiresAt(now.plusSeconds(PASSWORD_RESET_TOKEN_TTL_SECONDS))
-                .user(user)
-                .build();
-        tokenRepository.save(resetToken);
+        IssuedPasswordResetToken issuedToken = passwordResetTokenService.issueForUser(user);
 
         Map<String, Object> templateProperties = new HashMap<>();
         templateProperties.put("userName", user.getFullName());
-        templateProperties.put("resetUrl", normalizeBaseUrl(frontendBaseUrl) + "/reset-password?token=" + resetTokenValue);
+        templateProperties.put("resetUrl", normalizeBaseUrl(frontendBaseUrl) + "/reset-password?token=" + issuedToken.rawToken());
         templateProperties.put("expiresHours", 1);
         templateProperties.put("requestIp", "N/A");
         templateProperties.put("requestDevice", null);
@@ -568,7 +542,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void resetPassword(String token, String newPassword) {
-        Token savedToken = tokenRepository.findTopByTokenAndTokenTypeOrderByIdDesc(hashToken(token), TokenType.PASSWORD_RESET)
+        Token savedToken = tokenRepository.findTopByTokenAndTokenTypeOrderByIdDesc(passwordResetTokenService.hashToken(token), TokenType.PASSWORD_RESET)
                 .orElseThrow(() -> new RuntimeException(messageService.get(
                         "auth.passwordReset.invalidOrExpired",
                         "Invalid or expired password reset token."
@@ -950,21 +924,5 @@ public class AuthServiceImpl implements AuthService {
 
         return codeBuilder.toString();
     }
-
-    private String generatePasswordResetToken() {
-        byte[] bytes = new byte[PASSWORD_RESET_TOKEN_BYTES];
-        SECURE_RANDOM.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
-
-    private String hashToken(String rawToken) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(rawToken.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("Unable to hash token", e);
-        }
-    }
-
 
 }
