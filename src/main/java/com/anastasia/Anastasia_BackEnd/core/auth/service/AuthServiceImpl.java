@@ -95,6 +95,7 @@ public class AuthServiceImpl implements AuthService {
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
+    private static final int ACTIVATION_TOKEN_MINUTES = 10;
 
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
@@ -895,7 +896,7 @@ public class AuthServiceImpl implements AuthService {
         Map<String, Object> templateProperties = new HashMap<>();
         templateProperties.put("userName", user.getFullName());
         templateProperties.put("verifyUrl", activationUrl);
-        templateProperties.put("expiresHours", 24);
+        templateProperties.put("expiresMinutes", ACTIVATION_TOKEN_MINUTES);
         templateProperties.put("locale", messageService.resolveLocaleForUser(user));
 
         emailTemplateService.sendTemplateEmail(
@@ -914,7 +915,7 @@ public class AuthServiceImpl implements AuthService {
                 .token(generatedToken)
                 .tokenType(TokenType.ACTIVATION)
                 .createdAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(15 * 60L))
+                .expiresAt(Instant.now().plusSeconds(ACTIVATION_TOKEN_MINUTES * 60L))
                 .user(user)
                 .build();
 

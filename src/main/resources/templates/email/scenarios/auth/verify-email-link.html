@@ -8,7 +8,7 @@
         <th:block th:replace="~{email/components/button :: button(${verifyUrl}, #{email.auth.verifyEmailLink.cta}, 'primary')}"></th:block>
         <th:block th:replace="~{email/components/plainLink :: plainLink(${verifyUrl})}"></th:block>
         <th:block th:replace="~{email/components/alert :: alert('info', #{email.auth.verifyEmailLink.alert})}"></th:block>
-        <p class="email-muted-text" style="margin:10px 0 0 0; font-size:14px; color:#64748B;" th:text="#{email.auth.verifyEmailLink.expiry(${expiresHours})}">Expires in 24 hours.</p>
+        <p class="email-muted-text" style="margin:10px 0 0 0; font-size:14px; color:#64748B;" th:text="#{email.auth.verifyEmailLink.expiry(${expiresMinutes})}">Expires in 10 minutes.</p>
     </th:block>
 </th:block>
 </body>
