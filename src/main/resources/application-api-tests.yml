@@ -88,6 +88,7 @@ app:
     oauth2-enabled: false
     test-helper-secret: ${TEST_HELPER_SECRET:}
   platform-admin:
+    bootstrap-enabled: true
     secret: dev-secret
 
 logging:

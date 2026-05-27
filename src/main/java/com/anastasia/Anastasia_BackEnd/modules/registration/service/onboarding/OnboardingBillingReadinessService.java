@@ -24,6 +24,7 @@ public class OnboardingBillingReadinessService {
         boolean backendBaseUrlConfigured = isSet("app.public.backend-base-url");
         boolean corsConfigured = isSet("app.cors.allowed-origins");
         boolean jwtSecretConfigured = isSet("app.auth.jwt-current-secret");
+        boolean platformAdminBootstrapEnabled = environment.getProperty("app.platform-admin.bootstrap-enabled", Boolean.class, false);
         boolean platformAdminSecretConfigured = isSet("app.platform-admin.secret");
         boolean mailSenderConfigured = isSet("spring.mail.from");
         boolean mailCredentialsConfigured = isSet("spring.mail.username") && isSet("spring.mail.password");
@@ -45,7 +46,7 @@ public class OnboardingBillingReadinessService {
         if (!jwtSecretConfigured) {
             missing.add("app.auth.jwt-current-secret (env: ANASTASIA_JWT_CURRENT_SECRET)");
         }
-        if (!platformAdminSecretConfigured) {
+        if (platformAdminBootstrapEnabled && !platformAdminSecretConfigured) {
             missing.add("app.platform-admin.secret (env: PLATFORM_ADMIN_SECRET)");
         }
         if (!mailSenderConfigured) {
@@ -73,6 +74,7 @@ public class OnboardingBillingReadinessService {
         application.put("backendBaseUrlConfigured", backendBaseUrlConfigured);
         application.put("corsConfigured", corsConfigured);
         application.put("jwtSecretConfigured", jwtSecretConfigured);
+        application.put("platformAdminBootstrapEnabled", platformAdminBootstrapEnabled);
         application.put("platformAdminSecretConfigured", platformAdminSecretConfigured);
         application.put("refreshCookieSecure", refreshCookieSecure);
         application.put("refreshCookieSameSite", refreshCookieSameSite);
