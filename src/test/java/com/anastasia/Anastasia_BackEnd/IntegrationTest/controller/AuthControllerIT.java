@@ -126,6 +126,7 @@ public class AuthControllerIT extends PostgresTestContainer {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/api/v1/auth/activate-account")
                         .param("token", verificationTokenCode)
+                        .param("email", testUserDTOA.getEmail())
         ).andExpect(
                 status().isOk()
         );
@@ -150,6 +151,7 @@ public class AuthControllerIT extends PostgresTestContainer {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/api/v1/auth/activate-account")
                         .param("token", verificationTokenCode)
+                        .param("email", testUserDTOA.getEmail())
         ).andExpect(
                 status().isOk()
         );
@@ -209,6 +211,7 @@ public class AuthControllerIT extends PostgresTestContainer {
     private String fetchActivationToken(String email) throws Exception {
         MvcResult result = mockMvc.perform(
                         MockMvcRequestBuilders.get("/api/v1/auth/test/activation-token")
+                                .header("X-Test-Helper-Secret", "anastasia-api-test-helper-secret")
                                 .param("email", email)
                 )
                 .andExpect(status().isOk())

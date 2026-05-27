@@ -51,7 +51,7 @@ public final class SubscriptionFlowHelper {
 
         // 3 Activate account
         String activationToken = fetchActivationToken(tenantRequest.getOwnerEmail());
-        Response activationResponse = authService.activateAccount(activationToken);
+        Response activationResponse = authService.activateAccount(activationToken, tenantRequest.getOwnerEmail());
         Assertions.assertEquals(200, activationResponse.statusCode(),
                 "Account activation failed: " + activationResponse.asString());
 
@@ -64,7 +64,7 @@ public final class SubscriptionFlowHelper {
     private static String fetchActivationToken(String email) {
         String activationEndpoint = resolveEndpointPath("test.activation.endpoint", "/auth/test/activation-token");
         Response response = given()
-                .spec(RequestSpecFactory.anonymousSpec())
+                .spec(RequestSpecFactory.testHelperSpec())
                 .queryParam("email", email)
                 .get(activationEndpoint)
                 .then()
@@ -80,7 +80,7 @@ public final class SubscriptionFlowHelper {
     private static String fetchRefreshToken(String email) {
         String refreshEndpoint = resolveEndpointPath("test.refresh.endpoint", "/auth/test/refresh-token");
         Response response = given()
-                .spec(RequestSpecFactory.anonymousSpec())
+                .spec(RequestSpecFactory.testHelperSpec())
                 .queryParam("email", email)
                 .get(refreshEndpoint)
                 .then()

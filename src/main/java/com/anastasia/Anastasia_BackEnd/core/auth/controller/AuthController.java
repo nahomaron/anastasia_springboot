@@ -145,10 +145,18 @@ public class AuthController {
      * @return ResponseEntity indicating success or failure.
      */
     @GetMapping("/activate-account")
-    public ResponseEntity<?> confirm(@RequestParam String token, HttpServletResponse response) {
+    public ResponseEntity<?> confirm(
+            @RequestParam String token,
+            @RequestParam String email,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        if (!consumeRateLimit("auth:activate-account", request, normalizeKeyComponent(email), 5, Duration.ofMinutes(15))) {
+            return tooManyRequests();
+        }
         long start = System.currentTimeMillis();
         try {
-            AuthenticationResponse authResponse = withRefreshTokenCookie(authService.activateAccount(token), response);
+            AuthenticationResponse authResponse = withRefreshTokenCookie(authService.activateAccount(token, email), response);
             log.info("Activation took: {} ms", System.currentTimeMillis() - start);
             return ResponseEntity.ok(authResponse);
         } catch (RuntimeException ex) {

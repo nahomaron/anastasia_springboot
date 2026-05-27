@@ -30,7 +30,7 @@ public interface AuthService {
 
     boolean exists(UUID userId);
 
-    AuthenticationResponse activateAccount(String token);
+    AuthenticationResponse activateAccount(String token, String email);
 
     Optional<UserEntity> findUserByEmail(
             @NotBlank(message = "validation.auth.email.required")

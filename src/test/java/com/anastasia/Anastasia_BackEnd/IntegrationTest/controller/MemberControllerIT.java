@@ -118,7 +118,7 @@ class MemberControllerIT extends PostgresTestContainer {
                 .orElseThrow()
                 .getToken();
         assertNotNull(token);
-        authService.activateAccount(token);
+        authService.activateAccount(token, user.getEmail());
 
         AuthenticationResponse response = authService.authenticate(
                 TestDataUtil.createTestAuthenticationRequest(user.getEmail()));

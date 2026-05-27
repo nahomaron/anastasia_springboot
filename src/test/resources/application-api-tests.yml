@@ -65,6 +65,7 @@ app:
   evn: api-tests
   security:
     allow-anonymous: true
+    test-helper-secret: anastasia-api-test-helper-secret
 
 logging:
   pattern:

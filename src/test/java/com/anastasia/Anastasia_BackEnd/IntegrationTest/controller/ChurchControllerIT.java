@@ -99,7 +99,7 @@ class ChurchControllerIT extends PostgresTestContainer {
                 .orElseThrow()
                 .getToken();
         assertNotNull(token);
-        authService.activateAccount(token);
+        authService.activateAccount(token, tenantDTO.getOwnerEmail());
 
         AuthenticationResponse auth = authService.authenticate(
                 AuthenticationRequest.builder()

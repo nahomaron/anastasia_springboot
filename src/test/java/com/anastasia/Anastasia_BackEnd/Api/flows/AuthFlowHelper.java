@@ -33,7 +33,7 @@ public class AuthFlowHelper {
         String token = fetchActivationToken(email);
 
         // 3️⃣ Activate account
-        Response activateRes = authService.activateAccount(token);
+        Response activateRes = authService.activateAccount(token, email);
         Assertions.assertEquals(200, activateRes.statusCode(), "Activation failed");
 
         // 4️⃣ Login
@@ -54,7 +54,7 @@ public class AuthFlowHelper {
             endpoint = DEFAULT_TEST_ACTIVATION_ENDPOINT;
         }
         Response response = given()
-                .spec(RequestSpecFactory.anonymousSpec())
+                .spec(RequestSpecFactory.testHelperSpec())
                 .queryParam("email", email)
                 .get(endpoint)
                 .then()

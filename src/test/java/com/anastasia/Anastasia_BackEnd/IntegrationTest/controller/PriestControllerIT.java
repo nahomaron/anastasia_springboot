@@ -102,7 +102,7 @@ class PriestControllerIT extends PostgresTestContainer {
                 .orElseThrow()
                 .getToken();
         assertNotNull(token);
-        authService.activateAccount(token);
+        authService.activateAccount(token, priestDTO.getPersonalEmail());
 
         AuthenticationResponse auth = authService.authenticate(AuthenticationRequest.builder()
                 .email(priestDTO.getPersonalEmail())

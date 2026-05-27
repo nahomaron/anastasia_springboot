@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -27,17 +28,22 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -56,6 +62,9 @@ public class SecurityConfig {
     private boolean oauth2Enabled;
     @Value("${app.security.allow-anonymous:false}")
     private boolean allowAnonymous;
+    @Value("${app.security.test-helper-secret:}")
+    private String testHelperSecret;
+    private static final String TEST_HELPER_SECRET_HEADER = "X-Test-Helper-Secret";
     private static final String[] WHITE_LIST_ENDPOINTS = {
             "/api/v1/auth/**",
             "/oauth2/**",
@@ -72,13 +81,14 @@ public class SecurityConfig {
             "/webjars/**",
             "/api/v1/membership-cards/verify/**",
             "/ws/**",
-            "/ws-sockjs/**",
-            "/test-utils/**",
-            "/api/v1/test-utils/**"
+            "/ws-sockjs/**"
     };
     private static final String[] TEST_HELPER_ENDPOINTS = {
             "/api/v1/tenant/test/**",
-            "/api/v1/auth/test/**"
+            "/api/v1/auth/test/**",
+            "/api/v1/test-utils/**",
+            "/api/v1/test/**",
+            "/test-utils/**"
     };
 
     @Bean
@@ -94,8 +104,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        .requestMatchers(TEST_HELPER_ENDPOINTS).access(this::authorizeTestHelperRequest)
                         .requestMatchers(WHITE_LIST_ENDPOINTS).permitAll()
-                        .requestMatchers(TEST_HELPER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/tenant/subscription",
                                 "/api/v1/tenant/verify-phone",
@@ -151,6 +161,22 @@ public class SecurityConfig {
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    private AuthorizationDecision authorizeTestHelperRequest(
+            Supplier<org.springframework.security.core.Authentication> authentication,
+            RequestAuthorizationContext context
+    ) {
+        String configuredSecret = testHelperSecret == null ? "" : testHelperSecret.trim();
+        String providedSecret = context.getRequest().getHeader(TEST_HELPER_SECRET_HEADER);
+
+        boolean allowed = StringUtils.hasText(configuredSecret)
+                && StringUtils.hasText(providedSecret)
+                && MessageDigest.isEqual(
+                configuredSecret.getBytes(StandardCharsets.UTF_8),
+                providedSecret.trim().getBytes(StandardCharsets.UTF_8)
+        );
+        return new AuthorizationDecision(allowed);
     }
 
     @Bean

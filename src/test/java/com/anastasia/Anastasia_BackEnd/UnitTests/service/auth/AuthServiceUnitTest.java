@@ -142,6 +142,73 @@ public class AuthServiceUnitTest {
     }
 
     @Test
+    void activateAccount_shouldRequireTokenForProvidedEmail() {
+        UserEntity otherUser = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("other@example.com")
+                .build();
+        Token token = Token.builder()
+                .token("123456")
+                .tokenType(TokenType.ACTIVATION)
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .user(otherUser)
+                .build();
+        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.activateAccount("123456", email));
+
+        assertEquals("Invalid activation token", ex.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void activateAccount_shouldRejectAndMarkExpiredToken() {
+        Token token = Token.builder()
+                .token("123456")
+                .tokenType(TokenType.ACTIVATION)
+                .createdAt(Instant.now().minusSeconds(600))
+                .expiresAt(Instant.now().minusSeconds(1))
+                .user(user)
+                .build();
+        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.activateAccount("123456", email));
+
+        assertEquals("Activation token has expired. Please request a new activation email.", ex.getMessage());
+        assertTrue(token.isExpired());
+        assertNotNull(token.getExpiredAt());
+        verify(tokenRepository).save(token);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void activateAccount_shouldActivateUserAndBurnToken() {
+        Token token = Token.builder()
+                .token("123456")
+                .tokenType(TokenType.ACTIVATION)
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .user(user)
+                .build();
+        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+        when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
+        doReturn(AuthenticationResponse.builder().accessToken("access").build())
+                .when(authService).issueSessionForUser(user.getUuid());
+
+        AuthenticationResponse response = authService.activateAccount("123456", " Test@Example.com ");
+
+        assertEquals("access", response.getAccessToken());
+        assertTrue(user.isVerified());
+        assertEquals(UserStatus.ACTIVE, user.getStatus());
+        assertTrue(token.isExpired());
+        assertNotNull(token.getValidatedAt());
+        assertNotNull(token.getExpiredAt());
+        verify(userRepository).save(user);
+        verify(tokenRepository).save(token);
+    }
+
+    @Test
     void testAuthenticate_ShouldThrowInvalidCredentialsForBadCredentials() {
         AuthenticationRequest req = new AuthenticationRequest(email, "badpass");
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("Bad credentials"));

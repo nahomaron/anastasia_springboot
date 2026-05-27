@@ -118,7 +118,7 @@ class ChildControllerIT extends PostgresTestContainer {
                 .orElseThrow()
                 .getToken();
         assertNotNull(token);
-        authService.activateAccount(token);
+        authService.activateAccount(token, user.getEmail());
 
         AuthenticationResponse authResponse = authService.authenticate(
                 TestDataUtil.createTestAuthenticationRequest(user.getEmail())

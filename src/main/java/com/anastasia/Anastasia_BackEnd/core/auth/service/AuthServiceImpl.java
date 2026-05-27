@@ -56,6 +56,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.security.SecureRandom;
@@ -147,31 +148,49 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthenticationResponse activateAccount(String token) {
-        Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
-                .orElseThrow(() -> new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid token")));
+    @Transactional
+    public AuthenticationResponse activateAccount(String token, String email) {
+        String normalizedEmail = normalizeEmail(email);
+        Instant now = Instant.now();
+
+        Token savedToken = tokenRepository.findActiveTokensByValueAndType(token, TokenType.ACTIVATION).stream()
+                .filter(candidate -> candidate.getUser() != null
+                        && candidate.getUser().getEmail() != null
+                        && candidate.getUser().getEmail().trim().equalsIgnoreCase(normalizedEmail))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token")));
 
         if (savedToken.getTokenType() != TokenType.ACTIVATION) {
             throw new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token"));
         }
 
-//        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
-//            sendValidationEmail(savedToken.getUser());
-//            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
-//        }
+        if (savedToken.getValidatedAt() != null || savedToken.isExpired() || savedToken.isRevoked()) {
+            throw new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token"));
+        }
+
+        if (savedToken.getExpiresAt() == null || !savedToken.getExpiresAt().isAfter(now)) {
+            savedToken.setExpired(true);
+            savedToken.setExpiredAt(now);
+            tokenRepository.save(savedToken);
+            throw new RuntimeException(messageService.get("auth.activation.expiredToken", "Activation token has expired. Please request a new activation email."));
+        }
 
         var user = userRepository.findById(savedToken.getUser().getUuid())
                 .orElseThrow(() -> new UsernameNotFoundException("Activation - Username not found"));
+
+        if (user.getEmail() == null || !user.getEmail().trim().equalsIgnoreCase(normalizedEmail)) {
+            throw new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token"));
+        }
 
         if (!user.isVerified()) {
             user.setVerified(true);
             user.setStatus(UserStatus.ACTIVE);
             userRepository.save(user);
         }
-        if (savedToken.getValidatedAt() == null) {
-            savedToken.setValidatedAt(Instant.now());
-            tokenRepository.save(savedToken);
-        }
+        savedToken.setValidatedAt(now);
+        savedToken.setExpired(true);
+        savedToken.setExpiredAt(now);
+        tokenRepository.save(savedToken);
 
         return issueSessionForUser(user.getUuid());
     }
@@ -911,8 +930,15 @@ public class AuthServiceImpl implements AuthService {
         return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
     }
 
+    private String normalizeEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException(messageService.get("auth.activation.emailRequired", "Email is required for activation"));
+        }
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
     private String generateActivationCode(int length) {
-        String characters = "01234456789";
+        String characters = "0123456789";
         StringBuilder codeBuilder = new StringBuilder();
 
         for (int i = 0; i < length; i++) {

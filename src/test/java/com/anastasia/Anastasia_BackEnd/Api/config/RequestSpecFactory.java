@@ -14,6 +14,7 @@ import java.util.UUID;
  * All specs include JSON content type and logging filters for visibility.
  */
 public final class RequestSpecFactory {
+    private static final String TEST_HELPER_SECRET_HEADER = "X-Test-Helper-Secret";
 
     private RequestSpecFactory() {
     }
@@ -30,6 +31,25 @@ public final class RequestSpecFactory {
                 .log(LogDetail.URI)
                 .log(LogDetail.BODY)
                 .build();
+    }
+
+    /**
+     * Returns an unauthenticated specification allowed to call profile-gated test helper endpoints.
+     */
+    public static RequestSpecification testHelperSpec() {
+        RequestSpecBuilder builder = new RequestSpecBuilder()
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .log(LogDetail.METHOD)
+                .log(LogDetail.URI)
+                .log(LogDetail.BODY);
+
+        String secret = ConfigManager.get("app.security.test-helper-secret");
+        if (secret != null && !secret.isBlank()) {
+            builder.addHeader(TEST_HELPER_SECRET_HEADER, secret.trim());
+        }
+
+        return builder.build();
     }
 
     /**

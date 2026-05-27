@@ -97,7 +97,7 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
                 )
                 .orElseThrow(() -> new AssertionError("Activation token not persisted"))
                 .getToken();
-        authService.activateAccount(activationCode);
+        authService.activateAccount(activationCode, pendingUser.getEmail());
 
         UserEntity activatedUser = userRepository.findByEmail(pendingUser.getEmail())
                 .orElseThrow(() -> new AssertionError("User not persisted"));
