@@ -11,7 +11,6 @@ import java.util.UUID;
 
 @Data
 public class RecordExpenseRequest {
-    @NotNull(message = "Tenant ID is required")
     private UUID tenantId;
 
     @NotNull(message = "Date is required")

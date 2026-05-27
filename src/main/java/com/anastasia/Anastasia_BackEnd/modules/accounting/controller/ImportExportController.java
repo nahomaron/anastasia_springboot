@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.accounting.controller;
 
 
+import com.anastasia.Anastasia_BackEnd.modules.accounting.security.AccountingTenantResolver;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.ImportExportService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,19 +23,21 @@ import java.util.UUID;
 public class ImportExportController {
 
     private final ImportExportService importExportService;
+    private final AccountingTenantResolver tenantResolver;
 
     @GetMapping("/export/quickbooks")
     public void exportToQuickBooks(
-            @RequestParam UUID tenantId,
+            @RequestParam(required = false) UUID tenantId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             HttpServletResponse response) {
 
+        UUID effectiveTenantId = tenantResolver.resolveTenant(tenantId);
         try {
             response.setContentType("text/csv"); // Or application/vnd.quickbooks (IIF)
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"export.csv\"");
 
-            importExportService.exportToQuickBooks(tenantId, startDate, endDate, response.getOutputStream());
+            importExportService.exportToQuickBooks(effectiveTenantId, startDate, endDate, response.getOutputStream());
 
         } catch (Exception e) {
             // Handle exception
@@ -44,11 +47,12 @@ public class ImportExportController {
 
     @PostMapping("/import/quickbooks")
     public ResponseEntity<Void> importFromQuickBooks(
-            @RequestParam UUID tenantId,
+            @RequestParam(required = false) UUID tenantId,
             @RequestParam("file") MultipartFile file) {
 
+        UUID effectiveTenantId = tenantResolver.resolveTenant(tenantId);
         try {
-            importExportService.importFromQuickBooks(tenantId, file.getInputStream());
+            importExportService.importFromQuickBooks(effectiveTenantId, file.getInputStream());
             return ResponseEntity.ok().build();
 
         } catch (Exception e) {
