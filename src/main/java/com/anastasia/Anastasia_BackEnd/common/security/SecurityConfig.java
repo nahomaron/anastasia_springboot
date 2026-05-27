@@ -28,16 +28,23 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -90,6 +97,17 @@ public class SecurityConfig {
             "/api/v1/test/**",
             "/test-utils/**"
     };
+    private static final String[] CSRF_IGNORED_ENDPOINTS = {
+            "/webhooks/stripe",
+            "/api/v1/email/ses-events",
+            "/ws/**",
+            "/ws-sockjs/**",
+            "/api/v1/tenant/test/**",
+            "/api/v1/auth/test/**",
+            "/api/v1/test-utils/**",
+            "/api/v1/test/**",
+            "/test-utils/**"
+    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -99,7 +117,9 @@ public class SecurityConfig {
             OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler
     ) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers(CSRF_IGNORED_ENDPOINTS))
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -160,6 +180,7 @@ public class SecurityConfig {
         }
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(new CsrfCookieFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -216,6 +237,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
+                "X-XSRF-TOKEN",
                 "X-Requested-With",
                 "X-Tenant-Id",
                 "Idempotency-Key",
@@ -250,6 +272,22 @@ public class SecurityConfig {
     private boolean isLocalProfileActive() {
         return Arrays.stream(environment.getActiveProfiles())
                 .anyMatch(profile -> "dev".equalsIgnoreCase(profile) || "test".equalsIgnoreCase(profile));
+    }
+
+    private static final class CsrfCookieFilter extends OncePerRequestFilter {
+
+        @Override
+        protected void doFilterInternal(
+                HttpServletRequest request,
+                jakarta.servlet.http.HttpServletResponse response,
+                FilterChain filterChain
+        ) throws ServletException, IOException {
+            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+            if (csrfToken != null) {
+                csrfToken.getToken();
+            }
+            filterChain.doFilter(request, response);
+        }
     }
 
 }
