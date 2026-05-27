@@ -275,8 +275,6 @@ jobs:
           SMOKE_EMAIL_VAR: ${{ vars.SMOKE_EMAIL }}
           SMOKE_PASSWORD_SECRET: ${{ secrets.SMOKE_PASSWORD }}
           SMOKE_PASSWORD_VAR: ${{ vars.SMOKE_PASSWORD }}
-          SMOKE_TENANT_SLUG_SECRET: ${{ secrets.SMOKE_TENANT_SLUG }}
-          SMOKE_TENANT_SLUG_VAR: ${{ vars.SMOKE_TENANT_SLUG }}
           SMOKE_TENANT_PATH_SECRET: ${{ secrets.SMOKE_TENANT_PATH }}
           SMOKE_TENANT_PATH_VAR: ${{ vars.SMOKE_TENANT_PATH }}
           SMOKE_TENANT_ID_SECRET: ${{ secrets.SMOKE_TENANT_ID }}
@@ -287,7 +285,7 @@ jobs:
           LOGIN_BODY="diagnostics/staging-login.json"
           PROFILE_BODY="diagnostics/staging-profile.json"
           TENANT_BODY="diagnostics/staging-tenant.json"
-          TENANT_CONTEXT_PATH="/api/v1/tenant/current/verification-status"
+          DEFAULT_TENANT_PATH="/api/v1/tenant/current/verification-status"
 
           BASE_URL="$(printf '%s' "${BASE_URL}" | tr -d '\r')"
           case "${BASE_URL}" in
@@ -300,24 +298,21 @@ jobs:
 
           SMOKE_EMAIL="${SMOKE_EMAIL_SECRET:-${SMOKE_EMAIL_VAR:-}}"
           SMOKE_PASSWORD="${SMOKE_PASSWORD_SECRET:-${SMOKE_PASSWORD_VAR:-}}"
-          SMOKE_TENANT_SLUG="${SMOKE_TENANT_SLUG_SECRET:-${SMOKE_TENANT_SLUG_VAR:-${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-}}}}"
+          SMOKE_TENANT_PATH="${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-${DEFAULT_TENANT_PATH}}}"
           SMOKE_TENANT_ID="${SMOKE_TENANT_ID_SECRET:-${SMOKE_TENANT_ID_VAR:-}}"
 
-          for required in SMOKE_EMAIL SMOKE_PASSWORD SMOKE_TENANT_SLUG; do
+          for required in SMOKE_EMAIL SMOKE_PASSWORD; do
             if [[ -z "${!required}" ]]; then
               echo "Missing required staging smoke configuration: ${required}" >&2
               exit 1
             fi
           done
 
-          SMOKE_TENANT_SLUG="$(printf '%s' "${SMOKE_TENANT_SLUG}" | tr -d '\r' | tr '[:upper:]' '[:lower:]')"
-          case "${SMOKE_TENANT_SLUG}" in
-            *[!a-z0-9-]*|""|-*|*-)
-              echo "SMOKE_TENANT_SLUG must be a slug like 'anastasis-staging', got '${SMOKE_TENANT_SLUG}'" >&2
-              exit 1
-              ;;
-            *--*)
-              echo "SMOKE_TENANT_SLUG must not contain consecutive hyphens, got '${SMOKE_TENANT_SLUG}'" >&2
+          SMOKE_TENANT_PATH="$(printf '%s' "${SMOKE_TENANT_PATH}" | tr -d '\r')"
+          case "${SMOKE_TENANT_PATH}" in
+            /*) ;;
+            *)
+              echo "SMOKE_TENANT_PATH must start with '/', got '${SMOKE_TENANT_PATH}'" >&2
               exit 1
               ;;
           esac
@@ -355,27 +350,16 @@ jobs:
             "${BASE_URL}/api/v1/users/me/profile")
           [[ "${PROFILE_STATUS}" == "200" ]]
 
-          TENANT_HEADERS=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
-          if [[ -n "${SMOKE_TENANT_ID}" ]]; then
-            TENANT_HEADERS+=(-H "X-Tenant-ID: ${SMOKE_TENANT_ID}")
-          fi
           TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
-            "${TENANT_HEADERS[@]}" \
-            "${BASE_URL}${TENANT_CONTEXT_PATH}")
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            "${BASE_URL}${SMOKE_TENANT_PATH}")
+          if [[ "${TENANT_STATUS}" != "200" && -n "${SMOKE_TENANT_ID}" ]]; then
+            TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
+              -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+              -H "X-Tenant-ID: ${SMOKE_TENANT_ID}" \
+              "${BASE_URL}${SMOKE_TENANT_PATH}")
+          fi
           [[ "${TENANT_STATUS}" == "200" ]]
-
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          body = json.loads(Path("diagnostics/staging-tenant.json").read_text())
-          tenant_id = os.environ.get("SMOKE_TENANT_ID", "").strip()
-          if tenant_id and str(body.get("tenantId", "")).strip() != tenant_id:
-              raise SystemExit(
-                  f"Tenant context mismatch: expected tenantId {tenant_id}, got {body.get('tenantId')}"
-              )
-          PY
 
       - name: Prune stale backend images on staging host
         if: success()

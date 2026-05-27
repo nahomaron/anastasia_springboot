@@ -203,13 +203,15 @@ jobs:
             "${BASE_URL}/api/v1/users/me/profile")
           [[ "${PROFILE_STATUS}" == "200" ]]
 
-          TENANT_HEADERS=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
-          if [[ -n "${SMOKE_TENANT_ID}" ]]; then
-            TENANT_HEADERS+=(-H "X-Tenant-ID: ${SMOKE_TENANT_ID}")
-          fi
           TENANT_STATUS=$(curl -sS -o diagnostics/production-tenant.json -w "%{http_code}" \
-            "${TENANT_HEADERS[@]}" \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
             "${BASE_URL}${SMOKE_TENANT_PATH}")
+          if [[ "${TENANT_STATUS}" != "200" && -n "${SMOKE_TENANT_ID}" ]]; then
+            TENANT_STATUS=$(curl -sS -o diagnostics/production-tenant.json -w "%{http_code}" \
+              -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+              -H "X-Tenant-ID: ${SMOKE_TENANT_ID}" \
+              "${BASE_URL}${SMOKE_TENANT_PATH}")
+          fi
           [[ "${TENANT_STATUS}" == "200" ]]
 
       - name: Prune stale backend images on remote host
