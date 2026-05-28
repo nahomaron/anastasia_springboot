@@ -48,6 +48,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
 import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -64,6 +65,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+@Slf4j
 
 @Service
 @RequiredArgsConstructor
@@ -125,8 +127,7 @@ public class AuthServiceImpl implements AuthService {
             sendValidationEmail(savedUser);
 
         } catch (Exception e) {
-            // Log the error for debugging
-            System.err.println("Error creating user: " + e.getMessage());
+            log.warn("User creation failed during registration flow");
             throw new RuntimeException(messageService.get("auth.user.creationFailed", "User creation failed: {0}", e.getMessage()));
         }
 
@@ -880,8 +881,6 @@ public class AuthServiceImpl implements AuthService {
                 templateProperties,
                 EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.VERIFY_EMAIL_LINK.templateKey())
         );
-
-        System.out.println("Validation email triggered for: " + user.getEmail());
     }
 
     private String generateAndSaveActivationToken(UserEntity user) {
