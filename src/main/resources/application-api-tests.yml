@@ -86,6 +86,7 @@ app:
   security:
     allow-anonymous: true
     oauth2-enabled: false
+    public-docs-enabled: true
     test-helper-secret: ${TEST_HELPER_SECRET:}
   platform-admin:
     bootstrap-enabled: true

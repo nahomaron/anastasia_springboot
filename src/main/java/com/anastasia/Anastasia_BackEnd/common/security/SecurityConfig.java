@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -62,13 +61,14 @@ public class SecurityConfig {
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final LogoutHandler logoutHandler;
-    private final Environment environment;
     @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
     @Value("${app.security.oauth2-enabled:true}")
     private boolean oauth2Enabled;
     @Value("${app.security.allow-anonymous:false}")
     private boolean allowAnonymous;
+    @Value("${app.security.public-docs-enabled:false}")
+    private boolean publicDocsEnabled;
     @Value("${app.security.test-helper-secret:}")
     private String testHelperSecret;
     private static final String TEST_HELPER_SECRET_HEADER = "X-Test-Helper-Secret";
@@ -79,16 +79,18 @@ public class SecurityConfig {
             "/webhooks/stripe",
             "/api/v1/priests/register",
             "/api/v1/auth/platform-admin/register",
+            "/api/v1/membership-cards/verify/**",
+            "/ws/**",
+            "/ws-sockjs/**"
+    };
+    private static final String[] DOCS_ENDPOINTS = {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v2/api-docs/**",
             "/v3/api-docs/**",
             "/api-docs/**",
             "/api/swagger-ui/**",
-            "/webjars/**",
-            "/api/v1/membership-cards/verify/**",
-            "/ws/**",
-            "/ws-sockjs/**"
+            "/webjars/**"
     };
     private static final String[] TEST_HELPER_ENDPOINTS = {
             "/api/v1/tenant/test/**",
@@ -125,6 +127,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(TEST_HELPER_ENDPOINTS).access(this::authorizeTestHelperRequest)
+                        .requestMatchers(DOCS_ENDPOINTS).access((authentication, context) ->
+                                new AuthorizationDecision(publicDocsEnabled))
                         .requestMatchers(WHITE_LIST_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/tenant/subscription",

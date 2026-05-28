@@ -56,6 +56,12 @@ spring:
             required: ${MAIL_STARTTLS_REQUIRED:true}
           timeout: ${MAIL_SMTP_TIMEOUT:3000}
 
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 management:
   health:
     redis:
@@ -142,6 +148,7 @@ app:
   security:
     allow-anonymous: false
     oauth2-enabled: ${APP_SECURITY_OAUTH2_ENABLED:true}
+    public-docs-enabled: false
   platform-admin:
     secret: ${PLATFORM_ADMIN_SECRET:}
 
