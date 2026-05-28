@@ -12,8 +12,23 @@ import java.util.UUID;
 public class TestS3Service implements S3Service {
 
     @Override
-    public PresignedUrlResponse generatePresignedUploadUrl(String fileName) {
-        String objectKey = "test-imageAssets/" + UUID.randomUUID() + "_" + fileName;
-        return new PresignedUrlResponse(objectKey, "http://localhost/mock-presigned-url");
+    public PresignedUrlResponse generatePresignedUploadUrl(String objectKey, String contentType) {
+        String resolvedObjectKey = objectKey == null || objectKey.isBlank()
+                ? "test-imageAssets/" + UUID.randomUUID()
+                : objectKey;
+        return new PresignedUrlResponse(null, resolvedObjectKey, buildObjectUrl(resolvedObjectKey), "http://localhost/mock-presigned-url", contentType);
+    }
+
+    @Override
+    public StoredObjectMetadata verifyUploadedObject(String objectKey) {
+        String resolvedObjectKey = objectKey == null || objectKey.isBlank()
+                ? "test-imageAssets/" + UUID.randomUUID()
+                : objectKey;
+        return new StoredObjectMetadata(resolvedObjectKey, buildObjectUrl(resolvedObjectKey), "image/png", 1024L);
+    }
+
+    @Override
+    public String buildObjectUrl(String objectKey) {
+        return "http://localhost/mock-bucket/" + objectKey;
     }
 }

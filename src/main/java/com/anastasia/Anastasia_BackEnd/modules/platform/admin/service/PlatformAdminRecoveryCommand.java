@@ -54,8 +54,8 @@ public class PlatformAdminRecoveryCommand {
         if (exitAfterRun) {
             int finalExitCode = exitCode;
             Thread shutdownThread = new Thread(() -> {
-                SpringApplication.exit(applicationContext, () -> finalExitCode);
-                System.exit(finalExitCode);
+                int computedExitCode = SpringApplication.exit(applicationContext, () -> finalExitCode);
+                log.info("Platform admin recovery command requested shutdown with exit code {}", computedExitCode);
             }, "platform-admin-recovery-exit");
             shutdownThread.setDaemon(false);
             shutdownThread.start();

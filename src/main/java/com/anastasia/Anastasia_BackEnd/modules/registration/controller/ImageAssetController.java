@@ -1,10 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageUploadRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.FinalizeImageUploadRequest;
 import com.anastasia.Anastasia_BackEnd.common.aws.PresignedUrlResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ImageAssetService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,21 +23,23 @@ public class ImageAssetController {
     private final ImageAssetService imageAssetService;
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/presigned-url")
+    @PostMapping("/{ownerType}/{ownerId}/presigned-url")
     public ResponseEntity<PresignedUrlResponse> generatePresignedUrl(
-            @RequestParam @NotBlank(message = "fileName must be provided") String fileName
+            @PathVariable String ownerType,
+            @PathVariable String ownerId,
+            @Valid @RequestBody ImageUploadRequest request
     ) {
-        return ResponseEntity.ok(imageAssetService.requestPresignedUrl(fileName));
+        return ResponseEntity.ok(imageAssetService.requestPresignedUrl(ownerType, ownerId, request));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{ownerType}/{ownerId}")
     public ResponseEntity<ImageAssetDTO> saveImageAsset(
             @PathVariable String ownerType,
-            @PathVariable UUID ownerId,
-            @Valid @RequestBody ImageAssetDTO imageAssetDTO
+            @PathVariable String ownerId,
+            @Valid @RequestBody FinalizeImageUploadRequest request
     ) {
-        return ResponseEntity.ok(imageAssetService.saveImageAsset(ownerType, ownerId, imageAssetDTO));
+        return ResponseEntity.ok(imageAssetService.saveImageAsset(ownerType, ownerId, request));
     }
 
 
@@ -44,7 +47,7 @@ public class ImageAssetController {
     @GetMapping("/{ownerType}/{ownerId}")
     public ResponseEntity<ImageAssetDTO> getImageAsset(
             @PathVariable String ownerType,
-            @PathVariable UUID ownerId
+            @PathVariable String ownerId
     ) {
         return ResponseEntity.ok(imageAssetService.getImageAsset(ownerType, ownerId));
     }

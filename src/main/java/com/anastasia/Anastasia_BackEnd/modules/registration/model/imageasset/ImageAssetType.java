@@ -6,4 +6,5 @@ public enum ImageAssetType {
     CHILD,
     CHURCH,
     GROUP,
+    EVENT,
 }
