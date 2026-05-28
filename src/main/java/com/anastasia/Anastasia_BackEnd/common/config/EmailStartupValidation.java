@@ -60,8 +60,6 @@ public class EmailStartupValidation {
     }
 
     private boolean isTestProfile() {
-        return Arrays.stream(environment.getActiveProfiles())
-                .map(String::toLowerCase)
-                .anyMatch(profile -> profile.contains("test"));
+        return PublicUrlUtils.isLocalProfile(environment);
     }
 }

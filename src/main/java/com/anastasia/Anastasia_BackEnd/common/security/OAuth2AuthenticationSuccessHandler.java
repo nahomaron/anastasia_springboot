@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.common.security;
 
+import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.OAuthLoginTicketService;
@@ -70,9 +71,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     }
 
     private String normalizeBaseUrl(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException("app.public.frontend-base-url must be configured");
-        }
-        return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+        return PublicUrlUtils.normalizeBaseUrl(value, "app.public.frontend-base-url");
     }
 }

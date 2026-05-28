@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding;
 
+import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeReadinessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
@@ -20,9 +21,16 @@ public class OnboardingBillingReadinessService {
     public Map<String, Object> runtimeReadiness() {
         Map<String, Object> stripe = stripeReadinessService.onboardingReadiness();
 
-        boolean frontendBaseUrlConfigured = isSet("app.public.frontend-base-url");
-        boolean backendBaseUrlConfigured = isSet("app.public.backend-base-url");
+        boolean localProfile = PublicUrlUtils.isLocalProfile(environment);
+        String frontendBaseUrl = environment.getProperty("app.public.frontend-base-url");
+        String backendBaseUrl = environment.getProperty("app.public.backend-base-url");
+        String corsAllowedOrigins = environment.getProperty("app.cors.allowed-origins");
+        boolean frontendBaseUrlConfigured = hasValue(frontendBaseUrl);
+        boolean backendBaseUrlConfigured = hasValue(backendBaseUrl);
         boolean corsConfigured = isSet("app.cors.allowed-origins");
+        boolean frontendBaseUrlSecure = !frontendBaseUrlConfigured || localProfile || PublicUrlUtils.isHttpsUrl(frontendBaseUrl);
+        boolean backendBaseUrlSecure = !backendBaseUrlConfigured || localProfile || PublicUrlUtils.isHttpsUrl(backendBaseUrl);
+        boolean corsOriginsSecure = !corsConfigured || localProfile || hasOnlyHttpsOrigins(corsAllowedOrigins);
         boolean jwtSecretConfigured = isSet("app.auth.jwt-current-secret");
         boolean platformAdminBootstrapEnabled = environment.getProperty("app.platform-admin.bootstrap-enabled", Boolean.class, false);
         boolean platformAdminSecretConfigured = isSet("app.platform-admin.secret");
@@ -42,6 +50,15 @@ public class OnboardingBillingReadinessService {
         }
         if (!corsConfigured) {
             missing.add("app.cors.allowed-origins (env: APP_CORS_ALLOWED_ORIGINS)");
+        }
+        if (!frontendBaseUrlSecure) {
+            missing.add("app.public.frontend-base-url must use https outside local/test profiles");
+        }
+        if (!backendBaseUrlSecure) {
+            missing.add("app.public.backend-base-url must use https outside local/test profiles");
+        }
+        if (!corsOriginsSecure) {
+            missing.add("app.cors.allowed-origins must contain only https origins outside local/test profiles");
         }
         if (!jwtSecretConfigured) {
             missing.add("app.auth.jwt-current-secret (env: ANASTASIA_JWT_CURRENT_SECRET)");
@@ -73,6 +90,9 @@ public class OnboardingBillingReadinessService {
         application.put("frontendBaseUrlConfigured", frontendBaseUrlConfigured);
         application.put("backendBaseUrlConfigured", backendBaseUrlConfigured);
         application.put("corsConfigured", corsConfigured);
+        application.put("frontendBaseUrlSecure", frontendBaseUrlSecure);
+        application.put("backendBaseUrlSecure", backendBaseUrlSecure);
+        application.put("corsOriginsSecure", corsOriginsSecure);
         application.put("jwtSecretConfigured", jwtSecretConfigured);
         application.put("platformAdminBootstrapEnabled", platformAdminBootstrapEnabled);
         application.put("platformAdminSecretConfigured", platformAdminSecretConfigured);
@@ -99,6 +119,23 @@ public class OnboardingBillingReadinessService {
 
     private boolean isSet(String propertyName) {
         String value = environment.getProperty(propertyName);
+        return hasValue(value);
+    }
+
+    private boolean hasValue(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private boolean hasOnlyHttpsOrigins(String allowedOrigins) {
+        if (!hasValue(allowedOrigins)) {
+            return false;
+        }
+        for (String origin : allowedOrigins.split(",")) {
+            String trimmed = origin.trim();
+            if (!trimmed.isEmpty() && !PublicUrlUtils.isHttpsUrl(trimmed)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

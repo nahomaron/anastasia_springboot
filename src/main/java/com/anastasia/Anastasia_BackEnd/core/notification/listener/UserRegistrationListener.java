@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.notification.listener;
 
 
+import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.events.UserRegisteredEvent;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationEvent;
@@ -39,9 +40,6 @@ public class UserRegistrationListener {
     }
 
     private String normalizeBaseUrl(String rawUrl) {
-        if (rawUrl == null || rawUrl.isBlank()) {
-            throw new IllegalStateException("app.public.frontend-base-url must be configured");
-        }
-        return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
+        return PublicUrlUtils.normalizeBaseUrl(rawUrl, "app.public.frontend-base-url");
     }
 }
