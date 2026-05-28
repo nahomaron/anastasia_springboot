@@ -1,9 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.common.security;
 
 import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
+import com.anastasia.Anastasia_BackEnd.common.filter.TenantFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -61,6 +63,7 @@ public class SecurityConfig {
 
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
+    private final TenantFilter tenantFilter;
     private final LogoutHandler logoutHandler;
     private final Environment environment;
     @Value("${app.cors.allowed-origins:}")
@@ -183,8 +186,16 @@ public class SecurityConfig {
         }
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(tenantFilter, JwtFilter.class);
         http.addFilterAfter(new CsrfCookieFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public FilterRegistrationBean<TenantFilter> tenantFilterRegistration(TenantFilter tenantFilter) {
+        FilterRegistrationBean<TenantFilter> registration = new FilterRegistrationBean<>(tenantFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     private AuthorizationDecision authorizeTestHelperRequest(

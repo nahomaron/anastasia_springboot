@@ -3,16 +3,17 @@ package com.anastasia.Anastasia_BackEnd.common.filter;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
-import jakarta.servlet.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 /*
 TenantFilter is a servlet filter responsible for resolving the tenant identifier for multi-tenant request
@@ -25,20 +26,20 @@ This enables tenant-based data isolation across the application.
  */
 @Component
 @RequiredArgsConstructor
-public class TenantFilter implements Filter {
+public class TenantFilter extends OncePerRequestFilter {
     private static final String PLATFORM_ADMIN_PATH_PREFIX = "/api/v1/platform/admin";
     private static final String PLATFORM_ADMIN_AUTHORITY = "ROLE_PLATFORM_ADMIN";
 
     private final JwtUtil jwtUtil;
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
-        HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+    protected void doFilterInternal(HttpServletRequest httpServletRequest,
+                                    HttpServletResponse httpServletResponse,
+                                    FilterChain filterChain) throws IOException, ServletException {
 
         if (isPlatformAdminRequest(httpServletRequest)) {
             TenantContext.setTenantId(null);
             try {
-                filterChain.doFilter(servletRequest, servletResponse);
+                filterChain.doFilter(httpServletRequest, httpServletResponse);
             } finally {
                 TenantContext.clear();
             }
@@ -95,7 +96,7 @@ public class TenantFilter implements Filter {
         }
 
         try {
-            filterChain.doFilter(servletRequest, servletResponse);
+            filterChain.doFilter(httpServletRequest, httpServletResponse);
         } finally {
             TenantContext.clear();
         }
@@ -109,7 +110,7 @@ public class TenantFilter implements Filter {
         return null;
     }
 
-    private boolean isPlatformAdminRequest(HttpServletRequest request) throws ServletException {
+    private boolean isPlatformAdminRequest(HttpServletRequest request) {
         if (!request.getRequestURI().startsWith(PLATFORM_ADMIN_PATH_PREFIX)) {
             return false;
         }
@@ -122,18 +123,7 @@ public class TenantFilter implements Filter {
                 return true;
             }
         }
-
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return false;
-        }
-
-        try {
-            List<String> tokenRoles = jwtUtil.extractRoles(authHeader.substring(7));
-            return tokenRoles != null && tokenRoles.stream().anyMatch(PLATFORM_ADMIN_AUTHORITY::equals);
-        } catch (Exception ex) {
-            throw new ServletException("Invalid JWT token: " + ex.getMessage(), ex);
-        }
+        return false;
     }
 
 
