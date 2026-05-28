@@ -20,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -106,6 +108,19 @@ public class AuthControllerIT extends PostgresTestContainer {
                 .andExpect(
                         status().isOk()
                 );
+    }
+
+    @Test
+    public void testThatHttpBasicAuthenticationIsRejected() throws Exception {
+        String basicCredentials = Base64.getEncoder()
+                .encodeToString((TestDataSeeder.ADMIN_EMAIL + ":" + TestDataSeeder.ADMIN_PASSWORD)
+                        .getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/users/dashboard")
+                                .header("Authorization", "Basic " + basicCredentials)
+                )
+                .andExpect(status().isForbidden());
     }
 
     @Test

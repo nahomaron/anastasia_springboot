@@ -153,21 +153,18 @@ public class SecurityConfig {
                                 "/api/v1/membership-cards/verify/*"
                         ).permitAll()
                         .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied")))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .anonymous(allowAnonymous ? Customizer.withDefaults() : AbstractHttpConfigurer::disable) // controls if anonymous users are allowed
                 .headers(headers -> headers
-                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                        // todo -> in production the below should replace the above frameOptions
-//                        .frameOptions(frameOptions -> frameOptions.deny())
-//                        .httpStrictTransportSecurity(hsts -> hsts
-//                                .includeSubDomains(true)
-//                                .maxAgeInSeconds(31536000)
-//                                .preload(true)
-//                        )
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000)
+                        )
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
