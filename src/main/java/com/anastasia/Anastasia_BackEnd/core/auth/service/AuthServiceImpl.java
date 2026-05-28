@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
+import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
@@ -48,6 +49,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
 import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -58,16 +60,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
-@Slf4j
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
@@ -899,10 +900,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String normalizeBaseUrl(String rawUrl) {
-        if (rawUrl == null || rawUrl.isBlank()) {
-            throw new IllegalStateException("app.public.frontend-base-url must be configured");
-        }
-        return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
+        return PublicUrlUtils.normalizeBaseUrl(rawUrl, "app.public.frontend-base-url");
     }
 
     private String normalizeEmail(String email) {
