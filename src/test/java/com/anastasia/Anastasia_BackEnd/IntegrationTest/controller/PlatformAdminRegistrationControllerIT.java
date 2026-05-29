@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -70,6 +71,7 @@ class PlatformAdminRegistrationControllerIT extends PostgresTestContainer {
     @Test
     void registerPlatformAdmin_bootstrapSucceedsAndAudits() throws Exception {
         mockMvc.perform(post("/api/v1/auth/platform-admin/register")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Platform-Admin-Secret", "dev-secret")
                         .header("User-Agent", "MockMvc-Test")
@@ -91,12 +93,14 @@ class PlatformAdminRegistrationControllerIT extends PostgresTestContainer {
     @Test
     void registerPlatformAdmin_secondBootstrapIsRejectedAndAudited() throws Exception {
         mockMvc.perform(post("/api/v1/auth/platform-admin/register")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Platform-Admin-Secret", "dev-secret")
                         .content(objectMapper.writeValueAsString(request("first-bootstrap@example.com"))))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/v1/auth/platform-admin/register")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Platform-Admin-Secret", "dev-secret")
                         .content(objectMapper.writeValueAsString(request("second-bootstrap@example.com"))))
@@ -112,6 +116,7 @@ class PlatformAdminRegistrationControllerIT extends PostgresTestContainer {
     @Test
     void registerPlatformAdmin_invalidSecretIsRejectedAndAudited() throws Exception {
         mockMvc.perform(post("/api/v1/auth/platform-admin/register")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Platform-Admin-Secret", "wrong-secret")
                         .content(objectMapper.writeValueAsString(request("wrong-secret@example.com"))))
@@ -129,6 +134,7 @@ class PlatformAdminRegistrationControllerIT extends PostgresTestContainer {
         when(rateLimiterService.tryConsume(anyString(), anyLong(), any(Duration.class))).thenReturn(false);
 
         mockMvc.perform(post("/api/v1/auth/platform-admin/register")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Platform-Admin-Secret", "dev-secret")
                         .content(objectMapper.writeValueAsString(request("rate-limited@example.com"))))
@@ -147,6 +153,7 @@ class PlatformAdminRegistrationControllerIT extends PostgresTestContainer {
         ReflectionTestUtils.setField(platformAdminRegistrationService, "bootstrapEnabled", false);
 
         mockMvc.perform(post("/api/v1/auth/platform-admin/register")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Platform-Admin-Secret", "dev-secret")
                         .content(objectMapper.writeValueAsString(request("disabled@example.com"))))

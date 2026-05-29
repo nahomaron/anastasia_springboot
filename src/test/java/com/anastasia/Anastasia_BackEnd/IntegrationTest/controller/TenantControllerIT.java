@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,6 +53,7 @@ public class TenantControllerIT extends PostgresTestContainer {
     @Test
     void testSubscribeTenant_success() throws Exception {
         mockMvc.perform(post("/api/v1/tenant/subscription")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(tenantDTO)))
                 .andExpect(status().isCreated());
@@ -62,6 +64,7 @@ public class TenantControllerIT extends PostgresTestContainer {
         tenantDTO.setConfirmPassword("wrongPassword");
 
         mockMvc.perform(post("/api/v1/tenant/subscription")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(tenantDTO)))
                 .andExpect(status().isBadRequest())
@@ -97,7 +100,8 @@ public class TenantControllerIT extends PostgresTestContainer {
     @Test
     @WithMockUser(authorities = "OWN_SUBSCRIPTION")
     void testUnsubscribeTenant_success() throws Exception {
-        mockMvc.perform(post("/api/v1/tenant/unsubscribe/{tenantId}", savedTenant.getId()))
+        mockMvc.perform(post("/api/v1/tenant/unsubscribe/{tenantId}", savedTenant.getId())
+                        .with(csrf()))
                 .andExpect(status().isOk());
     }
 }

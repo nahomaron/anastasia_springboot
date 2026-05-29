@@ -45,6 +45,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -117,6 +118,7 @@ class ChurchControllerIT extends PostgresTestContainer {
     void testRegisterChurch() throws Exception {
         ChurchDTO testChurch = TestDataUtil.createTestChurchDTO_B();
                 mockMvc.perform(post("/api/v1/churches/register")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testChurch)))
@@ -180,6 +182,7 @@ class ChurchControllerIT extends PostgresTestContainer {
 
       assert church01 != null;
       mockMvc.perform(put("/api/v1/churches/{id}", church01.getChurchId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(churchDTO1)))
@@ -198,6 +201,7 @@ class ChurchControllerIT extends PostgresTestContainer {
 
         assert church01 != null;
         mockMvc.perform(delete("/api/v1/churches/{id}", church01.getChurchId())
+                        .with(csrf())
                         )
                 .andExpect(status().isNoContent());
     }

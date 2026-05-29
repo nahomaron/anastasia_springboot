@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -103,11 +104,17 @@ class TenantFilterTest {
     }
 
     @Test
-    void doFilter_whenPlatformAdminPathAndTokenRolePresent_shouldBypassTenantContext() throws ServletException, IOException {
+    void doFilter_whenPlatformAdminPathAndAuthenticationRolePresent_shouldBypassTenantContext() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/platform/admin/summary");
         request.addHeader("Authorization", "Bearer token");
         request.addHeader("X-Tenant-ID", UUID.randomUUID().toString());
-        when(jwtUtil.extractRoles("token")).thenReturn(List.of("ROLE_PLATFORM_ADMIN"));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "platform-admin",
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_PLATFORM_ADMIN"))
+                )
+        );
 
         FilterChain chain = (servletRequest, servletResponse) ->
                 assertThat(TenantContext.getTenantId()).isNull();
