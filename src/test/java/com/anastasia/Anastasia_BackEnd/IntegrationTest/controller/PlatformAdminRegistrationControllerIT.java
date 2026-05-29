@@ -30,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -73,6 +75,10 @@ class PlatformAdminRegistrationControllerIT extends PostgresTestContainer {
         mockMvc.perform(post("/api/v1/auth/platform-admin/register")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
+                        .with(request -> {
+                            request.setRemoteAddr("198.51.100.24");
+                            return request;
+                        })
                         .header("X-Platform-Admin-Secret", "dev-secret")
                         .header("User-Agent", "MockMvc-Test")
                         .header("X-Forwarded-For", "203.0.113.10")
@@ -81,11 +87,16 @@ class PlatformAdminRegistrationControllerIT extends PostgresTestContainer {
                 .andExpect(jsonPath("$.message").value("Platform admin bootstrap completed successfully"));
 
         assertThat(userRepository.findByEmailIgnoreCase("bootstrap@example.com")).isPresent();
+        verify(rateLimiterService).tryConsume(
+                eq("auth:platform-admin-bootstrap:198.51.100.24:bootstrap@example.com"),
+                eq(3L),
+                eq(Duration.ofMinutes(15))
+        );
 
         PlatformAdminBootstrapAuditEvent event = latestAuditEvent();
         assertThat(event.getOutcome()).isEqualTo(PlatformAdminBootstrapAuditOutcome.SUCCESS);
         assertThat(event.getAttemptedEmail()).isEqualTo("bootstrap@example.com");
-        assertThat(event.getIpAddress()).isEqualTo("203.0.113.10");
+        assertThat(event.getIpAddress()).isEqualTo("198.51.100.24");
         assertThat(event.getUserAgent()).isEqualTo("MockMvc-Test");
         assertThat(event.getCreatedUserId()).isNotNull();
     }
