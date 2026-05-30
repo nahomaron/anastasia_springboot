@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.GenerateReportRequest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.ReportResponseDto;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.security.AccountingTenantResolver;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.ReportService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
@@ -19,10 +20,12 @@ import org.springframework.web.bind.annotation.*;
 public class ReportController {
 
     private final ReportService reportService;
+    private final AccountingTenantResolver tenantResolver;
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'GENERATE_FINANCE_REPORT')")
     @PostMapping("/generate")
     public ResponseEntity<ReportResponseDto> generateReport(@Valid @RequestBody GenerateReportRequest request) {
+        request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
         ReportResponseDto report = reportService.generateReport(request);
         return ResponseEntity.ok(report);
     }

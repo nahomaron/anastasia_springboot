@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.RecordExpenseReque
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.RecordIncomeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransactionDto;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransferFundsRequest;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.security.AccountingTenantResolver;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.TransactionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
@@ -30,21 +31,25 @@ import java.util.UUID;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final AccountingTenantResolver tenantResolver;
 
     @PostMapping("/income")
     public ResponseEntity<TransactionDto> recordIncome(@Valid @RequestBody RecordIncomeRequest request) {
+        request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
         TransactionDto transaction = transactionService.recordIncome(request);
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
 
     @PostMapping("/expense")
     public ResponseEntity<TransactionDto> recordExpense(@Valid @RequestBody RecordExpenseRequest request) {
+        request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
         TransactionDto transaction = transactionService.recordExpense(request);
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
 
     @PostMapping("/transfer")
     public ResponseEntity<TransactionDto> transferFunds(@Valid @RequestBody TransferFundsRequest request) {
+        request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
         TransactionDto transaction = transactionService.transferFunds(request);
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
@@ -53,19 +58,24 @@ public class TransactionController {
     @Operation(summary = "Retrieve a single transaction by tenant-scoped id")
     public ResponseEntity<TransactionDto> getTransactionById(
             @PathVariable Long transactionId,
-            @RequestParam UUID tenantId
+            @RequestParam(required = false) UUID tenantId
     ) {
-        return ResponseEntity.ok(transactionService.getTransactionById(transactionId, tenantId));
+        return ResponseEntity.ok(transactionService.getTransactionById(transactionId, tenantResolver.resolveTenant(tenantId)));
     }
 
     @GetMapping
     @Operation(summary = "List tenant transactions with optional date and account filters")
     public ResponseEntity<List<TransactionDto>> getTransactions(
-            @RequestParam UUID tenantId,
+            @RequestParam(required = false) UUID tenantId,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
             @RequestParam(required = false) Long accountId
     ) {
-        return ResponseEntity.ok(transactionService.getTransactions(tenantId, startDate, endDate, accountId));
+        return ResponseEntity.ok(transactionService.getTransactions(
+                tenantResolver.resolveTenant(tenantId),
+                startDate,
+                endDate,
+                accountId
+        ));
     }
 }

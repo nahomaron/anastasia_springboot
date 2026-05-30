@@ -19,6 +19,8 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
 
     Optional<Token> findTopByTokenOrderByIdDesc(String token);
 
+    Optional<Token> findTopByTokenAndTokenTypeOrderByIdDesc(String token, TokenType tokenType);
+
     @Query("""
             select t from Token t
             where t.token = :token

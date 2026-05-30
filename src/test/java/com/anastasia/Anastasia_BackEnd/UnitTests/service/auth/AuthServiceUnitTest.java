@@ -12,6 +12,8 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.LoginTwoFactorChalle
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.IssuedPasswordResetToken;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.PasswordResetTokenService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.MemberEffectivePermissionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -34,6 +36,7 @@ import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBac
 import com.anastasia.Anastasia_BackEnd.util.JwtUtilTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -47,6 +50,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Locale;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +70,7 @@ public class AuthServiceUnitTest {
     @Mock private AuthenticationManager authenticationManager;
     @Mock private RefreshTokenCookieService refreshTokenCookieService;
     @Mock private TokenRepository tokenRepository;
+    @Mock private PasswordResetTokenService passwordResetTokenService;
     @Mock private EmailNotificationService emailNotificationService;
     @Mock private EmailTemplateService emailTemplateService;
     @Mock private LocalizedMessageService messageService;
@@ -136,9 +141,109 @@ public class AuthServiceUnitTest {
     }
 
     @Test
+    void initiatePasswordReset_shouldReturnSilentlyWhenUserMissing() throws Exception {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        authService.initiatePasswordReset(email);
+
+        verify(tokenRepository, never()).save(any());
+        verify(emailTemplateService, never()).sendTemplateEmail(any(), any(), any(), any());
+    }
+
+    @Test
+    void initiatePasswordReset_shouldStoreHashedTokenAndEmailRawToken() throws Exception {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(passwordResetTokenService.issueForUser(user)).thenReturn(
+                new IssuedPasswordResetToken(42, "raw-reset-token-value-with-sufficient-length", Instant.now().plusSeconds(3600))
+        );
+
+        authService.initiatePasswordReset(email);
+
+        verify(passwordResetTokenService).issueForUser(user);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> propertiesCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(emailTemplateService).sendTemplateEmail(eq(email), any(), propertiesCaptor.capture(), any());
+
+        String resetUrl = propertiesCaptor.getValue().get("resetUrl").toString();
+        String rawToken = resetUrl.substring(resetUrl.indexOf("token=") + "token=".length());
+
+        verify(tokenRepository, never()).save(any(Token.class));
+        assertEquals("raw-reset-token-value-with-sufficient-length", rawToken);
+        assertTrue(rawToken.length() >= 40);
+    }
+
+    @Test
     void testExists_ShouldReturnTrue() {
         when(userRepository.existsById(user.getUuid())).thenReturn(true);
         assertTrue(authService.exists(user.getUuid()));
+    }
+
+    @Test
+    void activateAccount_shouldRequireTokenForProvidedEmail() {
+        UserEntity otherUser = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("other@example.com")
+                .build();
+        Token token = Token.builder()
+                .token("123456")
+                .tokenType(TokenType.ACTIVATION)
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .user(otherUser)
+                .build();
+        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.activateAccount("123456", email));
+
+        assertEquals("Invalid activation token", ex.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void activateAccount_shouldRejectAndMarkExpiredToken() {
+        Token token = Token.builder()
+                .token("123456")
+                .tokenType(TokenType.ACTIVATION)
+                .createdAt(Instant.now().minusSeconds(600))
+                .expiresAt(Instant.now().minusSeconds(1))
+                .user(user)
+                .build();
+        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.activateAccount("123456", email));
+
+        assertEquals("Activation token has expired. Please request a new activation email.", ex.getMessage());
+        assertTrue(token.isExpired());
+        assertNotNull(token.getExpiredAt());
+        verify(tokenRepository).save(token);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void activateAccount_shouldActivateUserAndBurnToken() {
+        Token token = Token.builder()
+                .token("123456")
+                .tokenType(TokenType.ACTIVATION)
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .user(user)
+                .build();
+        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+        when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
+        doReturn(AuthenticationResponse.builder().accessToken("access").build())
+                .when(authService).issueSessionForUser(user.getUuid());
+
+        AuthenticationResponse response = authService.activateAccount("123456", " Test@Example.com ");
+
+        assertEquals("access", response.getAccessToken());
+        assertTrue(user.isVerified());
+        assertEquals(UserStatus.ACTIVE, user.getStatus());
+        assertTrue(token.isExpired());
+        assertNotNull(token.getValidatedAt());
+        assertNotNull(token.getExpiredAt());
+        verify(userRepository).save(user);
+        verify(tokenRepository).save(token);
     }
 
     @Test

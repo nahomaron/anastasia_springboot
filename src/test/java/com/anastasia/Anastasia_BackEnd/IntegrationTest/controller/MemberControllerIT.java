@@ -47,6 +47,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -118,7 +119,7 @@ class MemberControllerIT extends PostgresTestContainer {
                 .orElseThrow()
                 .getToken();
         assertNotNull(token);
-        authService.activateAccount(token);
+        authService.activateAccount(token, user.getEmail());
 
         AuthenticationResponse response = authService.authenticate(
                 TestDataUtil.createTestAuthenticationRequest(user.getEmail()));
@@ -129,6 +130,7 @@ class MemberControllerIT extends PostgresTestContainer {
     @Test
     void testRegisterMember() throws Exception {
                 mockMvc.perform(post("/api/v1/registrar/members/register-member")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(adultMemberDTO)))
@@ -166,6 +168,7 @@ class MemberControllerIT extends PostgresTestContainer {
         updatedDTO.setFirstName("UpdatedName");
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedDTO)))
@@ -178,6 +181,7 @@ class MemberControllerIT extends PostgresTestContainer {
         Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}/church-approve", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.approvedByChurch", is(true)));
@@ -188,6 +192,7 @@ class MemberControllerIT extends PostgresTestContainer {
         Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(patch("/api/v1/registrar/members/{id}/priest-approve", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.approvedByPriest", is(true)));
@@ -198,6 +203,7 @@ class MemberControllerIT extends PostgresTestContainer {
         Adult_MemberEntity saved = memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(delete("/api/v1/registrar/members/{id}", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNoContent());
     }
@@ -207,6 +213,7 @@ class MemberControllerIT extends PostgresTestContainer {
         memberRepository.save(TestDataUtil.createTestMember(church));
 
         mockMvc.perform(post("/api/v1/registrar/members/advanced-search")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))  // Add filters if needed

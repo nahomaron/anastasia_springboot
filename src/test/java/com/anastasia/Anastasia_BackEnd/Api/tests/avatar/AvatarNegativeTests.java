@@ -2,8 +2,9 @@ package com.anastasia.Anastasia_BackEnd.Api.tests.avatar;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
-import com.anastasia.Anastasia_BackEnd.Api.factories.AvatarDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.ImageAssetService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.FinalizeImageUploadRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageUploadRequest;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -24,7 +25,16 @@ class AvatarNegativeTests extends BaseApiTest {
     @Test
     @Story("Missing filename should be rejected")
     void requestingPresignedUrlWithoutFileNameShouldFail() {
-        Response response = avatarService.requestPresignedUrl(RequestSpecFactory.authenticatedSpec(), "");
+        Response response = avatarService.requestPresignedUrl(
+                RequestSpecFactory.authenticatedSpec(),
+                "USER",
+                BaseApiTest.getCachedUserId(),
+                ImageUploadRequest.builder()
+                        .fileName("")
+                        .contentType("image/png")
+                        .fileSizeBytes(1024L)
+                        .build()
+        );
         assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
     }
 
@@ -37,7 +47,10 @@ class AvatarNegativeTests extends BaseApiTest {
                 RequestSpecFactory.authenticatedSpec(),
                 "UNKNOWN",
                 userId, // Use the extracted UUID directly
-                AvatarDataFactory.newValidAvatar());
+                FinalizeImageUploadRequest.builder()
+                        .uploadId(java.util.UUID.randomUUID())
+                        .imageSize("1KB")
+                        .build());
 
         // 3. Assert the result.
         assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);

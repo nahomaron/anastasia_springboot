@@ -151,19 +151,23 @@ class AuthControllerUnitTest {
 
     @Test
     void confirm_shouldActivateAccount() {
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         HttpServletResponse httpResponse = mock(HttpServletResponse.class);
         AuthenticationResponse expected = AuthenticationResponse.builder()
                 .accessToken("access")
                 .refreshToken("refresh")
                 .build();
-        when(authService.activateAccount("token-123")).thenReturn(expected);
+        when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(rateLimiterService.tryConsume(eq("auth:activate-account:127.0.0.1:user@mail.com"), eq(5L), eq(Duration.ofMinutes(15))))
+                .thenReturn(true);
+        when(authService.activateAccount("token-123", "user@mail.com")).thenReturn(expected);
 
-        ResponseEntity<?> response = authController.confirm("token-123", httpResponse);
+        ResponseEntity<?> response = authController.confirm("token-123", "user@mail.com", httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expected);
         assertThat(expected.getRefreshToken()).isNull();
-        verify(authService).activateAccount("token-123");
+        verify(authService).activateAccount("token-123", "user@mail.com");
         verify(refreshTokenCookieService).addRefreshTokenCookie(httpResponse, "refresh");
     }
 

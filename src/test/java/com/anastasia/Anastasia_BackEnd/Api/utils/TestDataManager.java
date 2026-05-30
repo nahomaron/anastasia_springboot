@@ -54,6 +54,7 @@ public class TestDataManager {
     public static void deleteUserByEmail(String email) {
         runCleanup("User", email, () ->
                 given()
+                        .spec(RequestSpecFactory.testHelperSpec())
                         .queryParam("email", email)
                         .when()
                         .delete(buildPath(null))
@@ -66,6 +67,7 @@ public class TestDataManager {
     public static void deleteTenantByEmail(String email) {
         runCleanup("Tenant", email, () ->
                 given()
+                        .spec(RequestSpecFactory.testHelperSpec())
                         .queryParam("email", email)
                         .when()
                         .delete(buildPath("tenant"))
@@ -78,6 +80,7 @@ public class TestDataManager {
     public static void deleteMemberById(String memberId) {
         runCleanup("Member", memberId, () ->
                 given()
+                        .spec(RequestSpecFactory.testHelperSpec())
                         .queryParam("id", memberId)
                         .when()
                         .delete(buildPath("member"))
@@ -95,7 +98,7 @@ public class TestDataManager {
     public static void resetAllTestData() {
         runCleanup("Global Reset", "All Entities", () ->
                 given()
-                        .spec(RequestSpecFactory.anonymousSpec())
+                        .spec(RequestSpecFactory.testHelperSpec())
                         .when()
                         .post(buildPath("reset-all"))
                         .then()

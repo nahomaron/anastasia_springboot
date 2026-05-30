@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @Data
 public class TransferFundsRequest {
-    @NotNull(message = "Tenant ID is required")
     private UUID tenantId;
 
     @NotNull(message = "Date is required")

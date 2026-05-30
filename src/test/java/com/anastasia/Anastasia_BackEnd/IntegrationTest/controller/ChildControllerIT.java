@@ -49,6 +49,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
         import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -118,7 +119,7 @@ class ChildControllerIT extends PostgresTestContainer {
                 .orElseThrow()
                 .getToken();
         assertNotNull(token);
-        authService.activateAccount(token);
+        authService.activateAccount(token, user.getEmail());
 
         AuthenticationResponse authResponse = authService.authenticate(
                 TestDataUtil.createTestAuthenticationRequest(user.getEmail())
@@ -136,6 +137,7 @@ class ChildControllerIT extends PostgresTestContainer {
     @Test
     void testRegisterChild() throws Exception {
                 mockMvc.perform(post("/api/v1/registrar/children/register-child")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(childMemberDTO)))
@@ -172,6 +174,7 @@ class ChildControllerIT extends PostgresTestContainer {
         updatedDTO.setFirstName("UpdatedChild");
 
         mockMvc.perform(patch("/api/v1/registrar/children/{id}", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedDTO)))
@@ -184,6 +187,7 @@ class ChildControllerIT extends PostgresTestContainer {
         Child_MemberEntity saved = childRepository.save(TestDataUtil.createTestChild(church));
 
         mockMvc.perform(delete("/api/v1/registrar/children/{id}", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNoContent());
     }
@@ -193,6 +197,7 @@ class ChildControllerIT extends PostgresTestContainer {
         childRepository.save(TestDataUtil.createTestChild(church));
 
         mockMvc.perform(post("/api/v1/registrar/children/advanced-search")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))

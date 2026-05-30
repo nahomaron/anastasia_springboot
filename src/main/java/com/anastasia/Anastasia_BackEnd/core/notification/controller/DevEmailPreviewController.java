@@ -59,7 +59,7 @@ public class DevEmailPreviewController {
             }
             case VERIFY_EMAIL_LINK -> {
                 common.put("verifyUrl", "https://app.anastasia.com/verify?token=abc123");
-                common.put("expiresHours", 24);
+                common.put("expiresMinutes", 10);
             }
             case PASSWORD_RESET -> {
                 common.put("resetUrl", "https://app.anastasia.com/reset?token=abc123");

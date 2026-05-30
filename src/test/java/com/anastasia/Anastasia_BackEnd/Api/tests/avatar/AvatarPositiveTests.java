@@ -1,10 +1,10 @@
 package com.anastasia.Anastasia_BackEnd.Api.tests.avatar;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
-import com.anastasia.Anastasia_BackEnd.Api.factories.AvatarDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.ImageAssetService;
 import com.anastasia.Anastasia_BackEnd.Api.utils.SchemaValidator;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetDTO;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.FinalizeImageUploadRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageUploadRequest;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -31,14 +31,19 @@ class AvatarPositiveTests extends BaseApiTest {
         RequestSpecification ownerSpec = getSpecForRole("OWNER");
         UUID userId = BaseApiTest.getOwnerUserId();
 
-        Response urlResponse = avatarService.requestPresignedUrl(ownerSpec, "profile.png");
+        Response urlResponse = avatarService.requestPresignedUrl(ownerSpec, "USER", userId, ImageUploadRequest.builder()
+                .fileName("profile.png")
+                .contentType("image/png")
+                .fileSizeBytes(1024L)
+                .build());
         assertThat(urlResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(urlResponse, "schemas/avatar-presigned-url-schema.json");
 
-        ImageAssetDTO payload = AvatarDataFactory.newValidAvatar();
-
-
-        Response saveResponse = avatarService.saveAvatar(ownerSpec, "USER", userId, payload);
+        String uploadId = urlResponse.jsonPath().getString("uploadId");
+        Response saveResponse = avatarService.saveAvatar(ownerSpec, "USER", userId, FinalizeImageUploadRequest.builder()
+                .uploadId(UUID.fromString(uploadId))
+                .imageSize("256KB")
+                .build());
         assertThat(saveResponse.statusCode()).isEqualTo(200);
         SchemaValidator.validate(saveResponse, "schemas/avatar-schema.json");
 

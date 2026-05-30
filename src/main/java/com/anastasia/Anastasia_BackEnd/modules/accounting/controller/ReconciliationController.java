@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.accounting.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.BankStatementLine;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.ReconciliationResult;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.security.AccountingTenantResolver;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.ReconciliationService;
 import jakarta.validation.Valid;
 import lombok.Data;
@@ -32,13 +33,14 @@ class ReconciliationRequest {
 public class ReconciliationController {
 
     private final ReconciliationService reconciliationService;
+    private final AccountingTenantResolver tenantResolver;
 
     @PostMapping("/reconcile")
     public ResponseEntity<ReconciliationResult> reconcileStatement(
             @Valid @RequestBody ReconciliationRequest request) {
 
         ReconciliationResult result = reconciliationService.reconcileStatement(
-                request.getTenantId(),
+                tenantResolver.resolveTenant(request.getTenantId()),
                 request.getAccountId(),
                 request.getStatementLines(),
                 request.getClosingBalance()

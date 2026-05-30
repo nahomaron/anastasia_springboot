@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.modules.platform.config;
 
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.model.PlatformAdminSettingsEntity;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.model.PlatformAdminRecoveryAuditEvent;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.repository.PlatformAdminRecoveryAuditRepository;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.repository.PlatformAdminSettingsRepository;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
@@ -9,7 +11,13 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
 @ComponentScan(basePackages = "com.anastasia.Anastasia_BackEnd.modules.platform")
-@EntityScan(basePackageClasses = PlatformAdminSettingsEntity.class)
-@EnableJpaRepositories(basePackageClasses = PlatformAdminSettingsRepository.class)
+@EntityScan(basePackageClasses = {
+        PlatformAdminSettingsEntity.class,
+        PlatformAdminRecoveryAuditEvent.class
+})
+@EnableJpaRepositories(basePackageClasses = {
+        PlatformAdminSettingsRepository.class,
+        PlatformAdminRecoveryAuditRepository.class
+})
 public class PlatformModuleConfig {
 }

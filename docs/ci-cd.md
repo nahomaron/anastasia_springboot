@@ -155,8 +155,6 @@ Staging and production both run:
 
 The workflows intentionally use dedicated operational credentials rather than test-only endpoints so the release gate checks real behavior.
 
-Use an operational tenant slug such as `anastasis-staging` in staging and a production equivalent such as `anastasis-production` for the deploy-check workspace.
-
 ## Required GitHub configuration
 
 Use GitHub Environments for `staging` and `production`.

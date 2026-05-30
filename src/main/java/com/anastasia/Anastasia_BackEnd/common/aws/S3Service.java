@@ -6,5 +6,9 @@ package com.anastasia.Anastasia_BackEnd.common.aws;
  * lightweight stubs for tests.
  */
 public interface S3Service {
-    PresignedUrlResponse generatePresignedUploadUrl(String fileName);
+    PresignedUrlResponse generatePresignedUploadUrl(String objectKey, String contentType);
+
+    StoredObjectMetadata verifyUploadedObject(String objectKey);
+
+    String buildObjectUrl(String objectKey);
 }

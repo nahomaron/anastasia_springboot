@@ -36,7 +36,7 @@ public enum EmailTemplate {
             "email.subject.verify-email-link",
             EmailAudienceType.USER,
             EmailCategory.SECURITY,
-            List.of("userName", "verifyUrl", "expiresHours"),
+            List.of("userName", "verifyUrl", "expiresMinutes"),
             List.of("appName"),
             "Send on verification-link flows; single active token at a time.",
             key -> new Object[]{key.getOrDefault("appName", "Anastasia")}

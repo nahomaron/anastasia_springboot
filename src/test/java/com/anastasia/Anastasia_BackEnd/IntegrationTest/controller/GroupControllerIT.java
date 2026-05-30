@@ -34,6 +34,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -70,6 +71,7 @@ public class GroupControllerIT extends PostgresTestContainer {
         );
 
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
@@ -86,6 +88,7 @@ public class GroupControllerIT extends PostgresTestContainer {
     public void testThatCreateGroupReturns201Created() throws Exception {
         GroupDTO groupDTO = getValidGroupDTO();
         mockMvc.perform(post("/api/v1/groups")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,6 +107,7 @@ public class GroupControllerIT extends PostgresTestContainer {
                 .visibility("Public")
                 .build();
         mockMvc.perform(post("/api/v1/groups")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -151,6 +155,7 @@ public class GroupControllerIT extends PostgresTestContainer {
         groupDTO.setDescription("Updated description");
 
         mockMvc.perform(put("/api/v1/groups/" + created.getGroupId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,6 +167,7 @@ public class GroupControllerIT extends PostgresTestContainer {
     public void testThatUpdateGroupReturns404NotFoundWhenGroupDoesNotExist() throws Exception {
         GroupDTO groupDTO = getValidGroupDTO();
         mockMvc.perform(put("/api/v1/groups/99999")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -175,6 +181,7 @@ public class GroupControllerIT extends PostgresTestContainer {
         GroupResponse created = groupService.createGroup(groupDTO);
 
         mockMvc.perform(delete("/api/v1/groups/" + created.getGroupId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId))
                 .andExpect(status().isNoContent());
@@ -190,6 +197,7 @@ public class GroupControllerIT extends PostgresTestContainer {
                 .build();
 
         mockMvc.perform(post("/api/v1/groups/" + created.getGroupId() + "/users")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + accessToken)
                         .header("X-Tenant-ID", tenantId)
                         .contentType(MediaType.APPLICATION_JSON)

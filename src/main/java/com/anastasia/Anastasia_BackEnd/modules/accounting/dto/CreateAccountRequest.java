@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @Data
 public class CreateAccountRequest {
-    @NotNull(message = "Tenant ID is required")
     private UUID tenantId;
 
     @NotBlank(message = "Account name is required")

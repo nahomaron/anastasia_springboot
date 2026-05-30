@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
+import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
@@ -48,6 +49,8 @@ import com.anastasia.Anastasia_BackEnd.modules.users.security.TotpUtils;
 import jakarta.mail.IllegalWriteException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -56,7 +59,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -65,6 +68,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
@@ -77,6 +81,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
+    private final PasswordResetTokenService passwordResetTokenService;
     private final EmailTemplateService emailTemplateService;
     private final LocalizedMessageService messageService;
 
@@ -94,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
-
+    private static final int ACTIVATION_TOKEN_MINUTES = 10;
     @Override
     public void createUser(UserEntity userEntity) throws MessagingException {
         // todo -> make role fetching and assigning method
@@ -123,8 +128,7 @@ public class AuthServiceImpl implements AuthService {
             sendValidationEmail(savedUser);
 
         } catch (Exception e) {
-            // Log the error for debugging
-            System.err.println("Error creating user: " + e.getMessage());
+            log.warn("User creation failed during registration flow");
             throw new RuntimeException(messageService.get("auth.user.creationFailed", "User creation failed: {0}", e.getMessage()));
         }
 
@@ -147,31 +151,49 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthenticationResponse activateAccount(String token) {
-        Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
-                .orElseThrow(() -> new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid token")));
+    @Transactional
+    public AuthenticationResponse activateAccount(String token, String email) {
+        String normalizedEmail = normalizeEmail(email);
+        Instant now = Instant.now();
+
+        Token savedToken = tokenRepository.findActiveTokensByValueAndType(token, TokenType.ACTIVATION).stream()
+                .filter(candidate -> candidate.getUser() != null
+                        && candidate.getUser().getEmail() != null
+                        && candidate.getUser().getEmail().trim().equalsIgnoreCase(normalizedEmail))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token")));
 
         if (savedToken.getTokenType() != TokenType.ACTIVATION) {
             throw new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token"));
         }
 
-//        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
-//            sendValidationEmail(savedToken.getUser());
-//            throw new RuntimeException("Activation token has expired. Please find the new token sent to you!");
-//        }
+        if (savedToken.getValidatedAt() != null || savedToken.isExpired() || savedToken.isRevoked()) {
+            throw new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token"));
+        }
+
+        if (savedToken.getExpiresAt() == null || !savedToken.getExpiresAt().isAfter(now)) {
+            savedToken.setExpired(true);
+            savedToken.setExpiredAt(now);
+            tokenRepository.save(savedToken);
+            throw new RuntimeException(messageService.get("auth.activation.expiredToken", "Activation token has expired. Please request a new activation email."));
+        }
 
         var user = userRepository.findById(savedToken.getUser().getUuid())
                 .orElseThrow(() -> new UsernameNotFoundException("Activation - Username not found"));
+
+        if (user.getEmail() == null || !user.getEmail().trim().equalsIgnoreCase(normalizedEmail)) {
+            throw new RuntimeException(messageService.get("auth.activation.invalidToken", "Invalid activation token"));
+        }
 
         if (!user.isVerified()) {
             user.setVerified(true);
             user.setStatus(UserStatus.ACTIVE);
             userRepository.save(user);
         }
-        if (savedToken.getValidatedAt() == null) {
-            savedToken.setValidatedAt(Instant.now());
-            tokenRepository.save(savedToken);
-        }
+        savedToken.setValidatedAt(now);
+        savedToken.setExpired(true);
+        savedToken.setExpiredAt(now);
+        tokenRepository.save(savedToken);
 
         return issueSessionForUser(user.getUuid());
     }
@@ -497,33 +519,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public void initiatePasswordReset(String email) throws MessagingException {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        messageService.get("auth.passwordReset.userNotFound", "User not found with email: {0}", email)
-                ));
+        UserEntity user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return;
+        }
 
-        String resetTokenValue = generateActivationCode(8); // Longer token for security
-        // Invalidate any existing password reset tokens for this user first (optional but good practice)
-        tokenRepository.findAllValidTokensByUser(user.getUuid(), TokenType.PASSWORD_RESET) // Assuming you add TokenType.PASSWORD_RESET
-                .forEach(token -> {
-                    token.setExpired(true);
-                    token.setRevoked(true);
-                    token.setExpiredAt(Instant.now());
-                    token.setRevokedAt(Instant.now());
-                });
-
-        Token resetToken = Token.builder()
-                .token(resetTokenValue)
-                .tokenType(TokenType.PASSWORD_RESET) // Assign a specific type
-                .createdAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(60L * 60L))
-                .user(user)
-                .build();
-        tokenRepository.save(resetToken);
+        IssuedPasswordResetToken issuedToken = passwordResetTokenService.issueForUser(user);
 
         Map<String, Object> templateProperties = new HashMap<>();
         templateProperties.put("userName", user.getFullName());
-        templateProperties.put("resetUrl", normalizeBaseUrl(frontendBaseUrl) + "/reset-password?token=" + resetTokenValue);
+        templateProperties.put("resetUrl", normalizeBaseUrl(frontendBaseUrl) + "/reset-password?token=" + issuedToken.rawToken());
         templateProperties.put("expiresHours", 1);
         templateProperties.put("requestIp", "N/A");
         templateProperties.put("requestDevice", null);
@@ -535,29 +540,20 @@ public class AuthServiceImpl implements AuthService {
                 templateProperties,
                 EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.PASSWORD_RESET.templateKey())
         );
-        System.out.println("Password reset email triggered for: " + user.getEmail());
     }
 
     @Override
     public void resetPassword(String token, String newPassword) {
-        Token savedToken = tokenRepository.findTopByTokenOrderByIdDesc(token)
+        Token savedToken = tokenRepository.findTopByTokenAndTokenTypeOrderByIdDesc(passwordResetTokenService.hashToken(token), TokenType.PASSWORD_RESET)
                 .orElseThrow(() -> new RuntimeException(messageService.get(
                         "auth.passwordReset.invalidOrExpired",
                         "Invalid or expired password reset token."
                 )));
 
-        // Validate token type (ensure it's a password reset token)
-        if (savedToken.getTokenType() != TokenType.PASSWORD_RESET) {
-            throw new RuntimeException(messageService.get("auth.passwordReset.invalidTokenType", "Invalid token type for password reset."));
-        }
-
-        // Check if the token has expired
         if (Instant.now().isAfter(savedToken.getExpiresAt())) {
-            // Optionally, you could resend a new reset email here or prompt the user to request a new one
             throw new RuntimeException(messageService.get("auth.passwordReset.expired", "Password reset token has expired. Please request a new one."));
         }
 
-        // Check if the token has already been validated, expired or revoked
         if (savedToken.getValidatedAt() != null || savedToken.isExpired() || savedToken.isRevoked()) {
             throw new RuntimeException(messageService.get(
                     "auth.passwordReset.usedOrInvalid",
@@ -566,7 +562,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserEntity user = userRepository.findById(savedToken.getUser().getUuid())
-                .orElseThrow(() -> new UsernameNotFoundException("Reset password: User not found for this token."));
+                .orElseThrow(() -> new RuntimeException(messageService.get(
+                        "auth.passwordReset.invalidOrExpired",
+                        "Invalid or expired password reset token."
+                )));
 
         // Hash the new password and save it
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -583,8 +582,6 @@ public class AuthServiceImpl implements AuthService {
         savedToken.setExpiredAt(Instant.now());
         savedToken.setRevokedAt(Instant.now());
         tokenRepository.save(savedToken);
-
-        System.out.println("Password reset successfully for user: " + user.getEmail());
     }
 
     @Override
@@ -876,7 +873,7 @@ public class AuthServiceImpl implements AuthService {
         Map<String, Object> templateProperties = new HashMap<>();
         templateProperties.put("userName", user.getFullName());
         templateProperties.put("verifyUrl", activationUrl);
-        templateProperties.put("expiresHours", 24);
+        templateProperties.put("expiresMinutes", ACTIVATION_TOKEN_MINUTES);
         templateProperties.put("locale", messageService.resolveLocaleForUser(user));
 
         emailTemplateService.sendTemplateEmail(
@@ -885,8 +882,6 @@ public class AuthServiceImpl implements AuthService {
                 templateProperties,
                 EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.VERIFY_EMAIL_LINK.templateKey())
         );
-
-        System.out.println("Validation email triggered for: " + user.getEmail());
     }
 
     private String generateAndSaveActivationToken(UserEntity user) {
@@ -895,7 +890,7 @@ public class AuthServiceImpl implements AuthService {
                 .token(generatedToken)
                 .tokenType(TokenType.ACTIVATION)
                 .createdAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(15 * 60L))
+                .expiresAt(Instant.now().plusSeconds(ACTIVATION_TOKEN_MINUTES * 60L))
                 .user(user)
                 .build();
 
@@ -905,14 +900,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String normalizeBaseUrl(String rawUrl) {
-        if (rawUrl == null || rawUrl.isBlank()) {
-            throw new IllegalStateException("app.public.frontend-base-url must be configured");
+        return PublicUrlUtils.normalizeBaseUrl(rawUrl, "app.public.frontend-base-url");
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException(messageService.get("auth.activation.emailRequired", "Email is required for activation"));
         }
-        return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     private String generateActivationCode(int length) {
-        String characters = "01234456789";
+        String characters = "0123456789";
         StringBuilder codeBuilder = new StringBuilder();
 
         for (int i = 0; i < length; i++) {
@@ -922,6 +921,5 @@ public class AuthServiceImpl implements AuthService {
 
         return codeBuilder.toString();
     }
-
 
 }

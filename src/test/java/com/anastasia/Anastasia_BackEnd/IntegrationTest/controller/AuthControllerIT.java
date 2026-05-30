@@ -20,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +34,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -83,6 +86,7 @@ public class AuthControllerIT extends PostgresTestContainer {
         String userJson = objectMapper.writeValueAsString(testUserDTOA);
         mockMvc.perform(
                 post("/api/v1/auth/sign-up")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson)
         ).andExpect(
@@ -100,6 +104,7 @@ public class AuthControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(
                     post("/api/v1/auth/login")
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(testAuthJson)
                 )
@@ -109,12 +114,26 @@ public class AuthControllerIT extends PostgresTestContainer {
     }
 
     @Test
+    public void testThatHttpBasicAuthenticationIsRejected() throws Exception {
+        String basicCredentials = Base64.getEncoder()
+                .encodeToString((TestDataSeeder.ADMIN_EMAIL + ":" + TestDataSeeder.ADMIN_PASSWORD)
+                        .getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/users/dashboard")
+                                .header("Authorization", "Basic " + basicCredentials)
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     public void testThatActivateAccountReturnsHttpStatus200Ok() throws Exception {
         UserDTO testUserDTOA = TestDataUtil.createTestUserDTO();
         String userJson = objectMapper.writeValueAsString(testUserDTOA);
 
         mockMvc.perform(
                 post("/api/v1/auth/sign-up")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson)
         ).andExpect(
@@ -126,6 +145,7 @@ public class AuthControllerIT extends PostgresTestContainer {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/api/v1/auth/activate-account")
                         .param("token", verificationTokenCode)
+                        .param("email", testUserDTOA.getEmail())
         ).andExpect(
                 status().isOk()
         );
@@ -139,6 +159,7 @@ public class AuthControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(
                 post("/api/v1/auth/sign-up")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson)
         ).andExpect(
@@ -150,6 +171,7 @@ public class AuthControllerIT extends PostgresTestContainer {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/api/v1/auth/activate-account")
                         .param("token", verificationTokenCode)
+                        .param("email", testUserDTOA.getEmail())
         ).andExpect(
                 status().isOk()
         );
@@ -160,6 +182,7 @@ public class AuthControllerIT extends PostgresTestContainer {
 
         mockMvc.perform(
                         post("/api/v1/auth/login")
+                                .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(testAuthJson)
                 )
@@ -178,6 +201,7 @@ public class AuthControllerIT extends PostgresTestContainer {
         // should allow requests with in the limit
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")
+                            .with(csrf())
                             .cookie(refreshTokenCookie)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -193,6 +217,7 @@ public class AuthControllerIT extends PostgresTestContainer {
 
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")
+                            .with(csrf())
                             .cookie(refreshTokenCookie)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -200,6 +225,7 @@ public class AuthControllerIT extends PostgresTestContainer {
 
         // 6th request should be blocked
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/refresh-token")
+                        .with(csrf())
                         .cookie(refreshTokenCookie)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isTooManyRequests()) // 429
@@ -209,6 +235,7 @@ public class AuthControllerIT extends PostgresTestContainer {
     private String fetchActivationToken(String email) throws Exception {
         MvcResult result = mockMvc.perform(
                         MockMvcRequestBuilders.get("/api/v1/auth/test/activation-token")
+                                .header("X-Test-Helper-Secret", "anastasia-api-test-helper-secret")
                                 .param("email", email)
                 )
                 .andExpect(status().isOk())
@@ -223,6 +250,7 @@ public class AuthControllerIT extends PostgresTestContainer {
 
         MvcResult result = mockMvc.perform(
                         post("/api/v1/auth/login")
+                                .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(testAuthJson)
                 )

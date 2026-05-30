@@ -118,6 +118,8 @@ management:
 app:
   auth:
     jwt-current-secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
+  platform-admin:
+    bootstrap-enabled: true
   public:
     backend-base-url: http://localhost:8080
     frontend-base-url: http://localhost:4200
@@ -127,6 +129,7 @@ app:
   security:
     oauth2-enabled: false
     allow-anonymous: true
+    test-helper-secret: anastasia-api-test-helper-secret
 
 logging:
   pattern:

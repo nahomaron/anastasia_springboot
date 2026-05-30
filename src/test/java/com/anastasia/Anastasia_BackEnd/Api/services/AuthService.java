@@ -41,10 +41,11 @@ public class AuthService {
     }
 
     @Step("Activate account with token")
-    public Response activateAccount(String token) {
+    public Response activateAccount(String token, String email) {
         return given()
                 .spec(RequestSpecFactory.anonymousSpec())
                 .queryParam("token", token)
+                .queryParam("email", email)
                 .when()
                 .get(ConfigManager.get("auth.activate.endpoint"))
                 .then()
@@ -120,7 +121,7 @@ public class AuthService {
             endpoint = "/auth/test/refresh-token";
         }
         Response response = given()
-                .spec(RequestSpecFactory.anonymousSpec())
+                .spec(RequestSpecFactory.testHelperSpec())
                 .queryParam("email", email)
                 .get(endpoint)
                 .then()

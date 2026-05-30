@@ -2,15 +2,27 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Avatar Presigned URL",
   "type": "object",
-  "required": ["objectKey", "uploadUrl"],
+  "required": ["uploadId", "objectKey", "objectUrl", "uploadUrl", "contentType"],
   "properties": {
+    "uploadId": {
+      "type": "string",
+      "format": "uuid"
+    },
     "objectKey": {
       "type": "string",
       "minLength": 1
     },
+    "objectUrl": {
+      "type": "string",
+      "format": "uri"
+    },
     "uploadUrl": {
       "type": "string",
       "format": "uri"
+    },
+    "contentType": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "additionalProperties": true

@@ -42,6 +42,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -102,7 +103,7 @@ class PriestControllerIT extends PostgresTestContainer {
                 .orElseThrow()
                 .getToken();
         assertNotNull(token);
-        authService.activateAccount(token);
+        authService.activateAccount(token, priestDTO.getPersonalEmail());
 
         AuthenticationResponse auth = authService.authenticate(AuthenticationRequest.builder()
                 .email(priestDTO.getPersonalEmail())
@@ -117,6 +118,7 @@ class PriestControllerIT extends PostgresTestContainer {
         PriestDTO priestDTO_B = TestDataUtil.createTestPriestDTO_B(churchNumber);
 
         mockMvc.perform(post("/api/v1/priests/register")
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(priestDTO_B)))
@@ -162,6 +164,7 @@ class PriestControllerIT extends PostgresTestContainer {
         );
 
         mockMvc.perform(patch("/api/v1/priests/{id}", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(patchPayload)))
@@ -177,6 +180,7 @@ class PriestControllerIT extends PostgresTestContainer {
         PriestEntity saved = priestRepository.findByPhoneNumber(priestDTO.getPhoneNumber()).orElseThrow();
 
         mockMvc.perform(post("/api/v1/priests/delete/{id}", saved.getId())
+                        .with(csrf())
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk());
     }

@@ -6,17 +6,22 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.PermissionRepository
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.exception.InvalidPlatformAdminBootstrapSecretException;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.exception.PlatformAdminBootstrapCompletedException;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.exception.PlatformAdminBootstrapDisabledException;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +33,10 @@ import java.util.stream.Collectors;
 public class PlatformAdminRegistrationService {
 
     private static final String DEVELOPER_SUPER_ROLE = "DEVELOPER_SUPER_USER";
+    private static final Set<String> BOOTSTRAP_ROLE_NAMES = Set.of(
+            RoleType.PLATFORM_ADMIN.name(),
+            DEVELOPER_SUPER_ROLE
+    );
     private static final List<String> REQUIRED_ROLE_NAMES = List.of(
             "OWNER",
             "PLATFORM_ADMIN",
@@ -39,6 +48,8 @@ public class PlatformAdminRegistrationService {
 
     @Value("${app.platform-admin.secret:${platform.admin.secret:}}")
     private String configuredSecret;
+    @Value("${app.platform-admin.bootstrap-enabled:false}")
+    private boolean bootstrapEnabled;
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -47,6 +58,8 @@ public class PlatformAdminRegistrationService {
 
     @Transactional
     public UserEntity registerPlatformAdmin(PlatformAdminRegistrationRequest request, String providedSecret) {
+        ensureBootstrapEnabled();
+        ensureBootstrapNotCompleted();
         ensureSecretMatches(providedSecret);
 
         String normalizedEmail = request.getEmail().trim().toLowerCase(Locale.ROOT);
@@ -70,12 +83,34 @@ public class PlatformAdminRegistrationService {
         return userRepository.save(newUser);
     }
 
-    private void ensureSecretMatches(String providedSecret) {
-        if (!StringUtils.hasText(configuredSecret)) {
-            throw new IllegalStateException("app.platform-admin.secret must be configured before using the developer registration endpoint");
+    private void ensureBootstrapEnabled() {
+        if (!bootstrapEnabled) {
+            throw new PlatformAdminBootstrapDisabledException("Platform admin bootstrap is disabled.");
         }
-        if (!StringUtils.hasText(providedSecret) || !configuredSecret.equals(providedSecret.trim())) {
-            throw new AccessDeniedException("Invalid developer secret");
+    }
+
+    private void ensureBootstrapNotCompleted() {
+        boolean bootstrapAlreadyCompleted = !userRepository.findAllByRoleNames(BOOTSTRAP_ROLE_NAMES).isEmpty();
+        if (bootstrapAlreadyCompleted) {
+            throw new PlatformAdminBootstrapCompletedException(
+                    "Platform admin bootstrap is only available before the first platform admin account is created."
+            );
+        }
+    }
+
+    private void ensureSecretMatches(String providedSecret) {
+        String normalizedConfiguredSecret = configuredSecret == null ? "" : configuredSecret.trim();
+        if (!StringUtils.hasText(normalizedConfiguredSecret)) {
+            throw new IllegalStateException("app.platform-admin.secret must be configured before using the platform admin bootstrap endpoint");
+        }
+        String normalizedProvidedSecret = providedSecret == null ? "" : providedSecret.trim();
+        boolean matches = StringUtils.hasText(normalizedProvidedSecret)
+                && MessageDigest.isEqual(
+                normalizedConfiguredSecret.getBytes(StandardCharsets.UTF_8),
+                normalizedProvidedSecret.getBytes(StandardCharsets.UTF_8)
+        );
+        if (!matches) {
+            throw new InvalidPlatformAdminBootstrapSecretException("Invalid platform admin bootstrap secret");
         }
     }
 

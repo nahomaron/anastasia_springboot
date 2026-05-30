@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service.card;
 
+import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
@@ -425,10 +426,7 @@ public class MembershipCardService {
     }
 
     private String normalizeBaseUrl(String rawUrl) {
-        if (rawUrl == null || rawUrl.isBlank()) {
-            throw new IllegalStateException("app.public.backend-base-url must be configured");
-        }
-        return rawUrl.endsWith("/") ? rawUrl.substring(0, rawUrl.length() - 1) : rawUrl;
+        return PublicUrlUtils.normalizeBaseUrl(rawUrl, "app.public.backend-base-url");
     }
 
     private String normalizeFormat(String format) {

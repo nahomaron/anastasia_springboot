@@ -45,6 +45,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,6 +58,7 @@ import static org.mockito.Mockito.verify;
 @Epic("Integration Tests")
 @Feature("Service Layer - Auth & User Domain")
 class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
+    private static final Pattern RESET_TOKEN_PATTERN = Pattern.compile("/reset-password\\?token=([^\"'\\s<]+)");
 
     @Autowired private AuthService authService;
     @Autowired private RoleService roleService;
@@ -97,7 +100,7 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
                 )
                 .orElseThrow(() -> new AssertionError("Activation token not persisted"))
                 .getToken();
-        authService.activateAccount(activationCode);
+        authService.activateAccount(activationCode, pendingUser.getEmail());
 
         UserEntity activatedUser = userRepository.findByEmail(pendingUser.getEmail())
                 .orElseThrow(() -> new AssertionError("User not persisted"));
@@ -152,13 +155,22 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
                 anyString(),
                 any()
         );
-        String resetToken = tokenRepository
+        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
+        verify(emailNotificationService).sendEmail(
+                eq(pendingUser.getEmail()),
+                anyString(),
+                htmlCaptor.capture(),
+                anyString(),
+                any()
+        );
+        String resetToken = extractResetToken(htmlCaptor.getValue());
+        Token storedResetToken = tokenRepository
                 .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
                         pendingUser.getEmail(),
                         TokenType.PASSWORD_RESET
                 )
-                .orElseThrow(() -> new AssertionError("Password reset token not persisted"))
-                .getToken();
+                .orElseThrow(() -> new AssertionError("Password reset token not persisted"));
+        assertThat(storedResetToken.getToken()).isNotEqualTo(resetToken);
         String newPassword = "NewPassw0rd!";
         authService.resetPassword(resetToken, newPassword);
 
@@ -266,5 +278,11 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
                 PermissionType.BOOK_APPOINTMENT.getName(),
                 PermissionType.CANCEL_APPOINTMENT.getName()
         );
+    }
+
+    private String extractResetToken(String html) {
+        Matcher matcher = RESET_TOKEN_PATTERN.matcher(html);
+        assertThat(matcher.find()).isTrue();
+        return matcher.group(1);
     }
 }

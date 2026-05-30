@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 public class EmailStartupValidation {
@@ -61,7 +62,7 @@ public class EmailStartupValidation {
 
     private boolean isTestProfile() {
         return Arrays.stream(environment.getActiveProfiles())
-                .map(String::toLowerCase)
-                .anyMatch(profile -> profile.contains("test"));
+                .map(profile -> profile.toLowerCase(Locale.ROOT))
+                .anyMatch(profile -> "test".equals(profile) || "api-tests".equals(profile));
     }
 }

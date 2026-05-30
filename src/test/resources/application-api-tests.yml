@@ -59,12 +59,15 @@ platform:
     secret: dev-secret
 
 app:
+  platform-admin:
+    bootstrap-enabled: true
   public:
     backend-base-url: http://localhost:8080
     frontend-base-url: http://localhost:4200
   evn: api-tests
   security:
     allow-anonymous: true
+    test-helper-secret: anastasia-api-test-helper-secret
 
 logging:
   pattern:

@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.controller.TransactionController;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.TransactionDto;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.enums.TransactionType;
+import com.anastasia.Anastasia_BackEnd.modules.accounting.security.AccountingTenantResolver;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -24,6 +25,9 @@ class TransactionControllerUnitTest {
     @Mock
     private TransactionService transactionService;
 
+    @Mock
+    private AccountingTenantResolver tenantResolver;
+
     @InjectMocks
     private TransactionController transactionController;
 
@@ -35,6 +39,7 @@ class TransactionControllerUnitTest {
                 .description("Sunday offering")
                 .type(TransactionType.INCOME)
                 .build();
+        when(tenantResolver.resolveTenant(tenantId)).thenReturn(tenantId);
         when(transactionService.getTransactionById(42L, tenantId)).thenReturn(expected);
 
         var response = transactionController.getTransactionById(42L, tenantId);
@@ -51,6 +56,7 @@ class TransactionControllerUnitTest {
         List<TransactionDto> expected = List.of(
                 TransactionDto.builder().id(10L).type(TransactionType.EXPENSE).build()
         );
+        when(tenantResolver.resolveTenant(tenantId)).thenReturn(tenantId);
         when(transactionService.getTransactions(tenantId, startDate, endDate, 7L)).thenReturn(expected);
 
         var response = transactionController.getTransactions(tenantId, startDate, endDate, 7L);

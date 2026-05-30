@@ -1,9 +1,11 @@
 package com.anastasia.Anastasia_BackEnd.common.security;
 
 import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
+import com.anastasia.Anastasia_BackEnd.common.filter.TenantFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -27,17 +30,29 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -48,6 +63,7 @@ public class SecurityConfig {
 
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
+    private final TenantFilter tenantFilter;
     private final LogoutHandler logoutHandler;
     private final Environment environment;
     @Value("${app.cors.allowed-origins:}")
@@ -56,6 +72,11 @@ public class SecurityConfig {
     private boolean oauth2Enabled;
     @Value("${app.security.allow-anonymous:false}")
     private boolean allowAnonymous;
+    @Value("${app.security.public-docs-enabled:false}")
+    private boolean publicDocsEnabled;
+    @Value("${app.security.test-helper-secret:}")
+    private String testHelperSecret;
+    private static final String TEST_HELPER_SECRET_HEADER = "X-Test-Helper-Secret";
     private static final String[] WHITE_LIST_ENDPOINTS = {
             "/api/v1/auth/**",
             "/oauth2/**",
@@ -63,22 +84,36 @@ public class SecurityConfig {
             "/webhooks/stripe",
             "/api/v1/priests/register",
             "/api/v1/auth/platform-admin/register",
+            "/api/v1/membership-cards/verify/**",
+            "/ws/**",
+            "/ws-sockjs/**"
+    };
+    private static final String[] DOCS_ENDPOINTS = {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v2/api-docs/**",
             "/v3/api-docs/**",
             "/api-docs/**",
             "/api/swagger-ui/**",
-            "/webjars/**",
-            "/api/v1/membership-cards/verify/**",
-            "/ws/**",
-            "/ws-sockjs/**",
-            "/test-utils/**",
-            "/api/v1/test-utils/**"
+            "/webjars/**"
     };
     private static final String[] TEST_HELPER_ENDPOINTS = {
             "/api/v1/tenant/test/**",
-            "/api/v1/auth/test/**"
+            "/api/v1/auth/test/**",
+            "/api/v1/test-utils/**",
+            "/api/v1/test/**",
+            "/test-utils/**"
+    };
+    private static final String[] CSRF_IGNORED_ENDPOINTS = {
+            "/webhooks/stripe",
+            "/api/v1/email/ses-events",
+            "/ws/**",
+            "/ws-sockjs/**",
+            "/api/v1/tenant/test/**",
+            "/api/v1/auth/test/**",
+            "/api/v1/test-utils/**",
+            "/api/v1/test/**",
+            "/test-utils/**"
     };
 
     @Bean
@@ -89,13 +124,17 @@ public class SecurityConfig {
             OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler
     ) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers(CSRF_IGNORED_ENDPOINTS))
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        .requestMatchers(TEST_HELPER_ENDPOINTS).access(this::authorizeTestHelperRequest)
+                        .requestMatchers(DOCS_ENDPOINTS).access((authentication, context) ->
+                                new AuthorizationDecision(publicDocsEnabled))
                         .requestMatchers(WHITE_LIST_ENDPOINTS).permitAll()
-                        .requestMatchers(TEST_HELPER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/tenant/subscription",
                                 "/api/v1/tenant/verify-phone",
@@ -117,21 +156,18 @@ public class SecurityConfig {
                                 "/api/v1/membership-cards/verify/*"
                         ).permitAll()
                         .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied")))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .anonymous(allowAnonymous ? Customizer.withDefaults() : AbstractHttpConfigurer::disable) // controls if anonymous users are allowed
                 .headers(headers -> headers
-                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                        // todo -> in production the below should replace the above frameOptions
-//                        .frameOptions(frameOptions -> frameOptions.deny())
-//                        .httpStrictTransportSecurity(hsts -> hsts
-//                                .includeSubDomains(true)
-//                                .maxAgeInSeconds(31536000)
-//                                .preload(true)
-//                        )
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000)
+                        )
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
@@ -150,7 +186,32 @@ public class SecurityConfig {
         }
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(tenantFilter, JwtFilter.class);
+        http.addFilterAfter(new CsrfCookieFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public FilterRegistrationBean<TenantFilter> tenantFilterRegistration(TenantFilter tenantFilter) {
+        FilterRegistrationBean<TenantFilter> registration = new FilterRegistrationBean<>(tenantFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    private AuthorizationDecision authorizeTestHelperRequest(
+            Supplier<org.springframework.security.core.Authentication> authentication,
+            RequestAuthorizationContext context
+    ) {
+        String configuredSecret = testHelperSecret == null ? "" : testHelperSecret.trim();
+        String providedSecret = context.getRequest().getHeader(TEST_HELPER_SECRET_HEADER);
+
+        boolean allowed = StringUtils.hasText(configuredSecret)
+                && StringUtils.hasText(providedSecret)
+                && MessageDigest.isEqual(
+                configuredSecret.getBytes(StandardCharsets.UTF_8),
+                providedSecret.trim().getBytes(StandardCharsets.UTF_8)
+        );
+        return new AuthorizationDecision(allowed);
     }
 
     @Bean
@@ -190,6 +251,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
+                "X-XSRF-TOKEN",
                 "X-Requested-With",
                 "X-Tenant-Id",
                 "Idempotency-Key",
@@ -224,6 +286,22 @@ public class SecurityConfig {
     private boolean isLocalProfileActive() {
         return Arrays.stream(environment.getActiveProfiles())
                 .anyMatch(profile -> "dev".equalsIgnoreCase(profile) || "test".equalsIgnoreCase(profile));
+    }
+
+    private static final class CsrfCookieFilter extends OncePerRequestFilter {
+
+        @Override
+        protected void doFilterInternal(
+                HttpServletRequest request,
+                jakarta.servlet.http.HttpServletResponse response,
+                FilterChain filterChain
+        ) throws ServletException, IOException {
+            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+            if (csrfToken != null) {
+                csrfToken.getToken();
+            }
+            filterChain.doFilter(request, response);
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.Api.tests.tenant;
 
 import com.anastasia.Anastasia_BackEnd.Api.base.BaseApiTest;
 import com.anastasia.Anastasia_BackEnd.Api.config.ConfigManager;
+import com.anastasia.Anastasia_BackEnd.Api.config.RequestSpecFactory;
 import com.anastasia.Anastasia_BackEnd.Api.factories.TenantDataFactory;
 import com.anastasia.Anastasia_BackEnd.Api.services.AuthService;
 import com.anastasia.Anastasia_BackEnd.Api.services.TenantService;
@@ -40,6 +41,7 @@ public class TenantPositiveTests extends BaseApiTest {
 
         String activationEndpoint = ConfigManager.get("test.activation.endpoint");
         String token = given()
+                .spec(RequestSpecFactory.testHelperSpec())
                 .queryParam("email", tenant.getOwnerEmail())
                 .when()
                 .get(activationEndpoint != null ? activationEndpoint : "/auth/test/activation-token")
@@ -49,7 +51,7 @@ public class TenantPositiveTests extends BaseApiTest {
                 .trim();
         assertThat(token).isNotBlank();
 
-        Response activationResponse = authService.activateAccount(token);
+        Response activationResponse = authService.activateAccount(token, tenant.getOwnerEmail());
         assertThat(activationResponse.statusCode()).isEqualTo(200);
 
         AuthenticationResponse login = authService.loginAndExtractToken(new AuthenticationRequest(

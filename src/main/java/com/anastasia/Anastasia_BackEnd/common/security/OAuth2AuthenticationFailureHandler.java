@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.common.security;
 
+import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,9 +34,6 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
     }
 
     private String normalizeBaseUrl(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException("app.public.frontend-base-url must be configured");
-        }
-        return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+        return PublicUrlUtils.normalizeBaseUrl(value, "app.public.frontend-base-url");
     }
 }
