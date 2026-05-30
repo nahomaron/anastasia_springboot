@@ -287,6 +287,15 @@ jobs:
           TENANT_BODY="diagnostics/staging-tenant.json"
           DEFAULT_TENANT_PATH="/api/v1/tenant/current/verification-status"
 
+          print_body_preview() {
+            local file_path="$1"
+            if [[ -s "${file_path}" ]]; then
+              echo "--- ${file_path} ---" >&2
+              sed -n '1,120p' "${file_path}" >&2 || true
+              echo >&2
+            fi
+          }
+
           BASE_URL="$(printf '%s' "${BASE_URL}" | tr -d '\r')"
           case "${BASE_URL}" in
             http://*|https://*) ;;
@@ -298,7 +307,7 @@ jobs:
 
           SMOKE_EMAIL="${SMOKE_EMAIL_SECRET:-${SMOKE_EMAIL_VAR:-}}"
           SMOKE_PASSWORD="${SMOKE_PASSWORD_SECRET:-${SMOKE_PASSWORD_VAR:-}}"
-          SMOKE_TENANT_PATH="${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-${DEFAULT_TENANT_PATH}}}"
+          SMOKE_TENANT_PATH_RAW="${SMOKE_TENANT_PATH_SECRET:-${SMOKE_TENANT_PATH_VAR:-}}"
           SMOKE_TENANT_ID="${SMOKE_TENANT_ID_SECRET:-${SMOKE_TENANT_ID_VAR:-}}"
 
           for required in SMOKE_EMAIL SMOKE_PASSWORD; do
@@ -308,14 +317,18 @@ jobs:
             fi
           done
 
-          SMOKE_TENANT_PATH="$(printf '%s' "${SMOKE_TENANT_PATH}" | tr -d '\r')"
-          case "${SMOKE_TENANT_PATH}" in
-            /*) ;;
-            *)
-              echo "SMOKE_TENANT_PATH must start with '/', got '${SMOKE_TENANT_PATH}'" >&2
-              exit 1
-              ;;
-          esac
+          SMOKE_TENANT_PATH_RAW="$(printf '%s' "${SMOKE_TENANT_PATH_RAW}" | tr -d '\r')"
+          if [[ -z "${SMOKE_TENANT_PATH_RAW}" ]]; then
+            SMOKE_TENANT_PATH="${DEFAULT_TENANT_PATH}"
+          elif [[ "${SMOKE_TENANT_PATH_RAW}" == /* ]]; then
+            SMOKE_TENANT_PATH="${SMOKE_TENANT_PATH_RAW}"
+          elif [[ "${SMOKE_TENANT_PATH_RAW}" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "SMOKE_TENANT_PATH uses legacy slug-style value '${SMOKE_TENANT_PATH_RAW}'; falling back to ${DEFAULT_TENANT_PATH}" >&2
+            SMOKE_TENANT_PATH="${DEFAULT_TENANT_PATH}"
+          else
+            echo "SMOKE_TENANT_PATH must start with '/' or be a legacy slug value, got '${SMOKE_TENANT_PATH_RAW}'" >&2
+            exit 1
+          fi
 
           for attempt in {1..18}; do
             HEALTH_STATUS=$(curl -sS -o "${HEALTH_BODY}" -w "%{http_code}" \
@@ -325,6 +338,7 @@ jobs:
             fi
             if [[ "${attempt}" == "18" ]]; then
               echo "Staging health check did not become ready; last status=${HEALTH_STATUS}" >&2
+              print_body_preview "${HEALTH_BODY}"
               exit 1
             fi
             sleep 10
@@ -334,7 +348,11 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"email\":\"${SMOKE_EMAIL}\",\"password\":\"${SMOKE_PASSWORD}\"}" \
             "${BASE_URL}/api/v1/auth/login")
-          [[ "${LOGIN_STATUS}" == "200" ]]
+          if [[ "${LOGIN_STATUS}" != "200" ]]; then
+            echo "Staging login failed; status=${LOGIN_STATUS}" >&2
+            print_body_preview "${LOGIN_BODY}"
+            exit 1
+          fi
 
           ACCESS_TOKEN=$(python3 - <<'PY'
           import json
@@ -343,12 +361,20 @@ jobs:
           print(data.get("accessToken", ""))
           PY
           )
-          [[ -n "${ACCESS_TOKEN}" ]]
+          if [[ -z "${ACCESS_TOKEN}" ]]; then
+            echo "Staging login response did not contain accessToken" >&2
+            print_body_preview "${LOGIN_BODY}"
+            exit 1
+          fi
 
           PROFILE_STATUS=$(curl -sS -o "${PROFILE_BODY}" -w "%{http_code}" \
             -H "Authorization: Bearer ${ACCESS_TOKEN}" \
             "${BASE_URL}/api/v1/users/me/profile")
-          [[ "${PROFILE_STATUS}" == "200" ]]
+          if [[ "${PROFILE_STATUS}" != "200" ]]; then
+            echo "Staging profile check failed; status=${PROFILE_STATUS}" >&2
+            print_body_preview "${PROFILE_BODY}"
+            exit 1
+          fi
 
           TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
             -H "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -359,7 +385,11 @@ jobs:
               -H "X-Tenant-ID: ${SMOKE_TENANT_ID}" \
               "${BASE_URL}${SMOKE_TENANT_PATH}")
           fi
-          [[ "${TENANT_STATUS}" == "200" ]]
+          if [[ "${TENANT_STATUS}" != "200" ]]; then
+            echo "Staging tenant check failed; status=${TENANT_STATUS}; path=${SMOKE_TENANT_PATH}" >&2
+            print_body_preview "${TENANT_BODY}"
+            exit 1
+          fi
 
       - name: Prune stale backend images on staging host
         if: success()
