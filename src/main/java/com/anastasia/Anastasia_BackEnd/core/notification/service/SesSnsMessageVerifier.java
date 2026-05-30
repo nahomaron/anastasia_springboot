@@ -75,11 +75,12 @@ public class SesSnsMessageVerifier {
 
     protected X509Certificate loadCertificate(String signingCertUrl) {
         ResponseEntity<byte[]> response = snsRestOperations.getForEntity(signingCertUrl, byte[].class);
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null || response.getBody().length == 0) {
+        byte[] certificateBytes = response.getBody();
+        if (!response.getStatusCode().is2xxSuccessful() || certificateBytes == null || certificateBytes.length == 0) {
             throw new InvalidSesSnsMessageException(HttpStatus.FORBIDDEN, "SNS signing certificate could not be loaded");
         }
 
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(response.getBody())) {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(certificateBytes)) {
             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
             X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(inputStream);
             certificate.checkValidity();

@@ -587,10 +587,55 @@
 				<version>0.8.12</version>
 				<executions>
 					<execution>
+						<id>prepare-agent</id>
 						<goals>
 							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<propertyName>surefireArgLine</propertyName>
+							<destFile>${project.build.directory}/jacoco-unit.exec</destFile>
+							<append>true</append>
+						</configuration>
+					</execution>
+					<execution>
+						<id>prepare-agent-integration</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+						<configuration>
+							<propertyName>failsafeArgLine</propertyName>
+							<destFile>${project.build.directory}/jacoco-it.exec</destFile>
+							<append>true</append>
+						</configuration>
+					</execution>
+					<execution>
+						<id>merge-jacoco-data</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>merge</goal>
+						</goals>
+						<configuration>
+							<fileSets>
+								<fileSet>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>jacoco-unit.exec</include>
+										<include>jacoco-it.exec</include>
+									</includes>
+								</fileSet>
+							</fileSets>
+							<destFile>${project.build.directory}/jacoco.exec</destFile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<dataFile>${project.build.directory}/jacoco.exec</dataFile>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -624,6 +669,7 @@
 					<version>${maven.surefire.version}</version>
 					<configuration>
 						<skipTests>${skip.unit.tests}</skipTests>
+						<argLine>${surefireArgLine}</argLine>
 						<reuseForks>false</reuseForks>
 					<excludedGroups>${experimental.tests.tag}</excludedGroups>
 					<includes>
@@ -655,6 +701,7 @@
 					<version>${maven.surefire.version}</version>
 					<configuration>
 						<skipITs>${skip.integration.tests}</skipITs>
+						<argLine>${failsafeArgLine}</argLine>
 						<includes>
 							<include>**/*IT.java</include>
 					</includes>
