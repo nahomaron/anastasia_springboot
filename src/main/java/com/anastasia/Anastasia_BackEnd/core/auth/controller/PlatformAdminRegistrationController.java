@@ -116,10 +116,10 @@ public class PlatformAdminRegistrationController {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
+        String remoteAddress = request.getRemoteAddr();
+        if (remoteAddress == null || remoteAddress.isBlank()) {
+            return "unknown";
         }
-        return request.getRemoteAddr();
+        return normalizeKeyComponent(remoteAddress);
     }
 }

@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.core.notification.config;
 
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
@@ -24,6 +26,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailService userDetailService;
+    private final TokenRepository tokenRepository;
 
     @Override
     public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
@@ -42,6 +45,9 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         if (!jwtUtil.isTokenValid(bearerToken, userPrincipal)) {
             throw new IllegalArgumentException("Invalid Authorization token for WebSocket connection");
         }
+        if (!isPersistedBearerTokenActive(bearerToken)) {
+            throw new IllegalArgumentException("Revoked Authorization token for WebSocket connection");
+        }
 
         validateTenantScope(accessor, bearerToken, userPrincipal);
 
@@ -52,6 +58,12 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         );
         accessor.setUser(authentication);
         return message;
+    }
+
+    private boolean isPersistedBearerTokenActive(String bearerToken) {
+        return tokenRepository.findActiveTokensByValueAndType(bearerToken, TokenType.BEARER).stream()
+                .findFirst()
+                .isPresent();
     }
 
     private String extractBearerToken(StompHeaderAccessor accessor) {
