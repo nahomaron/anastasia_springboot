@@ -107,6 +107,7 @@ public class SecurityConfig {
     private static final String[] CSRF_IGNORED_ENDPOINTS = {
             "/webhooks/stripe",
             "/api/v1/email/ses-events",
+            "/api/v1/auth/login",
             "/ws/**",
             "/ws-sockjs/**",
             "/api/v1/tenant/test/**",
