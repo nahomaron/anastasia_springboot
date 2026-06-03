@@ -276,6 +276,7 @@ jobs:
             "${BASE_URL}/api/v1/auth/login")
           if [[ "${LOGIN_STATUS}" != "200" ]]; then
             echo "Staging login failed; status=${LOGIN_STATUS}" >&2
+            capture_remote_smoke_diagnostics "" "${SMOKE_TENANT_PATH}" "${SMOKE_TENANT_ID}"
             print_body_preview "${LOGIN_BODY}"
             exit 1
           fi
