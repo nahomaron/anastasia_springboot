@@ -14,6 +14,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdm
 import com.anastasia.Anastasia_BackEnd.modules.users.repository.TenantUserPermissionGrantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +29,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
+    private static final Logger log = LoggerFactory.getLogger(CustomUserDetailService.class);
     private static final Set<String> PRESERVED_PLATFORM_ROLE_NAMES = Set.of(
             "PLATFORM_ADMIN",
             "DEVELOPER_SUPER_USER"
@@ -55,9 +59,18 @@ public class CustomUserDetailService implements UserDetailsService {
 
         return new UserPrincipal(
                 resolvedUser,
-                resolveEffectiveRoles(resolvedUser),
-                resolveDirectPermissions(resolvedUser)
+                resolveEffectiveRolesSafely(resolvedUser),
+                resolveDirectPermissionsSafely(resolvedUser)
         );
+    }
+
+    private Set<Role> resolveEffectiveRolesSafely(UserEntity user) {
+        try {
+            return resolveEffectiveRoles(user);
+        } catch (DataAccessException ex) {
+            log.warn("Falling back to explicit roles for user {} after tenant role resolution failed", user.getUuid(), ex);
+            return accessPolicy.explicitRolesForTenant(user, user.getTenantId());
+        }
     }
 
     private Set<Role> resolveEffectiveRoles(UserEntity user) {
@@ -111,6 +124,15 @@ public class CustomUserDetailService implements UserDetailsService {
         user.getRoles().stream()
                 .filter(role -> role != null && PRESERVED_PLATFORM_ROLE_NAMES.contains(role.getRoleName()))
                 .forEach(resolvedRoles::add);
+    }
+
+    private Set<Permission> resolveDirectPermissionsSafely(UserEntity user) {
+        try {
+            return resolveDirectPermissions(user);
+        } catch (DataAccessException ex) {
+            log.warn("Skipping direct permission enrichment for user {} after data access failure", user.getUuid(), ex);
+            return Set.of();
+        }
     }
 
     private Set<Permission> resolveDirectPermissions(UserEntity user) {

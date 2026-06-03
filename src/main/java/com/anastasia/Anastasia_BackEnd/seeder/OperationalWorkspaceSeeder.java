@@ -46,6 +46,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -275,6 +276,15 @@ public class OperationalWorkspaceSeeder {
     }
 
     private UserEntity upsertOwner(UserEntity owner, TenantEntity tenant) {
+        try {
+            return persistOwner(owner, tenant);
+        } catch (ObjectOptimisticLockingFailureException ex) {
+            log.warn("Retrying operational owner upsert after optimistic locking failure for tenant {}", tenant.getSlug(), ex);
+            return persistOwner(resolveCurrentOwnerForUpsert(owner), tenant);
+        }
+    }
+
+    private UserEntity persistOwner(UserEntity owner, TenantEntity tenant) {
         Instant now = Instant.now();
         owner.setFullName(properties.getTenantOwnerName().trim());
         owner.setEmail(normalizedEmail(properties.getTenantOwnerEmail()));
@@ -302,6 +312,17 @@ public class OperationalWorkspaceSeeder {
                 ImageAssetVisibility.PRIVATE
         ));
         return userRepository.saveAndFlush(savedOwner);
+    }
+
+    private UserEntity resolveCurrentOwnerForUpsert(UserEntity owner) {
+        if (owner != null && owner.getUuid() != null) {
+            return userRepository.findById(owner.getUuid())
+                    .orElseGet(() -> userRepository.findByEmailIgnoreCase(normalizedEmail(properties.getTenantOwnerEmail()))
+                            .orElseGet(() -> UserEntity.builder().build()));
+        }
+
+        return userRepository.findByEmailIgnoreCase(normalizedEmail(properties.getTenantOwnerEmail()))
+                .orElseGet(() -> UserEntity.builder().build());
     }
 
     private void upsertAdminAssignment(TenantEntity tenant, UserEntity owner) {
