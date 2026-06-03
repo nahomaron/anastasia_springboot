@@ -284,7 +284,9 @@ jobs:
           HEALTH_BODY="diagnostics/staging-health.json"
           LOGIN_BODY="diagnostics/staging-login.json"
           PROFILE_BODY="diagnostics/staging-profile.json"
+          PROFILE_HEADERS="diagnostics/staging-profile.headers"
           TENANT_BODY="diagnostics/staging-tenant.json"
+          TENANT_HEADERS="diagnostics/staging-tenant.headers"
           DEFAULT_TENANT_PATH="/api/v1/tenant/current/verification-status"
 
           print_body_preview() {
@@ -294,6 +296,48 @@ jobs:
               sed -n '1,120p' "${file_path}" >&2 || true
               echo >&2
             fi
+          }
+
+          capture_remote_smoke_diagnostics() {
+            local access_token="$1"
+            local tenant_path="$2"
+            local tenant_id="$3"
+            local deploy_port="${DEPLOY_PORT:-22}"
+
+            ssh -p "${deploy_port}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+              "REMOTE_ROOT='${REMOTE_ROOT}' COMPOSE_PROJECT_NAME='${COMPOSE_PROJECT_NAME}' ACCESS_TOKEN='${access_token}' TENANT_PATH='${tenant_path}' TENANT_ID='${tenant_id}' bash -s" <<'EOF' || true
+            set -euo pipefail
+            cd "${REMOTE_ROOT}"
+            mkdir -p diagnostics
+
+            docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+              -f compose.yaml -f docker-compose.staging.yml ps > diagnostics/smoke-compose-ps.txt || true
+            docker compose -p "${COMPOSE_PROJECT_NAME}" --env-file releases/current.env --env-file .env.staging \
+              -f compose.yaml -f docker-compose.staging.yml logs --tail=200 backend > diagnostics/smoke-backend.log || true
+
+            curl -sS -D diagnostics/smoke-local-health.headers -o diagnostics/smoke-local-health.json -w "%{http_code}" \
+              http://localhost:8081/actuator/health > diagnostics/smoke-local-health.status || true
+
+            if [[ -n "${ACCESS_TOKEN}" ]]; then
+              curl -sS -D diagnostics/smoke-local-profile.headers -o diagnostics/smoke-local-profile.json -w "%{http_code}" \
+                -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+                http://localhost:8081/api/v1/users/me/profile > diagnostics/smoke-local-profile.status || true
+
+              curl -sS -D diagnostics/smoke-local-tenant.headers -o diagnostics/smoke-local-tenant.json -w "%{http_code}" \
+                -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+                "http://localhost:8081${TENANT_PATH}" > diagnostics/smoke-local-tenant.status || true
+
+              if [[ "$(cat diagnostics/smoke-local-tenant.status 2>/dev/null || true)" != "200" && -n "${TENANT_ID}" ]]; then
+                curl -sS -D diagnostics/smoke-local-tenant.headers -o diagnostics/smoke-local-tenant.json -w "%{http_code}" \
+                  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+                  -H "X-Tenant-ID: ${TENANT_ID}" \
+                  "http://localhost:8081${TENANT_PATH}" > diagnostics/smoke-local-tenant.status || true
+              fi
+            fi
+
+            grep -E -i "flyway|migration|sqlstate|caused by:|exception|relation .* does not exist|user_profiles|user_two_factor_backup_codes" \
+              diagnostics/smoke-backend.log | tail -n 120 > diagnostics/smoke-backend-hints.txt || true
+            EOF
           }
 
           BASE_URL="$(printf '%s' "${BASE_URL}" | tr -d '\r')"
@@ -367,26 +411,28 @@ jobs:
             exit 1
           fi
 
-          PROFILE_STATUS=$(curl -sS -o "${PROFILE_BODY}" -w "%{http_code}" \
+          PROFILE_STATUS=$(curl -sS -D "${PROFILE_HEADERS}" -o "${PROFILE_BODY}" -w "%{http_code}" \
             -H "Authorization: Bearer ${ACCESS_TOKEN}" \
             "${BASE_URL}/api/v1/users/me/profile")
           if [[ "${PROFILE_STATUS}" != "200" ]]; then
             echo "Staging profile check failed; status=${PROFILE_STATUS}" >&2
+            capture_remote_smoke_diagnostics "${ACCESS_TOKEN}" "${SMOKE_TENANT_PATH}" "${SMOKE_TENANT_ID}"
             print_body_preview "${PROFILE_BODY}"
             exit 1
           fi
 
-          TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
+          TENANT_STATUS=$(curl -sS -D "${TENANT_HEADERS}" -o "${TENANT_BODY}" -w "%{http_code}" \
             -H "Authorization: Bearer ${ACCESS_TOKEN}" \
             "${BASE_URL}${SMOKE_TENANT_PATH}")
           if [[ "${TENANT_STATUS}" != "200" && -n "${SMOKE_TENANT_ID}" ]]; then
-            TENANT_STATUS=$(curl -sS -o "${TENANT_BODY}" -w "%{http_code}" \
+            TENANT_STATUS=$(curl -sS -D "${TENANT_HEADERS}" -o "${TENANT_BODY}" -w "%{http_code}" \
               -H "Authorization: Bearer ${ACCESS_TOKEN}" \
               -H "X-Tenant-ID: ${SMOKE_TENANT_ID}" \
               "${BASE_URL}${SMOKE_TENANT_PATH}")
           fi
           if [[ "${TENANT_STATUS}" != "200" ]]; then
             echo "Staging tenant check failed; status=${TENANT_STATUS}; path=${SMOKE_TENANT_PATH}" >&2
+            capture_remote_smoke_diagnostics "${ACCESS_TOKEN}" "${SMOKE_TENANT_PATH}" "${SMOKE_TENANT_ID}"
             print_body_preview "${TENANT_BODY}"
             exit 1
           fi
