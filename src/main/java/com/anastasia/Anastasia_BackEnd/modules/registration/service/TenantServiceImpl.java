@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
@@ -36,6 +37,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -86,6 +88,7 @@ public class TenantServiceImpl implements TenantService {
         String normalizedPhone = PhoneNumberUtils.normalize(tenantDTO.getPhoneNumber());
         tenantDTO.setPhoneNumber(normalizedPhone);
         tenantDTO.setOwnerEmail(normalizeOwnerEmail(tenantDTO.getOwnerEmail()));
+        enforceLegacyFreePlanOnly(tenantDTO);
 
         TenantEntity existingTenantForRetry = findExistingTenantForRetry(tenantDTO);
         if (existingTenantForRetry != null) {
@@ -206,6 +209,17 @@ public class TenantServiceImpl implements TenantService {
             tenantAdminAssignmentRepository.save(primaryAdminAssignment);
         }
         return savedTenant;
+    }
+
+    private void enforceLegacyFreePlanOnly(TenantDTO tenantDTO) {
+        SubscriptionPlan requestedPlan = tenantDTO.getSubscriptionPlan();
+        if (requestedPlan == null || requestedPlan == SubscriptionPlan.FREE) {
+            return;
+        }
+        throw new AccessDeniedException(messageService.get(
+                "tenant.subscription.legacyPaidPlanForbidden",
+                "Paid subscription plans must use the Stripe onboarding flow."
+        ));
     }
 
     /**

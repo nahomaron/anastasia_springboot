@@ -1,10 +1,12 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -23,6 +25,7 @@ import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +50,7 @@ public class TenantServiceUnitTest {
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private RoleRepository roleRepository;
     @Mock private SecurityUtils securityUtils;
+    @Mock private LocalizedMessageService messageService;
 
     @InjectMocks
     private TenantServiceImpl tenantService;
@@ -114,6 +118,15 @@ public class TenantServiceUnitTest {
         ));
         // Optionally, verify no other interactions if strict mocks are desired
 //         verifyNoMoreInteractions(tenantRepository, roleRepository, authService);
+    }
+
+    @Test
+    void subscribeTenant_shouldRejectPaidPlansInLegacyFlow() {
+        TenantDTO dto = TestDataUtil.createTestTenantDTO();
+        dto.setSubscriptionPlan(SubscriptionPlan.BASIC);
+
+        assertThrows(AccessDeniedException.class, () -> tenantService.subscribeTenant(dto));
+        verifyNoInteractions(tenantRepository, churchRepository, authService);
     }
 
     @Test
