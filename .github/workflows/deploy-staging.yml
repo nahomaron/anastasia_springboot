@@ -219,7 +219,7 @@ jobs:
 
             grep -E -i "flyway|migration|sqlstate|caused by:|exception|relation .* does not exist|user_profiles|user_two_factor_backup_codes" \
               diagnostics/smoke-backend.log | tail -n 120 > diagnostics/smoke-backend-hints.txt || true
-            EOF
+EOF
           }
 
           BASE_URL="$(printf '%s' "${BASE_URL}" | tr -d '\r')"
