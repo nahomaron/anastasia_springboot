@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.TenantMapper;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
@@ -19,6 +20,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantServic
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
@@ -26,6 +28,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +59,11 @@ public class TenantServiceUnitTest {
 
     @InjectMocks
     private TenantServiceImpl tenantService;
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
 
     @Test
@@ -167,6 +177,13 @@ public class TenantServiceUnitTest {
     @Test
     void unsubscribeTenant_shouldDeactivateTenant() {
         TenantEntity entity = TestDataUtil.createTestTenantEntity();
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "platform-admin",
+                        null,
+                        List.of(new SimpleGrantedAuthority("MANAGE_TENANTS"))
+                )
+        );
         when(tenantRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
 
         tenantService.unsubscribeTenant(entity.getId());
@@ -178,9 +195,76 @@ public class TenantServiceUnitTest {
     @Test
     void unsubscribeTenant_shouldThrowIfNotFound() {
         UUID tenantId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "platform-admin",
+                        null,
+                        List.of(new SimpleGrantedAuthority("MANAGE_TENANTS"))
+                )
+        );
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.empty());
 
         assertThrows(SecurityException.class, () -> tenantService.unsubscribeTenant(tenantId));
+    }
+
+    @Test
+    void unsubscribeTenant_shouldDenyCrossTenantMutationForScopedUser() {
+        TenantEntity actorTenant = TestDataUtil.createTestTenantEntity();
+        TenantEntity targetTenant = TestDataUtil.createTestTenantEntity();
+        UserEntity user = TestDataUtil.createTestUserEntityA();
+        user.setTenant(actorTenant);
+
+        UserPrincipal principal = new UserPrincipal(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        principal,
+                        null,
+                        List.of(new SimpleGrantedAuthority("OWN_SUBSCRIPTION"))
+                )
+        );
+
+        assertThrows(AccessDeniedException.class, () -> tenantService.unsubscribeTenant(targetTenant.getId()));
+        verify(tenantRepository, never()).findById(targetTenant.getId());
+        verify(tenantRepository, never()).save(any(TenantEntity.class));
+    }
+
+    @Test
+    void updateTenant_shouldDenyCrossTenantMutationForScopedUser() {
+        TenantEntity actorTenant = TestDataUtil.createTestTenantEntity();
+        TenantEntity targetTenant = TestDataUtil.createTestTenantEntity();
+        UserEntity user = TestDataUtil.createTestUserEntityA();
+        user.setTenant(actorTenant);
+
+        UserPrincipal principal = new UserPrincipal(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        principal,
+                        null,
+                        List.of(new SimpleGrantedAuthority("MANAGE_TENANT_BILLING"))
+                )
+        );
+
+        assertThrows(AccessDeniedException.class, () -> tenantService.updateTenant(targetTenant.getId(), TestDataUtil.createTestTenantDTO()));
+        verify(tenantRepository, never()).findById(targetTenant.getId());
+        verify(tenantRepository, never()).save(any(TenantEntity.class));
+    }
+
+    @Test
+    void unsubscribeTenant_shouldAllowPlatformTenantManagersAcrossTenants() {
+        TenantEntity targetTenant = TestDataUtil.createTestTenantEntity();
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "platform-admin",
+                        null,
+                        List.of(new SimpleGrantedAuthority("MANAGE_TENANTS"))
+                )
+        );
+        when(tenantRepository.findById(targetTenant.getId())).thenReturn(Optional.of(targetTenant));
+
+        tenantService.unsubscribeTenant(targetTenant.getId());
+
+        assertThat(targetTenant.getStatus()).isEqualTo(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus.DEACTIVATED);
+        verify(tenantRepository).save(targetTenant);
     }
 
     @Test

@@ -2,10 +2,13 @@ package com.anastasia.Anastasia_BackEnd.IntegrationTest.controller;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.Api.config.PostgresTestContainer;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import jakarta.transaction.Transactional;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -23,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -109,10 +113,27 @@ public class TenantControllerIT extends PostgresTestContainer {
     }
 
     @Test
-    @WithMockUser(authorities = "OWN_SUBSCRIPTION")
+    @WithMockUser(authorities = "MANAGE_TENANTS")
     void testUnsubscribeTenant_success() throws Exception {
         mockMvc.perform(post("/api/v1/tenant/unsubscribe/{tenantId}", savedTenant.getId())
                         .with(csrf()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testUnsubscribeTenant_forbiddenForDifferentTenantScopedUser() throws Exception {
+        TenantEntity actorTenant = tenantRepository.save(tenantService.convertTenantToEntity(TestDataUtil.createTestTenantDTO()));
+        var actorUser = TestDataUtil.createTestUserEntityA();
+        actorUser.setTenant(actorTenant);
+        UserPrincipal principal = new UserPrincipal(actorUser);
+
+        mockMvc.perform(post("/api/v1/tenant/unsubscribe/{tenantId}", savedTenant.getId())
+                        .with(csrf())
+                        .with(authentication(new UsernamePasswordAuthenticationToken(
+                                principal,
+                                null,
+                                java.util.List.of(new SimpleGrantedAuthority("OWN_SUBSCRIPTION"))
+                        ))))
+                .andExpect(status().isForbidden());
     }
 }
