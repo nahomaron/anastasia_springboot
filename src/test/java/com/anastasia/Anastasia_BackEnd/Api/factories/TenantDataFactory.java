@@ -20,7 +20,7 @@ public final class TenantDataFactory {
         // Utility class
     }
 
-    /** Generates a valid tenant (church type, monthly plan) */
+    /** Generates a valid tenant for the legacy free signup path. */
     public static TenantDTO newValidTenant() {
         ChurchDTO church = ChurchDTO.builder()
                 .churchName("St. " + DataGenerator.randomName() + " Church")
@@ -37,7 +37,7 @@ public final class TenantDataFactory {
                 .displayName(church.getChurchNameLocal())
                 .slug("tenant-" + UUID.randomUUID().toString().substring(0, 8))
                 .tenantType(TenantType.CHURCH)
-                .subscriptionPlan(SubscriptionPlan.MONTHLY)
+                .subscriptionPlan(SubscriptionPlan.FREE)
                 .ownerName(church.getChurchNameLocal())
                 .ownerEmail("tenant_" + UUID.randomUUID() + "@mail.com")
                 .phoneNumber("+1408555" + (1000 + (int)(Math.random() * 8999)))
@@ -53,7 +53,7 @@ public final class TenantDataFactory {
                 .displayName("Fr. " + DataGenerator.randomName())
                 .slug("tenant-" + UUID.randomUUID().toString().substring(0, 8))
                 .tenantType(TenantType.PRIEST)
-                .subscriptionPlan(SubscriptionPlan.ANNUAL)
+                .subscriptionPlan(SubscriptionPlan.FREE)
                 .ownerName("Fr. " + DataGenerator.randomName())
                 .ownerEmail("priest_" + UUID.randomUUID() + "@mail.com")
                 .phoneNumber("+1408666" + (1000 + (int)(Math.random() * 8999)))

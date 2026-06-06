@@ -264,7 +264,7 @@ public class TestDataUtil {
                 .ownerName("St. Mary Church")
                 .ownerEmail(uniqueEmail("tenant.owner", "example.com"))
                 .phoneNumber("+1555" + randomDigits(7))
-                .subscriptionPlan(SubscriptionPlan.PREMIUM) // or BASIC, PRO, etc.
+                .subscriptionPlan(SubscriptionPlan.FREE)
                 .password(TEST_PASSWORD)
                 .confirmPassword(TEST_PASSWORD)
                 .church(church)

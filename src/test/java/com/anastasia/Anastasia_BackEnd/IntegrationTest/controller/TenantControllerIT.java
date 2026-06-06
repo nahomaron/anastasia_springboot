@@ -72,6 +72,17 @@ public class TenantControllerIT extends PostgresTestContainer {
     }
 
     @Test
+    void testSubscribeTenant_paidPlanRequiresStripeOnboarding() throws Exception {
+        tenantDTO.setSubscriptionPlan(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan.BASIC);
+
+        mockMvc.perform(post("/api/v1/tenant/subscription")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(tenantDTO)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(authorities = "MANAGE_TENANTS")
     void testListOfTenants() throws Exception {
         mockMvc.perform(get("/api/v1/tenant")

@@ -1,4 +1,10 @@
 name: Deploy Staging
+run-name: >-
+  ${{
+    github.event_name == 'workflow_dispatch' &&
+    format('Deploy Staging from build {0}', inputs.build_run_id) ||
+    format('Deploy Staging from build {0}', github.event.workflow_run.id)
+  }}
 
 on:
   workflow_dispatch:
@@ -219,7 +225,7 @@ jobs:
 
             grep -E -i "flyway|migration|sqlstate|caused by:|exception|relation .* does not exist|user_profiles|user_two_factor_backup_codes" \
               diagnostics/smoke-backend.log | tail -n 120 > diagnostics/smoke-backend-hints.txt || true
-EOF
+            EOF
           }
 
           BASE_URL="$(printf '%s' "${BASE_URL}" | tr -d '\r')"
