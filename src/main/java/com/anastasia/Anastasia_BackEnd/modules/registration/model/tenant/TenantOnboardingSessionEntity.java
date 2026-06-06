@@ -83,6 +83,9 @@ public class TenantOnboardingSessionEntity extends LocalDateTimeAuditMetadata {
     @Column(name = "draft_password_hash", nullable = false)
     private String draftPasswordHash;
 
+    @Column(name = "access_token_hash", length = 64)
+    private String accessTokenHash;
+
     @Builder.Default
     @Column(name = "payment_required", nullable = false)
     private boolean paymentRequired = true;

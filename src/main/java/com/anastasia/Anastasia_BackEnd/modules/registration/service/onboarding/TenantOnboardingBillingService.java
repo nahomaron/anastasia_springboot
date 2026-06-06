@@ -49,27 +49,25 @@ public class TenantOnboardingBillingService {
     private final StripeClient stripeClient;
     private final TenantOnboardingProvisioningService onboardingProvisioningService;
     private final OnboardingEmailVerificationService onboardingEmailVerificationService;
+    private final OnboardingSessionAccessService onboardingSessionAccessService;
     private final AuthService authService;
     private final LocalizedMessageService messageService;
 
     @Transactional
-    public OnboardingSessionResponse createSession(TenantDTO tenantDTO, String idempotencyKey) {
+    public OnboardingSessionResponse createSession(TenantDTO tenantDTO, String idempotencyKey, String accessToken) {
         String normalizedIdempotency = normalizeIdempotency(idempotencyKey);
         return onboardingSessionRepository.findByIdempotencyKey(normalizedIdempotency)
-                .map(this::toResponse)
+                .map(session -> toExistingSessionResponse(session, accessToken))
                 .orElseGet(() -> {
                     TenantOnboardingSessionEntity session = buildSession(tenantDTO, normalizedIdempotency);
-                    return toResponse(onboardingSessionRepository.save(session));
+                    String issuedAccessToken = onboardingSessionAccessService.issueAccessToken(session);
+                    return toResponse(onboardingSessionRepository.save(session), issuedAccessToken);
                 });
     }
 
     @Transactional
-    public OnboardingSessionResponse createCheckout(UUID sessionId, String idempotencyKey) {
-        TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
-                        "onboarding.session.notFound",
-                        "Onboarding session not found"
-                )));
+    public OnboardingSessionResponse createCheckout(UUID sessionId, String idempotencyKey, String accessToken) {
+        TenantOnboardingSessionEntity session = requireAuthorizedSession(sessionId, accessToken);
 
         ensureEmailVerifiedForOnboarding(session);
 
@@ -122,7 +120,8 @@ public class TenantOnboardingBillingService {
     }
 
     @Transactional
-    public OnboardingSessionResponse finalizeProvisioning(UUID sessionId) {
+    public OnboardingSessionResponse finalizeProvisioning(UUID sessionId, String accessToken) {
+        requireAuthorizedSession(sessionId, accessToken);
         onboardingProvisioningService.finalizeProvisioningIfReady(sessionId);
         TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get(
@@ -133,23 +132,15 @@ public class TenantOnboardingBillingService {
     }
 
     @Transactional
-    public OnboardingSessionResponse getSession(UUID sessionId) {
-        TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
-                        "onboarding.session.notFound",
-                        "Onboarding session not found"
-                )));
+    public OnboardingSessionResponse getSession(UUID sessionId, String accessToken) {
+        TenantOnboardingSessionEntity session = requireAuthorizedSession(sessionId, accessToken);
         refreshFromStripeIfNeeded(session);
         return toResponse(session);
     }
 
     @Transactional
-    public AuthenticationResponse autoLogin(UUID sessionId) {
-        TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
-                        "onboarding.session.notFound",
-                        "Onboarding session not found"
-                )));
+    public AuthenticationResponse autoLogin(UUID sessionId, String accessToken) {
+        TenantOnboardingSessionEntity session = requireAuthorizedSession(sessionId, accessToken);
 
         refreshFromStripeIfNeeded(session);
         if (session.getStatus() != OnboardingSessionStatus.PROVISIONED) {
@@ -166,6 +157,16 @@ public class TenantOnboardingBillingService {
         }
 
         return authService.issueSessionForUser(session.getProvisionedOwnerUserId());
+    }
+
+    private TenantOnboardingSessionEntity requireAuthorizedSession(UUID sessionId, String accessToken) {
+        TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
+                        "onboarding.session.notFound",
+                        "Onboarding session not found"
+                )));
+        onboardingSessionAccessService.assertSessionAccess(session, accessToken);
+        return session;
     }
 
     private TenantOnboardingSessionEntity buildSession(TenantDTO tenantDTO, String normalizedIdempotency) {
@@ -368,7 +369,20 @@ public class TenantOnboardingBillingService {
         ), ex);
     }
 
+    private OnboardingSessionResponse toExistingSessionResponse(TenantOnboardingSessionEntity session, String accessToken) {
+        if (session.getAccessTokenHash() == null || session.getAccessTokenHash().isBlank()) {
+            String issuedAccessToken = onboardingSessionAccessService.issueAccessToken(session);
+            return toResponse(onboardingSessionRepository.save(session), issuedAccessToken);
+        }
+        onboardingSessionAccessService.assertSessionAccess(session, accessToken);
+        return toResponse(session);
+    }
+
     private OnboardingSessionResponse toResponse(TenantOnboardingSessionEntity session) {
+        return toResponse(session, null);
+    }
+
+    private OnboardingSessionResponse toResponse(TenantOnboardingSessionEntity session, String onboardingAccessToken) {
         return OnboardingSessionResponse.builder()
                 .sessionId(session.getId())
                 .status(session.getStatus())
@@ -388,6 +402,7 @@ public class TenantOnboardingBillingService {
                 .createdAt(session.getCreatedAt())
                 .updatedAt(session.getUpdatedAt())
                 .expiresAt(session.getExpiresAt())
+                .onboardingAccessToken(onboardingAccessToken)
                 .build();
     }
 }
