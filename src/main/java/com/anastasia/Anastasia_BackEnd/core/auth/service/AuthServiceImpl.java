@@ -38,6 +38,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Members
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantRole;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantAdminAssignmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.staff.model.StaffEntity;
@@ -189,6 +190,7 @@ public class AuthServiceImpl implements AuthService {
             user.setVerified(true);
             user.setStatus(UserStatus.ACTIVE);
             userRepository.save(user);
+            activatePendingTenantForVerifiedUser(user, now);
         }
         savedToken.setValidatedAt(now);
         savedToken.setExpired(true);
@@ -196,6 +198,22 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(savedToken);
 
         return issueSessionForUser(user.getUuid());
+    }
+
+    private void activatePendingTenantForVerifiedUser(UserEntity user, Instant now) {
+        TenantEntity tenant = user.getTenant();
+        if (tenant == null) {
+            return;
+        }
+        if (tenant.getStatus() != TenantStatus.DRAFT && tenant.getStatus() != TenantStatus.PENDING_VERIFICATION) {
+            return;
+        }
+
+        tenant.setStatus(TenantStatus.ACTIVE);
+        if (tenant.getActivatedAt() == null) {
+            tenant.setActivatedAt(now);
+        }
+        tenantRepository.save(tenant);
     }
 
     @Override

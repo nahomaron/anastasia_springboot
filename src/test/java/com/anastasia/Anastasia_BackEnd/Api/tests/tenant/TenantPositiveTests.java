@@ -37,7 +37,7 @@ public class TenantPositiveTests extends BaseApiTest {
 
         Response verifyResponse = tenantService.verifyPhone(tenant.getPhoneNumber(), "disabled");
         assertThat(verifyResponse.statusCode()).isEqualTo(200);
-        assertThat(verifyResponse.asString()).contains("disabled");
+        assertThat(verifyResponse.asString()).contains("unavailable");
 
         String activationEndpoint = ConfigManager.get("test.activation.endpoint");
         String token = given()

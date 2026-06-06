@@ -10,6 +10,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -124,7 +125,9 @@ public class TenantServiceUnitTest {
         verify(tenantRepository, times(2)).save(any(TenantEntity.class));
         verify(authService, times(1)).createUser(any(UserEntity.class));
         verify(tenantRepository).save(argThat(saved ->
-                saved.isPhoneVerified() && saved.getPhoneVerifiedAt() != null
+                saved.getStatus() == TenantStatus.PENDING_VERIFICATION
+                        && !saved.isPhoneVerified()
+                        && saved.getPhoneVerifiedAt() == null
         ));
         // Optionally, verify no other interactions if strict mocks are desired
 //         verifyNoMoreInteractions(tenantRepository, roleRepository, authService);

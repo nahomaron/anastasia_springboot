@@ -123,12 +123,10 @@ public class TenantServiceImpl implements TenantService {
                 .displayName(resolvedDisplayName)
                 .slug(resolvedSlug)
                 .tenantType(tenantDTO.getTenantType())
-                .status(TenantStatus.DRAFT)
+                .status(TenantStatus.PENDING_VERIFICATION)
                 .ownerName(tenantDTO.getOwnerName())
                 .ownerEmail(tenantDTO.getOwnerEmail())
                 .phoneNumber(tenantDTO.getPhoneNumber())
-                .phoneVerified(true)
-                .phoneVerifiedAt(Instant.now())
                 .billingEmail(firstNonBlank(tenantDTO.getBillingEmail(), tenantDTO.getOwnerEmail()))
                 .defaultTimezone(firstNonBlank(tenantDTO.getDefaultTimezone(), "UTC"))
                 .defaultLocale(firstNonBlank(tenantDTO.getDefaultLocale(), "en"))
@@ -264,24 +262,7 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     @Override
     public boolean verifyTenantPhone(String phone, String rawOtp) {
-        String normalizedPhone = PhoneNumberUtils.normalize(phone);
-        return tenantRepository.findByPhoneNumber(normalizedPhone)
-                .or(() -> tenantRepository.findByPhoneNumber(phone))
-                .map(tenant -> {
-            tenant.setPhoneVerified(true);
-            if (tenant.getPhoneVerifiedAt() == null) {
-                tenant.setPhoneVerifiedAt(Instant.now());
-            }
-            if (tenant.getStatus() == TenantStatus.DRAFT) {
-                tenant.setStatus(TenantStatus.ACTIVE);
-                if (tenant.getActivatedAt() == null) {
-                    tenant.setActivatedAt(Instant.now());
-                }
-            }
-            tenantRepository.save(tenant);
-            return true;
-        })
-                .orElse(false);
+        return false;
     }
 
     @Cacheable(value = "tenants_page", keyGenerator = "tenantAwareKeyGenerator")
