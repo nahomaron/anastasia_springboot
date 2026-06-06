@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.Map;
 
 @RestController
@@ -36,7 +37,7 @@ public class PublicContactController {
             HttpServletRequest httpRequest
     ) {
         String remoteIp = httpRequest.getRemoteAddr();
-        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        String normalizedEmail = request.getEmail().trim().toLowerCase(Locale.ROOT);
         String rateLimitKey = "public:contact:" + remoteIp + ":" + normalizedEmail;
 
         if (!rateLimiterService.tryConsume(rateLimitKey, 5L, Duration.ofMinutes(15))) {

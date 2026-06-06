@@ -124,27 +124,20 @@ public class PublicContactService {
                 ? safeFileName(request.getDocument())
                 : "None";
 
-        return """
-                New public contact request
-
-                Topic: %s
-                Full name: %s
-                Email: %s
-                Church name: %s
-                Phone: %s
-                Text permission: %s
-                Attachment: %s
-
-                Request description:
-                %s
-                """.formatted(
-                request.getTopic().trim(),
-                request.getFullName().trim(),
-                request.getEmail().trim(),
-                request.getChurchName().trim(),
-                phone,
-                request.isTextPermission() ? "Yes" : "No",
-                attachment,
+        String lineSeparator = System.lineSeparator();
+        return String.join(
+                lineSeparator,
+                "New public contact request",
+                "",
+                "Topic: " + request.getTopic().trim(),
+                "Full name: " + request.getFullName().trim(),
+                "Email: " + request.getEmail().trim(),
+                "Church name: " + request.getChurchName().trim(),
+                "Phone: " + phone,
+                "Text permission: " + (request.isTextPermission() ? "Yes" : "No"),
+                "Attachment: " + attachment,
+                "",
+                "Request description:",
                 request.getRequestDescription().trim()
         );
     }
@@ -154,31 +147,26 @@ public class PublicContactService {
                 ? safeFileName(request.getDocument())
                 : "None";
 
-        return """
-                <html>
-                  <body>
-                    <h2>New public contact request</h2>
-                    <p><strong>Topic:</strong> %s</p>
-                    <p><strong>Full name:</strong> %s</p>
-                    <p><strong>Email:</strong> %s</p>
-                    <p><strong>Church name:</strong> %s</p>
-                    <p><strong>Phone:</strong> %s</p>
-                    <p><strong>Text permission:</strong> %s</p>
-                    <p><strong>Attachment:</strong> %s</p>
-                    <h3>Request description</h3>
-                    <p>%s</p>
-                  </body>
-                </html>
-                """.formatted(
-                escape(request.getTopic()),
-                escape(request.getFullName()),
-                escape(request.getEmail()),
-                escape(request.getChurchName()),
-                escape(StringUtils.hasText(request.getPhone()) ? request.getPhone().trim() : "Not provided"),
-                request.isTextPermission() ? "Yes" : "No",
-                escape(attachment),
-                escape(request.getRequestDescription()).replace("\n", "<br/>")
-        );
+        String description = escape(request.getRequestDescription())
+                .replace("\r\n", "\n")
+                .replace("\n", "<br/>");
+
+        return "<html>\n"
+                + "  <body>\n"
+                + "    <h2>New public contact request</h2>\n"
+                + "    <p><strong>Topic:</strong> " + escape(request.getTopic()) + "</p>\n"
+                + "    <p><strong>Full name:</strong> " + escape(request.getFullName()) + "</p>\n"
+                + "    <p><strong>Email:</strong> " + escape(request.getEmail()) + "</p>\n"
+                + "    <p><strong>Church name:</strong> " + escape(request.getChurchName()) + "</p>\n"
+                + "    <p><strong>Phone:</strong> "
+                + escape(StringUtils.hasText(request.getPhone()) ? request.getPhone().trim() : "Not provided")
+                + "</p>\n"
+                + "    <p><strong>Text permission:</strong> " + (request.isTextPermission() ? "Yes" : "No") + "</p>\n"
+                + "    <p><strong>Attachment:</strong> " + escape(attachment) + "</p>\n"
+                + "    <h3>Request description</h3>\n"
+                + "    <p>" + description + "</p>\n"
+                + "  </body>\n"
+                + "</html>\n";
     }
 
     private String escape(String value) {
