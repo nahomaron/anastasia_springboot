@@ -164,6 +164,47 @@ public class StripeClient {
         return Session.create(params, options);
     }
 
+    public Session createTenantUpgradeSubscriptionCheckoutSession(String upgradeRequestId,
+                                                                  String providerCustomerId,
+                                                                  String priceId,
+                                                                  String purposeLabel,
+                                                                  String idempotencyKey) throws StripeException {
+
+        String successUrl = successUrlTemplate.replace("{PAYMENT_ID}", upgradeRequestId);
+        String cancelUrl = cancelUrlTemplate.replace("{PAYMENT_ID}", upgradeRequestId);
+
+        var subscriptionData = SessionCreateParams.SubscriptionData.builder()
+                .putMetadata("upgradeRequestId", upgradeRequestId)
+                .putMetadata("billingContext", "TENANT_SELF_SERVICE_UPGRADE")
+                .putMetadata("purpose", purposeLabel)
+                .build();
+
+        SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
+                .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                .setClientReferenceId(upgradeRequestId)
+                .setSuccessUrl(successUrl)
+                .setCancelUrl(cancelUrl)
+                .putMetadata("upgradeRequestId", upgradeRequestId)
+                .putMetadata("billingContext", "TENANT_SELF_SERVICE_UPGRADE")
+                .addLineItem(SessionCreateParams.LineItem.builder()
+                        .setQuantity(1L)
+                        .setPrice(priceId)
+                        .build())
+                .setSubscriptionData(subscriptionData);
+
+        if (providerCustomerId != null && !providerCustomerId.isBlank()) {
+            paramsBuilder.setCustomer(providerCustomerId.trim());
+        }
+
+        var params = paramsBuilder.build();
+
+        var options = buildRequestOptions(
+                "tenant-upgrade-subscription:" + upgradeRequestId + ":" + idempotencyKey
+        );
+
+        return Session.create(params, options);
+    }
+
     public Session retrieveCheckoutSession(String checkoutSessionId) throws StripeException {
         return Session.retrieve(checkoutSessionId, buildReadRequestOptions());
     }

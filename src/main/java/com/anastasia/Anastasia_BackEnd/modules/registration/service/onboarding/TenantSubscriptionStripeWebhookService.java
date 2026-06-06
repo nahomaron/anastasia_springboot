@@ -5,11 +5,12 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Subscri
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionProviderLinkEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WebhookEventReceiptEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WebhookProcessingResult;
-import com.anastasia.Anastasia_BackEnd.modules.registration.repository.WebhookEventReceiptRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionProviderLinkRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.WebhookEventReceiptRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
 import com.stripe.model.Invoice;
 import com.stripe.model.Subscription;
+import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,26 @@ public class TenantSubscriptionStripeWebhookService {
     private final TenantSubscriptionProviderLinkRepository tenantSubscriptionProviderLinkRepository;
     private final WebhookEventReceiptRepository webhookEventReceiptRepository;
     private final SubscriptionService subscriptionService;
+    private final TenantSelfServiceUpgradeBillingService tenantSelfServiceUpgradeBillingService;
+
+    @Transactional
+    public boolean handleCheckoutSessionCompleted(String eventId,
+                                                  Instant occurredAt,
+                                                  String payload,
+                                                  String signatureHeader,
+                                                  Session session) {
+        if (session == null || session.getMetadata() == null) {
+            return false;
+        }
+        if (!"TENANT_SELF_SERVICE_UPGRADE".equals(session.getMetadata().get("billingContext"))) {
+            return false;
+        }
+        return tenantSelfServiceUpgradeBillingService.markCheckoutCompleted(
+                session.getId(),
+                session.getCustomer(),
+                session.getSubscription()
+        );
+    }
 
     @Transactional
     public boolean handleInvoicePaid(String eventId,
@@ -46,7 +67,12 @@ public class TenantSubscriptionStripeWebhookService {
                 .findByProviderAndProviderSubscriptionId(BillingProvider.STRIPE, providerSubscriptionId)
                 .orElse(null);
         if (providerLink == null) {
-            return false;
+            return tenantSelfServiceUpgradeBillingService.confirmPayment(
+                    providerSubscriptionId,
+                    invoice.getCustomer(),
+                    occurredAt,
+                    eventId
+            );
         }
         return processEvent(eventId, "invoice.paid", occurredAt, payload, signatureHeader, providerLink, () -> {
             var subscription = providerLink.getTenantSubscription();
@@ -74,6 +100,12 @@ public class TenantSubscriptionStripeWebhookService {
             providerLink.setLastProviderEventAt(occurredAtUtc);
             tenantSubscriptionProviderLinkRepository.save(providerLink);
 
+            tenantSelfServiceUpgradeBillingService.confirmPayment(
+                    providerSubscriptionId,
+                    invoice.getCustomer(),
+                    occurredAtUtc,
+                    eventId
+            );
             subscriptionService.applyDuePendingPlanChange(subscription.getTenant().getId(), null);
             return true;
         });
@@ -94,7 +126,14 @@ public class TenantSubscriptionStripeWebhookService {
                 .findByProviderAndProviderSubscriptionId(BillingProvider.STRIPE, providerSubscriptionId)
                 .orElse(null);
         if (providerLink == null) {
-            return false;
+            if (stripeSubscription.getMetadata() == null) {
+                return false;
+            }
+            return tenantSelfServiceUpgradeBillingService.markSubscriptionPending(
+                    stripeSubscription.getMetadata().get("upgradeRequestId"),
+                    stripeSubscription.getCustomer(),
+                    providerSubscriptionId
+            );
         }
         return processEvent(eventId, "customer.subscription.updated", occurredAt, payload, signatureHeader, providerLink, () -> {
             var subscription = providerLink.getTenantSubscription();

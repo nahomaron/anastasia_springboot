@@ -4,6 +4,7 @@ set -euo pipefail
 RUN_API_TESTS="${RUN_API_TESTS:-false}"
 RUN_GITLEAKS="${RUN_GITLEAKS:-false}"
 RUN_DEPENDENCY_CHECK="${RUN_DEPENDENCY_CHECK:-true}"
+MAVEN_BATCH_MODE="${MAVEN_BATCH_MODE:-${CI:-false}}"
 
 run_step() {
   local name="$1"
@@ -14,21 +15,25 @@ run_step() {
 }
 
 run_maven() {
-  ./mvnw --batch-mode "$@"
+  local args=()
+  if [[ "${MAVEN_BATCH_MODE}" == "true" ]]; then
+    args+=(--batch-mode)
+  fi
+  ./mvnw "${args[@]}" "$@"
 }
 
 chmod +x ./mvnw
 
-run_step "Compile" run_maven -q -DskipTests compile
-run_step "Unit tests with JaCoCo report" run_maven -q test jacoco:report -Dgroups=!experimental
-run_step "Integration tests" run_maven -q -Ptest verify -DskipApiTests=true
-run_step "Checkstyle" run_maven -q checkstyle:check
-run_step "SpotBugs" run_maven -q -DskipTests compile spotbugs:check
-run_step "Runtime dependency tree" run_maven -q dependency:tree -Dscope=runtime
+run_step "Compile" run_maven -DskipTests compile
+run_step "Unit tests with JaCoCo report" run_maven test jacoco:report -Dgroups=!experimental
+run_step "Integration tests" run_maven -Ptest verify -DskipApiTests=true
+run_step "Checkstyle" run_maven checkstyle:check
+run_step "SpotBugs" run_maven -DskipTests compile spotbugs:check
+run_step "Runtime dependency tree" run_maven dependency:tree -Dscope=runtime
 
 if [[ "${RUN_API_TESTS}" == "true" ]]; then
   : "${BASE_URL:?BASE_URL must be set when RUN_API_TESTS=true}"
-  run_step "Black-box API tests" env BASE_URL="${BASE_URL}" ./mvnw --batch-mode -q -Papi-tests test
+  run_step "Black-box API tests" env BASE_URL="${BASE_URL}" run_maven -q -Papi-tests test
 else
   echo
   echo "==> Skipping black-box API tests (set RUN_API_TESTS=true and BASE_URL to enable)"
@@ -55,7 +60,7 @@ if [[ "${RUN_DEPENDENCY_CHECK}" == "true" ]]; then
   find "${DC_DATA_DIR}" -mindepth 1 -exec rm -rf {} +
 
   run_step "OWASP Dependency-Check" \
-    ./mvnw --batch-mode -DskipTests \
+    run_maven -DskipTests \
       "org.owasp:dependency-check-maven:${DC_VERSION}:check" \
       -DnvdApiKey="${NVD_API_KEY}" \
       -DdataDirectory="${DC_DATA_DIR}" \

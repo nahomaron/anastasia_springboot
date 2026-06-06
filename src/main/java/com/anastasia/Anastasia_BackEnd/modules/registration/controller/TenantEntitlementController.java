@@ -4,6 +4,7 @@ import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.EntitlementSnapshotResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.RequestPlanChangeRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SubscriptionUpgradeCheckoutResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SubscriptionPlanHistoryItemResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingOverviewResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.UpdateCurrentTenantFeatureRequest;
@@ -15,7 +16,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantS
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementAdministrationService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantSelfServiceUpgradeBillingService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,6 +44,7 @@ public class TenantEntitlementController {
     private final EntitlementAdministrationService entitlementAdministrationService;
     private final SubscriptionService subscriptionService;
     private final TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
+    private final TenantSelfServiceUpgradeBillingService tenantSelfServiceUpgradeBillingService;
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
     @GetMapping("/me/entitlements")
@@ -72,9 +77,6 @@ public class TenantEntitlementController {
     public ResponseEntity<TenantBillingOverviewResponse> requestPlanChange(
             @Valid @RequestBody RequestPlanChangeRequest request
     ) {
-        if (request.getTargetPlan() != SubscriptionPlan.BASIC) {
-            throw new IllegalArgumentException("Selected plan is not available for self-service changes yet");
-        }
         UUID tenantId = requireTenantId();
         UUID actorUserId = currentActorUserId();
 
@@ -93,6 +95,24 @@ public class TenantEntitlementController {
                 .toList();
 
         return ResponseEntity.ok(toBillingOverview(tenant, subscription, history));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
+    @PostMapping("/me/plan-change/checkout")
+    public ResponseEntity<SubscriptionUpgradeCheckoutResponse> createUpgradeCheckout(
+            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
+            @Valid @RequestBody RequestPlanChangeRequest request
+    ) {
+        UUID tenantId = requireTenantId();
+        UUID actorUserId = currentActorUserId();
+        return ResponseEntity.ok(
+                tenantSelfServiceUpgradeBillingService.createUpgradeCheckout(
+                        tenantId,
+                        request.getTargetPlan(),
+                        idempotencyKey,
+                        actorUserId
+                )
+        );
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
