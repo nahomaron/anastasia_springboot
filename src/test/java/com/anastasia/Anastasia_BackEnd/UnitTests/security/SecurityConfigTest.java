@@ -86,4 +86,11 @@ class SecurityConfigTest {
                 "http://127.0.0.1:4200"
         );
     }
+
+    @Test
+    void csrfIgnoreList_shouldContainPublicContactEndpoint() {
+        String[] ignored = (String[]) ReflectionTestUtils.getField(securityConfig, "CSRF_IGNORED_ENDPOINTS");
+
+        assertThat(ignored).contains("/api/v1/public/contact-requests");
+    }
 }

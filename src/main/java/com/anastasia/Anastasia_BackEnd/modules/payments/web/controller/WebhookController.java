@@ -79,6 +79,10 @@ public class WebhookController {
                     event.getId(), event.getType(), occurredAt, payload, sigHeader, session)) {
                 return;
             }
+            if (tenantSubscriptionStripeWebhookService.handleCheckoutSessionCompleted(
+                    event.getId(), occurredAt, payload, sigHeader, session)) {
+                return;
+            }
             Map<String, String> metadata = session.getMetadata();
             if (metadata == null) {
                 log.warn("Checkout session missing metadata: {}", session.getId());
@@ -168,6 +172,10 @@ public class WebhookController {
             Instant occurredAt = event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now();
             if (onboardingStripeWebhookService.handleSubscriptionEvent(
                     event.getId(), event.getType(), occurredAt, payload, sigHeader, subscription)) {
+                return;
+            }
+            if (tenantSubscriptionStripeWebhookService.handleSubscriptionUpdated(
+                    event.getId(), occurredAt, payload, sigHeader, subscription)) {
                 return;
             }
             Map<String, String> metadata = subscription.getMetadata();

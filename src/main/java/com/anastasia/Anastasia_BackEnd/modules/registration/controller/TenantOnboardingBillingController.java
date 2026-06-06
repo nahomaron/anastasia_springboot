@@ -6,7 +6,9 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeReadinessService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.OnboardingBillingReadinessService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.OnboardingSessionAccessService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantOnboardingBillingService;
+import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,38 +41,73 @@ public class TenantOnboardingBillingController {
     private final StripeReadinessService stripeReadinessService;
     private final OnboardingBillingReadinessService onboardingBillingReadinessService;
     private final RefreshTokenCookieService refreshTokenCookieService;
+    private final OnboardingSessionAccessService onboardingSessionAccessService;
 
     @PostMapping("/sessions")
     public ResponseEntity<OnboardingSessionResponse> createOnboardingSession(
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
-            @Valid @RequestBody TenantDTO tenantDTO
+            @Valid @RequestBody TenantDTO tenantDTO,
+            @RequestHeader(value = OnboardingSessionAccessService.ONBOARDING_ACCESS_HEADER_NAME, required = false)
+            String onboardingAccessToken,
+            HttpServletRequest request,
+            HttpServletResponse response
     ) {
-        OnboardingSessionResponse response = onboardingBillingService.createSession(tenantDTO, idempotencyKey);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        OnboardingSessionResponse sessionResponse = onboardingBillingService.createSession(
+                tenantDTO,
+                idempotencyKey,
+                resolveOnboardingAccessToken(onboardingAccessToken, request)
+        );
+        if (sessionResponse.getOnboardingAccessToken() != null && !sessionResponse.getOnboardingAccessToken().isBlank()) {
+            onboardingSessionAccessService.addAccessTokenCookie(
+                    response,
+                    sessionResponse.getOnboardingAccessToken(),
+                    sessionResponse.getExpiresAt()
+            );
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(sessionResponse);
     }
 
     @PostMapping("/sessions/{sessionId}/checkout")
     public ResponseEntity<OnboardingSessionResponse> createCheckout(
             @PathVariable UUID sessionId,
-            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey
+            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
+            @RequestHeader(value = OnboardingSessionAccessService.ONBOARDING_ACCESS_HEADER_NAME, required = false)
+            String onboardingAccessToken,
+            HttpServletRequest request
     ) {
-        OnboardingSessionResponse response = onboardingBillingService.createCheckout(sessionId, idempotencyKey);
+        OnboardingSessionResponse response = onboardingBillingService.createCheckout(
+                sessionId,
+                idempotencyKey,
+                resolveOnboardingAccessToken(onboardingAccessToken, request)
+        );
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/sessions/{sessionId}/finalize")
     public ResponseEntity<OnboardingSessionResponse> finalizeProvisioning(
-            @PathVariable UUID sessionId
+            @PathVariable UUID sessionId,
+            @RequestHeader(value = OnboardingSessionAccessService.ONBOARDING_ACCESS_HEADER_NAME, required = false)
+            String onboardingAccessToken,
+            HttpServletRequest request
     ) {
-        OnboardingSessionResponse response = onboardingBillingService.finalizeProvisioning(sessionId);
+        OnboardingSessionResponse response = onboardingBillingService.finalizeProvisioning(
+                sessionId,
+                resolveOnboardingAccessToken(onboardingAccessToken, request)
+        );
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/sessions/{sessionId}")
     public ResponseEntity<OnboardingSessionResponse> getSession(
-            @PathVariable UUID sessionId
+            @PathVariable UUID sessionId,
+            @RequestHeader(value = OnboardingSessionAccessService.ONBOARDING_ACCESS_HEADER_NAME, required = false)
+            String onboardingAccessToken,
+            HttpServletRequest request
     ) {
-        OnboardingSessionResponse response = onboardingBillingService.getSession(sessionId);
+        OnboardingSessionResponse response = onboardingBillingService.getSession(
+                sessionId,
+                resolveOnboardingAccessToken(onboardingAccessToken, request)
+        );
         return ResponseEntity.ok(response);
     }
 
@@ -91,14 +128,27 @@ public class TenantOnboardingBillingController {
     @PostMapping("/sessions/{sessionId}/auto-login")
     public ResponseEntity<AuthenticationResponse> autoLogin(
             @PathVariable UUID sessionId,
+            @RequestHeader(value = OnboardingSessionAccessService.ONBOARDING_ACCESS_HEADER_NAME, required = false)
+            String onboardingAccessToken,
+            HttpServletRequest request,
             HttpServletResponse response
     ) {
-        AuthenticationResponse authResponse = onboardingBillingService.autoLogin(sessionId);
+        AuthenticationResponse authResponse = onboardingBillingService.autoLogin(
+                sessionId,
+                resolveOnboardingAccessToken(onboardingAccessToken, request)
+        );
         String refreshToken = authResponse.getRefreshToken();
         if (refreshToken != null && !refreshToken.isBlank()) {
             refreshTokenCookieService.addRefreshTokenCookie(response, refreshToken);
             authResponse.setRefreshToken(null);
         }
         return ResponseEntity.ok(authResponse);
+    }
+
+    private String resolveOnboardingAccessToken(String onboardingAccessToken, HttpServletRequest request) {
+        if (onboardingAccessToken != null && !onboardingAccessToken.isBlank()) {
+            return onboardingAccessToken;
+        }
+        return onboardingSessionAccessService.extractAccessToken(request).orElse(null);
     }
 }

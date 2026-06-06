@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.TenantMapper;
+import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.ImageAssetType;
@@ -38,6 +39,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -119,12 +123,10 @@ public class TenantServiceImpl implements TenantService {
                 .displayName(resolvedDisplayName)
                 .slug(resolvedSlug)
                 .tenantType(tenantDTO.getTenantType())
-                .status(TenantStatus.DRAFT)
+                .status(TenantStatus.PENDING_VERIFICATION)
                 .ownerName(tenantDTO.getOwnerName())
                 .ownerEmail(tenantDTO.getOwnerEmail())
                 .phoneNumber(tenantDTO.getPhoneNumber())
-                .phoneVerified(true)
-                .phoneVerifiedAt(Instant.now())
                 .billingEmail(firstNonBlank(tenantDTO.getBillingEmail(), tenantDTO.getOwnerEmail()))
                 .defaultTimezone(firstNonBlank(tenantDTO.getDefaultTimezone(), "UTC"))
                 .defaultLocale(firstNonBlank(tenantDTO.getDefaultLocale(), "en"))
@@ -260,24 +262,7 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     @Override
     public boolean verifyTenantPhone(String phone, String rawOtp) {
-        String normalizedPhone = PhoneNumberUtils.normalize(phone);
-        return tenantRepository.findByPhoneNumber(normalizedPhone)
-                .or(() -> tenantRepository.findByPhoneNumber(phone))
-                .map(tenant -> {
-            tenant.setPhoneVerified(true);
-            if (tenant.getPhoneVerifiedAt() == null) {
-                tenant.setPhoneVerifiedAt(Instant.now());
-            }
-            if (tenant.getStatus() == TenantStatus.DRAFT) {
-                tenant.setStatus(TenantStatus.ACTIVE);
-                if (tenant.getActivatedAt() == null) {
-                    tenant.setActivatedAt(Instant.now());
-                }
-            }
-            tenantRepository.save(tenant);
-            return true;
-        })
-                .orElse(false);
+        return false;
     }
 
     @Cacheable(value = "tenants_page", keyGenerator = "tenantAwareKeyGenerator")
@@ -327,6 +312,7 @@ public class TenantServiceImpl implements TenantService {
     })
     @Override
     public void unsubscribeTenant(UUID tenantId) {
+        authorizeTenantMutation(tenantId);
         TenantEntity tenantToBeUnsubscribed = tenantRepository.findById(tenantId)
                 .orElseThrow(SecurityException::new);
 
@@ -347,6 +333,7 @@ public class TenantServiceImpl implements TenantService {
     })
     @Override
     public void updateTenant(UUID tenantId, TenantDTO tenantDTO) {
+        authorizeTenantMutation(tenantId);
         tenantRepository.findById(tenantId).ifPresent(tenantEntity -> {
            Optional.ofNullable(tenantDTO.getOwnerName()).ifPresent(tenantEntity::setOwnerName);
            Optional.ofNullable(tenantDTO.getDisplayName()).filter(StringUtils::hasText).map(String::trim).ifPresent(tenantEntity::setDisplayName);
@@ -371,6 +358,34 @@ public class TenantServiceImpl implements TenantService {
         }
         );
 
+    }
+
+    private void authorizeTenantMutation(UUID tenantId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (hasAuthority(authentication, "MANAGE_TENANTS")) {
+            return;
+        }
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            throw new AccessDeniedException(messageService.get(
+                    "tenant.access.denied",
+                    "You do not have permission to modify this tenant."
+            ));
+        }
+        if (principal.getTenantId() == null || !principal.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException(messageService.get(
+                    "tenant.access.denied",
+                    "You do not have permission to modify this tenant."
+            ));
+        }
+    }
+
+    private boolean hasAuthority(Authentication authentication, String authority) {
+        if (authentication == null || authority == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority::equalsIgnoreCase);
     }
 
     private String generateUniqueChurchNumber(String churchName, int length) {

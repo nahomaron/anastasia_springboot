@@ -63,8 +63,8 @@ public class TenantController {
     }
 
     /**
-     * Phone verification is disabled for the first release. This endpoint remains as an idempotent
-     * compatibility hook and marks the tenant phone as verified when a matching tenant exists.
+     * Phone verification is unavailable in the first release. This endpoint remains as an
+     * idempotent compatibility hook and no longer mutates tenant verification state.
      */
     @PostMapping("/verify-phone")
     public ResponseEntity<?> verifyPhone(@RequestBody PhoneVerificationRequest request,
@@ -84,7 +84,7 @@ public class TenantController {
             ));
         }
         tenantService.verifyTenantPhone(normalizedPhone, request.getOtp());
-        return ResponseEntity.ok("Phone verification is disabled. Tenant phone marked as verified.");
+        return ResponseEntity.ok("Phone verification is unavailable in this release. No verification state was changed.");
     }
 
     /**
@@ -114,7 +114,7 @@ public class TenantController {
             return ResponseEntity.status(429).body("Too many attempts. Try again later.");
         }
         tenantService.verifyTenantPhone(tenantPhone, request.getOtp());
-        return ResponseEntity.ok("Phone verification is disabled. Tenant phone marked as verified.");
+        return ResponseEntity.ok("Phone verification is unavailable in this release. No verification state was changed.");
     }
 
     @PreAuthorize("isAuthenticated()")

@@ -13,8 +13,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestResponse;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
+import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
@@ -61,6 +63,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
     @Autowired private ChildRepository childRepository;
     @Autowired private PriestRepository priestRepository;
     @Autowired private TokenRepository tokenRepository;
+    @Autowired private AuthService authService;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
 
@@ -70,7 +73,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
     }
 
     @Test
-    void subscribeTenant_marksPhoneVerifiedWithoutOtp() throws MessagingException {
+    void subscribeTenant_requiresEmailActivationBeforeTenantActivation() throws MessagingException {
         TenantDTO tenantDTO = TestDataUtil.createTestTenantDTO();
         tenantDTO.setOwnerEmail("owner+" + UUID.randomUUID() + "@example.com");
         tenantDTO.setPhoneNumber("+1555" + UUID.randomUUID().toString().substring(0, 8));
@@ -89,16 +92,26 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
 
         TenantEntity savedTenant = tenantRepository.findByPhoneNumber(tenantDTO.getPhoneNumber())
                 .orElseThrow(() -> new AssertionError("Tenant not created"));
-        assertThat(savedTenant.isPhoneVerified()).isTrue();
-        assertThat(savedTenant.getPhoneVerifiedAt()).isNotNull();
+        assertThat(savedTenant.isPhoneVerified()).isFalse();
+        assertThat(savedTenant.getPhoneVerifiedAt()).isNull();
+        assertThat(savedTenant.getStatus()).isEqualTo(TenantStatus.PENDING_VERIFICATION);
+        assertThat(savedTenant.getActivatedAt()).isNull();
 
         UserEntity adminUser = userRepository.findByEmail(tenantDTO.getOwnerEmail())
                 .orElseThrow(() -> new AssertionError("Admin user not created"));
         assertThat(adminUser.getTenant().getId()).isEqualTo(savedTenant.getId());
 
-        assertThat(tokenRepository.findByUserUuid(adminUser.getUuid()))
+        var activationToken = tokenRepository.findByUserUuid(adminUser.getUuid());
+        assertThat(activationToken)
                 .as("Activation token persisted")
                 .isNotNull();
+
+        authService.activateAccount(activationToken.getToken(), tenantDTO.getOwnerEmail());
+
+        TenantEntity activatedTenant = tenantRepository.findById(savedTenant.getId())
+                .orElseThrow(() -> new AssertionError("Tenant missing after activation"));
+        assertThat(activatedTenant.getStatus()).isEqualTo(TenantStatus.ACTIVE);
+        assertThat(activatedTenant.getActivatedAt()).isNotNull();
     }
 
     @Test

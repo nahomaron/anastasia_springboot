@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingProvider;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.PlanChangeTiming;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlanHistoryEntity;
@@ -59,6 +60,20 @@ public interface SubscriptionService {
                                                PlanChangeTiming timing,
                                                String reason,
                                                UUID actorUserId);
+
+    /**
+     * Activates a paid plan only after billing provider confirmation.
+     */
+    TenantSubscriptionEntity activatePaidPlan(UUID tenantId,
+                                              SubscriptionPlan targetPlan,
+                                              Instant paymentAt,
+                                              BillingProvider provider,
+                                              String providerCustomerId,
+                                              String providerSubscriptionId,
+                                              String providerPriceReference,
+                                              UUID actorUserId,
+                                              String changeReason,
+                                              String providerEventId);
 
     /**
      * Applies pending plan change if effective_at has been reached.

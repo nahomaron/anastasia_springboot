@@ -210,6 +210,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         if (!isUpgrade && resolvedTiming == PlanChangeTiming.IMMEDIATE) {
             throw new IllegalArgumentException("Downgrades can only be scheduled at period end");
         }
+        if (isUpgrade) {
+            throw new IllegalArgumentException("Self-service upgrades require a checkout-backed payment flow");
+        }
 
         if (resolvedTiming == PlanChangeTiming.IMMEDIATE) {
             SubscriptionPlan oldPlan = subscription.getPlan();
@@ -235,6 +238,62 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         TenantSubscriptionEntity saved = tenantSubscriptionRepository.save(subscription);
         recordEvent(saved, TenantSubscriptionEventType.PLAN_CHANGE_SCHEDULED, currentPlan, targetPlan,
                 saved.getStatus(), saved.getStatus(), actorUserId, null);
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public TenantSubscriptionEntity activatePaidPlan(UUID tenantId,
+                                                     SubscriptionPlan targetPlan,
+                                                     Instant paymentAt,
+                                                     BillingProvider provider,
+                                                     String providerCustomerId,
+                                                     String providerSubscriptionId,
+                                                     String providerPriceReference,
+                                                     UUID actorUserId,
+                                                     String changeReason,
+                                                     String providerEventId) {
+        if (targetPlan == null) {
+            throw new IllegalArgumentException("targetPlan is required");
+        }
+        if (provider == null) {
+            throw new IllegalArgumentException("provider is required");
+        }
+
+        TenantSubscriptionEntity subscription = requireByTenantId(tenantId);
+        SubscriptionPlan oldPlan = subscription.getPlan() != null ? subscription.getPlan() : SubscriptionPlan.FREE;
+        SubscriptionStatus oldStatus = subscription.getStatus();
+        Instant effectivePaymentAt = paymentAt != null ? paymentAt : Instant.now();
+
+        subscription.setPlan(targetPlan);
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setProvider(provider);
+        subscription.setLastPaymentAt(effectivePaymentAt);
+        subscription.setPendingPlan(null);
+        subscription.setPendingPlanEffectiveAt(null);
+        subscription.setCancelAtPeriodEnd(false);
+        subscription.setCanceledAt(null);
+        subscription.setUpdatedByUserId(actorUserId);
+
+        upsertProviderLink(
+                subscription,
+                provider,
+                providerCustomerId,
+                providerSubscriptionId,
+                providerPriceReference,
+                null
+        );
+
+        TenantSubscriptionEntity saved = tenantSubscriptionRepository.save(subscription);
+        recordEvent(saved, TenantSubscriptionEventType.PAYMENT_SUCCEEDED, oldPlan, targetPlan,
+                oldStatus, saved.getStatus(), actorUserId, providerEventId);
+        if (oldPlan != targetPlan) {
+            recordEvent(saved, TenantSubscriptionEventType.PLAN_CHANGED, oldPlan, targetPlan,
+                    saved.getStatus(), saved.getStatus(), actorUserId, providerEventId);
+            recordPlanHistory(saved, oldPlan, targetPlan, effectivePaymentAt,
+                    changeReason != null ? changeReason : "Payment-backed plan upgrade applied",
+                    actorUserId, providerEventId);
+        }
         return saved;
     }
 

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.dto.onboarding;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.OnboardingSessionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 @Value
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OnboardingSessionResponse {
     UUID sessionId;
     OnboardingSessionStatus status;
@@ -30,4 +32,5 @@ public class OnboardingSessionResponse {
     Instant createdAt;
     Instant updatedAt;
     Instant expiresAt;
+    String onboardingAccessToken;
 }
