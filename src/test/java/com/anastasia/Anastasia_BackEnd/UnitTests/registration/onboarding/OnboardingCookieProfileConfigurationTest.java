@@ -12,7 +12,7 @@ class OnboardingCookieProfileConfigurationTest {
 
     @Test
     void defaultsToSecureOnboardingCookieConfiguration() {
-        Properties properties = loadProperties("application.yml");
+        Properties properties = loadProperties("application-staging.yml");
 
         assertThat(properties.getProperty("app.onboarding.access-cookie.secure")).isEqualTo("true");
         assertThat(properties.getProperty("app.onboarding.access-cookie.same-site")).isEqualTo("None");
@@ -20,7 +20,7 @@ class OnboardingCookieProfileConfigurationTest {
 
     @Test
     void stagingProfilePinsSecureCrossSiteOnboardingCookie() {
-        Properties properties = loadProperties("application.yml", "application-staging.yml");
+        Properties properties = loadProperties("application-staging.yml");
 
         assertThat(properties.getProperty("app.onboarding.access-cookie.secure")).isEqualTo("true");
         assertThat(properties.getProperty("app.onboarding.access-cookie.same-site")).isEqualTo("None");
@@ -28,7 +28,7 @@ class OnboardingCookieProfileConfigurationTest {
 
     @Test
     void productionProfilePinsSecureCrossSiteOnboardingCookie() {
-        Properties properties = loadProperties("application.yml", "application-prod.yml");
+        Properties properties = loadProperties("application-prod.yml");
 
         assertThat(properties.getProperty("app.onboarding.access-cookie.secure")).isEqualTo("true");
         assertThat(properties.getProperty("app.onboarding.access-cookie.same-site")).isEqualTo("None");

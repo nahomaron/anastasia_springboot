@@ -356,7 +356,12 @@ public class AuthServiceUnitTest {
         authService.refreshToken(request);
 
         verify(tokenRepository).findActiveTokensByValueAndType(refreshHash, TokenType.REFRESH);
-        verify(tokenRepository).revokeAllActiveTokensByUserUuidAndSessionIdAndType(user.getUuid(), sessionId, TokenType.BEARER, any());
+        verify(tokenRepository).revokeAllActiveTokensByUserUuidAndSessionIdAndType(
+                eq(user.getUuid()),
+                eq(sessionId),
+                eq(TokenType.BEARER),
+                any()
+        );
 
         ArgumentCaptor<Token> tokenCaptor = ArgumentCaptor.forClass(Token.class);
         verify(tokenRepository, atLeastOnce()).save(tokenCaptor.capture());
