@@ -53,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
+import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Locale;
@@ -85,6 +86,7 @@ public class OperationalWorkspaceSeeder {
     private final ImageAssetRepository imageAssetRepository;
     private final TokenRepository tokenRepository;
     private final PlatformTransactionManager transactionManager;
+    private final EntityManager entityManager;
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
@@ -102,6 +104,9 @@ public class OperationalWorkspaceSeeder {
 
         tenant = upsertTenant(tenant);
         owner = upsertOwner(owner, tenant);
+        entityManager.clear();
+        tenant = resolveCurrentTenantForUpsert(tenant);
+        owner = resolveCurrentOwnerForUpsert(owner);
         if (properties.isReset() && tenant.getId() != null && owner.getUuid() != null) {
             tenantWorkspaceLifecycleService.clearWorkspaceContent(tenant.getId(), owner.getUuid());
             tokenRepository.revokeAllActiveTokensByUserUuid(owner.getUuid(), Instant.now());
@@ -358,6 +363,17 @@ public class OperationalWorkspaceSeeder {
 
         return userRepository.findByEmailIgnoreCase(normalizedEmail(properties.getTenantOwnerEmail()))
                 .orElseGet(() -> UserEntity.builder().build());
+    }
+
+    private TenantEntity resolveCurrentTenantForUpsert(TenantEntity tenant) {
+        if (tenant != null && tenant.getId() != null) {
+            return tenantRepository.findById(tenant.getId())
+                    .orElseGet(() -> tenantRepository.findBySlug(normalizedSlug(properties.getTenantSlug()))
+                            .orElseGet(() -> TenantEntity.builder().build()));
+        }
+
+        return tenantRepository.findBySlug(normalizedSlug(properties.getTenantSlug()))
+                .orElseGet(() -> TenantEntity.builder().build());
     }
 
     private void upsertAdminAssignment(TenantEntity tenant, UserEntity owner) {
