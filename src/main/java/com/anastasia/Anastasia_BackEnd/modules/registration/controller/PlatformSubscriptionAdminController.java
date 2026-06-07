@@ -7,13 +7,21 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.Prom
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.PromoRedemptionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.RedeemPromoCodeRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SetFeatureOverrideRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingChargeSummaryResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingOverviewResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingOverrideRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantBillingOverrideResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantFeatureOverrideResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.TenantPlanGrantResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlanHistoryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantDemoTemplateCloneService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementAdministrationService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.TenantBillingOverrideService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +31,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -39,6 +50,8 @@ public class PlatformSubscriptionAdminController {
     private final EntitlementAdministrationService entitlementAdministrationService;
     private final TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
     private final TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
+    private final SubscriptionService subscriptionService;
+    private final TenantBillingOverrideService tenantBillingOverrideService;
 
     @GetMapping("/demo-template")
     public ResponseEntity<java.util.Map<String, Object>> getConfiguredDemoTemplate() {
@@ -75,6 +88,96 @@ public class PlatformSubscriptionAdminController {
     @GetMapping("/{tenantId}/entitlements")
     public ResponseEntity<EntitlementSnapshotResponse> getTenantEntitlements(@PathVariable UUID tenantId) {
         return ResponseEntity.ok(entitlementAdministrationService.resolveTenant(tenantId));
+    }
+
+    @GetMapping("/{tenantId}/billing")
+    public ResponseEntity<TenantBillingOverviewResponse> getTenantBillingOverview(@PathVariable UUID tenantId) {
+        UUID actorUserId = currentActorUserId();
+        subscriptionService.syncSubscriptionState(tenantId, actorUserId);
+        TenantEntity tenant = tenantWorkspaceLifecycleService.syncTenantLifecycle(tenantId, actorUserId);
+        TenantSubscriptionEntity subscription = subscriptionService.applyDuePendingPlanChange(tenantId, actorUserId);
+        List<com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SubscriptionPlanHistoryItemResponse> history =
+                subscriptionService.listRecentPlanHistory(tenantId).stream()
+                        .map(this::toHistoryItem)
+                        .toList();
+        TenantBillingChargeSummaryResponse chargeSummary = tenantBillingOverrideService.calculateCharge(
+                tenantId,
+                subscription.getPlan(),
+                Instant.now()
+        );
+        return ResponseEntity.ok(TenantBillingOverviewResponse.builder()
+                .tenantId(tenant.getId())
+                .currentPlan(subscription.getPlan())
+                .status(subscription.getStatus())
+                .billingInterval(subscription.getBillingInterval())
+                .workspaceInitializationMode(tenant.getWorkspaceInitializationMode())
+                .demoWorkspace(tenant.isDemoWorkspace())
+                .trialStartAt(subscription.getTrialStartAt())
+                .trialEndAt(subscription.getTrialEndAt())
+                .currentPeriodStartAt(subscription.getCurrentPeriodStartAt())
+                .currentPeriodEndAt(subscription.getCurrentPeriodEndAt())
+                .gracePeriodEndsAt(subscription.getGracePeriodEndsAt())
+                .cancelAtPeriodEnd(subscription.isCancelAtPeriodEnd())
+                .pendingPlan(subscription.getPendingPlan())
+                .pendingPlanEffectiveAt(subscription.getPendingPlanEffectiveAt())
+                .scheduledPurgeAt(tenant.getScheduledPurgeAt())
+                .archiveScheduledAt(tenant.getArchiveScheduledAt())
+                .archivedAt(tenant.getArchivedAt())
+                .retentionWarningActive(tenantWorkspaceLifecycleService.isRetentionWarningActive(tenant, subscription, Instant.now()))
+                .normalAmountMinor(chargeSummary.getNormalAmountMinor())
+                .discountAmountMinor(chargeSummary.getDiscountAmountMinor())
+                .effectiveAmountMinor(chargeSummary.getEffectiveAmountMinor())
+                .currency(chargeSummary.getCurrency())
+                .appliedBillingOverrideType(chargeSummary.getAppliedBillingOverrideType())
+                .billingOverrideEndsAt(chargeSummary.getOverrideEndsAt())
+                .recentPlanHistory(history)
+                .build());
+    }
+
+    @GetMapping("/{tenantId}/billing-overrides/active")
+    public ResponseEntity<TenantBillingOverrideResponse> getActiveBillingOverride(@PathVariable UUID tenantId) {
+        return tenantBillingOverrideService.findActiveOverride(tenantId, Instant.now())
+                .map(this::toBillingOverrideResponse)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @GetMapping("/{tenantId}/billing-overrides")
+    public ResponseEntity<List<TenantBillingOverrideResponse>> listBillingOverrides(@PathVariable UUID tenantId) {
+        return ResponseEntity.ok(tenantBillingOverrideService.listOverrideHistory(tenantId).stream()
+                .map(this::toBillingOverrideResponse)
+                .toList());
+    }
+
+    @PostMapping("/{tenantId}/billing-overrides")
+    public ResponseEntity<TenantBillingOverrideResponse> createBillingOverride(
+            @PathVariable UUID tenantId,
+            @Valid @RequestBody TenantBillingOverrideRequest request
+    ) {
+        return ResponseEntity.ok(toBillingOverrideResponse(
+                tenantBillingOverrideService.createOverride(tenantId, request, currentActorUserId())
+        ));
+    }
+
+    @PutMapping("/{tenantId}/billing-overrides/{overrideId}")
+    public ResponseEntity<TenantBillingOverrideResponse> updateBillingOverride(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID overrideId,
+            @Valid @RequestBody TenantBillingOverrideRequest request
+    ) {
+        return ResponseEntity.ok(toBillingOverrideResponse(
+                tenantBillingOverrideService.updateOverride(tenantId, overrideId, request, currentActorUserId())
+        ));
+    }
+
+    @DeleteMapping("/{tenantId}/billing-overrides/{overrideId}")
+    public ResponseEntity<Void> revokeBillingOverride(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID overrideId,
+            @RequestParam(value = "reason", required = false) String reason
+    ) {
+        tenantBillingOverrideService.revokeOverride(tenantId, overrideId, reason, currentActorUserId());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{tenantId}/plan-overrides")
@@ -249,6 +352,44 @@ public class PlatformSubscriptionAdminController {
                 .updatedByUserId(entity.getUpdatedByUserId())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    private TenantBillingOverrideResponse toBillingOverrideResponse(
+            com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantBillingOverrideEntity entity
+    ) {
+        return TenantBillingOverrideResponse.builder()
+                .id(entity.getId())
+                .tenantId(entity.getTenant() != null ? entity.getTenant().getId() : null)
+                .overrideType(entity.getOverrideType())
+                .active(entity.isActive())
+                .effective(entity.isEffective(Instant.now()))
+                .startsAt(entity.getStartsAt())
+                .endsAt(entity.getEndsAt())
+                .discountPercent(entity.getDiscountPercent())
+                .fixedAmountMinor(entity.getFixedAmountMinor())
+                .currency(entity.getCurrency())
+                .reason(entity.getReason())
+                .internalNote(entity.getInternalNote())
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .revokedByUserId(entity.getRevokedByUserId())
+                .revokedAt(entity.getRevokedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    private com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SubscriptionPlanHistoryItemResponse toHistoryItem(
+            SubscriptionPlanHistoryEntity entity
+    ) {
+        return com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement.SubscriptionPlanHistoryItemResponse.builder()
+                .id(entity.getId())
+                .oldPlan(entity.getOldPlan())
+                .newPlan(entity.getNewPlan())
+                .effectiveAt(entity.getEffectiveAt())
+                .reason(entity.getReason())
+                .actorUserId(entity.getActorUserId())
                 .build();
     }
 

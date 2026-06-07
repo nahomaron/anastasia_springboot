@@ -67,6 +67,7 @@ import java.util.UUID;
 public class OperationalWorkspaceSeeder {
 
     private static final SubscriptionPlan DEFAULT_PLAN = SubscriptionPlan.ENTERPRISE;
+    private static final int OWNER_UPSERT_MAX_ATTEMPTS = 5;
 
     private final OperationalWorkspaceSeedingProperties properties;
     private final RoleAndPermissionSeeder roleAndPermissionSeeder;
@@ -280,12 +281,36 @@ public class OperationalWorkspaceSeeder {
     }
 
     private UserEntity upsertOwner(UserEntity owner, TenantEntity tenant) {
-        try {
-            return persistOwnerInNewTransaction(owner, tenant);
-        } catch (ObjectOptimisticLockingFailureException ex) {
-            log.warn("Retrying operational owner upsert after optimistic locking failure for tenant {}", tenant.getSlug(), ex);
-            return persistOwnerInNewTransaction(resolveCurrentOwnerForUpsert(owner), tenant);
+        UserEntity currentOwner = owner;
+        ObjectOptimisticLockingFailureException lastFailure = null;
+
+        for (int attempt = 1; attempt <= OWNER_UPSERT_MAX_ATTEMPTS; attempt++) {
+            try {
+                return persistOwnerInNewTransaction(currentOwner, tenant);
+            } catch (ObjectOptimisticLockingFailureException ex) {
+                lastFailure = ex;
+                currentOwner = resolveCurrentOwnerForUpsert(currentOwner);
+                log.warn(
+                        "Retrying operational owner upsert after optimistic locking failure for tenant {} (attempt {}/{})",
+                        tenant.getSlug(),
+                        attempt,
+                        OWNER_UPSERT_MAX_ATTEMPTS,
+                        ex
+                );
+            }
         }
+
+        if (currentOwner != null && currentOwner.getUuid() != null) {
+            log.error(
+                    "Operational owner upsert remained contended for tenant {} after {} attempts; continuing startup with the persisted owner state",
+                    tenant.getSlug(),
+                    OWNER_UPSERT_MAX_ATTEMPTS,
+                    lastFailure
+            );
+            return currentOwner;
+        }
+
+        throw lastFailure;
     }
 
     private UserEntity persistOwnerInNewTransaction(UserEntity owner, TenantEntity tenant) {

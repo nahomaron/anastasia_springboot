@@ -16,6 +16,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantS
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.EntitlementAdministrationService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.TenantBillingOverrideService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantSelfServiceUpgradeBillingService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -45,6 +46,7 @@ public class TenantEntitlementController {
     private final SubscriptionService subscriptionService;
     private final TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
     private final TenantSelfServiceUpgradeBillingService tenantSelfServiceUpgradeBillingService;
+    private final TenantBillingOverrideService tenantBillingOverrideService;
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'OWN_SUBSCRIPTION', 'MANAGE_TENANT_BILLING', 'MANAGE_FINANCE')")
     @GetMapping("/me/entitlements")
@@ -174,6 +176,11 @@ public class TenantEntitlementController {
     private TenantBillingOverviewResponse toBillingOverview(TenantEntity tenant,
                                                             TenantSubscriptionEntity subscription,
                                                             List<SubscriptionPlanHistoryItemResponse> history) {
+        var chargeSummary = tenantBillingOverrideService.calculateCharge(
+                tenant.getId(),
+                subscription.getPlan(),
+                java.time.Instant.now()
+        );
         return TenantBillingOverviewResponse.builder()
                 .tenantId(tenant.getId())
                 .currentPlan(subscription.getPlan())
@@ -193,6 +200,12 @@ public class TenantEntitlementController {
                 .archiveScheduledAt(tenant.getArchiveScheduledAt())
                 .archivedAt(tenant.getArchivedAt())
                 .retentionWarningActive(tenantWorkspaceLifecycleService.isRetentionWarningActive(tenant, subscription, java.time.Instant.now()))
+                .normalAmountMinor(chargeSummary.getNormalAmountMinor())
+                .discountAmountMinor(chargeSummary.getDiscountAmountMinor())
+                .effectiveAmountMinor(chargeSummary.getEffectiveAmountMinor())
+                .currency(chargeSummary.getCurrency())
+                .appliedBillingOverrideType(chargeSummary.getAppliedBillingOverrideType())
+                .billingOverrideEndsAt(chargeSummary.getOverrideEndsAt())
                 .recentPlanHistory(history)
                 .build();
     }
