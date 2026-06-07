@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.UsersMapper;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
@@ -17,6 +18,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.UserServiceImpl;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,7 @@ public class UserServiceUnitTest {
     @Mock private UsersMapper usersMapper;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private RoleRepository roleRepository;
+    @Mock private TokenRepository tokenRepository;
     @Mock private LocalizedMessageService messageService;
     @Mock private TenantUserAccessPolicy accessPolicy;
     @InjectMocks private UserServiceImpl userService;
@@ -102,10 +105,45 @@ public class UserServiceUnitTest {
     }
 
     @Test
+    void testFindAllUsers_scopesResultsToCurrentTenant() {
+        TenantContext.setTenantId(tenantId);
+
+        UserEntity sameTenantUser = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("same-tenant@example.com")
+                .build();
+        sameTenantUser.setTenantId(tenantId);
+
+        Page<UserEntity> page = new PageImpl<>(List.of(sameTenantUser));
+        when(userRepository.findByAffiliatedTenantId(eq(tenantId), any(Pageable.class))).thenReturn(page);
+
+        Page<UserResponseIDs> result = userService.findAllUsers(Pageable.unpaged());
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(sameTenantUser.getUuid(), result.getContent().getFirst().getUuid());
+        verify(userRepository).findByAffiliatedTenantId(eq(tenantId), any(Pageable.class));
+        verify(userRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
     void testFindOne_found() {
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
         Optional<SimpleUserDTO> result = userService.findOne(testUserId);
         assertTrue(result.isPresent());
+    }
+
+    @Test
+    void testFindOne_returnsEmptyForUserFromAnotherTenant() {
+        TenantContext.setTenantId(tenantId);
+        UUID otherTenantUserId = UUID.randomUUID();
+
+        when(userRepository.findByUuidAndAffiliatedTenantId(otherTenantUserId, tenantId)).thenReturn(Optional.empty());
+
+        Optional<SimpleUserDTO> result = userService.findOne(otherTenantUserId);
+
+        assertTrue(result.isEmpty());
+        verify(userRepository).findByUuidAndAffiliatedTenantId(otherTenantUserId, tenantId);
+        verify(userRepository, never()).findById(otherTenantUserId);
     }
 
     @Test
@@ -202,6 +240,20 @@ public class UserServiceUnitTest {
         when(userRepository.findAll()).thenReturn(List.of(testUser));
         List<UserResponseIDs> result = userService.findAll();
         assertEquals(1, result.size());
+    }
+
+    @Test
+    void testDeleteUser_throwsWhenUserBelongsToAnotherTenant() {
+        TenantContext.setTenantId(tenantId);
+        UUID otherTenantUserId = UUID.randomUUID();
+
+        when(userRepository.findByUuidAndAffiliatedTenantId(otherTenantUserId, tenantId)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> userService.deleteUser(otherTenantUserId));
+
+        verify(userRepository).findByUuidAndAffiliatedTenantId(otherTenantUserId, tenantId);
+        verify(tokenRepository, never()).deleteAllByUserUuid(any());
+        verify(userRepository, never()).delete(any(UserEntity.class));
     }
 
 }

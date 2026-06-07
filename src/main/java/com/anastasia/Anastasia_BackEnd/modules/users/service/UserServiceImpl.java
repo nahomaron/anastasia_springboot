@@ -143,12 +143,20 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<UserResponseIDs> findAllUsers(Pageable pageable) {
+        UUID tenantId = TenantContext.getTenantId();
+        if (shouldEnforceTenantScope(tenantId)) {
+            return userRepository.findByAffiliatedTenantId(tenantId, pageable).map(this::toIdResponse);
+        }
         return userRepository.findAll(pageable).map(this::toIdResponse);
     }
 
-    @Cacheable(value = "users", key = "#userId")
+    @Cacheable(value = "users", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<SimpleUserDTO> findOne(UUID userId) {
+        UUID tenantId = TenantContext.getTenantId();
+        if (shouldEnforceTenantScope(tenantId)) {
+            return userRepository.findByUuidAndAffiliatedTenantId(userId, tenantId).map(this::toSimpleUserDTO);
+        }
         return userRepository.findById(userId).map(this::toSimpleUserDTO);
     }
 
@@ -665,6 +673,10 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public List<UserResponseIDs> findAll() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (shouldEnforceTenantScope(tenantId)) {
+            return userRepository.findByAffiliatedTenantId(tenantId).stream().map(this::toIdResponse).toList();
+        }
         return userRepository.findAll().stream().map(this::toIdResponse).toList();
     }
 
@@ -853,16 +865,22 @@ public class UserServiceImpl implements UserService {
 
     @Caching(
             evict = {
-                    @CacheEvict(value = "users", key = "#userId"
-                    ),
+                    @CacheEvict(value = "users", allEntries = true),
                     @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
                     @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
             }
     )
     @Override
     public void deleteUser(UUID userId) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        UUID tenantId = TenantContext.getTenantId();
+        UserEntity user = shouldEnforceTenantScope(tenantId)
+                ? userRepository.findByUuidAndAffiliatedTenantId(userId, tenantId)
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                            "user.access.notFoundInTenant",
+                            "User not found in current tenant"
+                    )))
+                : userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
         tokenRepository.deleteAllByUserUuid(userId);
 
@@ -879,7 +897,7 @@ public class UserServiceImpl implements UserService {
 
     @Caching(
             evict = {
-                    @CacheEvict(value = "users", key = "#root.target.getCurrentUserId()"),
+                    @CacheEvict(value = "users", allEntries = true),
                     @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
                     @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
             }
@@ -988,6 +1006,19 @@ public class UserServiceImpl implements UserService {
         return UserResponseIDs.builder()
                 .uuid(user.getUuid())
                 .build();
+    }
+
+    private boolean shouldEnforceTenantScope(UUID tenantId) {
+        return tenantId != null && !hasAuthority("VIEW_ALL_DATA");
+    }
+
+    private boolean hasAuthority(String authority) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authority == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> authority.equals(grantedAuthority.getAuthority()));
     }
 
     private UUID requireTenantId() {
