@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.core.auth.support;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,13 +19,13 @@ public class TestActivationTokenStore implements ActivationTokenObserver {
         if (email == null || rawToken == null) {
             return;
         }
-        latestTokensByEmail.put(email.trim().toLowerCase(), rawToken);
+        latestTokensByEmail.put(email.trim().toLowerCase(Locale.ROOT), rawToken);
     }
 
     public Optional<String> findByEmail(String email) {
         if (email == null || email.isBlank()) {
             return Optional.empty();
         }
-        return Optional.ofNullable(latestTokensByEmail.get(email.trim().toLowerCase()));
+        return Optional.ofNullable(latestTokensByEmail.get(email.trim().toLowerCase(Locale.ROOT)));
     }
 }
