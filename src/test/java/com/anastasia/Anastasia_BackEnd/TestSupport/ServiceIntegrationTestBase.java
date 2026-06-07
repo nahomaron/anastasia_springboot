@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.TestSupport;
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.PermissionRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.TestActivationTokenStore;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
@@ -51,6 +52,7 @@ public abstract class ServiceIntegrationTestBase {
     @Autowired protected PasswordEncoder passwordEncoder;
     @Autowired protected ChurchService churchService;
     @Autowired protected MemberRepository memberRepository;
+    @Autowired protected TestActivationTokenStore activationTokenStore;
 
     protected TenantEntity tenant;
     protected ChurchEntity church;
@@ -123,5 +125,10 @@ public abstract class ServiceIntegrationTestBase {
                 principal.getAuthorities()
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    protected String rawActivationToken(String email) {
+        return activationTokenStore.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("No raw activation token captured for " + email));
     }
 }

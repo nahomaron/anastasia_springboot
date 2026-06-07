@@ -101,12 +101,7 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
                 .orElseThrow(() -> new AssertionError("Admin user not created"));
         assertThat(adminUser.getTenant().getId()).isEqualTo(savedTenant.getId());
 
-        var activationToken = tokenRepository.findByUserUuid(adminUser.getUuid());
-        assertThat(activationToken)
-                .as("Activation token persisted")
-                .isNotNull();
-
-        authService.activateAccount(activationToken.getToken(), tenantDTO.getOwnerEmail());
+        authService.activateAccount(rawActivationToken(tenantDTO.getOwnerEmail()), tenantDTO.getOwnerEmail());
 
         TenantEntity activatedTenant = tenantRepository.findById(savedTenant.getId())
                 .orElseThrow(() -> new AssertionError("Tenant missing after activation"));

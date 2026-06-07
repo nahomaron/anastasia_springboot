@@ -8,9 +8,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.C
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.PermissionType;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.TestActivationTokenStore;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
@@ -71,7 +70,7 @@ class ChildControllerIT extends PostgresTestContainer {
     @Autowired private ChurchService churchService;
     @Autowired private RoleRepository roleRepository;
     @Autowired private PermissionRepository permissionRepository;
-    @Autowired private TokenRepository tokenRepository;
+    @Autowired private TestActivationTokenStore activationTokenStore;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
 
@@ -111,13 +110,7 @@ class ChildControllerIT extends PostgresTestContainer {
                 anyString(),
                 any()
         );
-        String token = tokenRepository
-                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
-                        user.getEmail(),
-                        TokenType.ACTIVATION
-                )
-                .orElseThrow()
-                .getToken();
+        String token = activationTokenStore.findByEmail(user.getEmail()).orElseThrow();
         assertNotNull(token);
         authService.activateAccount(token, user.getEmail());
 

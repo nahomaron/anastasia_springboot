@@ -25,10 +25,9 @@ import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.LogoutService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RoleService;
-import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
-import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.TestSupport.ServiceIntegrationTestBase;
+import com.anastasia.Anastasia_BackEnd.modules.users.service.UserService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,13 +92,7 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
                 anyString(),
                 any()
         );
-        String activationCode = tokenRepository
-                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
-                        pendingUser.getEmail(),
-                        TokenType.ACTIVATION
-                )
-                .orElseThrow(() -> new AssertionError("Activation token not persisted"))
-                .getToken();
+        String activationCode = rawActivationToken(pendingUser.getEmail());
         authService.activateAccount(activationCode, pendingUser.getEmail());
 
         UserEntity activatedUser = userRepository.findByEmail(pendingUser.getEmail())
