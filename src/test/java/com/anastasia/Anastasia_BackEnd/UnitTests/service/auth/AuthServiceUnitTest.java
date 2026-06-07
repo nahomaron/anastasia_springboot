@@ -39,9 +39,7 @@ import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -90,10 +88,8 @@ public class AuthServiceUnitTest {
     @Mock private StaffRepository staffRepository;
     @Mock private TenantRepository tenantRepository;
     @Mock private MemberEffectivePermissionService memberEffectivePermissionService;
-    @Mock private Optional<ActivationTokenObserver> activationTokenObserver;
+    @Mock private ActivationTokenObserver activationTokenObserver;
 
-    @Spy
-    @InjectMocks
     private AuthServiceImpl authService;
 
     private UserEntity user;
@@ -101,6 +97,29 @@ public class AuthServiceUnitTest {
 
     @BeforeEach
     void setUp() {
+        authService = spy(new AuthServiceImpl(
+                jwtUtil,
+                refreshTokenCookieService,
+                tokenHashingService,
+                userRepository,
+                passwordEncoder,
+                authenticationManager,
+                tokenRepository,
+                passwordResetTokenService,
+                emailTemplateService,
+                messageService,
+                cacheWarmupService,
+                roleRepository,
+                userProfileRepository,
+                userPreferencesRepository,
+                backupCodeRepository,
+                loginTwoFactorChallengeRepository,
+                tenantAdminAssignmentRepository,
+                tenantRepository,
+                staffRepository,
+                memberEffectivePermissionService,
+                Optional.of(activationTokenObserver)
+        ));
         user = UserEntity.builder()
                 .uuid(UUID.randomUUID())
                 .email(email)
