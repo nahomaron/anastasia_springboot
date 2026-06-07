@@ -78,6 +78,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtUtil jwtUtil;
     private final RefreshTokenCookieService refreshTokenCookieService;
+    private final TokenHashingService tokenHashingService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -472,7 +473,8 @@ public class AuthServiceImpl implements AuthService {
     public AuthenticationResponse refreshToken(HttpServletRequest request) {
         String refreshToken = refreshTokenCookieService.extractRefreshToken(request)
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get("auth.refreshToken.missing", "Refresh token cookie is missing.")));
-        Token storedRefreshToken = tokenRepository.findActiveTokensByValueAndType(refreshToken, TokenType.REFRESH).stream()
+        String refreshTokenHash = tokenHashingService.hashToken(refreshToken);
+        Token storedRefreshToken = tokenRepository.findActiveTokensByValueAndType(refreshTokenHash, TokenType.REFRESH).stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get(
                         "auth.refreshToken.invalid",
@@ -620,8 +622,14 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception ignored) {
         }
 
+        String storedTokenValue = switch (tokenType) {
+            case REFRESH -> tokenHashingService.hashToken(theToken);
+            case BEARER -> null;
+            default -> theToken;
+        };
+
         var token = Token.builder()
-                .token(theToken)
+                .token(storedTokenValue)
                 .jwtId(jwtId)
                 .sessionId(sessionId)
                 .user(user)

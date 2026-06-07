@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.filter;
 
 import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
+import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -89,8 +90,10 @@ class JwtFilterTest {
                 .build();
 
         when(jwtUtil.extractUsername("valid-token")).thenReturn("user");
+        when(jwtUtil.extractJwtId("valid-token")).thenReturn("jwt-1");
         when(userDetailsService.loadUserByUsername("user")).thenReturn(userDetails);
-        when(tokenRepository.findTopByTokenOrderByIdDesc("valid-token")).thenReturn(Optional.of(Token.builder().expired(false).revoked(false).build()));
+        when(tokenRepository.findTopByJwtIdAndTokenTypeOrderByIdDesc("jwt-1", TokenType.BEARER))
+                .thenReturn(Optional.of(Token.builder().expired(false).revoked(false).build()));
         when(jwtUtil.isTokenValid("valid-token", userDetails)).thenReturn(true);
 
         jwtFilter.doFilter(request, response, filterChain);

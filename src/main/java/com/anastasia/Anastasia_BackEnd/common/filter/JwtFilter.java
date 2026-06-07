@@ -88,8 +88,9 @@ public class JwtFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                String jwtId = jwtUtil.extractJwtId(token);
 
-                var isTokenStillValid = tokenRepository.findTopByTokenOrderByIdDesc(token)
+                var isTokenStillValid = tokenRepository.findTopByJwtIdAndTokenTypeOrderByIdDesc(jwtId, com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType.BEARER)
                         .map(t -> !t.isExpired() && !t.isRevoked()).orElse(false);
 
                 if (jwtUtil.isTokenValid(token, userDetails) && isTokenStillValid) {

@@ -127,8 +127,20 @@ class AuthAndUserServicesIT extends ServiceIntegrationTestBase {
         assertThat(refreshed.getAccessToken()).isNotBlank();
         assertThat(refreshed.getRefreshToken()).isNull();
 
-        Token storedAccessToken = tokenRepository.findTopByTokenOrderByIdDesc(loginResponse.getAccessToken())
+        Token storedRefreshToken = tokenRepository
+                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
+                        pendingUser.getEmail(),
+                        TokenType.REFRESH
+                )
+                .orElseThrow(() -> new AssertionError("Refresh token not found"));
+        assertThat(storedRefreshToken.getToken()).isNotEqualTo(loginResponse.getRefreshToken());
+
+        Token storedAccessToken = tokenRepository
+                .findByUserUuidAndTokenTypeOrderByIdDesc(activatedUser.getUuid(), TokenType.BEARER)
+                .stream()
+                .findFirst()
                 .orElseThrow(() -> new AssertionError("Access token not found"));
+        assertThat(storedAccessToken.getToken()).isNull();
 
         MockHttpServletRequest logoutRequest = new MockHttpServletRequest();
         logoutRequest.addHeader("Authorization", "Bearer " + loginResponse.getAccessToken());

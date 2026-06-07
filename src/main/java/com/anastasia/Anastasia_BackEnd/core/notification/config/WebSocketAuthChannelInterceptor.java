@@ -61,7 +61,8 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     }
 
     private boolean isPersistedBearerTokenActive(String bearerToken) {
-        return tokenRepository.findActiveTokensByValueAndType(bearerToken, TokenType.BEARER).stream()
+        String jwtId = jwtUtil.extractJwtId(bearerToken);
+        return tokenRepository.findActiveTokensByJwtIdAndType(jwtId, TokenType.BEARER).stream()
                 .findFirst()
                 .isPresent();
     }

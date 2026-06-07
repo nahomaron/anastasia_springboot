@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.users.service;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalePreferenceService;
+import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
@@ -118,6 +119,7 @@ public class UserServiceImpl implements UserService {
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final UserRecoveryEmailVerificationService recoveryEmailVerificationService;
     private final TokenRepository tokenRepository;
+    private final JwtUtil jwtUtil;
     private final LocalePreferenceService localePreferenceService;
     private final LocalizedMessageService messageService;
     private final TenantUserAccessPolicy accessPolicy;
@@ -472,6 +474,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserSessionResponse> listCurrentUserSessions(String currentBearerToken) {
         UserEntity user = getCurrentAuthenticatedUser();
+        String currentSessionId = extractSessionId(currentBearerToken);
         List<Token> tokens = tokenRepository.findByUserUuidAndTokenTypeOrderByIdDesc(user.getUuid(), TokenType.BEARER);
         return tokens.stream()
                 .map(token -> UserSessionResponse.builder()
@@ -481,7 +484,7 @@ public class UserServiceImpl implements UserService {
                         .expiresAt(token.getExpiresAt())
                         .revoked(token.isRevoked())
                         .expired(token.isExpired())
-                        .current(currentBearerToken != null && currentBearerToken.equals(token.getToken()))
+                        .current(currentSessionId != null && currentSessionId.equals(token.getSessionId()))
                         .build())
                 .toList();
     }
@@ -503,12 +506,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public void revokeOtherCurrentUserSessions(String currentBearerToken) {
         UserEntity user = getCurrentAuthenticatedUser();
+        String currentSessionId = extractSessionId(currentBearerToken);
         List<Token> tokens = tokenRepository.findAllActiveTokensByUserUuid(user.getUuid());
         Set<String> preservedSessionIds = new HashSet<>();
         Set<String> sessionIdsToRevoke = new HashSet<>();
         Set<Integer> standaloneTokenIdsToRevoke = new HashSet<>();
         for (Token token : tokens) {
-            if (currentBearerToken != null && currentBearerToken.equals(token.getToken())) {
+            if (currentSessionId != null && currentSessionId.equals(token.getSessionId())) {
                 if (token.getSessionId() != null && !token.getSessionId().isBlank()) {
                     preservedSessionIds.add(token.getSessionId());
                 }
@@ -531,6 +535,17 @@ public class UserServiceImpl implements UserService {
 
     private void revokeSessionFamily(UUID userId, String sessionFamilyId) {
         tokenRepository.revokeAllActiveTokensByUserUuidAndSessionId(userId, sessionFamilyId, Instant.now());
+    }
+
+    private String extractSessionId(String bearerToken) {
+        if (bearerToken == null || bearerToken.isBlank()) {
+            return null;
+        }
+        try {
+            return jwtUtil.extractSessionId(bearerToken);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     @Caching(

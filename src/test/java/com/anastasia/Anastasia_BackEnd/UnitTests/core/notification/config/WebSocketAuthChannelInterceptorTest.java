@@ -51,9 +51,10 @@ class WebSocketAuthChannelInterceptorTest {
         UserPrincipal principal = principal("member@example.com", null);
 
         when(jwtUtil.extractUsername("stale-token")).thenReturn("member@example.com");
+        when(jwtUtil.extractJwtId("stale-token")).thenReturn("jwt-stale");
         when(userDetailService.loadUserByUsername("member@example.com")).thenReturn(principal);
         when(jwtUtil.isTokenValid("stale-token", principal)).thenReturn(true);
-        when(tokenRepository.findActiveTokensByValueAndType("stale-token", TokenType.BEARER)).thenReturn(List.of());
+        when(tokenRepository.findActiveTokensByJwtIdAndType("jwt-stale", TokenType.BEARER)).thenReturn(List.of());
 
         assertThatThrownBy(() -> interceptor.preSend(connectMessage, mock(MessageChannel.class)))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -67,11 +68,12 @@ class WebSocketAuthChannelInterceptorTest {
         UserPrincipal principal = principal("member@example.com", tenantId);
 
         when(jwtUtil.extractUsername("active-token")).thenReturn("member@example.com");
+        when(jwtUtil.extractJwtId("active-token")).thenReturn("jwt-active");
         when(userDetailService.loadUserByUsername("member@example.com")).thenReturn(principal);
         when(jwtUtil.isTokenValid("active-token", principal)).thenReturn(true);
         when(jwtUtil.extractTenantId("active-token")).thenReturn(tenantId.toString());
-        when(tokenRepository.findActiveTokensByValueAndType("active-token", TokenType.BEARER))
-                .thenReturn(List.of(Token.builder().token("active-token").tokenType(TokenType.BEARER).build()));
+        when(tokenRepository.findActiveTokensByJwtIdAndType("jwt-active", TokenType.BEARER))
+                .thenReturn(List.of(Token.builder().jwtId("jwt-active").tokenType(TokenType.BEARER).build()));
 
         Message<?> authenticated = interceptor.preSend(connectMessage, mock(MessageChannel.class));
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(authenticated);

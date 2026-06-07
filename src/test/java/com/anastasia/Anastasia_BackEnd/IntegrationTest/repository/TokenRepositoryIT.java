@@ -32,15 +32,17 @@ class TokenRepositoryIT extends ServiceIntegrationTestBase {
         UserEntity user = persistUser("token+" + UUID.randomUUID() + "@integration.com", ownerRole);
 
         Token active = tokenRepository.save(Token.builder()
-                .token(UUID.randomUUID().toString())
+                .jwtId("access-jti")
                 .tokenType(TokenType.BEARER)
+                .sessionId("session-1")
                 .expired(false)
                 .revoked(false)
                 .user(user)
                 .build());
 
         Token expiring = tokenRepository.save(Token.builder()
-                .token(UUID.randomUUID().toString())
+                .token("refresh-hash")
+                .jwtId("refresh-jti")
                 .tokenType(TokenType.BEARER)
                 .expired(false)
                 .revoked(false)
@@ -49,7 +51,7 @@ class TokenRepositoryIT extends ServiceIntegrationTestBase {
                 .build());
 
         Token old = tokenRepository.save(Token.builder()
-                .token(UUID.randomUUID().toString())
+                .jwtId("old-jti")
                 .tokenType(TokenType.BEARER)
                 .expired(true)
                 .revoked(true)
@@ -66,6 +68,7 @@ class TokenRepositoryIT extends ServiceIntegrationTestBase {
         assertThat(tokenRepository.findById(expiring.getId())).isEmpty();
         assertThat(tokenRepository.findById(old.getId())).isEmpty();
         assertThat(tokenRepository.findById(active.getId())).isPresent();
+        assertThat(tokenRepository.findTopByJwtIdAndTokenTypeOrderByIdDesc("access-jti", TokenType.BEARER)).isPresent();
 
         List<Token> bearerTokens = tokenRepository.findAllValidTokensByUser(user.getUuid(), TokenType.BEARER);
         assertThat(bearerTokens).extracting(Token::getId).containsExactly(active.getId());

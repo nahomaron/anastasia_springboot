@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class LogoutService implements LogoutHandler {
 
     private final TokenRepository tokenRepository;
     private final RefreshTokenCookieService refreshTokenCookieService;
+    private final JwtUtil jwtUtil;
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -26,15 +28,54 @@ public class LogoutService implements LogoutHandler {
             accessToken = authHeader.substring(7);
         }
 
-        revokeToken(accessToken);
-        refreshTokenCookieService.extractRefreshToken(request).ifPresent(this::revokeToken);
+        String refreshToken = refreshTokenCookieService.extractRefreshToken(request).orElse(null);
+
+        revokeSessionFamily(accessToken, refreshToken);
         refreshTokenCookieService.clearRefreshTokenCookie(response);
     }
 
-    private void revokeToken(String token) {
-        if (token == null || token.isBlank()) {
+    private void revokeSessionFamily(String accessToken, String refreshToken) {
+        Instant now = Instant.now();
+        String sessionId = extractSessionId(accessToken);
+        if (sessionId == null || sessionId.isBlank()) {
+            sessionId = extractSessionId(refreshToken);
+        }
+        if (sessionId != null && !sessionId.isBlank()) {
+            tokenRepository.revokeAllActiveTokensBySessionId(sessionId, now);
             return;
         }
-        tokenRepository.revokeTokenByValue(token, Instant.now());
+
+        revokeByJwtId(accessToken, now);
+        revokeByJwtId(refreshToken, now);
+    }
+
+    private void revokeByJwtId(String token, Instant now) {
+        String jwtId = extractJwtId(token);
+        if (jwtId == null || jwtId.isBlank()) {
+            return;
+        }
+        tokenRepository.revokeTokenByJwtId(jwtId, now);
+    }
+
+    private String extractSessionId(String token) {
+        if (token == null || token.isBlank()) {
+            return null;
+        }
+        try {
+            return jwtUtil.extractSessionId(token);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String extractJwtId(String token) {
+        if (token == null || token.isBlank()) {
+            return null;
+        }
+        try {
+            return jwtUtil.extractJwtId(token);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }
