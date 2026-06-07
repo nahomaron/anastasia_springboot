@@ -89,4 +89,31 @@ public class RoleServiceTest {
         assertThrows(EntityNotFoundException.class, () -> roleService.createRole(roleRequest));
         verify(roleRepository, never()).save(any());
     }
+
+    @Test
+    void listRoles_scopesTenantRoleCountsAndOmitsSystemRoleCounts() {
+        Role tenantRole = Role.builder()
+                .id(10L)
+                .roleName("Volunteer")
+                .tenantId(tenantId)
+                .permissions(Set.of())
+                .build();
+        Role systemRole = Role.builder()
+                .id(11L)
+                .roleName("ADMIN")
+                .tenantId(null)
+                .permissions(Set.of())
+                .build();
+
+        when(roleRepository.findSystemAndTenantRoles(tenantId)).thenReturn(List.of(systemRole, tenantRole));
+        when(userRepository.countByRoles_IdAndAffiliatedTenantId(10L, tenantId)).thenReturn(3L);
+
+        var responses = roleService.listRoles();
+
+        assertEquals(2, responses.size());
+        assertEquals(0L, responses.get(0).getUserCount());
+        assertEquals(3L, responses.get(1).getUserCount());
+        verify(userRepository, never()).countByRoles_Id(tenantRole.getId());
+        verify(userRepository, never()).countByRoles_Id(systemRole.getId());
+    }
 }

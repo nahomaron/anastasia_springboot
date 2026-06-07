@@ -25,15 +25,17 @@ public class OnboardingSessionAccessService {
 
     public static final String ONBOARDING_ACCESS_COOKIE_NAME = "anastasia_onboarding_access";
     public static final String ONBOARDING_ACCESS_HEADER_NAME = "X-Onboarding-Token";
+    private static final String SAME_SITE_NONE = "None";
+    private static final String SAME_SITE_LAX = "Lax";
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final LocalizedMessageService messageService;
 
-    @Value("${app.onboarding.access-cookie.secure:false}")
+    @Value("${app.onboarding.access-cookie.secure:true}")
     private boolean secureCookie;
 
-    @Value("${app.onboarding.access-cookie.same-site:Lax}")
+    @Value("${app.onboarding.access-cookie.same-site:None}")
     private String sameSite;
 
     @Value("${app.onboarding.access-cookie.domain:}")
@@ -100,10 +102,11 @@ public class OnboardingSessionAccessService {
     }
 
     private ResponseCookie buildCookie(String value, Duration maxAge) {
+        String resolvedSameSite = resolveSameSite();
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(ONBOARDING_ACCESS_COOKIE_NAME, value)
                 .httpOnly(true)
                 .secure(secureCookie)
-                .sameSite(sameSite)
+                .sameSite(resolvedSameSite)
                 .path("/api/v1/onboarding/billing")
                 .maxAge(maxAge);
 
@@ -112,6 +115,13 @@ public class OnboardingSessionAccessService {
         }
 
         return builder.build();
+    }
+
+    private String resolveSameSite() {
+        if (!secureCookie && SAME_SITE_NONE.equalsIgnoreCase(sameSite)) {
+            return SAME_SITE_LAX;
+        }
+        return sameSite;
     }
 
     private String generateToken() {

@@ -12,12 +12,11 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantE
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.PermissionRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
-import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.TestActivationTokenStore;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,7 +68,7 @@ class MemberControllerIT extends PostgresTestContainer {
     @Autowired private ChurchService churchService;
     @Autowired private RoleRepository roleRepository;
     @Autowired private PermissionRepository permissionRepository;
-    @Autowired private TokenRepository tokenRepository;
+    @Autowired private TestActivationTokenStore activationTokenStore;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
 
@@ -111,13 +110,7 @@ class MemberControllerIT extends PostgresTestContainer {
                 anyString(),
                 any()
         );
-        String token = tokenRepository
-                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
-                        user.getEmail(),
-                        TokenType.ACTIVATION
-                )
-                .orElseThrow()
-                .getToken();
+        String token = activationTokenStore.findByEmail(user.getEmail()).orElseThrow();
         assertNotNull(token);
         authService.activateAccount(token, user.getEmail());
 

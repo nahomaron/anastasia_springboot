@@ -21,6 +21,8 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
 
     Optional<Token> findTopByTokenAndTokenTypeOrderByIdDesc(String token, TokenType tokenType);
 
+    Optional<Token> findTopByJwtIdAndTokenTypeOrderByIdDesc(String jwtId, TokenType tokenType);
+
     @Query("""
             select t from Token t
             where t.token = :token
@@ -31,6 +33,17 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
             order by t.id desc
             """)
     List<Token> findActiveTokensByValueAndType(@Param("token") String token, @Param("tokenType") TokenType tokenType);
+
+    @Query("""
+            select t from Token t
+            where t.jwtId = :jwtId
+              and t.tokenType = :tokenType
+              and t.expired = false
+              and t.revoked = false
+              and t.deletedAt is null
+            order by t.id desc
+            """)
+    List<Token> findActiveTokensByJwtIdAndType(@Param("jwtId") String jwtId, @Param("tokenType") TokenType tokenType);
 
     @Query("""
             select t from Token t inner join UserEntity u on t.user.id = u.uuid
@@ -97,6 +110,20 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
             t.revoked = true,
             t.expiredAt = :now,
             t.revokedAt = :now
+        where t.jwtId = :jwtId
+          and t.deletedAt is null
+          and (t.expired = false or t.revoked = false or t.expiredAt is null or t.revokedAt is null)
+        """)
+    int revokeTokenByJwtId(@Param("jwtId") String jwtId, @Param("now") Instant now);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Token t
+        set t.expired = true,
+            t.revoked = true,
+            t.expiredAt = :now,
+            t.revokedAt = :now
         where t.user.uuid = :userId
           and t.expired = false
           and t.revoked = false
@@ -119,6 +146,21 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
           and t.deletedAt is null
         """)
     int revokeAllActiveTokensByUserUuidAndSessionId(@Param("userId") UUID userId, @Param("sessionId") String sessionId, @Param("now") Instant now);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Token t
+        set t.expired = true,
+            t.revoked = true,
+            t.expiredAt = :now,
+            t.revokedAt = :now
+        where t.sessionId = :sessionId
+          and t.expired = false
+          and t.revoked = false
+          and t.deletedAt is null
+        """)
+    int revokeAllActiveTokensBySessionId(@Param("sessionId") String sessionId, @Param("now") Instant now);
 
     @Transactional
     @Modifying

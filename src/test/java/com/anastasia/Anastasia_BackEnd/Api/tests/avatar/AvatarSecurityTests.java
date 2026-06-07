@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AvatarSecurityTests extends BaseApiTest {
 
     @Test
-    void savingAvatarWithoutTokenShouldReturnForbidden() {
+    void savingAvatarWithoutTokenShouldReturnUnauthorized() {
         UUID userId = BaseApiTest.getCachedUserId();
 
         var response = given()
@@ -35,6 +35,6 @@ class AvatarSecurityTests extends BaseApiTest {
                 .extract()
                 .response();
 
-        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(response.statusCode()).isEqualTo(401);
     }
 }

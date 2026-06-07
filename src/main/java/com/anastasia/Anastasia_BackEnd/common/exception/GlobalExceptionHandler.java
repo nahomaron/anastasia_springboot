@@ -245,19 +245,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 : DisabledException.class.isInstance(ex)
                 ? ACCOUNT_DISABLED
                 : BAD_CREDENTIALS;
-        return buildResponse(UNAUTHORIZED, code, ex.getMessage() != null ? ex.getMessage() : localizedDescription(code));
+        return buildResponse(UNAUTHORIZED, code, stableClientMessage(code));
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ExceptionResponse> handleAuthentication(AuthenticationException ex) {
         logHandledClientException("Authentication failed", ex);
-        return buildResponse(UNAUTHORIZED, AUTHENTICATION_FAILED, ex.getMessage());
+        return buildResponse(UNAUTHORIZED, AUTHENTICATION_FAILED, stableClientMessage(AUTHENTICATION_FAILED));
     }
 
     @ExceptionHandler(AuthenticationProcessException.class)
     public ResponseEntity<ExceptionResponse> handleAuthProcess(AuthenticationProcessException ex) {
         log.error("Authentication process error", ex);
-        return buildResponse(INTERNAL_SERVER_ERROR, AUTHENTICATION_FAILED, ex.getMessage());
+        return buildResponse(INTERNAL_SERVER_ERROR, AUTHENTICATION_FAILED, stableClientMessage(AUTHENTICATION_FAILED));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -476,6 +476,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return code.getDescription();
         }
         return key(code.getMessageKey(), code.getDescription());
+    }
+
+    private String stableClientMessage(BusinessErrorCodes code) {
+        return localizedDescription(code);
     }
 
     private String key(String key, String fallback, Object... args) {

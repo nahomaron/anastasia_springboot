@@ -39,6 +39,10 @@ public class OnboardingBillingReadinessService {
         boolean s3BucketConfigured = isSet("aws.s3.bucket");
         boolean refreshCookieSecure = environment.getProperty("app.auth.refresh-cookie.secure", Boolean.class, false);
         String refreshCookieSameSite = environment.getProperty("app.auth.refresh-cookie.same-site", "Lax");
+        boolean onboardingAccessCookieSecure =
+                environment.getProperty("app.onboarding.access-cookie.secure", Boolean.class, true);
+        String onboardingAccessCookieSameSite =
+                environment.getProperty("app.onboarding.access-cookie.same-site", "None");
         boolean notificationEmailEnabled = environment.getProperty("notification.email.enabled", Boolean.class, true);
 
         List<String> missing = new ArrayList<>();
@@ -81,6 +85,12 @@ public class OnboardingBillingReadinessService {
         if (!"None".equalsIgnoreCase(refreshCookieSameSite)) {
             missing.add("app.auth.refresh-cookie.same-site should be None for cross-site staging login");
         }
+        if (!onboardingAccessCookieSecure) {
+            missing.add("app.onboarding.access-cookie.secure should be true outside local development");
+        }
+        if (!"None".equalsIgnoreCase(onboardingAccessCookieSameSite)) {
+            missing.add("app.onboarding.access-cookie.same-site should be None for cross-site onboarding over HTTPS");
+        }
         if (!notificationEmailEnabled) {
             missing.add("notification.email.enabled should remain true for onboarding email flows");
         }
@@ -98,6 +108,8 @@ public class OnboardingBillingReadinessService {
         application.put("platformAdminSecretConfigured", platformAdminSecretConfigured);
         application.put("refreshCookieSecure", refreshCookieSecure);
         application.put("refreshCookieSameSite", refreshCookieSameSite);
+        application.put("onboardingAccessCookieSecure", onboardingAccessCookieSecure);
+        application.put("onboardingAccessCookieSameSite", onboardingAccessCookieSameSite);
 
         Map<String, Object> delivery = new LinkedHashMap<>();
         delivery.put("notificationEmailEnabled", notificationEmailEnabled);

@@ -1,8 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.TestControllers;
 
+import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.TestActivationTokenStore;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,21 +13,17 @@ import org.springframework.web.bind.annotation.*;
 public class TestAuthController {
 
     private final TokenRepository tokenRepository;
+    private final TestActivationTokenStore activationTokenStore;
 
-    public TestAuthController(TokenRepository tokenRepository) {
+    public TestAuthController(TokenRepository tokenRepository, TestActivationTokenStore activationTokenStore) {
         this.tokenRepository = tokenRepository;
+        this.activationTokenStore = activationTokenStore;
     }
 
     // Endpoint to retrieve activation token by email
     @GetMapping("/activation-token")
     public String getActivationToken(@RequestParam String email) {
-        return tokenRepository.findAll()
-                .stream()
-                .filter(t -> t.getUser() != null &&
-                        t.getUser().getEmail().equalsIgnoreCase(email) &&
-                        !t.isExpired() && !t.isRevoked())
-                .map(Token::getToken)
-                .findFirst()
+        return activationTokenStore.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("No active activation token found for " + email));
     }
 

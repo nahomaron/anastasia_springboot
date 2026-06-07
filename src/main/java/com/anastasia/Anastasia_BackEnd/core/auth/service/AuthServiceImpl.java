@@ -15,6 +15,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.repository.LoginTwoFactorChalle
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.ActivationTokenObserver;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
@@ -66,6 +67,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.Base64;
 import java.util.stream.Collectors;
 
 @Service
@@ -78,6 +80,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtUtil jwtUtil;
     private final RefreshTokenCookieService refreshTokenCookieService;
+    private final TokenHashingService tokenHashingService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -97,6 +100,7 @@ public class AuthServiceImpl implements AuthService {
     private final TenantRepository tenantRepository;
     private final StaffRepository staffRepository;
     private final MemberEffectivePermissionService memberEffectivePermissionService;
+    private final Optional<ActivationTokenObserver> activationTokenObserver;
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
@@ -155,9 +159,10 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthenticationResponse activateAccount(String token, String email) {
         String normalizedEmail = normalizeEmail(email);
+        String hashedToken = tokenHashingService.hashToken(token);
         Instant now = Instant.now();
 
-        Token savedToken = tokenRepository.findActiveTokensByValueAndType(token, TokenType.ACTIVATION).stream()
+        Token savedToken = tokenRepository.findActiveTokensByValueAndType(hashedToken, TokenType.ACTIVATION).stream()
                 .filter(candidate -> candidate.getUser() != null
                         && candidate.getUser().getEmail() != null
                         && candidate.getUser().getEmail().trim().equalsIgnoreCase(normalizedEmail))
@@ -472,7 +477,8 @@ public class AuthServiceImpl implements AuthService {
     public AuthenticationResponse refreshToken(HttpServletRequest request) {
         String refreshToken = refreshTokenCookieService.extractRefreshToken(request)
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get("auth.refreshToken.missing", "Refresh token cookie is missing.")));
-        Token storedRefreshToken = tokenRepository.findActiveTokensByValueAndType(refreshToken, TokenType.REFRESH).stream()
+        String refreshTokenHash = tokenHashingService.hashToken(refreshToken);
+        Token storedRefreshToken = tokenRepository.findActiveTokensByValueAndType(refreshTokenHash, TokenType.REFRESH).stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(messageService.get(
                         "auth.refreshToken.invalid",
@@ -620,8 +626,14 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception ignored) {
         }
 
+        String storedTokenValue = switch (tokenType) {
+            case REFRESH -> tokenHashingService.hashToken(theToken);
+            case BEARER -> null;
+            default -> theToken;
+        };
+
         var token = Token.builder()
-                .token(theToken)
+                .token(storedTokenValue)
                 .jwtId(jwtId)
                 .sessionId(sessionId)
                 .user(user)
@@ -903,9 +915,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String generateAndSaveActivationToken(UserEntity user) {
-        String generatedToken = generateActivationCode(6);
+        String generatedToken = generateActivationTokenValue();
         var token = Token.builder()
-                .token(generatedToken)
+                .token(tokenHashingService.hashToken(generatedToken))
                 .tokenType(TokenType.ACTIVATION)
                 .createdAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(ACTIVATION_TOKEN_MINUTES * 60L))
@@ -913,6 +925,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         tokenRepository.save(token);
+        activationTokenObserver.ifPresent(observer -> observer.record(user.getEmail(), generatedToken));
 
         return generatedToken;
     }
@@ -928,16 +941,10 @@ public class AuthServiceImpl implements AuthService {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
-    private String generateActivationCode(int length) {
-        String characters = "0123456789";
-        StringBuilder codeBuilder = new StringBuilder();
-
-        for (int i = 0; i < length; i++) {
-            int randomIndex = SECURE_RANDOM.nextInt(characters.length());
-            codeBuilder.append(characters.charAt(randomIndex));
-        }
-
-        return codeBuilder.toString();
+    private String generateActivationTokenValue() {
+        byte[] randomBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
 }

@@ -9,12 +9,11 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
-import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.TestActivationTokenStore;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.PriestService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,7 +61,7 @@ class PriestControllerIT extends PostgresTestContainer {
     @Autowired private PriestRepository priestRepository;
     @Autowired private TenantRepository tenantRepository;
     @Autowired private ChurchRepository churchRepository;
-    @Autowired private TokenRepository tokenRepository;
+    @Autowired private TestActivationTokenStore activationTokenStore;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
 
@@ -95,13 +94,7 @@ class PriestControllerIT extends PostgresTestContainer {
                 anyString(),
                 any()
         );
-        String token = tokenRepository
-                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
-                        priestDTO.getPersonalEmail(),
-                        TokenType.ACTIVATION
-                )
-                .orElseThrow()
-                .getToken();
+        String token = activationTokenStore.findByEmail(priestDTO.getPersonalEmail()).orElseThrow();
         assertNotNull(token);
         authService.activateAccount(token, priestDTO.getPersonalEmail());
 

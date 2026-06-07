@@ -12,9 +12,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantD
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
-import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
-import com.anastasia.Anastasia_BackEnd.core.auth.token.TokenType;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.TestActivationTokenStore;
 import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificationService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantService;
@@ -66,7 +65,7 @@ class ChurchControllerIT extends PostgresTestContainer {
     @Autowired private TenantRepository tenantRepository;
     @Autowired private TenantService tenantService;
     @Autowired private JwtUtil jwtUtil;
-    @Autowired private TokenRepository tokenRepository;
+    @Autowired private TestActivationTokenStore activationTokenStore;
 
     @MockitoBean private EmailNotificationService emailNotificationService;
 
@@ -92,13 +91,7 @@ class ChurchControllerIT extends PostgresTestContainer {
                 anyString(),
                 any()
         );
-        String token = tokenRepository
-                .findTopByUserEmailIgnoreCaseAndTokenTypeAndDeletedAtIsNullOrderByIdDesc(
-                        tenantDTO.getOwnerEmail(),
-                        TokenType.ACTIVATION
-                )
-                .orElseThrow()
-                .getToken();
+        String token = activationTokenStore.findByEmail(tenantDTO.getOwnerEmail()).orElseThrow();
         assertNotNull(token);
         authService.activateAccount(token, tenantDTO.getOwnerEmail());
 

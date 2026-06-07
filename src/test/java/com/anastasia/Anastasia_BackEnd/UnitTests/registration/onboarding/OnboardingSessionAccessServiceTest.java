@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 
@@ -74,11 +75,28 @@ class OnboardingSessionAccessServiceTest {
     @Test
     void addAccessTokenCookieUsesOnboardingCookieName() {
         MockHttpServletResponse response = new MockHttpServletResponse();
+        ReflectionTestUtils.setField(accessService, "secureCookie", true);
+        ReflectionTestUtils.setField(accessService, "sameSite", "None");
 
         accessService.addAccessTokenCookie(response, "token-value", Instant.now().plusSeconds(600));
 
         String setCookie = response.getHeader("Set-Cookie");
         assertThat(setCookie).contains(OnboardingSessionAccessService.ONBOARDING_ACCESS_COOKIE_NAME + "=token-value");
         assertThat(setCookie).contains("HttpOnly");
+        assertThat(setCookie).contains("Secure");
+        assertThat(setCookie).contains("SameSite=None");
+    }
+
+    @Test
+    void insecureCookieNeverEmitsSameSiteNone() {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        ReflectionTestUtils.setField(accessService, "secureCookie", false);
+        ReflectionTestUtils.setField(accessService, "sameSite", "None");
+
+        accessService.addAccessTokenCookie(response, "token-value", Instant.now().plusSeconds(600));
+
+        String setCookie = response.getHeader("Set-Cookie");
+        assertThat(setCookie).doesNotContain("Secure");
+        assertThat(setCookie).contains("SameSite=Lax");
     }
 }

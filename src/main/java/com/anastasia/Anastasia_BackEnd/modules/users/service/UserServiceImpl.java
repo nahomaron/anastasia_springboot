@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.users.service;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalePreferenceService;
+import com.anastasia.Anastasia_BackEnd.common.utils.JwtUtil;
 import com.anastasia.Anastasia_BackEnd.common.utils.PhoneNumberUtils;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.token.Token;
@@ -118,6 +119,7 @@ public class UserServiceImpl implements UserService {
     private final UserTwoFactorBackupCodeRepository backupCodeRepository;
     private final UserRecoveryEmailVerificationService recoveryEmailVerificationService;
     private final TokenRepository tokenRepository;
+    private final JwtUtil jwtUtil;
     private final LocalePreferenceService localePreferenceService;
     private final LocalizedMessageService messageService;
     private final TenantUserAccessPolicy accessPolicy;
@@ -143,12 +145,20 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users_all", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Page<UserResponseIDs> findAllUsers(Pageable pageable) {
+        UUID tenantId = TenantContext.getTenantId();
+        if (shouldEnforceTenantScope(tenantId)) {
+            return userRepository.findByAffiliatedTenantId(tenantId, pageable).map(this::toIdResponse);
+        }
         return userRepository.findAll(pageable).map(this::toIdResponse);
     }
 
-    @Cacheable(value = "users", key = "#userId")
+    @Cacheable(value = "users", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<SimpleUserDTO> findOne(UUID userId) {
+        UUID tenantId = TenantContext.getTenantId();
+        if (shouldEnforceTenantScope(tenantId)) {
+            return userRepository.findByUuidAndAffiliatedTenantId(userId, tenantId).map(this::toSimpleUserDTO);
+        }
         return userRepository.findById(userId).map(this::toSimpleUserDTO);
     }
 
@@ -464,6 +474,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserSessionResponse> listCurrentUserSessions(String currentBearerToken) {
         UserEntity user = getCurrentAuthenticatedUser();
+        String currentSessionId = extractSessionId(currentBearerToken);
         List<Token> tokens = tokenRepository.findByUserUuidAndTokenTypeOrderByIdDesc(user.getUuid(), TokenType.BEARER);
         return tokens.stream()
                 .map(token -> UserSessionResponse.builder()
@@ -473,7 +484,7 @@ public class UserServiceImpl implements UserService {
                         .expiresAt(token.getExpiresAt())
                         .revoked(token.isRevoked())
                         .expired(token.isExpired())
-                        .current(currentBearerToken != null && currentBearerToken.equals(token.getToken()))
+                        .current(currentSessionId != null && currentSessionId.equals(token.getSessionId()))
                         .build())
                 .toList();
     }
@@ -495,12 +506,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public void revokeOtherCurrentUserSessions(String currentBearerToken) {
         UserEntity user = getCurrentAuthenticatedUser();
+        String currentSessionId = extractSessionId(currentBearerToken);
         List<Token> tokens = tokenRepository.findAllActiveTokensByUserUuid(user.getUuid());
         Set<String> preservedSessionIds = new HashSet<>();
         Set<String> sessionIdsToRevoke = new HashSet<>();
         Set<Integer> standaloneTokenIdsToRevoke = new HashSet<>();
         for (Token token : tokens) {
-            if (currentBearerToken != null && currentBearerToken.equals(token.getToken())) {
+            if (currentSessionId != null && currentSessionId.equals(token.getSessionId())) {
                 if (token.getSessionId() != null && !token.getSessionId().isBlank()) {
                     preservedSessionIds.add(token.getSessionId());
                 }
@@ -523,6 +535,17 @@ public class UserServiceImpl implements UserService {
 
     private void revokeSessionFamily(UUID userId, String sessionFamilyId) {
         tokenRepository.revokeAllActiveTokensByUserUuidAndSessionId(userId, sessionFamilyId, Instant.now());
+    }
+
+    private String extractSessionId(String bearerToken) {
+        if (bearerToken == null || bearerToken.isBlank()) {
+            return null;
+        }
+        try {
+            return jwtUtil.extractSessionId(bearerToken);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     @Caching(
@@ -665,6 +688,10 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public List<UserResponseIDs> findAll() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (shouldEnforceTenantScope(tenantId)) {
+            return userRepository.findByAffiliatedTenantId(tenantId).stream().map(this::toIdResponse).toList();
+        }
         return userRepository.findAll().stream().map(this::toIdResponse).toList();
     }
 
@@ -853,16 +880,22 @@ public class UserServiceImpl implements UserService {
 
     @Caching(
             evict = {
-                    @CacheEvict(value = "users", key = "#userId"
-                    ),
+                    @CacheEvict(value = "users", allEntries = true),
                     @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
                     @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
             }
     )
     @Override
     public void deleteUser(UUID userId) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        UUID tenantId = TenantContext.getTenantId();
+        UserEntity user = shouldEnforceTenantScope(tenantId)
+                ? userRepository.findByUuidAndAffiliatedTenantId(userId, tenantId)
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                            "user.access.notFoundInTenant",
+                            "User not found in current tenant"
+                    )))
+                : userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
         tokenRepository.deleteAllByUserUuid(userId);
 
@@ -879,7 +912,7 @@ public class UserServiceImpl implements UserService {
 
     @Caching(
             evict = {
-                    @CacheEvict(value = "users", key = "#root.target.getCurrentUserId()"),
+                    @CacheEvict(value = "users", allEntries = true),
                     @CacheEvict(value = "users_all", keyGenerator = "tenantAwareKeyGenerator", allEntries = true),
                     @CacheEvict(value = "users_all_list", keyGenerator = "tenantAwareKeyGenerator", allEntries = true)
             }
@@ -988,6 +1021,19 @@ public class UserServiceImpl implements UserService {
         return UserResponseIDs.builder()
                 .uuid(user.getUuid())
                 .build();
+    }
+
+    private boolean shouldEnforceTenantScope(UUID tenantId) {
+        return tenantId != null && !hasAuthority("VIEW_ALL_DATA");
+    }
+
+    private boolean hasAuthority(String authority) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authority == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> authority.equals(grantedAuthority.getAuthority()));
     }
 
     private UUID requireTenantId() {

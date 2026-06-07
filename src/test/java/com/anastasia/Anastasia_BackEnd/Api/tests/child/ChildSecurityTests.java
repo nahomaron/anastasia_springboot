@@ -30,7 +30,7 @@ class ChildSecurityTests extends BaseApiTest {
                 .extract()
                 .response();
 
-        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(response.statusCode()).isEqualTo(401);
     }
 
     @Test

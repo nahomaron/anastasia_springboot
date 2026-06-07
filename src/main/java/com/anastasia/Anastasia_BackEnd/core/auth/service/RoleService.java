@@ -49,7 +49,7 @@ public class RoleService {
     public List<RoleResponse> listRoles() {
         UUID tenantId = requireTenantId();
         return roleRepository.findSystemAndTenantRoles(tenantId).stream()
-                .map(this::toRoleResponse)
+                .map(role -> toRoleResponse(role, tenantId))
                 .toList();
     }
 
@@ -79,7 +79,7 @@ public class RoleService {
                 .build();
 
         Role saved = roleRepository.save(role);
-        return toRoleResponse(saved);
+        return toRoleResponse(saved, tenantId);
     }
 
     @Transactional
@@ -111,7 +111,7 @@ public class RoleService {
         role.setPermissions(resolvePermissions(roleRequest.getPermissions()));
 
         Role saved = roleRepository.save(role);
-        return toRoleResponse(saved);
+        return toRoleResponse(saved, tenantId);
     }
 
     @Transactional
@@ -143,7 +143,7 @@ public class RoleService {
         return permissionRepository.findByNameIn(enumNames);
     }
 
-    private RoleResponse toRoleResponse(Role role) {
+    private RoleResponse toRoleResponse(Role role, UUID tenantId) {
         List<String> permissionKeys = role.getPermissions().stream()
                 .map(permission -> permission.getName().getName())
                 .sorted()
@@ -156,8 +156,15 @@ public class RoleService {
                 .system(isSystemRole(role))
                 .tenantId(role.getTenantId())
                 .permissions(permissionKeys)
-                .userCount(userRepository.countByRoles_Id(role.getId()))
+                .userCount(resolveUserCount(role, tenantId))
                 .build();
+    }
+
+    private long resolveUserCount(Role role, UUID tenantId) {
+        if (isSystemRole(role)) {
+            return 0L;
+        }
+        return userRepository.countByRoles_IdAndAffiliatedTenantId(role.getId(), tenantId);
     }
 
     private boolean isSystemRole(Role role) {

@@ -138,11 +138,17 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
 
     List<UserEntity> findByAffiliatedTenantId(UUID tenantId);
 
+    Page<UserEntity> findByAffiliatedTenantId(UUID tenantId, Pageable pageable);
+
+    Optional<UserEntity> findByUuidAndAffiliatedTenantId(UUID userId, UUID tenantId);
+
     default List<UserEntity> findByTenantId(UUID tenantId) {
         return findByAffiliatedTenantId(tenantId);
     }
 
     long countByRoles_Id(Long roleId);
+
+    long countByRoles_IdAndAffiliatedTenantId(Long roleId, UUID tenantId);
 
     @Query("SELECT u FROM UserEntity u WHERE u.affiliatedTenant.id = :tenantId AND u.userType = 'TENANT'")
     Optional<UserEntity> findTenantAdmin(UUID tenantId);

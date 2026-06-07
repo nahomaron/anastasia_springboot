@@ -24,7 +24,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -245,12 +244,10 @@ public class AuthController {
      * @return ResponseEntity indicating whether the email is registered or not.
      */
     @GetMapping("/check-email")
-    public ResponseEntity<Map<String, Object>> checkEmail(@RequestParam String email) {
-        boolean isRegistered = authService.isEmailRegistered(email);
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", isRegistered ? "Email is already registered." : "Email is available for registration.");
-        response.put("registered", isRegistered);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> checkEmail(@RequestParam String email) {
+        return ResponseEntity.ok(message(
+                "If the email can be used for registration, you can continue with signup."
+        ));
     }
 
     private Map<String, String> message(String value) {

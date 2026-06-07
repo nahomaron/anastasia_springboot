@@ -44,6 +44,6 @@ class EventNegativeTests extends BaseApiTest {
     @Story("Anonymous clients cannot list visible events")
     void anonymousCannotListVisibleEvents() {
         Response response = eventService.listVisibleEvents(RequestSpecFactory.anonymousSpec());
-        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(response.statusCode()).isEqualTo(401);
     }
 }

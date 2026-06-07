@@ -10,6 +10,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.io.Console;
+
 @Component
 @RequiredArgsConstructor
 public class PlatformAdminRecoveryCommand {
@@ -44,7 +46,7 @@ public class PlatformAdminRecoveryCommand {
                     recoveryReason
             );
             log.warn("Platform admin recovery token issued for {}", result.email());
-            log.warn("Reset URL: {}", result.resetUrl());
+            writeResetUrlToConsole(result);
             log.warn("Expires at: {}", result.expiresAt());
         } catch (RuntimeException ex) {
             exitCode = 1;
@@ -60,5 +62,22 @@ public class PlatformAdminRecoveryCommand {
             shutdownThread.setDaemon(false);
             shutdownThread.start();
         }
+    }
+
+    void writeResetUrlToConsole(PlatformAdminRecoveryTokenResult result) {
+        Console console = locateConsole();
+        if (console == null) {
+            log.warn("Platform admin recovery reset URL generated for {} but withheld because no interactive console is attached", result.email());
+            return;
+        }
+
+        console.printf("%nPlatform admin reset URL for %s%n%s%nExpires at: %s%n",
+                result.email(),
+                result.resetUrl(),
+                result.expiresAt());
+    }
+
+    Console locateConsole() {
+        return System.console();
     }
 }

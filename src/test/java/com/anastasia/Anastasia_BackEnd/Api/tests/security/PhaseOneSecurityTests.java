@@ -29,7 +29,7 @@ class PhaseOneSecurityTests extends BaseApiTest {
                 .extract()
                 .response();
 
-        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(response.statusCode()).isEqualTo(401);
     }
 
     @Test
@@ -43,7 +43,7 @@ class PhaseOneSecurityTests extends BaseApiTest {
                 .extract()
                 .response();
 
-        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(response.statusCode()).isEqualTo(401);
     }
 
     @Test
@@ -55,7 +55,7 @@ class PhaseOneSecurityTests extends BaseApiTest {
                 .extract()
                 .response();
 
-        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(response.statusCode()).isEqualTo(401);
     }
 
     @Test
@@ -67,7 +67,7 @@ class PhaseOneSecurityTests extends BaseApiTest {
                 .extract()
                 .response();
 
-        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(response.statusCode()).isEqualTo(401);
     }
 
     @Test
