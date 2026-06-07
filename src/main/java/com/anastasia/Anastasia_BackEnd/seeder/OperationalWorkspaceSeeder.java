@@ -44,10 +44,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
@@ -80,6 +83,7 @@ public class OperationalWorkspaceSeeder {
     private final UserPreferencesRepository userPreferencesRepository;
     private final ImageAssetRepository imageAssetRepository;
     private final TokenRepository tokenRepository;
+    private final PlatformTransactionManager transactionManager;
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
@@ -277,11 +281,17 @@ public class OperationalWorkspaceSeeder {
 
     private UserEntity upsertOwner(UserEntity owner, TenantEntity tenant) {
         try {
-            return persistOwner(owner, tenant);
+            return persistOwnerInNewTransaction(owner, tenant);
         } catch (ObjectOptimisticLockingFailureException ex) {
             log.warn("Retrying operational owner upsert after optimistic locking failure for tenant {}", tenant.getSlug(), ex);
-            return persistOwner(resolveCurrentOwnerForUpsert(owner), tenant);
+            return persistOwnerInNewTransaction(resolveCurrentOwnerForUpsert(owner), tenant);
         }
+    }
+
+    private UserEntity persistOwnerInNewTransaction(UserEntity owner, TenantEntity tenant) {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return transactionTemplate.execute(status -> persistOwner(owner, tenant));
     }
 
     private UserEntity persistOwner(UserEntity owner, TenantEntity tenant) {
