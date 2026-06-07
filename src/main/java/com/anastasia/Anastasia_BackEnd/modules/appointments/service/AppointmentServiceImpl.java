@@ -39,6 +39,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -69,11 +70,17 @@ public class AppointmentServiceImpl implements AppointmentService {
         validateRequest(request);
         UUID tenantId = requireTenantId();
         ChurchEntity church = resolveChurch(tenantId);
+        boolean canManageAppointments = currentUserHasAuthority("MANAGE_APPOINTMENT");
 
-        AppointmentStatus status = Optional.ofNullable(request.status())
-                .orElse(AppointmentStatus.REQUESTED);
+        if (!canManageAppointments) {
+            validateMemberCreateRequest(request, userId, tenantId);
+        }
 
-        CalendarEntryEntity calendarEntry = createCalendarEntry(request, userId);
+        AppointmentStatus status = canManageAppointments
+                ? Optional.ofNullable(request.status()).orElse(AppointmentStatus.REQUESTED)
+                : AppointmentStatus.REQUESTED;
+
+        CalendarEntryEntity calendarEntry = createCalendarEntry(request, userId, canManageAppointments);
 
         AppointmentEntity appointment = AppointmentEntity.builder()
                 .tenantId(tenantId)
@@ -101,7 +108,10 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .build();
 
         Set<AppointmentParticipantEntity> participants = buildParticipants(request.participants(), appointment);
-        Set<AppointmentAssignmentEntity> assignments = buildAssignments(request.assignees(), appointment);
+        Set<AppointmentAssignmentEntity> assignments = buildAssignments(
+                canManageAppointments ? request.assignees() : Set.of(),
+                appointment
+        );
 
         ensureNoConflicts(tenantId, assignments, request.startDateTime(), request.endDateTime(), null);
 
@@ -179,71 +189,41 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse rescheduleAppointment(UUID appointmentId, AppointmentRescheduleRequest request, UUID userId) {
         validateReschedule(request);
         AppointmentEntity appointment = resolveAppointment(appointmentId);
-        AppointmentStatus previous = appointment.getStatus();
-        Instant now = Instant.now();
-
-        ensureNoConflicts(
-                appointment.getTenantId(),
-                appointment.getAssignments(),
-                request.newStart(),
-                request.newEnd(),
-                appointment.getId()
-        );
-
-        appointment.setStartAtUtc(request.newStart());
-        appointment.setEndAtUtc(request.newEnd());
-        appointment.setStatus(AppointmentStatus.RESCHEDULED);
-        appointment.setConfirmedAt(null);
-        appointment.setCompletedAt(null);
-        appointment.setCanceledAt(null);
-        appointment.setCancellationReason(null);
-        appointment.setOutcomeNotes(null);
-
-        if (request.reason() != null && !request.reason().isBlank()) {
-            String reason = "Rescheduled: " + request.reason().trim();
-            String existing = appointment.getNotesForMember();
-            appointment.setNotesForMember(existing == null || existing.isBlank()
-                    ? reason
-                    : existing + "\n" + reason);
-        }
-        if (appointment.getRequestedAt() == null) {
-            appointment.setRequestedAt(now);
-        }
-
-        updateCalendarEntry(appointment, request.newStart(), request.newEnd(), userId);
-        appointment.getStatusHistory().add(buildStatusHistory(
-                appointment,
-                previous,
-                AppointmentStatus.RESCHEDULED,
-                request.reason(),
-                userId
-        ));
-
-        AppointmentEntity saved = appointmentRepository.save(appointment);
+        AppointmentEntity saved = rescheduleAppointmentInternal(appointment, request, userId);
         enrichNames(saved);
         return appointmentMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
+    public MemberAppointmentResponse rescheduleMyAppointment(UUID appointmentId, AppointmentRescheduleRequest request, UUID userId) {
+        validateReschedule(request);
+        AppointmentEntity appointment = resolveMemberVisibleAppointment(appointmentId, userId);
+        AppointmentEntity saved = rescheduleAppointmentInternal(appointment, request, userId);
+        enrichNames(saved);
+        return appointmentMapper.toMemberResponse(saved);
+    }
+
+    @Override
+    @Transactional
     public AppointmentResponse updateStatus(UUID appointmentId, AppointmentStatusUpdateRequest request, UUID userId) {
         AppointmentEntity appointment = resolveAppointment(appointmentId);
-        AppointmentStatus previous = appointment.getStatus();
-        Instant now = Instant.now();
-
-        appointment.setStatus(request.status());
-        applyStatusLifecycle(appointment, request.status(), request.reason(), now);
-        appointment.getStatusHistory().add(buildStatusHistory(
-                appointment,
-                previous,
-                request.status(),
-                request.reason(),
-                userId
-        ));
-
-        AppointmentEntity saved = appointmentRepository.save(appointment);
+        AppointmentEntity saved = updateStatusInternal(appointment, request, userId);
         enrichNames(saved);
         return appointmentMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public MemberAppointmentResponse updateMyStatus(UUID appointmentId, AppointmentStatusUpdateRequest request, UUID userId) {
+        if (request.status() != AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Members may only cancel their own appointments");
+        }
+
+        AppointmentEntity appointment = resolveMemberVisibleAppointment(appointmentId, userId);
+        AppointmentEntity saved = updateStatusInternal(appointment, request, userId);
+        enrichNames(saved);
+        return appointmentMapper.toMemberResponse(saved);
     }
 
     @Override
@@ -365,7 +345,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         return visibleMemberIds;
     }
 
-    private CalendarEntryEntity createCalendarEntry(AppointmentCreateRequest request, UUID userId) {
+    private CalendarEntryEntity createCalendarEntry(AppointmentCreateRequest request, UUID userId, boolean canManageAppointments) {
         CalendarEntryRequest calendarRequest = new CalendarEntryRequest(
                 CalendarEntryType.APPOINTMENT,
                 request.title(),
@@ -375,7 +355,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 request.endDateTime(),
                 request.timeZone(),
                 false,
-                Optional.ofNullable(request.visibility()).orElse(CalendarVisibility.PRIEST_ONLY),
+                canManageAppointments
+                        ? Optional.ofNullable(request.visibility()).orElse(CalendarVisibility.PRIEST_ONLY)
+                        : CalendarVisibility.PRIEST_ONLY,
                 Set.of(CalendarCategory.APPOINTMENTS),
                 null,
                 null,
@@ -384,6 +366,82 @@ public class AppointmentServiceImpl implements AppointmentService {
         CalendarEntryResponse created = calendarEntryService.createEntry(calendarRequest, userId);
         return calendarEntryRepository.findById(created.entryId())
                 .orElseThrow(() -> new EntityNotFoundException("Created calendar entry not found"));
+    }
+
+    private AppointmentEntity resolveMemberVisibleAppointment(UUID appointmentId, UUID userId) {
+        UUID tenantId = requireTenantId();
+        Set<Long> visibleMemberIds = resolveVisibleMemberIds(userId, tenantId);
+        return appointmentRepository.findMemberVisibleByIdAndTenantId(appointmentId, tenantId, visibleMemberIds)
+                .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+    }
+
+    private AppointmentEntity rescheduleAppointmentInternal(
+            AppointmentEntity appointment,
+            AppointmentRescheduleRequest request,
+            UUID userId
+    ) {
+        AppointmentStatus previous = appointment.getStatus();
+        Instant now = Instant.now();
+
+        ensureNoConflicts(
+                appointment.getTenantId(),
+                appointment.getAssignments(),
+                request.newStart(),
+                request.newEnd(),
+                appointment.getId()
+        );
+
+        appointment.setStartAtUtc(request.newStart());
+        appointment.setEndAtUtc(request.newEnd());
+        appointment.setStatus(AppointmentStatus.RESCHEDULED);
+        appointment.setConfirmedAt(null);
+        appointment.setCompletedAt(null);
+        appointment.setCanceledAt(null);
+        appointment.setCancellationReason(null);
+        appointment.setOutcomeNotes(null);
+
+        if (request.reason() != null && !request.reason().isBlank()) {
+            String reason = "Rescheduled: " + request.reason().trim();
+            String existing = appointment.getNotesForMember();
+            appointment.setNotesForMember(existing == null || existing.isBlank()
+                    ? reason
+                    : existing + "\n" + reason);
+        }
+        if (appointment.getRequestedAt() == null) {
+            appointment.setRequestedAt(now);
+        }
+
+        updateCalendarEntry(appointment, request.newStart(), request.newEnd(), userId);
+        appointment.getStatusHistory().add(buildStatusHistory(
+                appointment,
+                previous,
+                AppointmentStatus.RESCHEDULED,
+                request.reason(),
+                userId
+        ));
+
+        return appointmentRepository.save(appointment);
+    }
+
+    private AppointmentEntity updateStatusInternal(
+            AppointmentEntity appointment,
+            AppointmentStatusUpdateRequest request,
+            UUID userId
+    ) {
+        AppointmentStatus previous = appointment.getStatus();
+        Instant now = Instant.now();
+
+        appointment.setStatus(request.status());
+        applyStatusLifecycle(appointment, request.status(), request.reason(), now);
+        appointment.getStatusHistory().add(buildStatusHistory(
+                appointment,
+                previous,
+                request.status(),
+                request.reason(),
+                userId
+        ));
+
+        return appointmentRepository.save(appointment);
     }
 
     private void updateCalendarEntry(AppointmentEntity appointment, Instant start, Instant end, UUID userId) {
@@ -617,6 +675,25 @@ public class AppointmentServiceImpl implements AppointmentService {
         validateContactChannels(request.contactPhone(), request.contactEmail(), request.contactPreference());
     }
 
+    private void validateMemberCreateRequest(AppointmentCreateRequest request, UUID userId, UUID tenantId) {
+        if (request.status() != null && request.status() != AppointmentStatus.REQUESTED) {
+            throw new IllegalArgumentException("Members may only create appointment requests");
+        }
+        if (request.assignees() != null && !request.assignees().isEmpty()) {
+            throw new IllegalArgumentException("Members may not assign appointments");
+        }
+        if (request.visibility() != null && request.visibility() != CalendarVisibility.PRIEST_ONLY) {
+            throw new IllegalArgumentException("Members may not change appointment visibility");
+        }
+
+        Set<Long> visibleMemberIds = resolveVisibleMemberIds(userId, tenantId);
+        for (AppointmentParticipantRequest participant : request.participants()) {
+            if (participant.memberId() != null && !visibleMemberIds.contains(participant.memberId())) {
+                throw new IllegalArgumentException("Members may only request appointments for their household");
+            }
+        }
+    }
+
     private void validateReschedule(AppointmentRescheduleRequest request) {
         if (request.newEnd() != null && request.newEnd().isBefore(request.newStart())) {
             throw new IllegalArgumentException("newEnd must be after newStart");
@@ -722,5 +799,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean currentUserHasAuthority(String authority) {
+        return SecurityContextHolder.getContext().getAuthentication() != null
+                && SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(grantedAuthority -> authority.equals(grantedAuthority.getAuthority()));
     }
 }

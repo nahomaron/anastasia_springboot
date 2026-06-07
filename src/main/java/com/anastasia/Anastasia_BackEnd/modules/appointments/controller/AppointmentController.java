@@ -50,7 +50,7 @@ public class AppointmentController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @GetMapping
     public ResponseEntity<List<AppointmentResponse>> listAppointments(
             @RequestParam(value = "start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
@@ -74,7 +74,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.listMyAppointments(userId, start, end, status, type));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @GetMapping("/{appointmentId}")
     public ResponseEntity<AppointmentResponse> getAppointment(@PathVariable UUID appointmentId) {
         return ResponseEntity.ok(appointmentService.getAppointment(appointmentId));
@@ -87,7 +87,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.getMyAppointment(appointmentId, userId));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'BOOK_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @PatchMapping("/{appointmentId}/reschedule")
     public ResponseEntity<AppointmentResponse> rescheduleAppointment(
             @PathVariable UUID appointmentId,
@@ -97,7 +97,17 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.rescheduleAppointment(appointmentId, request, userId));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'CANCEL_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'BOOK_APPOINTMENT')")
+    @PatchMapping("/me/{appointmentId}/reschedule")
+    public ResponseEntity<MemberAppointmentResponse> rescheduleMyAppointment(
+            @PathVariable UUID appointmentId,
+            @Valid @RequestBody AppointmentRescheduleRequest request
+    ) {
+        UUID userId = resolveCurrentUserId();
+        return ResponseEntity.ok(appointmentService.rescheduleMyAppointment(appointmentId, request, userId));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
     @PatchMapping("/{appointmentId}/status")
     public ResponseEntity<AppointmentResponse> updateStatus(
             @PathVariable UUID appointmentId,
@@ -105,6 +115,16 @@ public class AppointmentController {
     ) {
         UUID userId = resolveCurrentUserId();
         return ResponseEntity.ok(appointmentService.updateStatus(appointmentId, request, userId));
+    }
+
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'CANCEL_APPOINTMENT')")
+    @PatchMapping("/me/{appointmentId}/status")
+    public ResponseEntity<MemberAppointmentResponse> updateMyStatus(
+            @PathVariable UUID appointmentId,
+            @Valid @RequestBody AppointmentStatusUpdateRequest request
+    ) {
+        UUID userId = resolveCurrentUserId();
+        return ResponseEntity.ok(appointmentService.updateMyStatus(appointmentId, request, userId));
     }
 
     @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")

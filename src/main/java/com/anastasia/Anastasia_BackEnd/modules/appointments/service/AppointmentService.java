@@ -28,7 +28,11 @@ public interface AppointmentService {
 
     AppointmentResponse rescheduleAppointment(UUID appointmentId, AppointmentRescheduleRequest request, UUID userId);
 
+    MemberAppointmentResponse rescheduleMyAppointment(UUID appointmentId, AppointmentRescheduleRequest request, UUID userId);
+
     AppointmentResponse updateStatus(UUID appointmentId, AppointmentStatusUpdateRequest request, UUID userId);
+
+    MemberAppointmentResponse updateMyStatus(UUID appointmentId, AppointmentStatusUpdateRequest request, UUID userId);
 
     AppointmentResponse addAssignees(UUID appointmentId, List<AppointmentAssigneeRequest> assignees, UUID userId);
 
