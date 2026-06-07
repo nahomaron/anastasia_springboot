@@ -23,6 +23,8 @@ class OnboardingBillingReadinessServiceTest {
                 .withProperty("app.platform-admin.secret", "platform-secret")
                 .withProperty("app.auth.refresh-cookie.secure", "true")
                 .withProperty("app.auth.refresh-cookie.same-site", "None")
+                .withProperty("app.onboarding.access-cookie.secure", "true")
+                .withProperty("app.onboarding.access-cookie.same-site", "None")
                 .withProperty("spring.mail.from", "noreply@anastasisapp.com")
                 .withProperty("spring.mail.username", "smtp-user")
                 .withProperty("spring.mail.password", "smtp-pass")
@@ -49,6 +51,8 @@ class OnboardingBillingReadinessServiceTest {
                 .withProperty("app.env", "staging")
                 .withProperty("app.auth.refresh-cookie.secure", "false")
                 .withProperty("app.auth.refresh-cookie.same-site", "Lax")
+                .withProperty("app.onboarding.access-cookie.secure", "false")
+                .withProperty("app.onboarding.access-cookie.same-site", "Lax")
                 .withProperty("notification.email.enabled", "false");
 
         OnboardingBillingReadinessService service =
@@ -61,6 +65,8 @@ class OnboardingBillingReadinessServiceTest {
                 .contains("app.public.frontend-base-url (env: APP_FRONTEND_BASE_URL)")
                 .contains("app.auth.refresh-cookie.secure should be true outside local development")
                 .contains("app.auth.refresh-cookie.same-site should be None for cross-site staging login")
+                .contains("app.onboarding.access-cookie.secure should be true outside local development")
+                .contains("app.onboarding.access-cookie.same-site should be None for cross-site onboarding over HTTPS")
                 .contains("notification.email.enabled should remain true for onboarding email flows");
     }
 }

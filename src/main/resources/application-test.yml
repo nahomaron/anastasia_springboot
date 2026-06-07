@@ -11,6 +11,10 @@ notification:
 app:
   auth:
     jwt-current-secret: YW5hc3Rhc2lhLXRlc3QtY3VycmVudC1qd3QtbWF0ZXJpYWwtMDE=
+  onboarding:
+    access-cookie:
+      secure: false
+      same-site: Lax
   public:
     backend-base-url: http://localhost:8080
     frontend-base-url: http://localhost:4200
