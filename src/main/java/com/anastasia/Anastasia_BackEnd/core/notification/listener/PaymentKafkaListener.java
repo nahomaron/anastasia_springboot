@@ -28,7 +28,7 @@ public class PaymentKafkaListener {
             String currency = payload.path("currency").asText();
 
             if (email == null || email.isBlank()) {
-                log.warn("Missing email in payment.captured payload: {}", payload);
+                log.warn("Missing email in payment.captured event for paymentId={}", safeValue(paymentId));
                 return;
             }
 
@@ -44,7 +44,7 @@ public class PaymentKafkaListener {
             );
 
         } catch (Exception e) {
-            log.error("Failed to handle payment.captured event: {}", e.getMessage(), e);
+            log.error("Failed to handle payment.captured event", e);
         }
     }
 
@@ -56,7 +56,7 @@ public class PaymentKafkaListener {
             String purpose = payload.path("purpose").asText();
 
             if (email == null || email.isBlank()) {
-                log.warn("Missing email in subscriptions.activated payload: {}", payload);
+                log.warn("Missing email in subscriptions.activated event for subscriptionId={}", safeValue(subId));
                 return;
             }
 
@@ -68,7 +68,7 @@ public class PaymentKafkaListener {
             );
 
         } catch (Exception e) {
-            log.error("Failed to handle subscriptions.activated event: {}", e.getMessage(), e);
+            log.error("Failed to handle subscriptions.activated event", e);
         }
     }
 
@@ -79,7 +79,7 @@ public class PaymentKafkaListener {
             String subId = payload.path("subscriptionId").asText();
 
             if (email == null || email.isBlank()) {
-                log.warn("Missing email in subscriptions.canceled payload: {}", payload);
+                log.warn("Missing email in subscriptions.canceled event for subscriptionId={}", safeValue(subId));
                 return;
             }
 
@@ -91,7 +91,11 @@ public class PaymentKafkaListener {
             );
 
         } catch (Exception e) {
-            log.error("Failed to handle subscriptions.canceled event: {}", e.getMessage(), e);
+            log.error("Failed to handle subscriptions.canceled event", e);
         }
+    }
+
+    private String safeValue(String value) {
+        return value == null || value.isBlank() ? "unknown" : value;
     }
 }

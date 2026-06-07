@@ -261,22 +261,14 @@ class AuthControllerUnitTest {
     }
 
     @Test
-    void checkEmail_whenRegistered_shouldReturnRegisteredMessage() {
-        when(authService.isEmailRegistered("user@mail.com")).thenReturn(true);
+    void checkEmail_shouldReturnGenericMessage() {
+        ResponseEntity<Map<String, String>> response = authController.checkEmail("user@mail.com");
 
-        ResponseEntity<Map<String, Object>> response = authController.checkEmail("user@mail.com");
-
-        assertThat(response.getBody()).containsEntry("registered", true);
-        assertThat(response.getBody()).containsEntry("message", "Email is already registered.");
-    }
-
-    @Test
-    void checkEmail_whenAvailable_shouldReturnAvailableMessage() {
-        when(authService.isEmailRegistered("free@mail.com")).thenReturn(false);
-
-        ResponseEntity<Map<String, Object>> response = authController.checkEmail("free@mail.com");
-
-        assertThat(response.getBody()).containsEntry("registered", false);
-        assertThat(response.getBody()).containsEntry("message", "Email is available for registration.");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsEntry(
+                "message",
+                "If the email can be used for registration, you can continue with signup."
+        );
+        verify(authService, never()).isEmailRegistered(anyString());
     }
 }

@@ -189,12 +189,8 @@ public class OnboardingStripeWebhookService {
         receipt.setEventType(eventType);
         receipt.setOnboardingSessionId(onboardingSessionId);
         receipt.setEventCreatedAt(java.util.Objects.requireNonNullElse(eventCreatedAt, Instant.now()));
-        if (receipt.getPayload() == null) {
-            receipt.setPayload(payload);
-        }
-        if (receipt.getSignatureHeader() == null) {
-            receipt.setSignatureHeader(signatureHeader);
-        }
+        receipt.setPayload(WebhookReceiptSanitizer.summarizePayload(payload));
+        receipt.setSignatureHeader(null);
         receipt.setProcessingResult(WebhookProcessingResult.RETRY);
         receipt.setErrorMessage(null);
         receipt.setProcessedAt(null);

@@ -17,6 +17,7 @@ import com.anastasia.Anastasia_BackEnd.core.auth.service.PasswordResetTokenServi
 import com.anastasia.Anastasia_BackEnd.core.auth.service.RefreshTokenCookieService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.MemberEffectivePermissionService;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.TokenHashingService;
+import com.anastasia.Anastasia_BackEnd.core.auth.support.ActivationTokenObserver;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserPreferencesEntity;
@@ -61,6 +62,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @LenientMockitoTest
@@ -88,6 +90,7 @@ public class AuthServiceUnitTest {
     @Mock private StaffRepository staffRepository;
     @Mock private TenantRepository tenantRepository;
     @Mock private MemberEffectivePermissionService memberEffectivePermissionService;
+    @Mock private Optional<ActivationTokenObserver> activationTokenObserver;
 
     @Spy
     @InjectMocks
@@ -185,18 +188,19 @@ public class AuthServiceUnitTest {
 
     @Test
     void activateAccount_shouldRequireTokenForProvidedEmail() {
+        when(tokenHashingService.hashToken("123456")).thenReturn("hashed-123456");
         UserEntity otherUser = UserEntity.builder()
                 .uuid(UUID.randomUUID())
                 .email("other@example.com")
                 .build();
         Token token = Token.builder()
-                .token("123456")
+                .token("hashed-123456")
                 .tokenType(TokenType.ACTIVATION)
                 .createdAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(300))
                 .user(otherUser)
                 .build();
-        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+        when(tokenRepository.findActiveTokensByValueAndType("hashed-123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.activateAccount("123456", email));
 
@@ -206,14 +210,15 @@ public class AuthServiceUnitTest {
 
     @Test
     void activateAccount_shouldRejectAndMarkExpiredToken() {
+        when(tokenHashingService.hashToken("123456")).thenReturn("hashed-123456");
         Token token = Token.builder()
-                .token("123456")
+                .token("hashed-123456")
                 .tokenType(TokenType.ACTIVATION)
                 .createdAt(Instant.now().minusSeconds(600))
                 .expiresAt(Instant.now().minusSeconds(1))
                 .user(user)
                 .build();
-        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+        when(tokenRepository.findActiveTokensByValueAndType("hashed-123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.activateAccount("123456", email));
 
@@ -226,14 +231,15 @@ public class AuthServiceUnitTest {
 
     @Test
     void activateAccount_shouldActivateUserAndBurnToken() {
+        when(tokenHashingService.hashToken("123456")).thenReturn("hashed-123456");
         Token token = Token.builder()
-                .token("123456")
+                .token("hashed-123456")
                 .tokenType(TokenType.ACTIVATION)
                 .createdAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(300))
                 .user(user)
                 .build();
-        when(tokenRepository.findActiveTokensByValueAndType("123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
+        when(tokenRepository.findActiveTokensByValueAndType("hashed-123456", TokenType.ACTIVATION)).thenReturn(List.of(token));
         when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
         doReturn(AuthenticationResponse.builder().accessToken("access").build())
                 .when(authService).issueSessionForUser(user.getUuid());
@@ -248,6 +254,30 @@ public class AuthServiceUnitTest {
         assertNotNull(token.getExpiredAt());
         verify(userRepository).save(user);
         verify(tokenRepository).save(token);
+    }
+
+    @Test
+    void sendValidationEmail_shouldStoreHashedActivationTokenAndEmailRawToken() throws Exception {
+        when(tokenHashingService.hashToken(anyString())).thenReturn("hashed-activation-token");
+
+        authService.sendValidationEmail(user);
+
+        ArgumentCaptor<Token> tokenCaptor = ArgumentCaptor.forClass(Token.class);
+        verify(tokenRepository).save(tokenCaptor.capture());
+        assertEquals("hashed-activation-token", tokenCaptor.getValue().getToken());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> propertiesCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(emailTemplateService).sendTemplateEmail(eq(email), any(), propertiesCaptor.capture(), any());
+
+        String verifyUrl = propertiesCaptor.getValue().get("verifyUrl").toString();
+        String rawToken = verifyUrl.substring(
+                verifyUrl.indexOf("token=") + "token=".length(),
+                verifyUrl.indexOf("&email=")
+        );
+
+        assertTrue(rawToken.length() >= 40);
+        assertFalse(rawToken.matches("\\d{6}"));
     }
 
     @Test

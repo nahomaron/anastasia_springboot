@@ -123,7 +123,7 @@ public class AuthControllerIT extends PostgresTestContainer {
                         MockMvcRequestBuilders.get("/api/v1/users/dashboard")
                                 .header("Authorization", "Basic " + basicCredentials)
                 )
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

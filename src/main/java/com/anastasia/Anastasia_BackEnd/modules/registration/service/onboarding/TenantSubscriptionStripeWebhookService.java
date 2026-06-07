@@ -198,12 +198,8 @@ public class TenantSubscriptionStripeWebhookService {
         receipt.setTenantId(subscription.getTenant().getId());
         receipt.setTenantSubscriptionId(subscription.getId());
         receipt.setEventCreatedAt(occurredAt != null ? occurredAt : Instant.now());
-        if (receipt.getPayload() == null) {
-            receipt.setPayload(payload);
-        }
-        if (receipt.getSignatureHeader() == null) {
-            receipt.setSignatureHeader(signatureHeader);
-        }
+        receipt.setPayload(WebhookReceiptSanitizer.summarizePayload(payload));
+        receipt.setSignatureHeader(null);
         receipt.setProcessingResult(WebhookProcessingResult.RETRY);
         receipt.setErrorMessage(null);
         receipt.setProcessedAt(null);

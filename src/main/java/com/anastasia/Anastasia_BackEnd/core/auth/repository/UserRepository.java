@@ -148,6 +148,8 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
 
     long countByRoles_Id(Long roleId);
 
+    long countByRoles_IdAndAffiliatedTenantId(Long roleId, UUID tenantId);
+
     @Query("SELECT u FROM UserEntity u WHERE u.affiliatedTenant.id = :tenantId AND u.userType = 'TENANT'")
     Optional<UserEntity> findTenantAdmin(UUID tenantId);
 

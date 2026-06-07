@@ -64,23 +64,17 @@ public class OnboardingEmailVerificationService {
         String code = normalizeCode(rawCode);
 
         OnboardingEmailVerificationCodeEntity entity = repository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new IllegalArgumentException(messageService.get(
-                        "auth.verificationCode.notFound",
-                        "No verification code found for this email."
-                )));
+                .orElse(null);
+        if (entity == null) {
+            return false;
+        }
 
         Instant now = Instant.now();
         if (entity.getBlockedUntil() != null && entity.getBlockedUntil().isAfter(now)) {
-            throw new IllegalStateException(messageService.get(
-                    "auth.verificationCode.locked",
-                    "Too many invalid attempts. Please try again later."
-            ));
+            return false;
         }
         if (entity.getExpiresAt() == null || entity.getExpiresAt().isBefore(now)) {
-            throw new IllegalStateException(messageService.get(
-                    "auth.verificationCode.expiredNewCode",
-                    "Verification code has expired. Please request a new code."
-            ));
+            return false;
         }
 
         entity.setAttemptCount(entity.getAttemptCount() + 1);

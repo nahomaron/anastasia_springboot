@@ -15,14 +15,14 @@ import static io.restassured.RestAssured.given;
 public class AuthSecurityTests extends BaseApiTest {
 
     @Test
-    @DisplayName("403 – Missing JWT")
+    @DisplayName("401 – Missing JWT")
     void accessWithoutToken_ShouldReturn401() {
         given()
                 .contentType(ContentType.JSON)
                 .when()
                 .get("/registrar/members")
                 .then()
-                .statusCode(403);
+                .statusCode(401);
     }
 
     @Test
