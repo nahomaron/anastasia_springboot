@@ -15,6 +15,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRep
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionEventRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionProviderLinkRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.TenantBillingOverrideService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final TenantSubscriptionEventRepository tenantSubscriptionEventRepository;
     private final SubscriptionPlanHistoryRepository subscriptionPlanHistoryRepository;
     private final TenantRepository tenantRepository;
+    private final TenantBillingOverrideService tenantBillingOverrideService;
 
     @Override
     @Transactional
@@ -156,7 +158,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         if (subscription.getStatus() == SubscriptionStatus.TRIALING
                 && subscription.getPlan() == SubscriptionPlan.FREE
                 && subscription.getCurrentPeriodEndAt() != null
-                && subscription.getCurrentPeriodEndAt().isBefore(now)) {
+                && subscription.getCurrentPeriodEndAt().isBefore(now)
+                && !tenantBillingOverrideService.preservesAccess(subscription, now)) {
             SubscriptionStatus oldStatus = subscription.getStatus();
             subscription.setStatus(SubscriptionStatus.SUSPENDED);
             subscription.setEndedAt(now);

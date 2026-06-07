@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.dto.entitlement;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingInterval;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.BillingOverrideType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.WorkspaceInitializationMode;
@@ -36,5 +37,11 @@ public class TenantBillingOverviewResponse {
     private Instant archiveScheduledAt;
     private Instant archivedAt;
     private boolean retentionWarningActive;
+    private long normalAmountMinor;
+    private long discountAmountMinor;
+    private long effectiveAmountMinor;
+    private String currency;
+    private BillingOverrideType appliedBillingOverrideType;
+    private Instant billingOverrideEndsAt;
     private List<SubscriptionPlanHistoryItemResponse> recentPlanHistory;
 }
