@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.event;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
+import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceAttendeeType;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendance;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.report.EventReport;
@@ -9,13 +11,13 @@ import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventAttendance
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.events.service.EventReportService;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 
-import java.time.LocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -44,11 +46,16 @@ class EventReportServiceUnitTest {
     private EventEntity event;
     private UserEntity attendeeOne;
     private UserEntity attendeeTwo;
+    private UUID tenantId;
 
     @BeforeEach
     void setUp() {
+        TenantContext.clear();
+        tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
         event = EventEntity.builder()
                 .eventId(1L)
+                .tenantId(tenantId)
                 .title("Sunday Service")
                 .startAt(LocalDate.now().atTime(9, 0).toInstant(ZoneOffset.UTC))
                 .endAt(LocalDate.now().atTime(11, 0).toInstant(ZoneOffset.UTC))
@@ -82,11 +89,11 @@ class EventReportServiceUnitTest {
                 .status(AttendanceStatus.ABSENT)
                 .build();
 
-        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(attendanceRepository.findByEventId(event.getEventId()))
+        when(eventRepository.findByEventIdAndTenantId(event.getEventId(), tenantId)).thenReturn(Optional.of(event));
+        when(attendanceRepository.findByEventIdAndTenantId(event.getEventId(), tenantId))
                 .thenReturn(List.of(attendance1, attendance2));
-        when(userRepository.findById(attendeeOne.getUuid())).thenReturn(Optional.of(attendeeOne));
-        when(userRepository.findById(attendeeTwo.getUuid())).thenReturn(Optional.of(attendeeTwo));
+        when(userRepository.findByUuidAndAffiliatedTenantId(attendeeOne.getUuid(), tenantId)).thenReturn(Optional.of(attendeeOne));
+        when(userRepository.findByUuidAndAffiliatedTenantId(attendeeTwo.getUuid(), tenantId)).thenReturn(Optional.of(attendeeTwo));
 
         EventReport report = eventReportService.generateEventReport(event.getEventId());
 
@@ -111,10 +118,10 @@ class EventReportServiceUnitTest {
 
     @Test
     void generateEventReport_whenEventMissing_shouldThrow() {
-        when(eventRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(eventRepository.findByEventIdAndTenantId(anyLong(), org.mockito.ArgumentMatchers.eq(tenantId))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> eventReportService.generateEventReport(99L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Event not found");
     }
 
@@ -126,14 +133,45 @@ class EventReportServiceUnitTest {
                 .status(AttendanceStatus.CHECKED_IN)
                 .build();
 
-        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(attendanceRepository.findByEventId(event.getEventId()))
+        when(eventRepository.findByEventIdAndTenantId(event.getEventId(), tenantId)).thenReturn(Optional.of(event));
+        when(attendanceRepository.findByEventIdAndTenantId(event.getEventId(), tenantId))
                 .thenReturn(List.of(attendance));
-        when(userRepository.findById(attendeeOne.getUuid())).thenReturn(Optional.empty());
+        when(userRepository.findByUuidAndAffiliatedTenantId(attendeeOne.getUuid(), tenantId)).thenReturn(Optional.empty());
 
         EventReport report = eventReportService.generateEventReport(event.getEventId());
 
         assertThat(report.getUserAttendanceReport()).hasSize(1);
         assertThat(report.getUserAttendanceReport().get(0).getUserName()).isEqualTo("Unknown");
+    }
+
+    @Test
+    void generateEventReport_whenTenantContextMissing_shouldThrow() {
+        TenantContext.clear();
+
+        assertThatThrownBy(() -> eventReportService.generateEventReport(event.getEventId()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Tenant ID not found in context");
+    }
+
+    @Test
+    void generateEventReport_whenGuestAttendanceExists_shouldIncludeGuestRow() {
+        EventAttendance guestAttendance = EventAttendance.builder()
+                .event(event)
+                .guestFullName("Walk-in Guest")
+                .guestEmail("walkin@example.com")
+                .status(AttendanceStatus.CHECKED_IN)
+                .build();
+
+        when(eventRepository.findByEventIdAndTenantId(event.getEventId(), tenantId)).thenReturn(Optional.of(event));
+        when(attendanceRepository.findByEventIdAndTenantId(event.getEventId(), tenantId))
+                .thenReturn(List.of(guestAttendance));
+
+        EventReport report = eventReportService.generateEventReport(event.getEventId());
+
+        assertThat(report.getUserAttendanceReport()).hasSize(1);
+        assertThat(report.getUserAttendanceReport().get(0).getUserId()).isNull();
+        assertThat(report.getUserAttendanceReport().get(0).getUserName()).isEqualTo("Walk-in Guest");
+        assertThat(report.getUserAttendanceReport().get(0).getAttendeeType()).isEqualTo(AttendanceAttendeeType.GUEST);
+        assertThat(report.getUserAttendanceReport().get(0).getTotalAttended()).isEqualTo(1);
     }
 }

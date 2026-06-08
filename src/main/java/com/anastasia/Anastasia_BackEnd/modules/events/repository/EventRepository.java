@@ -17,6 +17,8 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     List<EventEntity> findByTenantId(UUID tenantId);
 
+    Optional<EventEntity> findByEventIdAndTenantId(Long eventId, UUID tenantId);
+
     Optional<EventEntity> findFirstByTenantIdAndChurch_ChurchIdAndTitleIgnoreCase(UUID tenantId,
                                                                                   Long churchId,
                                                                                   String title);
