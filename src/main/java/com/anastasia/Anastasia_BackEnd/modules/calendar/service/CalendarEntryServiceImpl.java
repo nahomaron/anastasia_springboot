@@ -22,6 +22,8 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRep
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +49,7 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
     @Transactional
     public CalendarEntryResponse createEntry(CalendarEntryRequest request, UUID ownerUserId) {
         validateRequest(request);
+        enforceAppointmentScopedWrite(request.type(), null);
         ChurchEntity church = resolveChurch();
         UserEntity owner = resolveUser(ownerUserId);
 
@@ -81,6 +84,7 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
         validateRequest(request);
         CalendarEntryEntity entry = resolveEntry(entryId);
         ensureTenant(entry);
+        enforceAppointmentScopedWrite(request.type(), entry.getType());
 
         entry.setTitle(request.title());
         entry.setDescription(request.description());
@@ -92,7 +96,6 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
         entry.setAllDay(request.allDay());
         entry.setVisibility(request.visibility());
         entry.setCategories(normalizeCategories(request.categories()));
-        entry.setOwnerUser(resolveUser(ownerUserId));
         if (entry.getStatus() == null) {
             entry.setStatus(CalendarEntryStatus.SCHEDULED);
         }
@@ -111,6 +114,7 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
     public void applyOccurrenceOverride(UUID entryId, OccurrenceOverrideRequest request, UUID ownerUserId) {
         CalendarEntryEntity entry = resolveEntry(entryId);
         ensureTenant(entry);
+        enforceAppointmentScopedWrite(entry.getType(), entry.getType());
 
         if (entry.getOwnerUserId() == null || !entry.getOwnerUserId().equals(ownerUserId)) {
             throw new IllegalStateException("Only the entry owner can override an occurrence");
@@ -154,6 +158,7 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
 
         CalendarEntryEntity entry = resolveEntry(entryId);
         ensureTenant(entry);
+        enforceAppointmentScopedWrite(newSeriesRequest.type(), entry.getType());
 
         if (entry.getRecurrence() == null || entry.getRecurrence().getFrequency() == RecurrenceFrequency.NONE) {
             throw new IllegalStateException("THIS_AND_FUTURE requires a recurring series");
@@ -218,6 +223,35 @@ public class CalendarEntryServiceImpl implements CalendarEntryService {
             throw new IllegalStateException("Tenant ID not found in context");
         }
         return tenantId;
+    }
+
+    private void enforceAppointmentScopedWrite(
+            com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType requestedType,
+            com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType existingType
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return;
+        }
+
+        Set<String> authorities = authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .collect(java.util.stream.Collectors.toSet());
+
+        boolean appointmentOnlyWriter = authorities.contains("MANAGE_APPOINTMENT")
+                && !authorities.contains("MANAGE_EVENTS")
+                && !authorities.contains("CREATE_EDIT_EVENTS");
+
+        if (!appointmentOnlyWriter) {
+            return;
+        }
+
+        if (existingType != null && existingType != com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType.APPOINTMENT) {
+            throw new IllegalStateException("Appointment-scoped users can only modify appointment calendar entries");
+        }
+        if (requestedType != com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryType.APPOINTMENT) {
+            throw new IllegalStateException("Appointment-scoped users can only create or update appointment calendar entries");
+        }
     }
 
     private UserEntity resolveUser(UUID userId) {
