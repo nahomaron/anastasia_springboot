@@ -124,7 +124,7 @@ public class MemberDashboardService {
     }
 
     private List<MemberUpcomingEventItem> buildUpcomingEvents(UserEntity user, UUID tenantId) {
-        Map<Long, EventAttendance> attendanceByEventId = eventAttendanceRepository.findByUserUuid(user.getUuid()).stream()
+        Map<Long, EventAttendance> attendanceByEventId = eventAttendanceRepository.findByUserUuidAndTenantId(user.getUuid(), tenantId).stream()
                 .filter(attendance -> attendance.getEventId() != null)
                 .collect(java.util.stream.Collectors.toMap(EventAttendance::getEventId, attendance -> attendance, (a, b) -> a));
 

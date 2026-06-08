@@ -30,11 +30,20 @@ public class EventAttendance {
     private Long eventId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private UserEntity user;
 
     @Column(name = "user_id", insertable = false, updatable = false)
     private UUID userId;
+
+    @Column(name = "guest_full_name", length = 255)
+    private String guestFullName;
+
+    @Column(name = "guest_email", length = 255)
+    private String guestEmail;
+
+    @Column(name = "guest_phone", length = 64)
+    private String guestPhone;
 
     private LocalDateTime checkInTime;
 

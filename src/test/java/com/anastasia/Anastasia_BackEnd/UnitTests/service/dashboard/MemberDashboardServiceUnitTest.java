@@ -97,7 +97,7 @@ class MemberDashboardServiceUnitTest {
                 .eventId(mass.getEventId())
                 .userId(userUuid)
                 .build();
-        when(eventAttendanceRepository.findByUserUuid(eq(userUuid))).thenReturn(List.of(attendance));
+        when(eventAttendanceRepository.findByUserUuidAndTenantId(eq(userUuid), eq(tenantId))).thenReturn(List.of(attendance));
         when(paymentIntentRepositoryProvider.getIfAvailable()).thenReturn(null);
 
         var response = memberDashboardService.getSummary();

@@ -50,6 +50,7 @@ public class EventReport {
     public static class UserAttendanceReport {
         private UUID userId;
         private String userName;
+        private com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceAttendeeType attendeeType;
         private int totalInvited;
         private int totalAttended;
         private int totalMissed;
@@ -65,4 +66,3 @@ public class EventReport {
         }
     }
 }
-
