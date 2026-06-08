@@ -332,6 +332,23 @@ class EventAttendanceServiceUnitTest {
     }
 
     @Test
+    void checkIn_whenGuestRequestHasNoStableIdentifier_throwsIllegalArgument() {
+        CheckInRequestDTO request = CheckInRequestDTO.builder()
+                .eventId(event.getEventId())
+                .guestFullName("Guest Visitor")
+                .checkInMethod("MANUAL")
+                .build();
+
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
+
+        assertThatThrownBy(() -> eventAttendanceService.checkIn(request, actorUserId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("guestEmail or guestPhone is required");
+
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
     void getAttendanceReportByUser_whenUserHasNoMembership_throwsIllegalArgument() {
         UserEntity nonMemberUser = UserEntity.builder()
                 .uuid(userId)

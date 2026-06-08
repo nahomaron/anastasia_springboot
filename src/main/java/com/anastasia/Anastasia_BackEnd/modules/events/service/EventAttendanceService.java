@@ -219,6 +219,12 @@ public class EventAttendanceService {
                     "guestFullName is required when userId is not provided"
             ));
         }
+        if (normalizedGuestEmail == null && normalizedGuestPhone == null) {
+            throw new IllegalArgumentException(messageService.get(
+                    "events.attendance.guest.contactRequired",
+                    "guestEmail or guestPhone is required when userId is not provided"
+            ));
+        }
         return AttendanceTarget.forGuest(normalizedGuestName, normalizedGuestEmail, normalizedGuestPhone);
     }
 
