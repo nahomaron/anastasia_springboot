@@ -12,6 +12,7 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.mappers.AppointmentM
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentParticipantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentSource;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatus;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentStatusHistoryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentType;
@@ -90,7 +91,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .description(request.description())
                 .type(request.type())
                 .status(status)
-                .source(Optional.ofNullable(request.source()).orElse(com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentSource.MANUAL))
+                .source(resolveAppointmentSource(request, canManageAppointments))
                 .locationType(request.locationType())
                 .locationLabel(request.locationLabel())
                 .startAtUtc(request.startDateTime())
@@ -692,6 +693,13 @@ public class AppointmentServiceImpl implements AppointmentService {
                 throw new IllegalArgumentException("Members may only request appointments for their household");
             }
         }
+    }
+
+    private AppointmentSource resolveAppointmentSource(AppointmentCreateRequest request, boolean canManageAppointments) {
+        if (!canManageAppointments) {
+            return AppointmentSource.REQUEST_MODULE;
+        }
+        return Optional.ofNullable(request.source()).orElse(AppointmentSource.MANUAL);
     }
 
     private void validateReschedule(AppointmentRescheduleRequest request) {

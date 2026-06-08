@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.events.model.attendance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ public class CheckInQRRequestDTO {
 
     private Long eventId;
 
+    @JsonIgnore
     private UUID userId;
 
     private double longitude;

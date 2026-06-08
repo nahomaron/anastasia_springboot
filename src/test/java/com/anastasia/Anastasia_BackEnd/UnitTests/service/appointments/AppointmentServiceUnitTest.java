@@ -18,8 +18,10 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.model.LocationType;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.repository.AppointmentRepository;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.service.AppointmentServiceImpl;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarVisibility;
+import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -192,6 +194,69 @@ class AppointmentServiceUnitTest {
         assertThat(saved.getCanceledAt()).isNotNull();
         assertThat(saved.getCancellationReason()).isEqualTo("patient no show");
         assertThat(saved.getConfirmedAt()).isEqualTo(saved.getCanceledAt());
+    }
+
+    @Test
+    void createAppointment_shouldOverrideMemberControlledSource() {
+        TenantContext.setTenantId(tenantId);
+        UUID userId = UUID.randomUUID();
+        UUID calendarEntryId = UUID.randomUUID();
+        Adult_MemberEntity membership = Adult_MemberEntity.builder().id(77L).build();
+        UserEntity user = new UserEntity();
+        user.setUuid(userId);
+        user.setTenantId(tenantId);
+        user.setMembership(membership);
+
+        AppointmentCreateRequest request = new AppointmentCreateRequest(
+                "one",
+                null,
+                AppointmentType.BAPTISM_PREP,
+                Instant.parse("2026-01-01T10:00:00Z"),
+                Instant.parse("2026-01-01T11:00:00Z"),
+                "UTC",
+                LocationType.ONSITE,
+                "hall",
+                AppointmentStatus.REQUESTED,
+                AppointmentSource.KIOSK,
+                null,
+                null,
+                "owner@example.com",
+                ContactPreference.EMAIL,
+                null,
+                null,
+                Set.of(),
+                Set.of()
+        );
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(calendarEntryService.createEntry(any(), eq(userId))).thenReturn(
+                new com.anastasia.Anastasia_BackEnd.modules.calendar.dto.CalendarEntryResponse(
+                        calendarEntryId,
+                        null,
+                        request.title(),
+                        request.description(),
+                        null,
+                        request.startDateTime(),
+                        request.endDateTime(),
+                        request.timeZone(),
+                        false,
+                        CalendarVisibility.PRIEST_ONLY,
+                        null,
+                        null,
+                        null,
+                        Set.of(),
+                        userId
+                )
+        );
+        when(calendarEntryRepository.findById(calendarEntryId)).thenReturn(Optional.of(new CalendarEntryEntity()));
+        when(appointmentRepository.save(any(AppointmentEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(appointmentMapper.toResponse(any())).thenAnswer(invocation -> buildResponse(invocation.getArgument(0)));
+
+        appointmentService.createAppointment(request, userId);
+
+        ArgumentCaptor<AppointmentEntity> captor = ArgumentCaptor.forClass(AppointmentEntity.class);
+        verify(appointmentRepository).save(captor.capture());
+        assertThat(captor.getValue().getSource()).isEqualTo(AppointmentSource.REQUEST_MODULE);
     }
 
     @Test

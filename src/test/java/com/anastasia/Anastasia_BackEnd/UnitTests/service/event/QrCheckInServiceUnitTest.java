@@ -1,10 +1,13 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.event;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.CheckInQRRequestDTO;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.EventAttendance;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventAttendanceRepository;
 import com.anastasia.Anastasia_BackEnd.modules.events.repository.EventRepository;
@@ -29,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -55,13 +59,21 @@ class QrCheckInServiceUnitTest {
     private EventEntity event;
     private UserEntity user;
     private UUID userId;
+    private UUID actorUserId;
+    private UUID tenantId;
 
     @BeforeEach
     void setUp() {
+        TenantContext.clear();
+        tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
         userId = UUID.randomUUID();
+        actorUserId = UUID.randomUUID();
         user = UserEntity.builder()
-                .uuid(userId)
+                .uuid(actorUserId)
                 .fullName("Qr User")
+                .affiliatedTenantId(tenantId)
+                .membership(Adult_MemberEntity.builder().churchId(4L).build())
                 .build();
 
         lenient().doAnswer(invocation -> invocation.getArgument(1))
@@ -70,6 +82,8 @@ class QrCheckInServiceUnitTest {
 
         event = EventEntity.builder()
                 .eventId(15L)
+                .tenantId(tenantId)
+                .church(ChurchEntity.builder().churchId(4L).build())
                 .title("Youth Fellowship")
                 .startAt(LocalDate.now().atTime(9, 0).toInstant(ZoneOffset.UTC))
                 .endAt(LocalDate.now().atTime(11, 0).toInstant(ZoneOffset.UTC))
@@ -89,28 +103,29 @@ class QrCheckInServiceUnitTest {
                 .build();
 
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(attendanceRepository.findByUserUuidAndEventId(userId, event.getEventId()))
+        when(userRepository.findByUuidAndAffiliatedTenantId(actorUserId, tenantId)).thenReturn(Optional.of(user));
+        when(attendanceRepository.findByUserUuidAndEventId(actorUserId, event.getEventId()))
                 .thenReturn(Optional.empty());
         when(attendanceTimeValidator.isCheckInAllowed(event)).thenReturn(true);
         when(attendanceRepository.save(any(EventAttendance.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        EventAttendance attendance = qrCheckInService.checkInWithQR(request);
+        EventAttendance attendance = qrCheckInService.checkInWithQR(request, actorUserId);
 
         assertThat(attendance.getStatus()).isEqualTo(AttendanceStatus.CHECKED_IN);
         assertThat(attendance.getCheckInMethod()).isEqualTo("QR");
         assertThat(attendance.getEvent()).isEqualTo(event);
         assertThat(attendance.getUser()).isEqualTo(user);
         assertThat(attendance.getCheckInTime()).isNotNull();
-        assertThat(attendance.getCheckedInBy()).isEqualTo(userId);
+        assertThat(attendance.getUser().getUuid()).isEqualTo(actorUserId);
+        assertThat(attendance.getCheckedInBy()).isEqualTo(actorUserId);
     }
 
     @Test
     void checkInWithQR_whenEventMissing_shouldThrow() {
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
+        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest(), actorUserId))
                 .isInstanceOf(EntityNotFoundException.class);
 
         verify(attendanceRepository, never()).save(any());
@@ -119,9 +134,9 @@ class QrCheckInServiceUnitTest {
     @Test
     void checkInWithQR_whenUserMissing_shouldThrow() {
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findByUuidAndAffiliatedTenantId(actorUserId, tenantId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
+        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest(), actorUserId))
                 .isInstanceOf(EntityNotFoundException.class);
 
         verify(attendanceRepository, never()).save(any());
@@ -130,11 +145,11 @@ class QrCheckInServiceUnitTest {
     @Test
     void checkInWithQR_whenAlreadyCheckedIn_shouldThrow() {
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(attendanceRepository.findByUserUuidAndEventId(userId, event.getEventId()))
+        when(userRepository.findByUuidAndAffiliatedTenantId(actorUserId, tenantId)).thenReturn(Optional.of(user));
+        when(attendanceRepository.findByUserUuidAndEventId(actorUserId, event.getEventId()))
                 .thenReturn(Optional.of(EventAttendance.builder().build()));
 
-        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
+        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest(), actorUserId))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -144,11 +159,11 @@ class QrCheckInServiceUnitTest {
         event.setLongitude(null);
 
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(attendanceRepository.findByUserUuidAndEventId(userId, event.getEventId()))
+        when(userRepository.findByUuidAndAffiliatedTenantId(actorUserId, tenantId)).thenReturn(Optional.of(user));
+        when(attendanceRepository.findByUserUuidAndEventId(actorUserId, event.getEventId()))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
+        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest(), actorUserId))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -162,24 +177,52 @@ class QrCheckInServiceUnitTest {
                 .build();
 
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(attendanceRepository.findByUserUuidAndEventId(userId, event.getEventId()))
+        when(userRepository.findByUuidAndAffiliatedTenantId(actorUserId, tenantId)).thenReturn(Optional.of(user));
+        when(attendanceRepository.findByUserUuidAndEventId(actorUserId, event.getEventId()))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(request))
+        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(request, actorUserId))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void checkInWithQR_whenCheckInNotAllowed_shouldThrow() {
         when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(attendanceRepository.findByUserUuidAndEventId(userId, event.getEventId()))
+        when(userRepository.findByUuidAndAffiliatedTenantId(actorUserId, tenantId)).thenReturn(Optional.of(user));
+        when(attendanceRepository.findByUserUuidAndEventId(actorUserId, event.getEventId()))
                 .thenReturn(Optional.empty());
         when(attendanceTimeValidator.isCheckInAllowed(event)).thenReturn(false);
 
-        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest()))
+        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest(), actorUserId))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void checkInWithQR_whenEventOutsideTenant_shouldThrow() {
+        event.setTenantId(UUID.randomUUID());
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
+
+        assertThatThrownBy(() -> qrCheckInService.checkInWithQR(buildRequest(), actorUserId))
+                .isInstanceOf(EntityNotFoundException.class);
+
+        verify(userRepository, never()).findByUuidAndAffiliatedTenantId(eq(actorUserId), any());
+    }
+
+    @Test
+    void checkInWithQR_whenUserOutsideChurchScope_shouldStillAllowTenantScopedCheckIn() {
+        user.setMembership(Adult_MemberEntity.builder().churchId(99L).build());
+        when(eventRepository.findById(event.getEventId())).thenReturn(Optional.of(event));
+        when(userRepository.findByUuidAndAffiliatedTenantId(actorUserId, tenantId)).thenReturn(Optional.of(user));
+        when(attendanceRepository.findByUserUuidAndEventId(actorUserId, event.getEventId()))
+                .thenReturn(Optional.empty());
+        when(attendanceTimeValidator.isCheckInAllowed(event)).thenReturn(true);
+        when(attendanceRepository.save(any(EventAttendance.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        EventAttendance attendance = qrCheckInService.checkInWithQR(buildRequest(), actorUserId);
+
+        assertThat(attendance.getUser()).isEqualTo(user);
+        assertThat(attendance.getStatus()).isEqualTo(AttendanceStatus.CHECKED_IN);
     }
 
     private CheckInQRRequestDTO buildRequest() {

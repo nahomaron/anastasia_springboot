@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.events.service;
 
+import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.EventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.events.model.attendance.AttendanceStatus;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,18 +30,10 @@ public class QrCheckInService {
 
     private static final double DEFAULT_MAX_DISTANCE_METERS = 100; // fallback radius
 
-    public EventAttendance checkInWithQR(CheckInQRRequestDTO request) {
-        EventEntity event = eventRepository.findById(request.getEventId())
-                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
-                        "events.notFound",
-                        "Event not found"
-                )));
-
-        UserEntity user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
-                        "user.notFound",
-                        "User not found"
-                )));
+    public EventAttendance checkInWithQR(CheckInQRRequestDTO request, UUID actorUserId) {
+        UUID tenantId = requireTenantId();
+        EventEntity event = findEventForTenant(request.getEventId(), tenantId);
+        UserEntity user = findUserInEventScope(actorUserId, tenantId, event);
 
         boolean alreadyCheckedIn = attendanceRepository
                 .findByUserUuidAndEventId(user.getUuid(), event.getEventId())
@@ -91,7 +85,7 @@ public class QrCheckInService {
                 .checkInTime(LocalDateTime.now())
                 .checkInMethod("QR")
                 .status(AttendanceStatus.CHECKED_IN)
-                .checkedInBy(request.getUserId())
+                .checkedInBy(actorUserId)
                 .build();
 
         return attendanceRepository.save(attendance);
@@ -107,5 +101,39 @@ public class QrCheckInService {
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
+    }
+
+    private EventEntity findEventForTenant(Long eventId, UUID tenantId) {
+        EventEntity event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "events.notFound",
+                        "Event not found"
+                )));
+        if (!tenantId.equals(event.getTenantId())) {
+            throw new EntityNotFoundException(messageService.get(
+                    "events.notFound",
+                    "Event not found"
+            ));
+        }
+        return event;
+    }
+
+    private UserEntity findUserInEventScope(UUID userId, UUID tenantId, EventEntity event) {
+        return userRepository.findByUuidAndAffiliatedTenantId(userId, tenantId)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get(
+                        "user.notFound",
+                        "User not found"
+                )));
+    }
+
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException(messageService.get(
+                    "tenant.context.missing",
+                    "Tenant ID not found in context"
+            ));
+        }
+        return tenantId;
     }
 }

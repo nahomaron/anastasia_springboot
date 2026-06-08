@@ -174,22 +174,22 @@ class GroupAndEventServicesIT extends ServiceIntegrationTestBase {
                 .userId(extraUser.getUuid())
                 .checkInMethod("MANUAL")
                 .checkedInBy(managerUser.getUuid())
-                .build());
+                .build(), managerUser.getUuid());
 
         attendanceService.markAbsent(MarkAbsentRequestDTO.builder()
                 .eventId(savedEvent.getEventId())
                 .userId(memberUser.getUuid())
                 .markedAbsentBy(managerUser.getUuid())
-                .build());
+                .build(), managerUser.getUuid());
 
         qrCheckInService.checkInWithQR(CheckInQRRequestDTO.builder()
                 .eventId(savedEvent.getEventId())
                 .userId(qrUser.getUuid())
                 .latitude(40.71281)
                 .longitude(-74.00601)
-                .build());
+                .build(), qrUser.getUuid());
 
-        assertThat(attendanceRepository.findByEventId(savedEvent.getEventId())).hasSize(3);
+        assertThat(attendanceRepository.findByEventIdAndTenantId(savedEvent.getEventId(), tenant.getId())).hasSize(3);
         assertThat(attendanceService.getAttendanceByUser(extraUser.getUuid())).hasSize(1);
         assertThat(attendanceService.getAttendanceByEventAndStatus(savedEvent.getEventId(), AttendanceStatus.CHECKED_IN))
                 .hasSize(2);
