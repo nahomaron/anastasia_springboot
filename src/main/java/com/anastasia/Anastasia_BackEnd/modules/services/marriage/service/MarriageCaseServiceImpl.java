@@ -45,6 +45,15 @@ import java.math.BigDecimal;
 @Service
 public class MarriageCaseServiceImpl implements MarriageCaseService {
 
+    private static final Set<String> ALLOWED_MARRIAGE_DOCUMENT_CATEGORIES = Set.of(
+            "BAPTISM_CERTIFICATE",
+            "CONFIRMATION_CERTIFICATE",
+            "FREEDOM_TO_MARRY_LETTER",
+            "PARISH_MEMBERSHIP_LETTER",
+            "SACRAMENT_RECORD_EXTRACT",
+            "DISPENSATION_OR_PERMISSION_LETTER"
+    );
+
     private final MarriageCaseRepository marriageCaseRepository;
     private final MarriagePartyRepository marriagePartyRepository;
     private final MarriagePartySubmissionRepository marriagePartySubmissionRepository;
@@ -499,23 +508,26 @@ public class MarriageCaseServiceImpl implements MarriageCaseService {
     public MarriageDocumentResponse addDocument(UUID caseId, MarriageDocumentMetadataRequest request) {
         UserEntity currentUser = marriageSecuritySupport.requireCurrentUser();
         MarriageCaseEntity marriageCase = resolveAccessibleCase(caseId);
-        MarriagePartyEntity party = request.partyRole() == null ? null : resolveParty(marriageCase, request.partyRole());
+        MarriagePartyEntity party = request.getPartyRole() == null ? null : resolveParty(marriageCase, request.getPartyRole());
         if (party != null) {
             ensurePartyEditableByCurrentUser(party, currentUser);
         } else if (!marriageSecuritySupport.isAdminLike()) {
             throw new IllegalStateException("Case-level document upload requires admin access.");
         }
+        String normalizedCategory = normalizeCode(request.getDocumentCategory());
+        if (!ALLOWED_MARRIAGE_DOCUMENT_CATEGORIES.contains(normalizedCategory)) {
+            throw new IllegalStateException("Only church-issued marriage document categories may be uploaded.");
+        }
 
         MarriagePartyDocumentEntity document = MarriagePartyDocumentEntity.builder()
                 .marriageCase(marriageCase)
                 .party(party)
-                .documentCategory(normalizeCode(request.documentCategory()))
-                .originalFileName(request.originalFileName().trim())
-                .storageReference(request.storageReference().trim())
-                .contentType(trimToNull(request.contentType()))
-                .expiryDate(request.expiryDate())
-                .documentNumber(trimToNull(request.documentNumber()))
-                .notes(trimToNull(request.notes()))
+                .documentCategory(normalizedCategory)
+                .originalFileName(request.getOriginalFileName().trim())
+                .storageReference(request.getStorageReference().trim())
+                .contentType(trimToNull(request.getContentType()))
+                .expiryDate(request.getExpiryDate())
+                .notes(trimToNull(request.getNotes()))
                 .uploadedByUserId(currentUser.getUuid())
                 .uploadedAt(Instant.now())
                 .build();
@@ -1581,7 +1593,6 @@ public class MarriageCaseServiceImpl implements MarriageCaseService {
                 document.getContentType(),
                 document.getVerificationStatus(),
                 document.getExpiryDate(),
-                document.getDocumentNumber(),
                 document.getNotes(),
                 document.getUploadedByUserId(),
                 document.getUploadedAt()
