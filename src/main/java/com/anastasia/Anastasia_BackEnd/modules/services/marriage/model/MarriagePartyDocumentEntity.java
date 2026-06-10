@@ -86,9 +86,6 @@ public class MarriagePartyDocumentEntity extends Auditable {
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
 
-    @Column(name = "document_number", length = 128)
-    private String documentNumber;
-
     @Column(name = "notes", length = 2000)
     private String notes;
 

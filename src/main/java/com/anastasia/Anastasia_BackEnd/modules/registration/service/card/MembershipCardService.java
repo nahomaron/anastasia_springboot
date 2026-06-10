@@ -9,6 +9,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.dto.card.MembershipC
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.card.MembershipCardSummaryResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.card.MembershipCardTemplateResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.card.MembershipCardVerifyResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.MembershipCardAuditEntity;
@@ -16,11 +17,13 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.Me
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.MembershipCardEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.MembershipCardStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.card.MembershipCardTemplateEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MemberRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MembershipCardAuditRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MembershipCardRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.MembershipCardTemplateRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -31,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -43,6 +47,7 @@ public class MembershipCardService {
     private final MembershipCardRepository membershipCardRepository;
     private final MembershipCardAuditRepository membershipCardAuditRepository;
     private final MembershipCardTemplateRepository membershipCardTemplateRepository;
+    private final MemberRepository memberRepository;
     private final UserRepository userRepository;
     private final MembershipCardTokenService tokenService;
     private final MembershipCardStorageService storageService;
@@ -255,7 +260,7 @@ public class MembershipCardService {
     }
 
     @Transactional
-    public MembershipCardVerifyResponse verifyToken(String token) {
+    public MembershipCardVerifyResponse verifyToken(String token, HttpServletRequest request) {
         MembershipCardTokenService.ParsedMembershipCardToken parsed = tokenService.parse(token);
 
         MembershipCardEntity card = membershipCardRepository.findById(parsed.cardId())
@@ -269,12 +274,10 @@ public class MembershipCardService {
         boolean memberMatches = parsed.membershipNumber().equals(card.getMembershipNumber());
 
         if (!hashMatches || !tenantMatches || !memberMatches) {
+            audit(card, MembershipCardAuditEventType.VERIFIED,
+                    buildVerificationAuditDetails(false, "token-mismatch", request, card));
             return MembershipCardVerifyResponse.builder()
                     .valid(false)
-                    .message(messageService.get(
-                            "registration.membershipCard.token.invalid",
-                            "Invalid card token"
-                    ))
                     .build();
         }
 
@@ -286,19 +289,19 @@ public class MembershipCardService {
         boolean valid = card.getStatus() == MembershipCardStatus.ACTIVE
                 && !LocalDate.now().isAfter(card.getExpirationDate());
 
+        Adult_MemberEntity member = memberRepository.findByIdAndTenantId(card.getMemberId(), card.getTenantId())
+                .orElse(null);
+        ChurchEntity church = member != null ? member.getChurch() : null;
+
         audit(card, MembershipCardAuditEventType.VERIFIED,
-                "Verification result=" + valid + " at " + Instant.now());
+                buildVerificationAuditDetails(valid, valid ? "verified" : "inactive-or-expired", request, card));
 
         return MembershipCardVerifyResponse.builder()
                 .valid(valid)
-                .message(valid ? "Card is valid" : "Card is not valid")
-                .memberFullName(card.getMemberFullName())
                 .churchName(card.getChurchName())
-                .membershipNumber(card.getMembershipNumber())
-                .issueDate(card.getIssueDate())
+                .diocese(trimToNull(church != null ? church.getDiocese() : null))
                 .expirationDate(card.getExpirationDate())
-                .status(card.getStatus())
-                .cardSerialNumber(card.getCardSerialNumber())
+                .maskedMemberLabel(maskMemberLabel(card))
                 .build();
     }
 
@@ -365,6 +368,108 @@ public class MembershipCardService {
                 .details(details)
                 .build();
         membershipCardAuditRepository.save(audit);
+    }
+
+    private String buildVerificationAuditDetails(
+            boolean valid,
+            String outcome,
+            HttpServletRequest request,
+            MembershipCardEntity card
+    ) {
+        List<String> parts = new ArrayList<>();
+        parts.add("result=" + valid);
+        parts.add("outcome=" + outcome);
+        parts.add("cardStatus=" + card.getStatus());
+        parts.add("expiresOn=" + card.getExpirationDate());
+        parts.add("clientIp=" + safeAuditValue(extractClientIp(request), 96));
+        parts.add("userAgent=" + safeAuditValue(request != null ? request.getHeader("User-Agent") : null, 256));
+        parts.add("forwardedFor=" + safeAuditValue(request != null ? request.getHeader("X-Forwarded-For") : null, 256));
+        return String.join(", ", parts);
+    }
+
+    private String maskMemberLabel(MembershipCardEntity card) {
+        String name = trimToNull(card.getMemberFullName());
+        String membershipNumber = trimToNull(card.getMembershipNumber());
+
+        if (name == null && membershipNumber == null) {
+            return null;
+        }
+
+        String maskedName = name == null ? null : maskName(name);
+        String maskedMembershipNumber = membershipNumber == null ? null : maskMembershipNumber(membershipNumber);
+
+        if (maskedName == null) {
+            return maskedMembershipNumber;
+        }
+        if (maskedMembershipNumber == null) {
+            return maskedName;
+        }
+        return maskedName + " • " + maskedMembershipNumber;
+    }
+
+    private String maskName(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+        List<String> maskedParts = new ArrayList<>();
+        for (String part : parts) {
+            String maskedPart = maskNamePart(part);
+            if (!maskedPart.isBlank()) {
+                maskedParts.add(maskedPart);
+            }
+        }
+        return maskedParts.isEmpty() ? null : String.join(" ", maskedParts);
+    }
+
+    private String maskNamePart(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() == 1) {
+            return trimmed;
+        }
+        return trimmed.charAt(0) + "*";
+    }
+
+    private String maskMembershipNumber(String membershipNumber) {
+        String trimmed = membershipNumber.trim();
+        if (trimmed.length() <= 4) {
+            return trimmed;
+        }
+        return "****" + trimmed.substring(trimmed.length() - 4);
+    }
+
+    private String extractClientIp(HttpServletRequest request) {
+        if (request == null) {
+            return "n/a";
+        }
+        String forwardedFor = trimToNull(request.getHeader("X-Forwarded-For"));
+        if (forwardedFor != null) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        String realIp = trimToNull(request.getHeader("X-Real-IP"));
+        if (realIp != null) {
+            return realIp;
+        }
+        return request.getRemoteAddr();
+    }
+
+    private String safeAuditValue(String value, int maxLength) {
+        String normalized = trimToNull(value);
+        if (normalized == null) {
+            return "n/a";
+        }
+        if (normalized.length() <= maxLength) {
+            return normalized;
+        }
+        return normalized.substring(0, maxLength);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void ensureDefaultTemplates(UUID tenantId, Long churchId) {

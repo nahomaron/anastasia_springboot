@@ -13,7 +13,6 @@ public record MarriageDocumentResponse(
         String contentType,
         String verificationStatus,
         LocalDate expiryDate,
-        String documentNumber,
         String notes,
         UUID uploadedByUserId,
         Instant uploadedAt
