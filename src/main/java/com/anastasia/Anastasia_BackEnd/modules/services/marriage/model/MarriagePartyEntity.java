@@ -133,9 +133,6 @@ public class MarriagePartyEntity extends Auditable {
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride(name = "governmentIdType", column = @Column(name = "identity_government_id_type", length = 64)),
-            @AttributeOverride(name = "governmentIdNumber", column = @Column(name = "identity_government_id_number", length = 128)),
-            @AttributeOverride(name = "passportNumber", column = @Column(name = "identity_passport_number", length = 128)),
             @AttributeOverride(name = "documentNumber", column = @Column(name = "identity_document_number", length = 128)),
             @AttributeOverride(name = "documentExpiryDate", column = @Column(name = "identity_document_expiry_date"))
     })

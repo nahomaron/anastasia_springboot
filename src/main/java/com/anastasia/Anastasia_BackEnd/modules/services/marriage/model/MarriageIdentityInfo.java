@@ -18,15 +18,6 @@ import java.time.LocalDate;
 @Embeddable
 public class MarriageIdentityInfo {
 
-    @Column(name = "government_id_type", length = 64)
-    private String governmentIdType;
-
-    @Column(name = "government_id_number", length = 128)
-    private String governmentIdNumber;
-
-    @Column(name = "passport_number", length = 128)
-    private String passportNumber;
-
     @Column(name = "document_number", length = 128)
     private String documentNumber;
 
