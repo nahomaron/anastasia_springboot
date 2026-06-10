@@ -197,6 +197,7 @@ public class TenantEntitlementController {
                 .pendingPlan(subscription.getPendingPlan())
                 .pendingPlanEffectiveAt(subscription.getPendingPlanEffectiveAt())
                 .scheduledPurgeAt(tenant.getScheduledPurgeAt())
+                .scheduledDeletionAt(tenant.getScheduledDeletionAt())
                 .archiveScheduledAt(tenant.getArchiveScheduledAt())
                 .archivedAt(tenant.getArchivedAt())
                 .retentionWarningActive(tenantWorkspaceLifecycleService.isRetentionWarningActive(tenant, subscription, java.time.Instant.now()))

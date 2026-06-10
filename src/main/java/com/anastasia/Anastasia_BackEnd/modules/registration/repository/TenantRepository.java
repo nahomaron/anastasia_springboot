@@ -76,6 +76,16 @@ public interface TenantRepository extends JpaRepository<TenantEntity, UUID> {
         from TenantEntity t
         left join fetch t.subscription s
         where t.deletedAt is null
+          and t.scheduledDeletionAt is not null
+          and t.scheduledDeletionAt <= :now
+    """)
+    List<TenantEntity> findTenantsDueForDeletion(@Param("now") Instant now);
+
+    @Query("""
+        select t
+        from TenantEntity t
+        left join fetch t.subscription s
+        where t.deletedAt is null
           and t.archiveScheduledAt is not null
           and t.archivedAt is null
           and t.archiveScheduledAt <= :now

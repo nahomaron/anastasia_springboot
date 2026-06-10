@@ -123,8 +123,8 @@ public class TenantWorkspaceLifecycleService {
     @Value("${app.tenants.demo.grace-period-days:14}")
     private long demoGracePeriodDays;
 
-    @Value("${app.tenants.paid.archive-after-days:180}")
-    private long paidArchiveAfterDays;
+    @Value("${app.tenants.retention.deletion-after-days:30}")
+    private long paidRetentionDeletionDays;
 
     @Value("${app.tenants.retention.warning-days:7}")
     private long retentionWarningDays;
@@ -164,6 +164,7 @@ public class TenantWorkspaceLifecycleService {
         tenant.setDeactivatedAt(null);
         tenant.setClosedAt(null);
         tenant.setScheduledPurgeAt(null);
+        tenant.setScheduledDeletionAt(null);
         tenant.setPurgedAt(null);
         tenant.setArchivedAt(null);
         tenant.setArchiveScheduledAt(null);
@@ -191,6 +192,8 @@ public class TenantWorkspaceLifecycleService {
         Instant threshold = null;
         if (tenant.getScheduledPurgeAt() != null) {
             threshold = tenant.getScheduledPurgeAt();
+        } else if (tenant.getScheduledDeletionAt() != null) {
+            threshold = tenant.getScheduledDeletionAt();
         } else if (tenant.getArchiveScheduledAt() != null) {
             threshold = tenant.getArchiveScheduledAt();
         } else if (subscription != null && effectiveAccessDeadline(subscription) != null) {
@@ -210,8 +213,11 @@ public class TenantWorkspaceLifecycleService {
         tenantRepository.findDemoWorkspacesDueForPurge(now)
                 .forEach(tenant -> purgeDemoWorkspace(tenant, now));
 
+        tenantRepository.findTenantsDueForDeletion(now)
+                .forEach(tenant -> deleteTenantWorkspaceAfterRetention(tenant, now));
+
         tenantRepository.findTenantsDueForArchive(now)
-                .forEach(tenant -> archiveTenantWorkspace(tenant, now));
+                .forEach(tenant -> deleteTenantWorkspaceAfterRetention(tenant, now));
     }
 
     private void syncTenantLifecycle(TenantEntity tenant, UUID actorUserId, Instant now) {
@@ -232,6 +238,7 @@ public class TenantWorkspaceLifecycleService {
         Instant accessDeadline = effectiveAccessDeadline(subscription);
         if (hasActiveAccess(subscription, now)) {
             tenant.setScheduledPurgeAt(null);
+            tenant.setScheduledDeletionAt(null);
             subscription.setGracePeriodEndsAt(null);
             if (tenant.getStatus() == TenantStatus.SUSPENDED && tenant.getPurgedAt() == null) {
                 tenant.setStatus(TenantStatus.ACTIVE);
@@ -245,6 +252,8 @@ public class TenantWorkspaceLifecycleService {
             return;
         }
 
+        tenant.setScheduledDeletionAt(null);
+        tenant.setArchiveScheduledAt(null);
         Instant purgeAt = accessDeadline.plus(Duration.ofDays(demoGracePeriodDays));
         tenant.setScheduledPurgeAt(purgeAt);
         subscription.setGracePeriodEndsAt(purgeAt);
@@ -259,8 +268,10 @@ public class TenantWorkspaceLifecycleService {
     }
 
     private void syncPaidWorkspaceLifecycle(TenantEntity tenant, TenantSubscriptionEntity subscription, Instant now) {
-        if (!shouldArchiveOnLapse(subscription)) {
+        Instant accessDeadline = effectiveAccessDeadline(subscription);
+        if (!requiresRetentionDeletionSchedule(subscription)) {
             if (hasActiveAccess(subscription, now)) {
+                tenant.setScheduledDeletionAt(null);
                 tenant.setArchiveScheduledAt(null);
                 if (tenant.getArchivedAt() == null && tenant.getStatus() == TenantStatus.SUSPENDED) {
                     tenant.setStatus(TenantStatus.ACTIVE);
@@ -271,19 +282,27 @@ public class TenantWorkspaceLifecycleService {
             return;
         }
 
-        Instant accessDeadline = effectiveAccessDeadline(subscription);
-        if (accessDeadline == null || accessDeadline.isAfter(now)) {
+        if (accessDeadline == null) {
             return;
         }
 
-        if (tenant.getArchiveScheduledAt() == null) {
-            tenant.setArchiveScheduledAt(accessDeadline.plus(Duration.ofDays(paidArchiveAfterDays)));
+        /*
+         * Paid workspaces, including demos that later converted, keep their data for the legal
+         * retention period after access ends and are then deleted/anonymized. We do not leave
+         * them on a silent 180-day archive-only path.
+         */
+        Instant scheduledDeletionAt = accessDeadline.plus(Duration.ofDays(paidRetentionDeletionDays));
+        tenant.setScheduledDeletionAt(scheduledDeletionAt);
+        tenant.setArchiveScheduledAt(null);
+
+        if (accessDeadline.isAfter(now)) {
+            return;
         }
 
         if (tenant.getStatus() == TenantStatus.ACTIVE) {
             tenant.setStatus(TenantStatus.SUSPENDED);
             tenant.setSuspendedAt(now);
-            tenant.setSuspensionReason("Subscription access lapsed");
+            tenant.setSuspensionReason("Subscription ended; tenant retained for 30 days before deletion");
         }
     }
 
@@ -307,19 +326,26 @@ public class TenantWorkspaceLifecycleService {
         log.info("Purged demo workspace for tenant {}", tenant.getId());
     }
 
-    private void archiveTenantWorkspace(TenantEntity tenant, Instant now) {
-        if (tenant.getDeletedAt() != null || tenant.getArchivedAt() != null) {
+    private void deleteTenantWorkspaceAfterRetention(TenantEntity tenant, Instant now) {
+        if (tenant.getDeletedAt() != null || tenant.getPurgedAt() != null) {
             return;
         }
 
+        UserEntity owner = resolveWorkspaceOwner(tenant, null);
+        clearWorkspaceData(tenant, owner);
         deactivateTenantUsers(tenant, now);
         tenant.setStatus(TenantStatus.CLOSED);
-        tenant.setSuspendedAt(now);
+        tenant.setDeactivatedAt(now);
         tenant.setClosedAt(now);
+        tenant.setDeletedAt(now);
+        tenant.setPurgedAt(now);
         tenant.setArchivedAt(now);
-        tenant.setSuspensionReason("Workspace archived after subscription lapse");
+        tenant.setSuspensionReason("Workspace deleted after 30-day legal retention period");
+        tenant.setScheduledDeletionAt(null);
+        tenant.setArchiveScheduledAt(null);
+        purgeTenantGovernanceData(tenant.getId());
         tenantRepository.save(tenant);
-        log.info("Archived tenant workspace {}", tenant.getId());
+        log.info("Deleted tenant workspace after retention period {}", tenant.getId());
     }
 
     private void clearWorkspaceData(TenantEntity tenant, UserEntity owner) {
@@ -529,22 +555,29 @@ public class TenantWorkspaceLifecycleService {
         if (subscription == null) {
             return null;
         }
-        if (subscription.getTrialEndAt() != null) {
+        if (subscription.getStatus() == SubscriptionStatus.TRIALING && subscription.getTrialEndAt() != null) {
             return subscription.getTrialEndAt();
         }
-        if (subscription.getCurrentPeriodEndAt() != null) {
-            return subscription.getCurrentPeriodEndAt();
+        if (subscription.getStatus() == SubscriptionStatus.CANCELED && subscription.getCanceledAt() != null) {
+            return subscription.getCanceledAt();
         }
         if (subscription.getEndedAt() != null) {
             return subscription.getEndedAt();
         }
+        if (subscription.getCurrentPeriodEndAt() != null) {
+            return subscription.getCurrentPeriodEndAt();
+        }
+        if (subscription.getTrialEndAt() != null) {
+            return subscription.getTrialEndAt();
+        }
         return subscription.getCanceledAt();
     }
 
-    private boolean shouldArchiveOnLapse(TenantSubscriptionEntity subscription) {
+    private boolean requiresRetentionDeletionSchedule(TenantSubscriptionEntity subscription) {
         return subscription != null
                 && hasEverPaid(subscription)
-                && (subscription.getStatus() == SubscriptionStatus.CANCELED
+                && (subscription.isCancelAtPeriodEnd()
+                || subscription.getStatus() == SubscriptionStatus.CANCELED
                 || subscription.getStatus() == SubscriptionStatus.PAST_DUE
                 || subscription.getStatus() == SubscriptionStatus.SUSPENDED);
     }

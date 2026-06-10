@@ -13,6 +13,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSub
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionProviderLinkRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.SubscriptionServiceImpl;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -36,6 +37,7 @@ class SubscriptionServiceImplUnitTest {
     @Mock private TenantSubscriptionEventRepository tenantSubscriptionEventRepository;
     @Mock private SubscriptionPlanHistoryRepository subscriptionPlanHistoryRepository;
     @Mock private TenantRepository tenantRepository;
+    @Mock private TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
 
     @InjectMocks
     private SubscriptionServiceImpl subscriptionService;
@@ -87,6 +89,30 @@ class SubscriptionServiceImplUnitTest {
         assertThat(updated.getLastPaymentAt()).isEqualTo(paymentAt);
         assertThat(updated.getProviderLinks()).hasSize(1);
         assertThat(updated.getProviderLinks().iterator().next().getProviderSubscriptionId()).isEqualTo("sub_123");
+    }
+
+    @Test
+    void cancelSubscriptionImmediatelyEndsAccessAndTriggersLifecycleSync() {
+        TenantSubscriptionEntity subscription = subscription(SubscriptionPlan.BASIC, SubscriptionStatus.ACTIVE);
+        subscription.setCurrentPeriodEndAt(Instant.parse("2026-07-01T00:00:00Z"));
+        when(tenantSubscriptionRepository.findByTenantId(subscription.getTenant().getId()))
+                .thenReturn(Optional.of(subscription));
+        when(tenantSubscriptionRepository.save(any(TenantSubscriptionEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Instant before = Instant.now();
+        TenantSubscriptionEntity updated = subscriptionService.cancelSubscription(
+                subscription.getTenant().getId(),
+                false,
+                UUID.randomUUID()
+        );
+        Instant after = Instant.now();
+
+        assertThat(updated.getStatus()).isEqualTo(SubscriptionStatus.CANCELED);
+        assertThat(updated.getCanceledAt()).isBetween(before, after);
+        assertThat(updated.getEndedAt()).isEqualTo(updated.getCanceledAt());
+        assertThat(updated.getCurrentPeriodEndAt()).isEqualTo(updated.getCanceledAt());
+        verify(tenantWorkspaceLifecycleService).syncTenantLifecycle(subscription.getTenant().getId(), updated.getUpdatedByUserId());
     }
 
     private TenantSubscriptionEntity subscription(SubscriptionPlan plan, SubscriptionStatus status) {

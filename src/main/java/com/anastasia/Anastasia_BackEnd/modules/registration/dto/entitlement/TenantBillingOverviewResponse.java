@@ -34,6 +34,7 @@ public class TenantBillingOverviewResponse {
     private SubscriptionPlan pendingPlan;
     private Instant pendingPlanEffectiveAt;
     private Instant scheduledPurgeAt;
+    private Instant scheduledDeletionAt;
     private Instant archiveScheduledAt;
     private Instant archivedAt;
     private boolean retentionWarningActive;

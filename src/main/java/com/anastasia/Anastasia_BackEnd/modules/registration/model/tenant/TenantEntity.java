@@ -111,6 +111,9 @@ public class TenantEntity extends LocalDateTimeAuditMetadata {
     @Column(name = "scheduled_purge_at")
     private Instant scheduledPurgeAt;
 
+    @Column(name = "scheduled_deletion_at")
+    private Instant scheduledDeletionAt;
+
     @Column(name = "purged_at")
     private Instant purgedAt;
 

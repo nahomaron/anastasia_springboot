@@ -121,6 +121,7 @@ public class PlatformSubscriptionAdminController {
                 .pendingPlan(subscription.getPendingPlan())
                 .pendingPlanEffectiveAt(subscription.getPendingPlanEffectiveAt())
                 .scheduledPurgeAt(tenant.getScheduledPurgeAt())
+                .scheduledDeletionAt(tenant.getScheduledDeletionAt())
                 .archiveScheduledAt(tenant.getArchiveScheduledAt())
                 .archivedAt(tenant.getArchivedAt())
                 .retentionWarningActive(tenantWorkspaceLifecycleService.isRetentionWarningActive(tenant, subscription, Instant.now()))

@@ -35,6 +35,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionPlanHistoryRepository subscriptionPlanHistoryRepository;
     private final TenantRepository tenantRepository;
     private final TenantBillingOverrideService tenantBillingOverrideService;
+    private final TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
 
     @Override
     @Transactional
@@ -130,15 +131,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public TenantSubscriptionEntity cancelSubscription(UUID tenantId, boolean cancelAtPeriodEnd, UUID actorUserId) {
         TenantSubscriptionEntity subscription = requireByTenantId(tenantId);
         SubscriptionStatus oldStatus = subscription.getStatus();
+        Instant now = Instant.now();
 
         subscription.setCancelAtPeriodEnd(cancelAtPeriodEnd);
-        if (!cancelAtPeriodEnd) {
+        subscription.setStatusChangedAt(now);
+        if (cancelAtPeriodEnd) {
+            subscription.setStatusChangeReason("Subscription set to cancel at period end");
+            subscription.setEndedAt(null);
+        } else {
             subscription.setStatus(SubscriptionStatus.CANCELED);
-            subscription.setCanceledAt(Instant.now());
+            subscription.setCanceledAt(now);
+            subscription.setEndedAt(now);
+            subscription.setCurrentPeriodEndAt(now);
+            subscription.setStatusChangeReason("Subscription canceled immediately");
         }
         subscription.setUpdatedByUserId(actorUserId);
 
         TenantSubscriptionEntity saved = tenantSubscriptionRepository.save(subscription);
+        tenantWorkspaceLifecycleService.syncTenantLifecycle(tenantId, actorUserId);
         recordEvent(saved, TenantSubscriptionEventType.CANCELED, saved.getPlan(), saved.getPlan(), oldStatus, saved.getStatus(), actorUserId, null);
         return saved;
     }
