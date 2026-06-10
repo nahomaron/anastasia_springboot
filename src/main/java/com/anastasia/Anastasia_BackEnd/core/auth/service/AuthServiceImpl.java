@@ -271,6 +271,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AuthenticationResponse authenticateGoogleUser(String googleId, String email, String fullName) {
         String normalizedGoogleId = googleId == null ? null : googleId.trim();
         String normalizedEmail = email == null ? null : email.trim().toLowerCase(Locale.ROOT);

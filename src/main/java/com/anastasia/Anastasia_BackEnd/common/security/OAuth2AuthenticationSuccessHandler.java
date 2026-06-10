@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -18,6 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
@@ -52,11 +54,13 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             String redirectUrl = UriComponentsBuilder
                     .fromUriString(normalizeBaseUrl(frontendBaseUrl) + "/auth/google/callback")
                     .queryParam("ticket", ticket)
-                    .build(true)
+                    .build()
+                    .encode()
                     .toUriString();
 
             response.sendRedirect(redirectUrl);
         } catch (RuntimeException ex) {
+            log.warn("Google OAuth login provisioning failed for email={}: {}", email, ex.getMessage(), ex);
             redirectWithError(response, ex.getMessage());
         }
     }
@@ -64,10 +68,18 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     private void redirectWithError(HttpServletResponse response, String error) throws IOException {
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(normalizeBaseUrl(frontendBaseUrl) + "/auth/google/callback")
-                .queryParam("error", error == null ? "Google sign-in failed." : error)
-                .build(true)
+                .queryParam("error", sanitizeErrorMessage(error))
+                .build()
+                .encode()
                 .toUriString();
         response.sendRedirect(redirectUrl);
+    }
+
+    private String sanitizeErrorMessage(String error) {
+        if (error == null || error.isBlank()) {
+            return "Google sign-in failed.";
+        }
+        return error.trim();
     }
 
     private String normalizeBaseUrl(String value) {

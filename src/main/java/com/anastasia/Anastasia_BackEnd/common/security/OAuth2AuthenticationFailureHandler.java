@@ -26,11 +26,19 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
     ) throws IOException, ServletException {
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(normalizeBaseUrl(frontendBaseUrl) + "/auth/google/callback")
-                .queryParam("error", exception == null ? "Google sign-in failed." : exception.getMessage())
-                .build(true)
+                .queryParam("error", sanitizeErrorMessage(exception == null ? null : exception.getMessage()))
+                .build()
+                .encode()
                 .toUriString();
 
         response.sendRedirect(redirectUrl);
+    }
+
+    private String sanitizeErrorMessage(String error) {
+        if (error == null || error.isBlank()) {
+            return "Google sign-in failed.";
+        }
+        return error.trim();
     }
 
     private String normalizeBaseUrl(String value) {
