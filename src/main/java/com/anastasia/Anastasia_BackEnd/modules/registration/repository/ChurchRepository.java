@@ -49,6 +49,38 @@ public interface ChurchRepository extends JpaRepository<ChurchEntity, Long> {
 
     Optional<ChurchEntity> findByChurchNumberAndUsesOurServicesTrue(String churchNumber);
 
+    @Query("""
+            SELECT c FROM ChurchEntity c
+            WHERE c.publicDirectoryEnabled = true
+              AND (:usesOurServices IS NULL OR c.usesOurServices = :usesOurServices)
+              AND (
+                   LOWER(COALESCE(c.churchName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.churchNameLocal, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.churchNumber, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.prefix, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.prefixLocal, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.neighborhood, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.neighborhoodLocal, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.diocese, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.dioceseLocal, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.denomination, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.address.city, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+                   OR LOWER(COALESCE(c.address.country, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+              )
+            """)
+    Page<ChurchEntity> searchPublic(@Param("q") String query, @Param("usesOurServices") Boolean usesOurServices, Pageable pageable);
+
+    @Query("""
+            SELECT c FROM ChurchEntity c
+            WHERE c.publicDirectoryEnabled = true
+              AND (:usesOurServices IS NULL OR c.usesOurServices = :usesOurServices)
+            """)
+    Page<ChurchEntity> findAllPublicFiltered(@Param("usesOurServices") Boolean usesOurServices, Pageable pageable);
+
+    Optional<ChurchEntity> findByChurchNumberAndPublicDirectoryEnabledTrue(String churchNumber);
+
+    Optional<ChurchEntity> findByChurchNumberAndUsesOurServicesTrueAndPublicDirectoryEnabledTrue(String churchNumber);
+
 
     boolean existsByChurchNumber(String churchNumber);
 

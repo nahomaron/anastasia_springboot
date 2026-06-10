@@ -8,6 +8,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.Ima
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.PublicChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -74,6 +75,11 @@ public class ChurchServiceImpl implements ChurchService{
         return response;
     }
 
+    @Override
+    public PublicChurchResponse convertToPublicResponse(ChurchEntity churchEntity) {
+        return churchMapper.churchEntityToPublicResponse(churchEntity);
+    }
+
 //    @Caching(
 //            put = {@CachePut(value = "churches",
 //                    key = "#churchId")
@@ -132,6 +138,16 @@ public class ChurchServiceImpl implements ChurchService{
         return churchRepository.search(normalizedQuery, usesOurServices, pageable).map(this::convertToResponse);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PublicChurchResponse> findAllPublic(Pageable pageable, String query, Boolean usesOurServices) {
+        String normalizedQuery = (query == null || query.isBlank()) ? null : query.trim();
+        if (normalizedQuery == null) {
+            return churchRepository.findAllPublicFiltered(usesOurServices, pageable).map(this::convertToPublicResponse);
+        }
+        return churchRepository.searchPublic(normalizedQuery, usesOurServices, pageable).map(this::convertToPublicResponse);
+    }
+
 //    @Cacheable(value = "churches", keyGenerator = "tenantAwareKeyGenerator")
     @Override
     public Optional<ChurchEntity> findOne(Long churchId) {
@@ -146,6 +162,16 @@ public class ChurchServiceImpl implements ChurchService{
     @Override
     public Optional<ChurchEntity> findOneByChurchNumberUsingOurServices(String churchNumber) {
         return churchRepository.findByChurchNumberAndUsesOurServicesTrue(churchNumber);
+    }
+
+    @Override
+    public Optional<ChurchEntity> findOnePublicByChurchNumber(String churchNumber) {
+        return churchRepository.findByChurchNumberAndPublicDirectoryEnabledTrue(churchNumber);
+    }
+
+    @Override
+    public Optional<ChurchEntity> findOnePublicByChurchNumberUsingOurServices(String churchNumber) {
+        return churchRepository.findByChurchNumberAndUsesOurServicesTrueAndPublicDirectoryEnabledTrue(churchNumber);
     }
 
 //    @Cacheable(value = "churches_all_list", keyGenerator = "tenantAwareKeyGenerator")
@@ -236,6 +262,7 @@ public class ChurchServiceImpl implements ChurchService{
         target.setDescription(incoming.getDescription());
         target.setDescriptionLocal(incoming.getDescriptionLocal());
         target.setUsesOurServices(resolveUsesOurServices(target, incoming));
+        target.setPublicDirectoryEnabled(incoming.isPublicDirectoryEnabled());
         target.setGpsLocation(incoming.getGpsLocation());
         target.setLatitude(incoming.getLatitude());
         target.setLongitude(incoming.getLongitude());

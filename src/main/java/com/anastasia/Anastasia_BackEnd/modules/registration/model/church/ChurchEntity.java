@@ -103,6 +103,10 @@ public class ChurchEntity extends LocalDateTimeAuditMetadata {
     @Column(name = "uses_our_services", nullable = false)
     private boolean usesOurServices;
 
+    @Column(name = "public_directory_enabled", nullable = false)
+    @Builder.Default
+    private boolean publicDirectoryEnabled = false;
+
     private String gpsLocation;
 
     private Double latitude;

@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.PublicChurchResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,11 @@ public interface ChurchService {
 
     ChurchResponse convertToResponse(ChurchEntity churchEntity);
 
+    PublicChurchResponse convertToPublicResponse(ChurchEntity churchEntity);
+
     Page<ChurchResponse> findAll(Pageable pageable, String query, Boolean usesOurServices);
+
+    Page<PublicChurchResponse> findAllPublic(Pageable pageable, String query, Boolean usesOurServices);
 
     boolean exists(Long churchId);
 
@@ -32,4 +37,8 @@ public interface ChurchService {
     Optional<ChurchEntity> findOneByChurchNumber(String churchNumber);
 
     Optional<ChurchEntity> findOneByChurchNumberUsingOurServices(String churchNumber);
+
+    Optional<ChurchEntity> findOnePublicByChurchNumber(String churchNumber);
+
+    Optional<ChurchEntity> findOnePublicByChurchNumberUsingOurServices(String churchNumber);
 }

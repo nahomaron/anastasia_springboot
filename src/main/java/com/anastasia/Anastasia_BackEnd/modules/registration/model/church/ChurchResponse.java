@@ -62,6 +62,7 @@ public class ChurchResponse {
     private String descriptionLocal;
 
     private boolean usesOurServices;
+    private boolean publicDirectoryEnabled;
 
     private String gpsLocation;
 

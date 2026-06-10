@@ -3,6 +3,7 @@ package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.PublicChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.ChurchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,25 +36,25 @@ public class ChurchController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ChurchResponse>> getChurches(
+    public ResponseEntity<Page<PublicChurchResponse>> getChurches(
             Pageable pageable,
             @RequestParam(value = "q", required = false) String query,
             @RequestParam(value = "usesOurServices", required = false) Boolean usesOurServices
     ){
-        Page<ChurchResponse> churches = churchService.findAll(pageable, query, usesOurServices);
+        Page<PublicChurchResponse> churches = churchService.findAllPublic(pageable, query, usesOurServices);
         return new ResponseEntity<>(churches, HttpStatus.OK);
     }
 
     @GetMapping("/by-number/{churchNumber}")
-    public ResponseEntity<ChurchResponse> findByChurchNumber(
+    public ResponseEntity<PublicChurchResponse> findByChurchNumber(
             @PathVariable String churchNumber,
             @RequestParam(value = "usesOurServicesOnly", required = false, defaultValue = "false") boolean usesOurServicesOnly
     ) {
         Optional<ChurchEntity> foundChurch = usesOurServicesOnly
-                ? churchService.findOneByChurchNumberUsingOurServices(churchNumber)
-                : churchService.findOneByChurchNumber(churchNumber);
+                ? churchService.findOnePublicByChurchNumberUsingOurServices(churchNumber)
+                : churchService.findOnePublicByChurchNumber(churchNumber);
 
-        return foundChurch.map(church -> ResponseEntity.ok(churchService.convertToResponse(church)))
+        return foundChurch.map(church -> ResponseEntity.ok(churchService.convertToPublicResponse(church)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 

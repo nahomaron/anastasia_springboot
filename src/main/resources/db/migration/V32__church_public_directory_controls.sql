@@ -1,0 +1,2 @@
+ALTER TABLE churches
+    ADD COLUMN IF NOT EXISTS public_directory_enabled BOOLEAN NOT NULL DEFAULT FALSE;

@@ -71,6 +71,9 @@ public class ChurchDTO {
 
     private boolean usesOurServices;
 
+    @Builder.Default
+    private boolean publicDirectoryEnabled = false;
+
     private String gpsLocation;
 
     private Double latitude;

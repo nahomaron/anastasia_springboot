@@ -127,27 +127,64 @@ class ChurchControllerIT extends PostgresTestContainer {
     void testGetChurchesAllowsAnonymousLookup() throws Exception {
         ChurchDTO churchDTO = TestDataUtil.createTestChurchDTO();
         churchDTO.setUsesOurServices(true);
+        churchDTO.setPublicDirectoryEnabled(true);
         churchService.createChurch(churchService.convertToEntity(churchDTO));
 
         mockMvc.perform(get("/api/v1/churches")
-                        .param("q", churchDTO.getChurchName())
                         .param("usesOurServices", "true")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(1))));
+                .andExpect(jsonPath("$.content[*].churchName", hasItem(churchDTO.getChurchName())))
+                .andExpect(jsonPath("$.content[0].email").doesNotExist())
+                .andExpect(jsonPath("$.content[0].phone").doesNotExist())
+                .andExpect(jsonPath("$.content[0].city", notNullValue()))
+                .andExpect(jsonPath("$.content[0].address").doesNotExist());
+    }
+
+    @Test
+    void testGetChurchesExcludesOptedOutChurchesFromAnonymousLookup() throws Exception {
+        ChurchDTO churchDTO = TestDataUtil.createTestChurchDTO();
+        churchDTO.setUsesOurServices(true);
+        churchDTO.setPublicDirectoryEnabled(false);
+        churchDTO.setChurchName("Hidden Parish");
+        churchDTO.setChurchNameLocal("Hidden Parish Local");
+        churchDTO.setEmail("hidden+" + UUID.randomUUID() + "@church.org");
+        churchService.createChurch(churchService.convertToEntity(churchDTO));
+
+        mockMvc.perform(get("/api/v1/churches")
+                        .param("q", "Hidden Parish")
+                        .param("usesOurServices", "true")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)));
     }
 
     @Test
     void testFindChurchByNumberAllowsAnonymousLookup() throws Exception {
         ChurchDTO churchDTO = TestDataUtil.createTestChurchDTO_B();
         churchDTO.setUsesOurServices(true);
+        churchDTO.setPublicDirectoryEnabled(true);
         ChurchResponse createdChurch = churchService.createChurch(churchService.convertToEntity(churchDTO));
 
         mockMvc.perform(get("/api/v1/churches/by-number/{churchNumber}", createdChurch.getChurchNumber())
                         .param("usesOurServicesOnly", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.churchNumber", is(createdChurch.getChurchNumber())));
+                .andExpect(jsonPath("$.churchNumber", is(createdChurch.getChurchNumber())))
+                .andExpect(jsonPath("$.email").doesNotExist())
+                .andExpect(jsonPath("$.phone").doesNotExist())
+                .andExpect(jsonPath("$.city", is(churchDTO.getAddress().getCity())));
+    }
+
+    @Test
+    void testFindChurchByNumberHidesOptedOutChurchesFromAnonymousLookup() throws Exception {
+        ChurchDTO churchDTO = TestDataUtil.createTestChurchDTO();
+        churchDTO.setPublicDirectoryEnabled(false);
+        ChurchResponse createdChurch = churchService.createChurch(churchService.convertToEntity(churchDTO));
+
+        mockMvc.perform(get("/api/v1/churches/by-number/{churchNumber}", createdChurch.getChurchNumber()))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -172,6 +209,7 @@ class ChurchControllerIT extends PostgresTestContainer {
 
       ChurchEntity church01 = churchRepository.findByChurchNumber(churchNum).orElse(null);
       churchDTO1.setChurchNameLocal("Updated Church Name");
+      churchDTO1.setPublicDirectoryEnabled(false);
 
       assert church01 != null;
       mockMvc.perform(put("/api/v1/churches/{id}", church01.getChurchId())
@@ -181,6 +219,7 @@ class ChurchControllerIT extends PostgresTestContainer {
                         .content(objectMapper.writeValueAsString(churchDTO1)))
               .andExpect(status().isOk())
               .andExpect(jsonPath("$.churchNameLocal", is("Updated Church Name")))
+              .andExpect(jsonPath("$.publicDirectoryEnabled", is(false)))
               .andExpect(jsonPath("$.dioceseLocal", is(churchDTO1.getDioceseLocal())))
               .andExpect(jsonPath("$.descriptionLocal", is(churchDTO1.getDescriptionLocal())));
     }

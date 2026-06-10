@@ -8,6 +8,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchD
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.PublicChurchResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -63,8 +64,19 @@ class ChurchServiceUnitTest {
                     .email(mappedChurch.getEmail())
                     .phone(mappedChurch.getPhone())
                     .descriptionLocal(mappedChurch.getDescriptionLocal())
+                    .publicDirectoryEnabled(mappedChurch.isPublicDirectoryEnabled())
                     .status(mappedChurch.getStatus())
                     .tenantId(mappedChurch.getTenant() != null ? mappedChurch.getTenant().getId() : null)
+                    .build();
+        });
+        lenient().when(churchMapper.churchEntityToPublicResponse(any(ChurchEntity.class))).thenAnswer(invocation -> {
+            ChurchEntity mappedChurch = invocation.getArgument(0);
+            return PublicChurchResponse.builder()
+                    .churchNumber(mappedChurch.getChurchNumber())
+                    .churchName(mappedChurch.getChurchName())
+                    .city(mappedChurch.getAddress() != null ? mappedChurch.getAddress().getCity() : null)
+                    .country(mappedChurch.getAddress() != null ? mappedChurch.getAddress().getCountry() : null)
+                    .usesOurServices(mappedChurch.isUsesOurServices())
                     .build();
         });
     }
@@ -91,6 +103,22 @@ class ChurchServiceUnitTest {
     }
 
     @Test
+    void testFindAllPublicChurches_usesOptInQueries() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<ChurchEntity> entityPage = new PageImpl<>(List.of(church));
+
+        when(churchRepository.findAllPublicFiltered(true, pageable)).thenReturn(entityPage);
+
+        Page<PublicChurchResponse> result = churchService.findAllPublic(pageable, null, true);
+
+        assertThat(result.getContent()).singleElement()
+                .extracting(PublicChurchResponse::getChurchNumber)
+                .isEqualTo(church.getChurchNumber());
+        verify(churchRepository).findAllPublicFiltered(true, pageable);
+        verify(churchRepository, never()).findAllFiltered(any(), any());
+    }
+
+    @Test
     void testExistsById() {
         when(churchRepository.existsById(1L)).thenReturn(true);
         assertThat(churchService.exists(1L)).isTrue();
@@ -106,6 +134,7 @@ class ChurchServiceUnitTest {
         update.setDioceseLocal("ዝተሓደሰ ሃገረ ስብከት");
         update.setDescriptionLocal("ዝተሓደሰ ናይ ደብሪ መግለጺ");
         update.setStatus(ChurchStatus.ACTIVE);
+        update.setPublicDirectoryEnabled(false);
 
         ChurchResponse response = churchService.updateChurch(1L, update);
 
@@ -115,6 +144,7 @@ class ChurchServiceUnitTest {
         verify(churchRepository).save(church);
         assertThat(church.getDioceseLocal()).isEqualTo("ዝተሓደሰ ሃገረ ስብከት");
         assertThat(church.getChurchNumber()).isNotBlank();
+        assertThat(response.isPublicDirectoryEnabled()).isFalse();
     }
 
     @Test

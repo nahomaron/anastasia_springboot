@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.imageasset.Ima
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.PublicChurchResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -34,6 +35,7 @@ public interface ChurchMapper {
                 .description(churchEntity.getDescription())
                 .descriptionLocal(churchEntity.getDescriptionLocal())
                 .usesOurServices(churchEntity.isUsesOurServices())
+                .publicDirectoryEnabled(churchEntity.isPublicDirectoryEnabled())
                 .gpsLocation(churchEntity.getGpsLocation())
                 .latitude(churchEntity.getLatitude())
                 .longitude(churchEntity.getLongitude())
@@ -73,6 +75,7 @@ public interface ChurchMapper {
                 .description(churchEntity.getDescription())
                 .descriptionLocal(churchEntity.getDescriptionLocal())
                 .usesOurServices(churchEntity.isUsesOurServices())
+                .publicDirectoryEnabled(churchEntity.isPublicDirectoryEnabled())
                 .gpsLocation(churchEntity.getGpsLocation())
                 .latitude(churchEntity.getLatitude())
                 .longitude(churchEntity.getLongitude())
@@ -113,6 +116,7 @@ public interface ChurchMapper {
                 .description(churchDTO.getDescription())
                 .descriptionLocal(churchDTO.getDescriptionLocal())
                 .usesOurServices(churchDTO.isUsesOurServices())
+                .publicDirectoryEnabled(churchDTO.isPublicDirectoryEnabled())
                 .gpsLocation(churchDTO.getGpsLocation())
                 .latitude(churchDTO.getLatitude())
                 .longitude(churchDTO.getLongitude())
@@ -122,6 +126,30 @@ public interface ChurchMapper {
                 .facebook(churchDTO.getFacebook())
                 .status(churchDTO.getStatus())
                 .profilePicture(map(churchDTO.getProfilePicture()))
+                .build();
+    }
+
+    default PublicChurchResponse churchEntityToPublicResponse(ChurchEntity churchEntity) {
+        if (churchEntity == null) {
+            return null;
+        }
+
+        return PublicChurchResponse.builder()
+                .churchNumber(churchEntity.getChurchNumber())
+                .prefix(churchEntity.getPrefix())
+                .prefixLocal(churchEntity.getPrefixLocal())
+                .profilePicture(map(churchEntity.getProfilePicture()))
+                .churchName(churchEntity.getChurchName())
+                .churchNameLocal(churchEntity.getChurchNameLocal())
+                .neighborhood(churchEntity.getNeighborhood())
+                .neighborhoodLocal(churchEntity.getNeighborhoodLocal())
+                .diocese(churchEntity.getDiocese())
+                .dioceseLocal(churchEntity.getDioceseLocal())
+                .denomination(churchEntity.getDenomination())
+                .usesOurServices(churchEntity.isUsesOurServices())
+                .city(churchEntity.getAddress() != null ? churchEntity.getAddress().getCity() : null)
+                .stateProvince(churchEntity.getAddress() != null ? churchEntity.getAddress().getStateProvince() : null)
+                .country(churchEntity.getAddress() != null ? churchEntity.getAddress().getCountry() : null)
                 .build();
     }
 
