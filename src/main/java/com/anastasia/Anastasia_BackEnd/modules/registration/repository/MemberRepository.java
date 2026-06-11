@@ -34,7 +34,7 @@ public interface MemberRepository extends JpaRepository<Adult_MemberEntity, Long
 
     List<Adult_MemberEntity> findAllByIdInAndTenantId(Set<Long> ids, UUID tenantId);
 
-    Optional<Adult_MemberEntity> findFirstBySpouseIdNumberAndTenantId(String spouseIdNumber, UUID tenantId);
+    Optional<Adult_MemberEntity> findFirstBySpouseMembershipNumberAndTenantId(String spouseMembershipNumber, UUID tenantId);
 
     Page<Adult_MemberEntity> findByStatusValueNotAndTenantId(MemberLifecycleStatus status, UUID tenantId, Pageable pageable);
 

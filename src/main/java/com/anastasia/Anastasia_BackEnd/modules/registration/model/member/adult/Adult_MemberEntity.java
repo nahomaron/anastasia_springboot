@@ -95,7 +95,8 @@ public class Adult_MemberEntity extends BaseMember {
 
     private String profession;
 
-    private String spouseIdNumber;
+    @Column(name = "spouse_id_number")
+    private String spouseMembershipNumber;
 
     @Transient
     @Builder.Default

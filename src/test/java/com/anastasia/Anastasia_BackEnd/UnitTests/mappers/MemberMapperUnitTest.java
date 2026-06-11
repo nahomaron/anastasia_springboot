@@ -54,7 +54,7 @@ class MemberMapperUnitTest {
                 .profession("Engineer")
                 .educationLevelValue(EducationLevel.MASTERS)
                 .fatherOfConfession("Father Abraham")
-                .spouseIdNumber("SP1234")
+                .spouseMembershipNumber("SP1234")
                 .termsAccepted(true)
                 .termsVersion("test-v1")
                 .termsAcceptedAt(Instant.now())
@@ -77,6 +77,7 @@ class MemberMapperUnitTest {
         assertThat(dto.getProfession()).isEqualTo("Engineer");
         assertThat(dto.getMaritalStatus()).isEqualTo("Divorced");
         assertThat(dto.getAddress().getCity()).isEqualTo("Addis");
+        assertThat(dto.getSpouseMembershipNumber()).isEqualTo("SP1234");
     }
 
     @Test
@@ -116,7 +117,7 @@ class MemberMapperUnitTest {
                 .profession("Designer")
                 .levelOfEducation("Bachelors")
                 .fatherOfConfession("Father Yohannes")
-                .spouseIdNumber("SP9999")
+                .spouseMembershipNumber("SP9999")
                 .termsAccepted(true)
                 .termsVersion("test-v1")
                 .termsAcceptedAt(Instant.now())
@@ -138,6 +139,7 @@ class MemberMapperUnitTest {
         assertThat(entity.getProfession()).isEqualTo("Designer");
         assertThat(entity.getMaritalStatus()).isEqualTo(MaritalStatus.MARRIED);
         assertThat(entity.getAddress().getCity()).isEqualTo("Asmara");
+        assertThat(entity.getSpouseMembershipNumber()).isEqualTo("SP9999");
     }
 
     @Test

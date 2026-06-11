@@ -316,7 +316,7 @@ public class TenantDemoTemplateCloneService {
                     .eritreaContact(source.getEritreaContact())
                     .maritalStatus(source.getMaritalStatus())
                     .profession(source.getProfession())
-                    .spouseIdNumber(source.getSpouseIdNumber())
+                    .spouseMembershipNumber(source.getSpouseMembershipNumber())
                     .build();
             clone.setApprovedByChurch(source.isApprovedByChurch());
             clone.setApprovedByPriest(source.isApprovedByPriest());

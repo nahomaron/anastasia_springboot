@@ -120,7 +120,9 @@ public class Adult_MemberDTO {
 
     private String priestNumber;
 
-    private String spouseIdNumber;
+    @JsonProperty("spouseMembershipNumber")
+    @JsonAlias("spouseIdNumber")
+    private String spouseMembershipNumber;
 
     @Valid
     private Address address;

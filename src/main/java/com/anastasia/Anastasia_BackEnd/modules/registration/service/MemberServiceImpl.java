@@ -514,7 +514,7 @@ public class MemberServiceImpl implements MemberService {
             Optional.ofNullable(request.getChurchOfBaptism()).ifPresent(memberEntity::setChurchOfBaptism);
             Optional.ofNullable(request.getBaptismName()).ifPresent(memberEntity::setBaptismName);
             Optional.ofNullable(request.getPriestNumber()).ifPresent(memberEntity::setPriestNumber);
-            Optional.ofNullable(request.getSpouseIdNumber()).ifPresent(memberEntity::setSpouseIdNumber);
+            Optional.ofNullable(request.getSpouseMembershipNumber()).ifPresent(memberEntity::setSpouseMembershipNumber);
 
             Optional.ofNullable(request.getAddress()).ifPresent(memberEntity::setAddress);
             Optional.ofNullable(request.getAvatar()).ifPresent(avatar -> {
@@ -938,18 +938,18 @@ public class MemberServiceImpl implements MemberService {
     private Optional<Adult_MemberEntity> resolveSpouse(Adult_MemberEntity self, UUID tenantId) {
         if (self.getMembershipNumber() != null) {
             Optional<Adult_MemberEntity> reverseMatch = memberRepository
-                    .findFirstBySpouseIdNumberAndTenantId(self.getMembershipNumber(), tenantId)
+                    .findFirstBySpouseMembershipNumberAndTenantId(self.getMembershipNumber(), tenantId)
                     .filter(candidate -> !candidate.getId().equals(self.getId()));
             if (reverseMatch.isPresent()) {
                 return reverseMatch;
             }
         }
 
-        if (self.getSpouseIdNumber() == null || self.getSpouseIdNumber().isBlank()) {
+        if (self.getSpouseMembershipNumber() == null || self.getSpouseMembershipNumber().isBlank()) {
             return Optional.empty();
         }
 
-        return memberRepository.findByMembershipNumberAndTenantId(self.getSpouseIdNumber().trim(), tenantId)
+        return memberRepository.findByMembershipNumberAndTenantId(self.getSpouseMembershipNumber().trim(), tenantId)
                 .filter(candidate -> !candidate.getId().equals(self.getId()));
     }
 

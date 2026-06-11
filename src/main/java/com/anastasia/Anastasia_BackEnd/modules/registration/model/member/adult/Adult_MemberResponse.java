@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult;
 
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.BaseMemberResponse;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,8 @@ public class Adult_MemberResponse extends BaseMemberResponse {
     private String maritalStatus;
     private int numberOfChildren;
     private String profession;
-    private String spouseIdNumber;
+    @JsonProperty("spouseMembershipNumber")
+    private String spouseMembershipNumber;
     private Set<Long> childrenAsFatherIds;
     private Set<Long> childrenAsMotherIds;
 }
