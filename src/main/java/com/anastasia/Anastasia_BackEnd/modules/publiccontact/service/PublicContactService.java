@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.HtmlUtils;
 
+import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 
@@ -25,8 +26,17 @@ import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 public class PublicContactService {
 
     private static final long MAX_ATTACHMENT_BYTES = 10L * 1024L * 1024L;
+    private static final int MAX_ATTACHMENT_FILENAME_LENGTH = 180;
+    // This public upload path does not have malware scanning. Keep the accepted types narrow
+    // until a scanning/quarantine pipeline exists.
     private static final Set<String> ALLOWED_FILE_EXTENSIONS =
-            Set.of("pdf", "doc", "docx", "png", "jpg", "jpeg");
+            Set.of("pdf", "png", "jpg", "jpeg");
+    private static final Map<String, Set<String>> ALLOWED_CONTENT_TYPES = Map.of(
+            "pdf", Set.of("application/pdf"),
+            "png", Set.of("image/png"),
+            "jpg", Set.of("image/jpeg"),
+            "jpeg", Set.of("image/jpeg")
+    );
 
     private final JavaMailSender mailSender;
     private final TurnstileVerificationService turnstileVerificationService;
@@ -98,6 +108,28 @@ public class PublicContactService {
             return;
         }
 
+        String fileName = normalizedOriginalFilename(document);
+        if (!StringUtils.hasText(fileName)) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "Attachment filename is required."
+            );
+        }
+
+        if (fileName.length() > MAX_ATTACHMENT_FILENAME_LENGTH) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "Attachment filename is too long."
+            );
+        }
+
+        if (containsControlCharacters(fileName)) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "Attachment filename contains unsupported characters."
+            );
+        }
+
         if (document.getSize() > MAX_ATTACHMENT_BYTES) {
             throw new ResponseStatusException(
                     BAD_REQUEST,
@@ -105,11 +137,19 @@ public class PublicContactService {
             );
         }
 
-        String extension = extensionOf(document.getOriginalFilename());
+        String extension = extensionOf(fileName);
         if (!ALLOWED_FILE_EXTENSIONS.contains(extension)) {
             throw new ResponseStatusException(
                     BAD_REQUEST,
                     "Attachment type is not supported."
+            );
+        }
+
+        String contentType = normalizedContentType(document);
+        if (StringUtils.hasText(contentType) && !ALLOWED_CONTENT_TYPES.getOrDefault(extension, Set.of()).contains(contentType)) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "Attachment content type does not match the file extension."
             );
         }
     }
@@ -174,8 +214,8 @@ public class PublicContactService {
     }
 
     private String safeFileName(MultipartFile document) {
-        String original = document.getOriginalFilename();
-        return StringUtils.hasText(original) ? original.trim() : "attachment";
+        String original = normalizedOriginalFilename(document);
+        return StringUtils.hasText(original) ? original : "attachment";
     }
 
     private String extensionOf(String fileName) {
@@ -183,5 +223,26 @@ public class PublicContactService {
             return "";
         }
         return fileName.substring(fileName.lastIndexOf('.') + 1).trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizedOriginalFilename(MultipartFile document) {
+        String original = document.getOriginalFilename();
+        if (!StringUtils.hasText(original)) {
+            return "";
+        }
+
+        String normalized = original.replace('\\', '/').trim();
+        int lastSlash = normalized.lastIndexOf('/');
+        return lastSlash >= 0 ? normalized.substring(lastSlash + 1).trim() : normalized;
+    }
+
+    private String normalizedContentType(MultipartFile document) {
+        return StringUtils.hasText(document.getContentType())
+                ? document.getContentType().trim().toLowerCase(Locale.ROOT)
+                : "";
+    }
+
+    private boolean containsControlCharacters(String value) {
+        return value.chars().anyMatch(Character::isISOControl);
     }
 }
