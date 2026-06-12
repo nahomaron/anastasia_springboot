@@ -15,7 +15,8 @@ import java.util.UUID;
 public class AuditLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @SequenceGenerator(name = "audit_logs_seq_gen", sequenceName = "audit_logs_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "audit_logs_seq_gen")
     private Long id;
 
     @ManyToOne
