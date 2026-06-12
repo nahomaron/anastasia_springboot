@@ -73,6 +73,7 @@ public class GenericNotificationProcessor implements NotificationProcessor {
                     html,
                     text,
                     EmailSendMetadata.of(EmailCategory.ADMIN_ALERT, "admin-member-notification")
+                            .withTenantId(resolveTenantId(event))
             );
         }
 
@@ -111,10 +112,7 @@ public class GenericNotificationProcessor implements NotificationProcessor {
     }
 
     private Optional<TenantBranding> resolveTenantBranding(NotificationEvent event) {
-        UUID tenantId = event.getTarget().tenantId();
-        if (tenantId == null && event.getUser() != null) {
-            tenantId = event.getUser().getTenantId();
-        }
+        UUID tenantId = resolveTenantId(event);
         if (tenantId == null) {
             return Optional.empty();
         }
@@ -134,6 +132,14 @@ public class GenericNotificationProcessor implements NotificationProcessor {
                 .orElse(null);
 
         return Optional.of(new TenantBranding(churchName, churchLogoUrl, footerAddress));
+    }
+
+    private UUID resolveTenantId(NotificationEvent event) {
+        UUID tenantId = event.getTarget().tenantId();
+        if (tenantId == null && event.getUser() != null) {
+            tenantId = event.getUser().getTenantId();
+        }
+        return tenantId;
     }
 
     private String formatChurchAddress(ChurchEntity church) {

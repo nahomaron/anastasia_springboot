@@ -1197,7 +1197,8 @@ public class UserServiceImpl implements UserService {
                 email,
                 "Anastasia membership invitation",
                 EmailTemplateName.NOTIFICATION,
-                properties
+                properties,
+                tenantId
         );
     }
 

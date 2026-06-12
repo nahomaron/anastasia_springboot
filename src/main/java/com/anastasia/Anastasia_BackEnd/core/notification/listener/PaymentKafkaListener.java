@@ -5,6 +5,7 @@ import com.anastasia.Anastasia_BackEnd.core.notification.channel.EmailNotificati
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,6 +27,7 @@ public class PaymentKafkaListener {
             String paymentId = payload.path("paymentId").asText();
             long amount = payload.path("gross").asLong();
             String currency = payload.path("currency").asText();
+            UUID tenantId = parseTenantId(payload);
 
             if (email == null || email.isBlank()) {
                 log.warn("Missing email in payment.captured event for paymentId={}", safeValue(paymentId));
@@ -40,7 +42,8 @@ public class PaymentKafkaListener {
                             "amount", amount / 100.0,
                             "currency", currency,
                             "paymentId", paymentId
-                    )
+                    ),
+                    tenantId
             );
 
         } catch (Exception e) {
@@ -54,6 +57,7 @@ public class PaymentKafkaListener {
             String email = payload.path("memberEmail").asText(null);
             String subId = payload.path("subscriptionId").asText();
             String purpose = payload.path("purpose").asText();
+            UUID tenantId = parseTenantId(payload);
 
             if (email == null || email.isBlank()) {
                 log.warn("Missing email in subscriptions.activated event for subscriptionId={}", safeValue(subId));
@@ -64,7 +68,8 @@ public class PaymentKafkaListener {
                     email,
                     "Subscription Activated",
                     EmailTemplateName.SUBSCRIPTION_ACTIVATED,
-                    Map.of("subscriptionId", subId, "purpose", purpose)
+                    Map.of("subscriptionId", subId, "purpose", purpose),
+                    tenantId
             );
 
         } catch (Exception e) {
@@ -77,6 +82,7 @@ public class PaymentKafkaListener {
         try {
             String email = payload.path("memberEmail").asText(null);
             String subId = payload.path("subscriptionId").asText();
+            UUID tenantId = parseTenantId(payload);
 
             if (email == null || email.isBlank()) {
                 log.warn("Missing email in subscriptions.canceled event for subscriptionId={}", safeValue(subId));
@@ -87,7 +93,8 @@ public class PaymentKafkaListener {
                     email,
                     "Subscription Canceled",
                     EmailTemplateName.SUBSCRIPTION_CANCELED,
-                    Map.of("subscriptionId", subId)
+                    Map.of("subscriptionId", subId),
+                    tenantId
             );
 
         } catch (Exception e) {
@@ -97,5 +104,18 @@ public class PaymentKafkaListener {
 
     private String safeValue(String value) {
         return value == null || value.isBlank() ? "unknown" : value;
+    }
+
+    private UUID parseTenantId(JsonNode payload) {
+        String rawTenantId = payload.path("tenantId").asText(null);
+        if (rawTenantId == null || rawTenantId.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(rawTenantId);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid tenantId on payment notification payload: {}", rawTenantId);
+            return null;
+        }
     }
 }

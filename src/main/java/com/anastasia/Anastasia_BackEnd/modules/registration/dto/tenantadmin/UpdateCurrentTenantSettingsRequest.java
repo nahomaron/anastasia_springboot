@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UpdateCurrentTenantSettingsRequest {
     private UpdateTenantAttendanceSettingsRequest attendance;
+    private UpdateTenantEmailSettingsRequest email;
 }

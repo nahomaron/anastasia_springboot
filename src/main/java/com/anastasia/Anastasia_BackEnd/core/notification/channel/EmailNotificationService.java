@@ -10,9 +10,12 @@ import com.anastasia.Anastasia_BackEnd.core.notification.repository.Notification
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.EmailSuppressionService;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationIdempotencyService;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantEmailPolicyService;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailSendMetadata;
+import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailCategory;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.EmailTemplateName;
 import com.anastasia.Anastasia_BackEnd.core.notification.template.TemplateService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -49,6 +52,8 @@ public class EmailNotificationService {
     private final NotificationPreferenceRepository notificationPreferenceRepository;
     private final NotificationIdempotencyService idempotencyService;
     private final EmailSuppressionService emailSuppressionService;
+    private final TenantEmailPolicyService tenantEmailPolicyService;
+    private final TenantRepository tenantRepository;
     private final boolean emailSendingEnabled;
     private final String defaultSenderEmail;
 
@@ -58,6 +63,8 @@ public class EmailNotificationService {
                                     NotificationPreferenceRepository notificationPreferenceRepository,
                                     NotificationIdempotencyService idempotencyService,
                                     EmailSuppressionService emailSuppressionService,
+                                    TenantEmailPolicyService tenantEmailPolicyService,
+                                    TenantRepository tenantRepository,
                                     @Value("${notification.email.enabled:${email.sending.enabled:true}}") boolean emailSendingEnabled,
                                     @Value("${spring.mail.from:noreply@anastasisapp.com}") String defaultSenderEmail) {
         this.mailSender = mailSender;
@@ -66,6 +73,8 @@ public class EmailNotificationService {
         this.notificationPreferenceRepository = notificationPreferenceRepository;
         this.idempotencyService = idempotencyService;
         this.emailSuppressionService = emailSuppressionService;
+        this.tenantEmailPolicyService = tenantEmailPolicyService;
+        this.tenantRepository = tenantRepository;
         this.emailSendingEnabled = emailSendingEnabled;
         this.defaultSenderEmail = defaultSenderEmail;
     }
@@ -91,15 +100,16 @@ public class EmailNotificationService {
             return;
         }
 
-        sendEmail(to, subject, template, variables, event);
+        sendEmail(to, subject, template, variables, event, null);
     }
 
     @Async
     public void sendEmail(String to,
                           String subject,
                           EmailTemplateName template,
-                          Map<String, Object> variables) {
-        sendEmail(to, subject, template, variables, null);
+                          Map<String, Object> variables,
+                          UUID tenantId) {
+        sendEmail(to, subject, template, variables, null, tenantId);
     }
 
     @Async
@@ -118,14 +128,15 @@ public class EmailNotificationService {
             return;
         }
 
-        dispatchEmail(to, subject, html, text, metadata, null, idempotencyKey);
+        dispatchEmail(to, subject, html, text, metadata, null, idempotencyKey, null, null);
     }
 
     private void sendEmail(String to,
                            String subject,
                            EmailTemplateName template,
                            Map<String, Object> variables,
-                           NotificationEvent eventContext) {
+                           NotificationEvent eventContext,
+                           UUID tenantIdOverride) {
         String idempotencyKey = idempotencyService.computeKey(eventContext, NotificationChannelType.EMAIL, to);
         if (idempotencyKey != null && notificationRepository.existsByIdempotencyKeyAndChannel(idempotencyKey, NotificationChannelType.EMAIL)) {
             log.debug("Skipping duplicate email notification for key={}", idempotencyKey);
@@ -136,7 +147,17 @@ public class EmailNotificationService {
         String html = templateService.renderTemplate(template.getName(), payload);
         String text = renderTextFallback(payload, html);
 
-        dispatchEmail(to, subject, html, text, null, eventContext, idempotencyKey);
+        dispatchEmail(
+                to,
+                subject,
+                html,
+                text,
+                null,
+                eventContext,
+                idempotencyKey,
+                resolveEmailCategory(template),
+                tenantIdOverride
+        );
     }
 
     private void dispatchEmail(String to,
@@ -145,13 +166,38 @@ public class EmailNotificationService {
                                String text,
                                EmailSendMetadata metadata,
                                NotificationEvent eventContext,
-                               String idempotencyKey) {
+                               String idempotencyKey,
+                               EmailCategory templateCategory,
+                               UUID tenantIdOverride) {
         if (!emailSendingEnabled) {
             log.debug("Email sending disabled, skipping to={}", to);
             return;
         }
 
         if (!isEmailDeliveryAllowed(to, eventContext)) {
+            return;
+        }
+
+        NotificationType notificationType = resolveNotificationType(eventContext, metadata);
+        UUID tenantId = resolveTenantId(eventContext, metadata, tenantIdOverride);
+        EmailCategory emailCategory = metadata != null ? metadata.category() : templateCategory;
+        TenantEmailPolicyService.EmailPolicyDecision policyDecision =
+                tenantEmailPolicyService.evaluate(tenantId, emailCategory, notificationType);
+        if (!policyDecision.allowed()) {
+            log.warn("Email blocked by tenant policy tenantId={} code={} to={}", tenantId, policyDecision.errorCode(), to);
+            persistNotification(
+                    to,
+                    subject,
+                    html,
+                    eventContext,
+                    metadata,
+                    false,
+                    policyDecision.errorMessage(),
+                    policyDecision.errorCode(),
+                    idempotencyKey,
+                    tenantId,
+                    notificationType
+            );
             return;
         }
 
@@ -170,11 +216,23 @@ public class EmailNotificationService {
                     metadata != null ? metadata.category() : null,
                     metadata != null ? metadata.correlationId() : null);
 
-            persistNotification(to, subject, html, eventContext, metadata, true, null, idempotencyKey);
+            persistNotification(to, subject, html, eventContext, metadata, true, null, null, idempotencyKey, tenantId, notificationType);
 
         } catch (Exception e) {
             log.error("Error sending email to {}: {}", to, e.getMessage(), e);
-            persistNotification(to, subject, html, eventContext, metadata, false, e.getMessage(), idempotencyKey);
+            persistNotification(
+                    to,
+                    subject,
+                    html,
+                    eventContext,
+                    metadata,
+                    false,
+                    e.getMessage(),
+                    "EMAIL_DELIVERY_FAILED",
+                    idempotencyKey,
+                    tenantId,
+                    notificationType
+            );
         }
     }
 
@@ -254,19 +312,22 @@ public class EmailNotificationService {
                                      EmailSendMetadata metadata,
                                      boolean success,
                                      String error,
-                                     String idempotencyKey) {
+                                     String errorCode,
+                                     String idempotencyKey,
+                                     UUID tenantId,
+                                     NotificationType notificationType) {
         NotificationEntity entity = new NotificationEntity();
         Instant now = Instant.now();
         entity.setRecipientAddress(recipient);
         entity.setTitle(subject);
         entity.setMessage(body);
         entity.setChannel(NotificationChannelType.EMAIL);
-        entity.setType(resolveNotificationType(context, metadata));
+        entity.setType(notificationType != null ? notificationType : resolveNotificationType(context, metadata));
         entity.setDeliveryStatus(success ? NotificationDeliveryStatus.SENT : NotificationDeliveryStatus.FAILED);
         entity.setProvider("AWS_SES");
         entity.setProviderStatus(success ? "DELIVERED" : "FAILED");
         entity.setErrorMessage(success ? null : error);
-        entity.setErrorCode(success ? null : "EMAIL_DELIVERY_FAILED");
+        entity.setErrorCode(success ? null : errorCode);
         entity.setIdempotencyKey(idempotencyKey);
         entity.setCorrelationId(metadata != null && StringUtils.hasText(metadata.correlationId())
                 ? metadata.correlationId()
@@ -282,8 +343,37 @@ public class EmailNotificationService {
         if (context != null) {
             entity.setTenant(context.getUser() != null ? context.getUser().getTenant() : null);
             entity.setRecipientUserId(context.getUser() != null ? context.getUser().getUuid() : null);
+        } else if (tenantId != null) {
+            entity.setTenant(tenantRepository.findById(tenantId).orElse(null));
         }
         notificationRepository.save(entity);
+    }
+
+    private UUID resolveTenantId(NotificationEvent eventContext,
+                                 EmailSendMetadata metadata,
+                                 UUID tenantIdOverride) {
+        if (tenantIdOverride != null) {
+            return tenantIdOverride;
+        }
+        if (metadata != null && metadata.tenantId() != null) {
+            return metadata.tenantId();
+        }
+        if (eventContext != null && eventContext.getUser() != null) {
+            return eventContext.getUser().getTenantId();
+        }
+        return null;
+    }
+
+    private EmailCategory resolveEmailCategory(EmailTemplateName template) {
+        if (template == null) {
+            return null;
+        }
+        return switch (template) {
+            case ACTIVATE_ACCOUNT -> EmailCategory.AUTH;
+            case RESET_PASSWORD -> EmailCategory.SECURITY;
+            case PAYMENT_RECEIPT, SUBSCRIPTION_ACTIVATED, SUBSCRIPTION_CANCELED -> EmailCategory.BILLING;
+            default -> null;
+        };
     }
 
     private NotificationType resolveNotificationType(NotificationEvent context, EmailSendMetadata metadata) {

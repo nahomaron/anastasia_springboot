@@ -484,7 +484,8 @@ public class EventServiceImpl implements EventService {
                         event.getTitle()
                 ),
                 EmailTemplateName.NOTIFICATION,
-                props
+                props,
+                tenantId
         );
     }
 

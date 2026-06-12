@@ -380,7 +380,8 @@ public class StaffServiceImpl implements StaffService {
                 user.getEmail(),
                 "Anastasia staff account credentials",
                 EmailTemplateName.NOTIFICATION,
-                properties
+                properties,
+                tenant.getId()
         );
     }
 

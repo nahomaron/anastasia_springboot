@@ -102,4 +102,17 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
     int markAllRead(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId, @Param("now") Instant now);
 
     boolean existsByIdempotencyKeyAndChannel(String idempotencyKey, NotificationChannelType channel);
+
+    @Query("""
+        select count(n)
+        from NotificationEntity n
+        where n.tenant.id = :tenantId
+          and n.channel = com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType.EMAIL
+          and n.deliveryStatus = com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationDeliveryStatus.SENT
+          and n.deliveredAt >= :periodStart
+          and n.deliveredAt < :periodEnd
+    """)
+    long countSentEmailByTenantAndDeliveredAtBetween(@Param("tenantId") UUID tenantId,
+                                                     @Param("periodStart") Instant periodStart,
+                                                     @Param("periodEnd") Instant periodEnd);
 }

@@ -14,4 +14,5 @@ import java.util.UUID;
 public class CurrentTenantSettingsResponse {
     private UUID tenantId;
     private TenantAttendanceSettingsResponse attendance;
+    private TenantEmailSettingsResponse email;
 }

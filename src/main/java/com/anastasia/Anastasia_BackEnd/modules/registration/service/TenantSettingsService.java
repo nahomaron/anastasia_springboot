@@ -5,9 +5,12 @@ import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.CurrentTenantSettingsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.TenantAttendanceCaptureFieldsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.TenantAttendanceSettingsResponse;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.TenantEmailSettingsResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.UpdateCurrentTenantSettingsRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.UpdateTenantAttendanceCaptureFieldsRequest;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.UpdateTenantAttendanceSettingsRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.tenantadmin.UpdateTenantEmailSettingsRequest;
+import com.anastasia.Anastasia_BackEnd.core.notification.service.TenantEmailPolicyService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSettingsEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
@@ -27,6 +30,7 @@ public class TenantSettingsService {
     private final TenantRepository tenantRepository;
     private final TenantSettingsRepository tenantSettingsRepository;
     private final LocalizedMessageService messageService;
+    private final TenantEmailPolicyService tenantEmailPolicyService;
 
     @Transactional(readOnly = true)
     public CurrentTenantSettingsResponse getCurrentTenantSettings() {
@@ -43,6 +47,9 @@ public class TenantSettingsService {
 
         if (request != null && request.getAttendance() != null) {
             applyAttendance(settings, request.getAttendance());
+        }
+        if (request != null && request.getEmail() != null) {
+            applyEmailSettings(settings, request.getEmail());
         }
 
         return toResponse(settings);
@@ -72,7 +79,27 @@ public class TenantSettingsService {
         }
     }
 
+    private void applyEmailSettings(TenantSettingsEntity settings, UpdateTenantEmailSettingsRequest email) {
+        if (email.getQuotaEnforced() != null) {
+            settings.setEmailQuotaEnforced(email.getQuotaEnforced());
+        }
+        if (email.getSendingSuspended() != null) {
+            settings.setEmailSendingSuspended(email.getSendingSuspended());
+            if (!email.getSendingSuspended() && email.getSuspensionReason() == null) {
+                settings.setEmailSuspensionReason(null);
+            }
+        }
+        if (email.getMonthlyQuota() != null) {
+            settings.setEmailMonthlyQuota(email.getMonthlyQuota());
+        }
+        if (email.getSuspensionReason() != null) {
+            String trimmed = email.getSuspensionReason().trim();
+            settings.setEmailSuspensionReason(trimmed.isEmpty() ? null : trimmed);
+        }
+    }
+
     private CurrentTenantSettingsResponse toResponse(TenantSettingsEntity settings) {
+        TenantEmailPolicyService.EmailUsageSnapshot emailUsage = tenantEmailPolicyService.usageSnapshot(settings.getTenantId());
         return CurrentTenantSettingsResponse.builder()
                 .tenantId(settings.getTenantId())
                 .attendance(TenantAttendanceSettingsResponse.builder()
@@ -83,6 +110,16 @@ public class TenantSettingsService {
                                 .email(settings.isAttendanceCaptureEmail())
                                 .phone(settings.isAttendanceCapturePhone())
                                 .build())
+                        .build())
+                .email(TenantEmailSettingsResponse.builder()
+                        .quotaEnforced(settings.isEmailQuotaEnforced())
+                        .sendingSuspended(settings.isEmailSendingSuspended())
+                        .suspensionReason(settings.getEmailSuspensionReason())
+                        .monthlyQuota(settings.getEmailMonthlyQuota())
+                        .effectiveMonthlyQuota(emailUsage.effectiveMonthlyQuota())
+                        .currentPeriodSentCount(emailUsage.currentPeriodSentCount())
+                        .currentPeriodStart(emailUsage.currentPeriodStart())
+                        .currentPeriodEnd(emailUsage.currentPeriodEnd())
                         .build())
                 .build();
     }
@@ -95,6 +132,8 @@ public class TenantSettingsService {
                 .attendanceCaptureFullName(true)
                 .attendanceCaptureEmail(true)
                 .attendanceCapturePhone(false)
+                .emailQuotaEnforced(true)
+                .emailSendingSuspended(false)
                 .build());
     }
 

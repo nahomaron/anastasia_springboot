@@ -58,6 +58,20 @@ public class TenantSettingsEntity {
     @Column(name = "attendance_capture_phone", nullable = false)
     private boolean attendanceCapturePhone = false;
 
+    @Builder.Default
+    @Column(name = "email_quota_enforced", nullable = false)
+    private boolean emailQuotaEnforced = true;
+
+    @Builder.Default
+    @Column(name = "email_sending_suspended", nullable = false)
+    private boolean emailSendingSuspended = false;
+
+    @Column(name = "email_monthly_quota")
+    private Integer emailMonthlyQuota;
+
+    @Column(name = "email_suspension_reason", length = 512)
+    private String emailSuspensionReason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
