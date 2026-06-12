@@ -16,10 +16,14 @@ import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformTenant
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformTenantStatusUpdateRequest;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminUserResponse;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.PlatformAdminSummaryResponse;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.SupportAccessSessionEndRequest;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.SupportAccessSessionResponse;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.dto.SupportAccessSessionStartRequest;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminActionService;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminIdentityService;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminReportService;
 import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformAdminSettingsService;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformSupportAccessService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import jakarta.validation.Valid;
@@ -51,6 +55,7 @@ public class PlatformAdminController {
     private final PlatformAdminSettingsService settingsService;
     private final PlatformAdminActionService actionService;
     private final PlatformAdminIdentityService identityService;
+    private final PlatformSupportAccessService supportAccessService;
 
     @GetMapping("/summary")
     public ResponseEntity<PlatformAdminSummaryResponse> summary() {
@@ -127,7 +132,7 @@ public class PlatformAdminController {
             @PathVariable Long priestId,
             @Valid @RequestBody PlatformPriestStatusUpdateRequest request
     ) {
-        actionService.updatePriestStatus(priestId, request.getStatus());
+        actionService.updatePriestStatus(priestId, request.getStatus(), currentActorUserId());
         return ResponseEntity.accepted().build();
     }
 
@@ -162,6 +167,21 @@ public class PlatformAdminController {
             @Valid @RequestBody PlatformAdminStatusUpdateRequest request
     ) {
         return ResponseEntity.ok(identityService.updateStatus(userId, request.getStatus(), currentActorUserId()));
+    }
+
+    @PostMapping("/support-access/sessions")
+    public ResponseEntity<SupportAccessSessionResponse> startSupportAccessSession(
+            @Valid @RequestBody SupportAccessSessionStartRequest request
+    ) {
+        return ResponseEntity.ok(supportAccessService.startSession(currentActorUserId(), request));
+    }
+
+    @PostMapping("/support-access/sessions/{sessionId}/end")
+    public ResponseEntity<SupportAccessSessionResponse> endSupportAccessSession(
+            @PathVariable UUID sessionId,
+            @RequestBody(required = false) SupportAccessSessionEndRequest request
+    ) {
+        return ResponseEntity.ok(supportAccessService.endSession(currentActorUserId(), sessionId, request));
     }
 
     private UUID currentActorUserId() {

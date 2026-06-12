@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UpdateCurrentTenantSettingsRequest {
-    private UpdateTenantAttendanceSettingsRequest attendance;
-    private UpdateTenantEmailSettingsRequest email;
-    private UpdateTenantSupportAccessSettingsRequest supportAccess;
+public class UpdateTenantSupportAccessSettingsRequest {
+    private Boolean enabled;
 }

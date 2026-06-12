@@ -72,6 +72,10 @@ public class TenantSettingsEntity {
     @Column(name = "email_suspension_reason", length = 512)
     private String emailSuspensionReason;
 
+    @Builder.Default
+    @Column(name = "support_access_enabled", nullable = false)
+    private boolean supportAccessEnabled = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -95,5 +99,9 @@ public class TenantSettingsEntity {
     @PreUpdate
     void onUpdate() {
         this.updatedAt = Instant.now();
+    }
+
+    public boolean isSupportAccessEnabled() {
+        return supportAccessEnabled;
     }
 }

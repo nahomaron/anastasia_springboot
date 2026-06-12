@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.common.security;
 
 import com.anastasia.Anastasia_BackEnd.common.filter.JwtFilter;
+import com.anastasia.Anastasia_BackEnd.common.filter.SupportAccessGovernanceFilter;
 import com.anastasia.Anastasia_BackEnd.common.filter.TenantFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,7 @@ public class SecurityConfig {
 //    private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
     private final TenantFilter tenantFilter;
+    private final SupportAccessGovernanceFilter supportAccessGovernanceFilter;
     private final LogoutHandler logoutHandler;
     private final Environment environment;
     @Value("${app.cors.allowed-origins:}")
@@ -192,6 +194,7 @@ public class SecurityConfig {
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterAfter(tenantFilter, JwtFilter.class);
+        http.addFilterAfter(supportAccessGovernanceFilter, TenantFilter.class);
         http.addFilterAfter(new CsrfCookieFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -256,6 +259,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
+                "X-Support-Access-Session",
                 "X-XSRF-TOKEN",
                 "X-Requested-With",
                 "X-Tenant-Id",

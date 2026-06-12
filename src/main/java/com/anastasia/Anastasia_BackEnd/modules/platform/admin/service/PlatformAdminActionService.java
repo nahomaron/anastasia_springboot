@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantE
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEventEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEventType;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.model.SupportAccessScope;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.PriestRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantSubscriptionEventRepository;
@@ -26,11 +27,13 @@ public class PlatformAdminActionService {
     private final TenantSubscriptionEventRepository eventRepository;
     private final SubscriptionService subscriptionService;
     private final PriestRepository priestRepository;
+    private final PlatformSupportAccessService supportAccessService;
 
     @Transactional
     public void updateTenantStatus(UUID tenantId, TenantStatus targetStatus, UUID actorUserId) {
         TenantEntity tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+        supportAccessService.authorizeCurrentRequestSession(actorUserId, tenantId, SupportAccessScope.READ_WRITE);
         if (targetStatus != TenantStatus.ACTIVE && targetStatus != TenantStatus.SUSPENDED) {
             throw new IllegalArgumentException("Unsupported tenant status: " + targetStatus);
         }
@@ -52,6 +55,7 @@ public class PlatformAdminActionService {
     public void retryPayment(UUID paymentId, UUID actorUserId) {
         TenantSubscriptionEventEntity event = eventRepository.findById(paymentId)
                 .orElseThrow(() -> new EntityNotFoundException("Payment event not found"));
+        supportAccessService.authorizeCurrentRequestSession(actorUserId, event.getTenant().getId(), SupportAccessScope.READ_WRITE);
         if (event.getEventType() != TenantSubscriptionEventType.PAYMENT_FAILED) {
             throw new IllegalStateException("Only failed payments can be retried");
         }
@@ -63,6 +67,7 @@ public class PlatformAdminActionService {
     public void refundPayment(UUID paymentId, UUID actorUserId) {
         TenantSubscriptionEventEntity event = eventRepository.findById(paymentId)
                 .orElseThrow(() -> new EntityNotFoundException("Payment event not found"));
+        supportAccessService.authorizeCurrentRequestSession(actorUserId, event.getTenant().getId(), SupportAccessScope.READ_WRITE);
         TenantSubscriptionEventEntity refundEvent = new TenantSubscriptionEventEntity();
         refundEvent.setTenant(event.getTenant());
         refundEvent.setTenantSubscription(event.getTenantSubscription());
@@ -82,6 +87,7 @@ public class PlatformAdminActionService {
                 .orElseThrow(() -> new EntityNotFoundException("Priest not found"));
         TenantEntity tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+        supportAccessService.authorizeCurrentRequestSession(actorUserId, tenantId, SupportAccessScope.READ_WRITE);
         priest.setTenant(tenant);
         priest.setStatus(PriestStatus.ACTIVE);
         priest.setActive(true);
@@ -90,9 +96,12 @@ public class PlatformAdminActionService {
     }
 
     @Transactional
-    public void updatePriestStatus(Long priestId, PriestStatus status) {
+    public void updatePriestStatus(Long priestId, PriestStatus status, UUID actorUserId) {
         PriestEntity priest = priestRepository.findById(priestId)
                 .orElseThrow(() -> new EntityNotFoundException("Priest not found"));
+        if (priest.getTenant() != null) {
+            supportAccessService.authorizeCurrentRequestSession(actorUserId, priest.getTenant().getId(), SupportAccessScope.READ_WRITE);
+        }
         priest.setStatus(status);
         if (status == PriestStatus.ACTIVE) {
             priest.setActive(true);
