@@ -131,6 +131,24 @@ public class EmailNotificationService {
         dispatchEmail(to, subject, html, text, metadata, null, idempotencyKey, null, null);
     }
 
+    public void sendEmailOrThrow(String to,
+                                 String subject,
+                                 String html,
+                                 String text,
+                                 EmailSendMetadata metadata) {
+        String idempotencyKey = metadata != null && StringUtils.hasText(metadata.idempotencyKey())
+                ? metadata.idempotencyKey()
+                : null;
+
+        if (StringUtils.hasText(idempotencyKey)
+                && notificationRepository.existsByIdempotencyKeyAndChannel(idempotencyKey, NotificationChannelType.EMAIL)) {
+            log.debug("Skipping duplicate email notification for metadata idempotency key={}", idempotencyKey);
+            return;
+        }
+
+        dispatchEmailOrThrow(to, subject, html, text, metadata, null, idempotencyKey, null, null);
+    }
+
     private void sendEmail(String to,
                            String subject,
                            EmailTemplateName template,
@@ -158,6 +176,81 @@ public class EmailNotificationService {
                 resolveEmailCategory(template),
                 tenantIdOverride
         );
+    }
+
+    private void dispatchEmailOrThrow(String to,
+                                      String subject,
+                                      String html,
+                                      String text,
+                                      EmailSendMetadata metadata,
+                                      NotificationEvent eventContext,
+                                      String idempotencyKey,
+                                      EmailCategory templateCategory,
+                                      UUID tenantIdOverride) {
+        if (!emailSendingEnabled) {
+            throw new IllegalStateException("Email delivery is not enabled.");
+        }
+
+        if (!isEmailDeliveryAllowed(to, eventContext)) {
+            throw new IllegalStateException("Email delivery is not allowed for this recipient.");
+        }
+
+        NotificationType notificationType = resolveNotificationType(eventContext, metadata);
+        UUID tenantId = resolveTenantId(eventContext, metadata, tenantIdOverride);
+        EmailCategory emailCategory = metadata != null ? metadata.category() : templateCategory;
+        TenantEmailPolicyService.EmailPolicyDecision policyDecision =
+                tenantEmailPolicyService.evaluate(tenantId, emailCategory, notificationType);
+        if (!policyDecision.allowed()) {
+            log.warn("Email blocked by tenant policy tenantId={} code={} to={}", tenantId, policyDecision.errorCode(), to);
+            persistNotification(
+                    to,
+                    subject,
+                    html,
+                    eventContext,
+                    metadata,
+                    false,
+                    policyDecision.errorMessage(),
+                    policyDecision.errorCode(),
+                    idempotencyKey,
+                    tenantId,
+                    notificationType
+            );
+            throw new IllegalStateException(policyDecision.errorMessage());
+        }
+
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
+            helper.setTo(to);
+            helper.setFrom(new InternetAddress(defaultSenderEmail.trim(), DEFAULT_SENDER_NAME, UTF_8.name()));
+            helper.setSubject(subject);
+            helper.setText(resolveTextBody(text, html), html);
+
+            mailSender.send(mimeMessage);
+            log.info("Email sent to {} template={} category={} correlationId={}",
+                    to,
+                    metadata != null ? metadata.templateKey() : "legacy",
+                    metadata != null ? metadata.category() : null,
+                    metadata != null ? metadata.correlationId() : null);
+
+            persistNotification(to, subject, html, eventContext, metadata, true, null, null, idempotencyKey, tenantId, notificationType);
+        } catch (Exception e) {
+            log.error("Error sending email to {}: {}", to, e.getMessage(), e);
+            persistNotification(
+                    to,
+                    subject,
+                    html,
+                    eventContext,
+                    metadata,
+                    false,
+                    e.getMessage(),
+                    "EMAIL_DELIVERY_FAILED",
+                    idempotencyKey,
+                    tenantId,
+                    notificationType
+            );
+            throw new IllegalStateException("Email delivery failed.", e);
+        }
     }
 
     private void dispatchEmail(String to,

@@ -9,8 +9,10 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.Onboard
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.OnboardingEmailVerificationCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -111,12 +113,23 @@ public class OnboardingEmailVerificationService {
                 "locale", messageService.currentLocale()
         );
 
-        emailTemplateService.sendTemplateEmail(
-                to,
-                EmailTemplate.VERIFY_EMAIL_OTP.templateKey(),
-                model,
-                EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.VERIFY_EMAIL_OTP.templateKey())
-        );
+        try {
+            emailTemplateService.sendTemplateEmailOrThrow(
+                    to,
+                    EmailTemplate.VERIFY_EMAIL_OTP.templateKey(),
+                    model,
+                    EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.VERIFY_EMAIL_OTP.templateKey())
+            );
+        } catch (IllegalStateException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    messageService.get(
+                            "onboarding.emailVerification.sendFailed",
+                            "Unable to send verification email right now. Please try again later."
+                    ),
+                    ex
+            );
+        }
     }
 
     private String normalizeEmail(String email) {

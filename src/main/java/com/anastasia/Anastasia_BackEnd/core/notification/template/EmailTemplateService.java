@@ -94,6 +94,16 @@ public class EmailTemplateService {
         sendEmail(to, subject, html, text, metadata);
     }
 
+    public void sendTemplateEmailOrThrow(String to,
+                                         String templateName,
+                                         Map<String, Object> model,
+                                         EmailSendMetadata metadata) {
+        String subject = subjectResolver(templateName, model);
+        String html = renderHtml(templateName, model);
+        String text = renderText(templateName, model);
+        emailNotificationService.sendEmailOrThrow(to, subject, html, text, metadata);
+    }
+
     private Map<String, Object> buildModel(EmailTemplate template, Map<String, Object> model) {
         Map<String, Object> merged = new HashMap<>();
         if (model != null) {

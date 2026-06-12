@@ -93,4 +93,14 @@ class SecurityConfigTest {
 
         assertThat(ignored).contains("/api/v1/public/contact-requests");
     }
+
+    @Test
+    void csrfIgnoreList_shouldContainOnboardingEmailVerificationEndpoints() {
+        String[] ignored = (String[]) ReflectionTestUtils.getField(securityConfig, "CSRF_IGNORED_ENDPOINTS");
+
+        assertThat(ignored).contains(
+                "/api/v1/onboarding/email-verification/send-code",
+                "/api/v1/onboarding/email-verification/verify-code"
+        );
+    }
 }

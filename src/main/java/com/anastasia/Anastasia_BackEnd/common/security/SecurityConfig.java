@@ -111,6 +111,8 @@ public class SecurityConfig {
             "/api/v1/email/ses-events",
             "/api/v1/auth/login",
             "/api/v1/public/contact-requests",
+            "/api/v1/onboarding/email-verification/send-code",
+            "/api/v1/onboarding/email-verification/verify-code",
             "/ws/**",
             "/ws-sockjs/**",
             "/api/v1/tenant/test/**",
