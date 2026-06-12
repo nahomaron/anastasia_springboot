@@ -8,15 +8,18 @@ import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionPlan;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.SubscriptionStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantSubscriptionEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.TenantRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.service.AuthService;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantWorkspaceLifecycleService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.TenantServiceImpl;
 import com.anastasia.Anastasia_BackEnd.common.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
@@ -57,6 +60,7 @@ public class TenantServiceUnitTest {
     @Mock private RoleRepository roleRepository;
     @Mock private SecurityUtils securityUtils;
     @Mock private LocalizedMessageService messageService;
+    @Mock private TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
 
     @InjectMocks
     private TenantServiceImpl tenantService;
@@ -178,8 +182,9 @@ public class TenantServiceUnitTest {
     }
 
     @Test
-    void unsubscribeTenant_shouldDeactivateTenant() {
+    void unsubscribeTenant_shouldCancelSubscriptionAndTriggerLifecycleSync() {
         TenantEntity entity = TestDataUtil.createTestTenantEntity();
+        TenantSubscriptionEntity subscription = entity.getSubscription();
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
                         "platform-admin",
@@ -191,8 +196,14 @@ public class TenantServiceUnitTest {
 
         tenantService.unsubscribeTenant(entity.getId());
 
-        assertThat(entity.getStatus()).isEqualTo(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus.DEACTIVATED);
+        assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.CANCELED);
+        assertThat(subscription.getCanceledAt()).isNotNull();
+        assertThat(subscription.getEndedAt()).isNotNull();
+        assertThat(subscription.getCurrentPeriodEndAt()).isNotNull();
+        assertThat(subscription.isCancelAtPeriodEnd()).isFalse();
+        assertThat(subscription.getStatusChangeReason()).isEqualTo("Tenant canceled workspace");
         verify(tenantRepository).save(entity);
+        verify(tenantWorkspaceLifecycleService).syncTenantLifecycle(entity.getId(), null);
     }
 
     @Test
@@ -266,8 +277,9 @@ public class TenantServiceUnitTest {
 
         tenantService.unsubscribeTenant(targetTenant.getId());
 
-        assertThat(targetTenant.getStatus()).isEqualTo(com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantStatus.DEACTIVATED);
+        assertThat(targetTenant.getSubscription().getStatus()).isEqualTo(SubscriptionStatus.CANCELED);
         verify(tenantRepository).save(targetTenant);
+        verify(tenantWorkspaceLifecycleService).syncTenantLifecycle(targetTenant.getId(), null);
     }
 
     @Test

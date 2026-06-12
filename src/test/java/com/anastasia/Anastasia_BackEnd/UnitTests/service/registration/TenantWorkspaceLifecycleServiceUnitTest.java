@@ -1,6 +1,8 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.repository.AccountRepository;
@@ -55,6 +57,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -95,6 +100,7 @@ class TenantWorkspaceLifecycleServiceUnitTest {
     @Mock private AccountRepository accountRepository;
     @Mock private TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
     @Mock private TenantDemoWorkspaceSeederService tenantDemoWorkspaceSeederService;
+    @Mock private AuditLogService auditLogService;
 
     @InjectMocks
     private TenantWorkspaceLifecycleService service;
@@ -142,6 +148,25 @@ class TenantWorkspaceLifecycleServiceUnitTest {
         assertThat(updated.getScheduledDeletionAt()).isEqualTo(canceledAt.plus(Duration.ofDays(30)));
         assertThat(updated.getStatus()).isEqualTo(TenantStatus.SUSPENDED);
         assertThat(updated.getSuspensionReason()).contains("30 days");
+    }
+
+    @Test
+    void syncTenantLifecycleKeepsDemoCancellationOnDemoPurgePathWhenWorkspaceNeverPaid() {
+        Instant canceledAt = Instant.parse("2026-06-01T00:00:00Z");
+        TenantEntity tenant = demoTenant(
+                SubscriptionStatus.CANCELED,
+                canceledAt,
+                canceledAt
+        );
+        when(tenantRepository.findWithSubscriptionById(tenant.getId())).thenReturn(Optional.of(tenant));
+        when(tenantRepository.save(any(TenantEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TenantEntity updated = service.syncTenantLifecycle(tenant.getId(), UUID.randomUUID());
+
+        assertThat(updated.getScheduledPurgeAt()).isEqualTo(canceledAt.plus(Duration.ofDays(14)));
+        assertThat(updated.getScheduledDeletionAt()).isNull();
+        assertThat(updated.getStatus()).isEqualTo(TenantStatus.SUSPENDED);
+        assertThat(updated.getSuspensionReason()).contains("Demo trial expired");
     }
 
     @Test
@@ -200,6 +225,17 @@ class TenantWorkspaceLifecycleServiceUnitTest {
         assertThat(tenant.getScheduledDeletionAt()).isNull();
         assertThat(tenant.getStatus()).isEqualTo(TenantStatus.CLOSED);
         verify(tenantRepository).save(tenant);
+        verify(auditLogService).record(
+                eq(AuditEventType.DATA_DELETION_EXECUTED),
+                eq("SUCCESS"),
+                isNull(),
+                eq(tenant.getOwnerEmail()),
+                eq(tenant.getId()),
+                eq("TENANT"),
+                eq(tenant.getId().toString()),
+                eq("retention-policy"),
+                contains("Deleting tenant workspace")
+        );
     }
 
     private TenantEntity paidTenant(SubscriptionStatus status,
@@ -221,6 +257,28 @@ class TenantWorkspaceLifecycleServiceUnitTest {
                 .cancelAtPeriodEnd(cancelAtPeriodEnd)
                 .canceledAt(canceledAt)
                 .lastPaymentAt(Instant.parse("2026-04-01T00:00:00Z"))
+                .build();
+        tenant.assignSubscription(subscription);
+        return tenant;
+    }
+
+    private TenantEntity demoTenant(SubscriptionStatus status,
+                                    Instant currentPeriodEndAt,
+                                    Instant canceledAt) {
+        TenantEntity tenant = TenantEntity.builder()
+                .id(UUID.randomUUID())
+                .ownerEmail("owner@example.com")
+                .status(TenantStatus.ACTIVE)
+                .demoWorkspace(true)
+                .build();
+
+        TenantSubscriptionEntity subscription = TenantSubscriptionEntity.builder()
+                .tenant(tenant)
+                .plan(SubscriptionPlan.FREE)
+                .status(status)
+                .provider(BillingProvider.MANUAL)
+                .currentPeriodEndAt(currentPeriodEndAt)
+                .canceledAt(canceledAt)
                 .build();
         tenant.assignSubscription(subscription);
         return tenant;

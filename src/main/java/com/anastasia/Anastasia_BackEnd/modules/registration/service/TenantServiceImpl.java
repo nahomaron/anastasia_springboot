@@ -69,6 +69,7 @@ public class TenantServiceImpl implements TenantService {
     private final SecurityUtils securityUtils;
     private final TenantAdminAssignmentRepository tenantAdminAssignmentRepository;
     private final LocalizedMessageService messageService;
+    private final TenantWorkspaceLifecycleService tenantWorkspaceLifecycleService;
 
     @Override
     public TenantEntity convertTenantToEntity(TenantDTO tenantDTO) {
@@ -316,13 +317,31 @@ public class TenantServiceImpl implements TenantService {
         TenantEntity tenantToBeUnsubscribed = tenantRepository.findById(tenantId)
                 .orElseThrow(SecurityException::new);
 
-        if (tenantToBeUnsubscribed.getStatus() == TenantStatus.ACTIVE) {
-            tenantToBeUnsubscribed.setStatus(TenantStatus.DEACTIVATED);
-        }
-        if (tenantToBeUnsubscribed.getDeactivatedAt() == null) {
-            tenantToBeUnsubscribed.setDeactivatedAt(Instant.now());
+        Instant now = Instant.now();
+        TenantSubscriptionEntity subscription = tenantToBeUnsubscribed.getSubscription();
+        if (subscription != null) {
+            subscription.setCancelAtPeriodEnd(false);
+            subscription.setStatus(SubscriptionStatus.CANCELED);
+            if (subscription.getCanceledAt() == null) {
+                subscription.setCanceledAt(now);
+            }
+            subscription.setEndedAt(now);
+            subscription.setCurrentPeriodEndAt(now);
+            subscription.setStatusChangedAt(now);
+            subscription.setStatusChangeReason("Tenant canceled workspace");
+            subscription.setUpdatedByUserId(currentActorUserId());
+        } else {
+            if (tenantToBeUnsubscribed.getStatus() == TenantStatus.ACTIVE) {
+                tenantToBeUnsubscribed.setStatus(TenantStatus.DEACTIVATED);
+            }
+            if (tenantToBeUnsubscribed.getDeactivatedAt() == null) {
+                tenantToBeUnsubscribed.setDeactivatedAt(now);
+            }
         }
         tenantRepository.save(tenantToBeUnsubscribed);
+        if (subscription != null) {
+            tenantWorkspaceLifecycleService.syncTenantLifecycle(tenantId, currentActorUserId());
+        }
     }
 
     @Caching(evict = {
@@ -377,6 +396,14 @@ public class TenantServiceImpl implements TenantService {
                     "You do not have permission to modify this tenant."
             ));
         }
+    }
+
+    private UUID currentActorUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal principal) {
+            return principal.getUserUuid();
+        }
+        return null;
     }
 
     private boolean hasAuthority(Authentication authentication, String authority) {
