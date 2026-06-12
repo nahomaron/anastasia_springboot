@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.users.service;
 
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
@@ -39,6 +41,7 @@ public class TenantUserAccessService {
     private final TenantUserPermissionGrantRepository permissionGrantRepository;
     private final TenantUserAccessPolicy accessPolicy;
     private final LocalizedMessageService messageService;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public TenantUserAccessResponse getUserAccess(UUID userId) {
@@ -88,8 +91,23 @@ public class TenantUserAccessService {
             ));
         }
 
+        Set<String> previousRoleNames = user.getRoles().stream()
+                .map(Role::getRoleName)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         user.setRoles(new LinkedHashSet<>(requestedRoles));
         userRepository.save(user);
+        auditLogService.record(
+                AuditEventType.ACCESS_ROLE_CHANGED,
+                "SUCCESS",
+                getCurrentUserId(),
+                null,
+                tenantId,
+                "USER",
+                userId.toString(),
+                null,
+                "Explicit roles changed from " + previousRoleNames + " to "
+                        + requestedRoles.stream().map(Role::getRoleName).toList()
+        );
 
         return getUserAccess(userId);
     }
@@ -106,6 +124,7 @@ public class TenantUserAccessService {
         Set<PermissionType> directPermissionTypesToPersist = requestedPermissionTypes.stream()
                 .filter(permissionType -> !inheritedPermissions.contains(permissionType.getName()))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+        List<String> previousDirectPermissions = normalizedDirectPermissionKeys(userId, tenantId, inheritedPermissions);
 
         permissionGrantRepository.deleteByUserIdAndTenantId(userId, tenantId);
 
@@ -128,6 +147,19 @@ public class TenantUserAccessService {
 
             permissionGrantRepository.saveAll(grants);
         }
+
+        auditLogService.record(
+                AuditEventType.ACCESS_PERMISSION_CHANGED,
+                "SUCCESS",
+                getCurrentUserId(),
+                null,
+                tenantId,
+                "USER",
+                userId.toString(),
+                null,
+                "Direct permissions changed from " + previousDirectPermissions + " to "
+                        + directPermissionTypesToPersist.stream().map(PermissionType::getName).sorted().toList()
+        );
 
         return getUserAccess(userId);
     }

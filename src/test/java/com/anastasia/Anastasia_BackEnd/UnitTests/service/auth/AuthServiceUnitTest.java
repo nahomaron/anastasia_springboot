@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.UnitTests.service.auth;
 
 
 import com.anastasia.Anastasia_BackEnd.common.cache.CacheWarmupService;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
@@ -60,7 +62,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 @LenientMockitoTest
@@ -89,6 +93,7 @@ public class AuthServiceUnitTest {
     @Mock private TenantRepository tenantRepository;
     @Mock private MemberEffectivePermissionService memberEffectivePermissionService;
     @Mock private ActivationTokenObserver activationTokenObserver;
+    @Mock private AuditLogService auditLogService;
 
     private AuthServiceImpl authService;
 
@@ -118,7 +123,8 @@ public class AuthServiceUnitTest {
                 tenantRepository,
                 staffRepository,
                 memberEffectivePermissionService,
-                Optional.of(activationTokenObserver)
+                Optional.of(activationTokenObserver),
+                auditLogService
         ));
         user = UserEntity.builder()
                 .uuid(UUID.randomUUID())
@@ -195,8 +201,71 @@ public class AuthServiceUnitTest {
         String rawToken = resetUrl.substring(resetUrl.indexOf("token=") + "token=".length());
 
         verify(tokenRepository, never()).save(any(Token.class));
+        verify(auditLogService).record(
+                eq(AuditEventType.AUTH_PASSWORD_RESET_REQUESTED),
+                eq("SUCCESS"),
+                eq(user.getUuid()),
+                eq(email),
+                isNull(),
+                eq("USER"),
+                eq(user.getUuid().toString()),
+                isNull(),
+                contains("Password reset token issued")
+        );
         assertEquals("raw-reset-token-value-with-sufficient-length", rawToken);
         assertTrue(rawToken.length() >= 40);
+    }
+
+    @Test
+    void authenticate_shouldAuditFailedLoginWhenCredentialsAreInvalid() {
+        AuthenticationRequest request = new AuthenticationRequest(email, "wrong-password");
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        doThrow(new BadCredentialsException("bad credentials"))
+                .when(authenticationManager)
+                .authenticate(any());
+
+        assertThrows(InvalidCredentialsException.class, () -> authService.authenticate(request));
+
+        verify(auditLogService).record(
+                eq(AuditEventType.AUTH_LOGIN_FAILED),
+                eq("FAILURE"),
+                eq(user.getUuid()),
+                eq(email),
+                eq(user.getTenantId()),
+                eq("USER"),
+                eq(user.getUuid().toString()),
+                eq("invalid-credentials"),
+                contains("Username/password authentication failed")
+        );
+    }
+
+    @Test
+    void resetPassword_shouldAuditCompletion() {
+        Token token = Token.builder()
+                .token("hashed-reset")
+                .tokenType(TokenType.PASSWORD_RESET)
+                .expiresAt(Instant.now().plusSeconds(600))
+                .user(user)
+                .build();
+        when(passwordResetTokenService.hashToken("plain-reset")).thenReturn("hashed-reset");
+        when(tokenRepository.findTopByTokenAndTokenTypeOrderByIdDesc("hashed-reset", TokenType.PASSWORD_RESET))
+                .thenReturn(Optional.of(token));
+        when(userRepository.findById(user.getUuid())).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("new-password")).thenReturn("encoded-password");
+
+        authService.resetPassword("plain-reset", "new-password");
+
+        verify(auditLogService).record(
+                eq(AuditEventType.AUTH_PASSWORD_RESET_COMPLETED),
+                eq("SUCCESS"),
+                eq(user.getUuid()),
+                eq(email),
+                eq(user.getTenantId()),
+                eq("USER"),
+                eq(user.getUuid().toString()),
+                isNull(),
+                contains("Password reset completed")
+        );
     }
 
     @Test

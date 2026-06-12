@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.MembershipStatus;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantAdminAssignmentEntity;
@@ -29,6 +31,7 @@ public class TenantAdminAssignmentServiceImpl implements TenantAdminAssignmentSe
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final LocalizedMessageService messageService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -61,7 +64,19 @@ public class TenantAdminAssignmentServiceImpl implements TenantAdminAssignmentSe
             entity.setCreatedByUserId(actorUserId);
         }
 
-        return tenantAdminAssignmentRepository.save(entity);
+        TenantAdminAssignmentEntity saved = tenantAdminAssignmentRepository.save(entity);
+        auditLogService.record(
+                AuditEventType.ACCESS_ROLE_CHANGED,
+                "SUCCESS",
+                actorUserId,
+                null,
+                tenantId,
+                "TENANT_ADMIN_ASSIGNMENT",
+                saved.getId() != null ? saved.getId().toString() : null,
+                null,
+                "Invited tenant user " + userId + " with role " + saved.getRole()
+        );
+        return saved;
     }
 
     @Override
@@ -77,6 +92,17 @@ public class TenantAdminAssignmentServiceImpl implements TenantAdminAssignmentSe
         UserEntity user = requireUser(userId);
         user.assignAffiliatedTenant(saved.getTenant());
         userRepository.save(user);
+        auditLogService.record(
+                AuditEventType.ACCESS_ROLE_CHANGED,
+                "SUCCESS",
+                actorUserId,
+                null,
+                tenantId,
+                "TENANT_ADMIN_ASSIGNMENT",
+                saved.getId() != null ? saved.getId().toString() : null,
+                null,
+                "Activated tenant membership for user " + userId + " with role " + saved.getRole()
+        );
         return saved;
     }
 
@@ -93,9 +119,22 @@ public class TenantAdminAssignmentServiceImpl implements TenantAdminAssignmentSe
         TenantAdminAssignmentEntity entity = requireTenantAdminAssignment(tenantId, userId);
         ensurePrimaryOwnerConstraint(tenantId, newRole, entity);
 
+        TenantRole previousRole = entity.getRole();
         entity.setRole(newRole);
         entity.setUpdatedByUserId(actorUserId);
-        return tenantAdminAssignmentRepository.save(entity);
+        TenantAdminAssignmentEntity saved = tenantAdminAssignmentRepository.save(entity);
+        auditLogService.record(
+                AuditEventType.ACCESS_ROLE_CHANGED,
+                "SUCCESS",
+                actorUserId,
+                null,
+                tenantId,
+                "TENANT_ADMIN_ASSIGNMENT",
+                saved.getId() != null ? saved.getId().toString() : null,
+                null,
+                "Changed tenant role for user " + userId + " from " + previousRole + " to " + newRole
+        );
+        return saved;
     }
 
     @Override
@@ -111,7 +150,19 @@ public class TenantAdminAssignmentServiceImpl implements TenantAdminAssignmentSe
 
         entity.setBillingContact(billingContact);
         entity.setUpdatedByUserId(actorUserId);
-        return tenantAdminAssignmentRepository.save(entity);
+        TenantAdminAssignmentEntity saved = tenantAdminAssignmentRepository.save(entity);
+        auditLogService.record(
+                AuditEventType.BILLING_SUBSCRIPTION_CHANGED,
+                "SUCCESS",
+                actorUserId,
+                null,
+                tenantId,
+                "TENANT_ADMIN_ASSIGNMENT",
+                saved.getId() != null ? saved.getId().toString() : null,
+                null,
+                "Billing contact for user " + userId + " set to " + billingContact
+        );
+        return saved;
     }
 
     @Override

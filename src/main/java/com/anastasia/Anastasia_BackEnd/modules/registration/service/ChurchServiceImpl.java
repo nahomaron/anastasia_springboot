@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
@@ -41,6 +43,7 @@ public class ChurchServiceImpl implements ChurchService{
     private final TenantRepository tenantRepository;
     private final SecurityUtils securityUtils;
     private final LocalizedMessageService messageService;
+    private final AuditLogService auditLogService;
 
     @Override
     public ChurchEntity convertToEntity(ChurchDTO churchDTO) {
@@ -204,10 +207,25 @@ public class ChurchServiceImpl implements ChurchService{
                         "church.notFound",
                         "Church Not Found"
                 )));
+        boolean previousPublicDirectoryEnabled = existingChurch.isPublicDirectoryEnabled();
 
         mergeChurch(existingChurch, churchEntity);
         applyStatusLifecycle(existingChurch, churchEntity.getStatus());
         ChurchEntity savedChurch = churchRepository.save(existingChurch);
+        if (previousPublicDirectoryEnabled != savedChurch.isPublicDirectoryEnabled()) {
+            auditLogService.record(
+                    AuditEventType.PUBLIC_DIRECTORY_VISIBILITY_CHANGED,
+                    "SUCCESS",
+                    currentActorUserId(),
+                    null,
+                    savedChurch.getTenant() != null ? savedChurch.getTenant().getId() : TenantContext.getTenantId(),
+                    "CHURCH",
+                    savedChurch.getChurchId() != null ? savedChurch.getChurchId().toString() : null,
+                    null,
+                    "publicDirectoryEnabled changed from " + previousPublicDirectoryEnabled
+                            + " to " + savedChurch.isPublicDirectoryEnabled()
+            );
+        }
         return convertToResponse(savedChurch);
 
     }
@@ -339,6 +357,14 @@ public class ChurchServiceImpl implements ChurchService{
         target.setHeight(incoming.getHeight());
         target.setDeletedAt(incoming.getDeletedAt());
         return target;
+    }
+
+    private UUID currentActorUserId() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal principal) {
+            return principal.getUserUuid();
+        }
+        return null;
     }
 
     private String defaultTimezone(String candidate, String fallback) {

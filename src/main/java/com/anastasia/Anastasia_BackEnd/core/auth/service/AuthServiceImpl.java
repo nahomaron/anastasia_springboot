@@ -2,6 +2,8 @@ package com.anastasia.Anastasia_BackEnd.core.auth.service;
 
 import com.anastasia.Anastasia_BackEnd.common.config.PublicUrlUtils;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.AuthenticationProcessException;
 import com.anastasia.Anastasia_BackEnd.common.exception.customExceptions.InvalidCredentialsException;
@@ -101,6 +103,7 @@ public class AuthServiceImpl implements AuthService {
     private final StaffRepository staffRepository;
     private final MemberEffectivePermissionService memberEffectivePermissionService;
     private final Optional<ActivationTokenObserver> activationTokenObserver;
+    private final AuditLogService auditLogService;
 
     private static final int LOGIN_2FA_MAX_ATTEMPTS = 5;
     private static final int LOGIN_2FA_CHALLENGE_MINUTES = 10;
@@ -225,6 +228,14 @@ public class AuthServiceImpl implements AuthService {
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws MessagingException {
         Optional<UserEntity> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent() && !existingUser.get().isVerified()) {
+            auditAuthEvent(
+                    AuditEventType.AUTH_LOGIN_FAILED,
+                    "REJECTED",
+                    existingUser.get(),
+                    request.getEmail(),
+                    "account-not-verified",
+                    "Login blocked before password verification"
+            );
             handleUnverifiedLoginAttempt(existingUser.get());
         }
 
@@ -233,10 +244,34 @@ public class AuthServiceImpl implements AuthService {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            auditAuthEvent(
+                    AuditEventType.AUTH_LOGIN_FAILED,
+                    "FAILURE",
+                    existingUser.orElse(null),
+                    request.getEmail(),
+                    "invalid-credentials",
+                    "Username/password authentication failed"
+            );
             throw new InvalidCredentialsException(messageService.get("auth.login.invalidCredentials", "Unauthorized: Invalid email or password"));
         } catch (AuthenticationException e) {
+            auditAuthEvent(
+                    AuditEventType.AUTH_LOGIN_FAILED,
+                    "FAILURE",
+                    existingUser.orElse(null),
+                    request.getEmail(),
+                    e.getClass().getSimpleName(),
+                    "Authentication exception during login"
+            );
             throw e;
         } catch (Exception e) {
+            auditAuthEvent(
+                    AuditEventType.AUTH_LOGIN_FAILED,
+                    "ERROR",
+                    existingUser.orElse(null),
+                    request.getEmail(),
+                    e.getClass().getSimpleName(),
+                    "Unexpected error during login"
+            );
             throw new AuthenticationProcessException(
                     messageService.get("auth.login.unexpectedError", "An unexpected error occurred during login"),
                     e
@@ -364,11 +399,27 @@ public class AuthServiceImpl implements AuthService {
         challenge.setLastAttemptAt(Instant.now());
         if (!valid) {
             loginTwoFactorChallengeRepository.save(challenge);
+            auditAuthEvent(
+                    AuditEventType.AUTH_MFA_VERIFIED,
+                    "FAILURE",
+                    user,
+                    user.getEmail(),
+                    "invalid-verification-code",
+                    "Login two-factor verification failed"
+            );
             throw new IllegalArgumentException(messageService.get("auth.verificationCode.invalid", "Invalid verification code."));
         }
 
         challenge.setConsumedAt(Instant.now());
         loginTwoFactorChallengeRepository.save(challenge);
+        auditAuthEvent(
+                AuditEventType.AUTH_MFA_VERIFIED,
+                "SUCCESS",
+                user,
+                user.getEmail(),
+                null,
+                "Login two-factor verification succeeded"
+        );
         return issueSessionForUser(user.getUuid());
     }
 
@@ -387,6 +438,14 @@ public class AuthServiceImpl implements AuthService {
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
         touchStaffLoginAudit(user);
+        auditAuthEvent(
+                AuditEventType.AUTH_LOGIN_SUCCEEDED,
+                "SUCCESS",
+                user,
+                user.getEmail(),
+                null,
+                "User session issued"
+        );
 
         UserPrincipal userPrincipal = new UserPrincipal(
                 user,
@@ -546,6 +605,17 @@ public class AuthServiceImpl implements AuthService {
     public void initiatePasswordReset(String email) throws MessagingException {
         UserEntity user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
+            auditLogService.record(
+                    AuditEventType.AUTH_PASSWORD_RESET_REQUESTED,
+                    "NO_MATCH",
+                    null,
+                    email,
+                    null,
+                    "USER",
+                    null,
+                    "email-not-found",
+                    "Password reset requested for an unknown email"
+            );
             return;
         }
 
@@ -564,6 +634,14 @@ public class AuthServiceImpl implements AuthService {
                 EmailTemplate.PASSWORD_RESET.templateKey(),
                 templateProperties,
                 EmailSendMetadata.of(EmailCategory.SECURITY, EmailTemplate.PASSWORD_RESET.templateKey())
+        );
+        auditAuthEvent(
+                AuditEventType.AUTH_PASSWORD_RESET_REQUESTED,
+                "SUCCESS",
+                user,
+                user.getEmail(),
+                null,
+                "Password reset token issued and email queued"
         );
     }
 
@@ -607,6 +685,14 @@ public class AuthServiceImpl implements AuthService {
         savedToken.setExpiredAt(Instant.now());
         savedToken.setRevokedAt(Instant.now());
         tokenRepository.save(savedToken);
+        auditAuthEvent(
+                AuditEventType.AUTH_PASSWORD_RESET_COMPLETED,
+                "SUCCESS",
+                user,
+                user.getEmail(),
+                null,
+                "Password reset completed and active sessions revoked"
+        );
     }
 
     @Override
@@ -855,6 +941,14 @@ public class AuthServiceImpl implements AuthService {
                 .expiresAt(Instant.now().plusSeconds(LOGIN_2FA_CHALLENGE_MINUTES * 60L))
                 .build();
         loginTwoFactorChallengeRepository.save(challenge);
+        auditAuthEvent(
+                AuditEventType.AUTH_MFA_CHALLENGE_ISSUED,
+                "CHALLENGE",
+                user,
+                user.getEmail(),
+                null,
+                "Login two-factor challenge issued"
+        );
 
         return AuthenticationResponse.builder()
                 .challengeRequired(true)
@@ -946,6 +1040,27 @@ public class AuthServiceImpl implements AuthService {
         byte[] randomBytes = new byte[32];
         SECURE_RANDOM.nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+    private void auditAuthEvent(
+            AuditEventType eventType,
+            String result,
+            UserEntity user,
+            String actorIdentifier,
+            String reason,
+            String context
+    ) {
+        auditLogService.record(
+                eventType,
+                result,
+                user != null ? user.getUuid() : null,
+                actorIdentifier,
+                user != null ? user.getTenantId() : TenantContext.getTenantId(),
+                "USER",
+                user != null && user.getUuid() != null ? user.getUuid().toString() : null,
+                reason,
+                context
+        );
     }
 
 }

@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.service;
 
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Account;
@@ -117,6 +119,7 @@ public class TenantWorkspaceLifecycleService {
     private final TransactionRepository transactionRepository;
     private final FundRepository fundRepository;
     private final AccountRepository accountRepository;
+    private final AuditLogService auditLogService;
     private final TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
     private final TenantDemoWorkspaceSeederService tenantDemoWorkspaceSeederService;
 
@@ -310,6 +313,17 @@ public class TenantWorkspaceLifecycleService {
         if (tenant.getDeletedAt() != null || tenant.getPurgedAt() != null) {
             return;
         }
+        auditLogService.record(
+                AuditEventType.DATA_PURGE_EXECUTED,
+                "SUCCESS",
+                null,
+                tenant.getOwnerEmail(),
+                tenant.getId(),
+                "TENANT",
+                tenant.getId().toString(),
+                "demo-retention-policy",
+                "Purging demo workspace after grace period"
+        );
 
         UserEntity owner = resolveWorkspaceOwner(tenant, null);
         clearWorkspaceData(tenant, owner);
@@ -330,6 +344,17 @@ public class TenantWorkspaceLifecycleService {
         if (tenant.getDeletedAt() != null || tenant.getPurgedAt() != null) {
             return;
         }
+        auditLogService.record(
+                AuditEventType.DATA_DELETION_EXECUTED,
+                "SUCCESS",
+                null,
+                tenant.getOwnerEmail(),
+                tenant.getId(),
+                "TENANT",
+                tenant.getId().toString(),
+                "retention-policy",
+                "Deleting tenant workspace after legal retention period"
+        );
 
         UserEntity owner = resolveWorkspaceOwner(tenant, null);
         clearWorkspaceData(tenant, owner);

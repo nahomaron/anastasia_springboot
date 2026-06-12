@@ -325,6 +325,10 @@ public class OperationalWorkspaceSeeder {
     }
 
     private UserEntity persistOwner(UserEntity owner, TenantEntity tenant) {
+        if (owner.getUuid() != null) {
+            return owner;
+        }
+
         Instant now = Instant.now();
         owner.setFullName(properties.getTenantOwnerName().trim());
         owner.setEmail(normalizedEmail(properties.getTenantOwnerEmail()));

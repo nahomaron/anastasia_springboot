@@ -1,5 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.modules.accounting.service.impl;
 
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditEventType;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.dto.JournalEntryLine;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Account;
 import com.anastasia.Anastasia_BackEnd.modules.accounting.model.Transaction;
@@ -37,6 +39,7 @@ public class ImportExportServiceImpl implements ImportExportService {
     private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
     private final AccountRepository accountRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -48,6 +51,18 @@ public class ImportExportServiceImpl implements ImportExportService {
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
             QuickBooksMapper.writeTransactionsAsIif(transactions, writer);
+            auditLogService.record(
+                    AuditEventType.DATA_EXPORT_REQUESTED,
+                    "SUCCESS",
+                    currentActorUserId(),
+                    null,
+                    tenantId,
+                    "ACCOUNTING_EXPORT",
+                    tenantId.toString(),
+                    null,
+                    "QuickBooks export for period " + startDate + " to " + endDate
+                            + ", transactions=" + transactions.size()
+            );
         } catch (IOException e) {
             log.error("Failed to export QuickBooks IIF for tenant={} between {} and {}", tenantId, startDate, endDate, e);
             throw new IllegalStateException("QuickBooks export failed", e);
@@ -107,5 +122,13 @@ public class ImportExportServiceImpl implements ImportExportService {
         if (totalDebit.subtract(totalCredit).abs().compareTo(new BigDecimal("0.01")) > 0) {
             throw new IllegalArgumentException("Imported QuickBooks entry is not balanced: debits=" + totalDebit + " credits=" + totalCredit);
         }
+    }
+
+    private UUID currentActorUserId() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal principal) {
+            return principal.getUserUuid();
+        }
+        return null;
     }
 }

@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
+import com.anastasia.Anastasia_BackEnd.modules.platform.admin.service.PlatformSupportAccessService;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -42,6 +43,7 @@ class PlatformAdminActionServiceTest {
     @Mock private TenantSubscriptionEventRepository eventRepository;
     @Mock private SubscriptionService subscriptionService;
     @Mock private PriestRepository priestRepository;
+    @Mock private PlatformSupportAccessService supportAccessService;
 
     @InjectMocks private PlatformAdminActionService actionService;
 
@@ -121,13 +123,14 @@ class PlatformAdminActionServiceTest {
     @Test
     void updatePriestStatus_flipsActiveFlag() {
         Long priestId = 9L;
+        UUID actorUserId = UUID.randomUUID();
         PriestEntity priest = new PriestEntity();
         priest.setId(priestId);
         priest.setStatus(PriestStatus.PENDING);
         priest.setActive(true);
         when(priestRepository.findById(priestId)).thenReturn(Optional.of(priest));
 
-        actionService.updatePriestStatus(priestId, PriestStatus.INACTIVE);
+        actionService.updatePriestStatus(priestId, PriestStatus.INACTIVE, actorUserId);
 
         verify(priestRepository, times(1)).save(priest);
         assertThat(priest.isActive()).isFalse();
