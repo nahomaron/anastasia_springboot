@@ -103,4 +103,26 @@ class SecurityConfigTest {
                 "/api/v1/onboarding/email-verification/verify-code"
         );
     }
+
+    @Test
+    void csrfIgnoreList_shouldContainAnonymousAuthAndOnboardingEndpoints() {
+        String[] ignored = (String[]) ReflectionTestUtils.getField(securityConfig, "CSRF_IGNORED_ENDPOINTS");
+
+        assertThat(ignored).contains(
+                "/api/v1/auth/sign-up",
+                "/api/v1/auth/login/2fa/verify",
+                "/api/v1/auth/resend-activation",
+                "/api/v1/auth/forgot-password",
+                "/api/v1/auth/reset-password",
+                "/api/v1/tenant/subscription",
+                "/api/v1/tenant/verify-phone",
+                "/api/v1/tenant/resend-phone-otp",
+                "/api/v1/onboarding/billing/sessions",
+                "/api/v1/onboarding/billing/sessions/*/checkout",
+                "/api/v1/onboarding/billing/sessions/*/finalize",
+                "/api/v1/onboarding/billing/sessions/*/auto-login",
+                "/api/v1/priests/register",
+                "/api/v1/auth/platform-admin/register"
+        );
+    }
 }
