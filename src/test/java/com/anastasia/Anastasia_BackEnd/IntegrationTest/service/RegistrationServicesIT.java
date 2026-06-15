@@ -142,9 +142,11 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         Adult_MemberResponse response = memberService.registerMember(adultMemberEntity);
 
         assertThat(response.getMembershipNumber()).isNotBlank();
-        assertThat(memberRepository.count()).isEqualTo(1);
+        assertThat(memberRepository.countByTenantId(tenant.getId())).isEqualTo(1);
 
-        Adult_MemberEntity saved = memberRepository.findAll().get(0);
+        Adult_MemberEntity saved = memberRepository
+                .findByMembershipNumberAndTenantId(response.getMembershipNumber(), tenant.getId())
+                .orElseThrow();
         assertThat(saved.getChurch().getChurchId()).isEqualTo(church.getChurchId());
 
         UserEntity refreshedUser = userRepository.findById(user.getUuid()).orElseThrow();
@@ -178,9 +180,12 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
         Child_MemberResponse response = childService.registerChild(childMemberEntity);
 
         assertThat(response.getMembershipNumber()).isNotBlank();
-        assertThat(childRepository.count()).isEqualTo(1);
+        assertThat(childRepository.countByTenantId(tenant.getId())).isEqualTo(1);
 
-        Child_MemberEntity saved = childRepository.findAll().get(0);
+        Child_MemberEntity saved = childRepository.findByTenantId(tenant.getId()).stream()
+                .filter(child -> response.getMembershipNumber().equals(child.getMembershipNumber()))
+                .findFirst()
+                .orElseThrow();
         assertThat(saved.getChurch().getChurchId()).isEqualTo(church.getChurchId());
 
         Child_MemberDTO updateDto = TestDataUtil.createTestChildDTO(church);
@@ -210,7 +215,10 @@ class RegistrationServicesIT extends ServiceIntegrationTestBase {
                 any()
         );
 
-        PriestEntity saved = priestRepository.findAll().get(0);
+        PriestEntity saved = priestRepository.findAll().stream()
+                .filter(priest -> priestDTO.getPersonalEmail().equals(priest.getUser().getEmail()))
+                .findFirst()
+                .orElseThrow();
         assertThat(saved.getChurch().getChurchNumber()).isEqualTo(church.getChurchNumber());
         assertThat(saved.getUser().getEmail()).isEqualTo(priestDTO.getPersonalEmail());
 
