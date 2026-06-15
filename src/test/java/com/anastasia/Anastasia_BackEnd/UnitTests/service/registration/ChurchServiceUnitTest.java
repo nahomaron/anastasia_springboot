@@ -1,6 +1,7 @@
 package com.anastasia.Anastasia_BackEnd.UnitTests.service.registration;
 
 import com.anastasia.Anastasia_BackEnd.TestDataUtil;
+import com.anastasia.Anastasia_BackEnd.common.auditing.AuditLogService;
 import com.anastasia.Anastasia_BackEnd.common.config.TenantContext;
 import com.anastasia.Anastasia_BackEnd.common.i18n.LocalizedMessageService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.mappers.ChurchMapper;
@@ -39,6 +40,7 @@ class ChurchServiceUnitTest {
     @Mock private TenantRepository tenantRepository;
     @Mock private SecurityUtils securityUtils;
     @Mock private LocalizedMessageService messageService;
+    @Mock private AuditLogService auditLogService;
 
     @InjectMocks
     private ChurchServiceImpl churchService;

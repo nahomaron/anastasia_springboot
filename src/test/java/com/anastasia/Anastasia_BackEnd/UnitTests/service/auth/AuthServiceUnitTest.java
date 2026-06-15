@@ -219,6 +219,8 @@ public class AuthServiceUnitTest {
     @Test
     void authenticate_shouldAuditFailedLoginWhenCredentialsAreInvalid() {
         AuthenticationRequest request = new AuthenticationRequest(email, "wrong-password");
+        user.setVerified(true);
+        user.setStatus(UserStatus.ACTIVE);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         doThrow(new BadCredentialsException("bad credentials"))
                 .when(authenticationManager)

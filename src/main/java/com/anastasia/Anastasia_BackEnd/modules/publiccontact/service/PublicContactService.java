@@ -237,8 +237,9 @@ public class PublicContactService {
     }
 
     private String normalizedContentType(MultipartFile document) {
-        return StringUtils.hasText(document.getContentType())
-                ? document.getContentType().trim().toLowerCase(Locale.ROOT)
+        String contentType = document.getContentType();
+        return StringUtils.hasText(contentType)
+                ? contentType.trim().toLowerCase(Locale.ROOT)
                 : "";
     }
 

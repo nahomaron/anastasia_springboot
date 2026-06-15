@@ -38,6 +38,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Map;
@@ -52,6 +53,7 @@ import static org.mockito.Mockito.verify;
 
 @Epic("Integration Tests")
 @Feature("Service Layer - Registration Domain")
+@Transactional
 class RegistrationServicesIT extends ServiceIntegrationTestBase {
 
     @Autowired private TenantService tenantService;
