@@ -14,14 +14,14 @@ The production-ready release path is now:
 
 Flow:
 
-1. `push` / `pull_request` to `main` or `dev` runs `CI` and `Security`.
-2. A successful `CI` run on `main` triggers `Build Image`.
-3. `Build Image` waits for `Security` to pass for the same commit, then pushes exactly one immutable GHCR image tagged by commit SHA and publishes `release-manifest.json`.
-4. A successful `Build Image` run triggers `Deploy Staging`.
+1. `push` / `pull_request` to `main`, `dev`, or `staging` runs `CI` and `Security`.
+2. A successful `Security` run on `staging` triggers `Build Image`.
+3. `Build Image` only accepts staging commits, then pushes exactly one immutable GHCR image tagged by commit SHA and publishes `release-manifest.json`.
+4. A successful staging `Build Image` run deploys that exact digest to staging.
 5. `Deploy Staging` downloads the manifest, deploys the exact image digest to staging, writes release state on the target host, and runs smoke tests.
 6. After successful smoke checks, the deployment prunes stale backend images from the shared host while preserving any digest referenced by staging or production `current.env` / `previous.env`.
 7. A successful `Deploy Staging` run triggers `K6 Load`.
-8. `Promote Production` is manual only. It reuses the same manifest and exact image digest after validating that staging and K6 both passed for that commit.
+8. `Promote Production` is manual only. It accepts only a successful staging `Build Image` run and reuses the same exact image digest after validating that staging and K6 both passed for that commit.
 9. `Rollback` is manual only and restores the previously deployed digest for staging or production.
 10. Staging and production must use external RDS-style database hosts; the workflows now fail fast if `DB_HOST` is `postgres`, `localhost`, or `127.0.0.1`.
 
@@ -32,6 +32,7 @@ Flow:
 Manifest fields:
 
 - `git_sha`
+- `source_branch`
 - `image_repo`
 - `image_tag`
 - `image_digest`
@@ -182,7 +183,7 @@ Repository variables:
 - `CI_RUN_API_TESTS`: set to `true` only when the CI host should run the API suite
 - `CI_API_BASE_URL`: required when `CI_RUN_API_TESTS=true`
 
-Branch protection on `main` should require:
+Branch protection on `main` and `staging` should require:
 
 - `CI Gate`
 - `Security Gate`
@@ -196,7 +197,7 @@ Branch protection on `main` should require:
 ```dotenv
 SPRING_PROFILES_ACTIVE=staging
 COMPOSE_PROJECT_NAME=anastasis-staging
-DB_HOST=postgres
+DB_HOST=anastasis-staging.cluster-xxxxxx.us-east-2.rds.amazonaws.com
 DB_PORT=5432
 DB_NAME=anastasia_staging
 DB_USER=anastasis_staging
@@ -281,10 +282,10 @@ If both environments run on the same EC2 instance, keep separate internal host p
 
 ## Promotion process
 
-1. Merge the change to `main`.
+1. Merge or cherry-pick the release candidate onto `staging`.
 2. Wait for `CI`, `Security`, `Build Image`, `Deploy Staging`, and `K6 Load` to pass.
 3. Run `Promote Production`.
-4. Provide the `Build Image` run id.
+4. Provide the `Build Image` run id from the successful `staging` build.
 5. Approve the `production` environment deployment.
 6. Confirm the production smoke checks pass.
 

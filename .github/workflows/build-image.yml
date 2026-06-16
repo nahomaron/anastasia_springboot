@@ -9,7 +9,7 @@ run-name: >-
 on:
   workflow_run:
     workflows: ["Security"]
-    branches: [staging, main]
+    branches: [staging]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -27,14 +27,14 @@ jobs:
   build-image:
     if: >-
       ${{
-        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.ref_name == 'staging'
+        ) ||
         (
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
-          (
-            github.event.workflow_run.head_branch == 'staging' ||
-            github.event.workflow_run.head_branch == 'main'
-          ) &&
+          github.event.workflow_run.head_branch == 'staging' &&
           github.event.workflow_run.name == 'Security'
         )
       }}
@@ -61,6 +61,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.meta.outputs.git_sha }}
+          fetch-depth: 0
+      - name: Verify staging commit provenance
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          git fetch --no-tags origin staging
+          if ! git merge-base --is-ancestor "${{ steps.meta.outputs.git_sha }}" "origin/staging"; then
+            echo "Manual builds must target a commit that is contained in origin/staging." >&2
+            exit 1
+          fi
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -93,6 +102,7 @@ jobs:
 
           manifest = {
               "git_sha": os.environ["GIT_SHA"],
+              "source_branch": os.environ["SOURCE_BRANCH"],
               "image_repo": os.environ["IMAGE_REPO"],
               "image_tag": os.environ["IMAGE_TAG"],
               "image_digest": os.environ["IMAGE_DIGEST"],
@@ -112,6 +122,7 @@ jobs:
           IMAGE_TAG: ${{ steps.meta.outputs.git_sha }}
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
+          SOURCE_BRANCH: staging
       - name: Upload release manifest
         uses: actions/upload-artifact@v4
         with:
@@ -455,6 +466,7 @@ jobs:
           Path("staging-release.json").write_text(json.dumps({
               "git_sha": "${{ needs.build-image.outputs.git_sha }}",
               "build_run_id": "${{ needs.build-image.outputs.build_run_id }}",
+              "source_branch": "staging",
               "staging_url": "${{ vars.APP_BACKEND_BASE_URL }}",
               "image_ref": "${{ needs.build-image.outputs.image_ref }}",
               "built_at": "${{ needs.build-image.outputs.built_at }}",
