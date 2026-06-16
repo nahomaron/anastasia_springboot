@@ -60,26 +60,62 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
             response.sendRedirect(redirectUrl);
         } catch (RuntimeException ex) {
-            log.warn("Google OAuth login provisioning failed for email={}: {}", email, ex.getMessage(), ex);
-            redirectWithError(response, ex.getMessage());
+            String resolvedError = resolveErrorMessage(ex);
+            log.warn("Google OAuth login provisioning failed for email={}: {}", email, resolvedError, ex);
+            redirectWithError(response, resolvedError);
         }
     }
 
     private void redirectWithError(HttpServletResponse response, String error) throws IOException {
+        String resolvedError = trimToNull(error);
+        if (resolvedError == null) {
+            resolvedError = "Google sign-in failed.";
+        }
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(normalizeBaseUrl(frontendBaseUrl) + "/auth/google/callback")
-                .queryParam("error", sanitizeErrorMessage(error))
+                .queryParam("error", resolvedError)
                 .build()
                 .encode()
                 .toUriString();
         response.sendRedirect(redirectUrl);
     }
 
-    private String sanitizeErrorMessage(String error) {
-        if (error == null || error.isBlank()) {
-            return "Google sign-in failed.";
+    private String resolveErrorMessage(Throwable throwable) {
+        String directMessage = trimToNull(throwable == null ? null : throwable.getMessage());
+        if (directMessage != null) {
+            return directMessage;
         }
-        return error.trim();
+
+        Throwable rootCause = findRootCause(throwable);
+        String rootMessage = trimToNull(rootCause == null ? null : rootCause.getMessage());
+        if (rootMessage != null) {
+            return rootMessage;
+        }
+
+        if (throwable != null) {
+            return "Google sign-in failed (" + throwable.getClass().getSimpleName() + ").";
+        }
+
+        return "Google sign-in failed.";
+    }
+
+    private Throwable findRootCause(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null && current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        return trimmed;
     }
 
     private String normalizeBaseUrl(String value) {

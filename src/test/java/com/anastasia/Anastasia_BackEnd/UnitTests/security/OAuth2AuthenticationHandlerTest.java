@@ -13,6 +13,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -102,6 +104,46 @@ class OAuth2AuthenticationHandlerTest {
 
         assertThat(response.getRedirectedUrl())
                 .isEqualTo("https://staging.anastasisapp.com/auth/google/callback?error=oauth%20provider%20rejected%20callback%20with%20invalid%20state");
+    }
+
+    @Test
+    void failureHandler_shouldPreferProviderDescriptionWhenExceptionMessageIsBlank() throws Exception {
+        ReflectionTestUtils.setField(failureHandler, "frontendBaseUrl", "https://staging.anastasisapp.com");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("error", "access_denied");
+        request.setParameter("error_description", "User cancelled the Google consent screen");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        failureHandler.onAuthenticationFailure(
+                request,
+                response,
+                new OAuth2AuthenticationException(new OAuth2Error("access_denied", null, null), " ")
+        );
+
+        assertThat(response.getRedirectedUrl())
+                .isEqualTo("https://staging.anastasisapp.com/auth/google/callback?error=User%20cancelled%20the%20Google%20consent%20screen");
+    }
+
+    @Test
+    void successHandler_shouldUseRootCauseMessageWhenProvisioningExceptionMessageIsBlank() throws Exception {
+        OAuth2User oauthUser = oauthUser(
+                "google-123",
+                "test@example.com",
+                "Test User",
+                true
+        );
+
+        when(authentication.getPrincipal()).thenReturn(oauthUser);
+        when(authService.authenticateGoogleUser("google-123", "test@example.com", "Test User"))
+                .thenThrow(new IllegalStateException(" ", new RuntimeException("database write failed")));
+        ReflectionTestUtils.setField(successHandler, "frontendBaseUrl", "https://staging.anastasisapp.com");
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        successHandler.onAuthenticationSuccess(new MockHttpServletRequest(), response, authentication);
+
+        assertThat(response.getRedirectedUrl())
+                .isEqualTo("https://staging.anastasisapp.com/auth/google/callback?error=database%20write%20failed");
     }
 
     private OAuth2User oauthUser(String sub, String email, String name, boolean emailVerified) {
