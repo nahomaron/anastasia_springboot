@@ -59,6 +59,10 @@ public class TenantOnboardingBillingService {
         return onboardingSessionRepository.findByIdempotencyKey(normalizedIdempotency)
                 .map(session -> toExistingSessionResponse(session, accessToken))
                 .orElseGet(() -> {
+                    onboardingProvisioningService.assertOwnerIdentityEligible(
+                            tenantDTO.getOwnerEmail(),
+                            tenantDTO.getPhoneNumber()
+                    );
                     TenantOnboardingSessionEntity session = buildSession(tenantDTO, normalizedIdempotency);
                     String issuedAccessToken = onboardingSessionAccessService.issueAccessToken(session);
                     return toResponse(onboardingSessionRepository.save(session), issuedAccessToken);
@@ -69,6 +73,10 @@ public class TenantOnboardingBillingService {
     public OnboardingSessionResponse createCheckout(UUID sessionId, String idempotencyKey, String accessToken) {
         TenantOnboardingSessionEntity session = requireAuthorizedSession(sessionId, accessToken);
 
+        onboardingProvisioningService.assertOwnerIdentityEligible(
+                session.getOwnerEmail(),
+                session.getOwnerPhone()
+        );
         ensureEmailVerifiedForOnboarding(session);
 
         if (!session.isPaymentRequired()) {

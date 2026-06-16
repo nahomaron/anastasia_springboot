@@ -67,6 +67,24 @@ public class TenantOnboardingProvisioningService {
     private final TenantDemoTemplateCloneService tenantDemoTemplateCloneService;
     private final LocalizedMessageService messageService;
 
+    @Transactional(readOnly = true)
+    public void assertOwnerIdentityEligible(String ownerEmail, String ownerPhone) {
+        Optional<UserEntity> existingUser = findExistingUser(ownerEmail);
+        if (existingUser.isPresent() && !canPromoteStandaloneUser(existingUser.get())) {
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.provisioning.ownerEmailConflict",
+                    "This email is already linked to an existing tenant account. Sign in with that account or use another email."
+            ));
+        }
+
+        if (StringUtils.hasText(ownerPhone) && tenantRepository.findByPhoneNumber(ownerPhone.trim()).isPresent()) {
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.provisioning.ownerPhoneConflict",
+                    "This phone number is already linked to an existing tenant. Use a different phone number for onboarding."
+            ));
+        }
+    }
+
     @Transactional
     public void finalizeProvisioningIfReady(UUID onboardingSessionId) {
         TenantOnboardingSessionEntity session = onboardingSessionRepository.findById(onboardingSessionId)
@@ -90,6 +108,11 @@ public class TenantOnboardingProvisioningService {
             session.setProvisionedAt(Instant.now());
             session.setFailureReason(null);
             onboardingSessionRepository.save(session);
+        } catch (IllegalStateException ex) {
+            session.setStatus(OnboardingSessionStatus.PROVISIONING_FAILED);
+            session.setFailureReason(trimError(ex.getMessage()));
+            onboardingSessionRepository.save(session);
+            log.warn("Onboarding provisioning failed for session {}: {}", onboardingSessionId, ex.getMessage());
         } catch (RuntimeException ex) {
             session.setStatus(OnboardingSessionStatus.PROVISIONING_FAILED);
             session.setFailureReason(trimError(ex.getMessage()));
@@ -106,10 +129,22 @@ public class TenantOnboardingProvisioningService {
             return byTenantId.get();
         }
 
-        Optional<UserEntity> existingUser = userRepository.findByEmail(session.getOwnerEmail());
+        Optional<UserEntity> existingUser = findExistingUser(session.getOwnerEmail());
         Optional<TenantEntity> existingTenantByPhone = tenantRepository.findByPhoneNumber(session.getOwnerPhone());
-        if (existingUser.isPresent() || existingTenantByPhone.isPresent()) {
+        if (existingUser.isPresent() && existingTenantByPhone.isPresent()) {
             return resolveExistingOrFail(session, existingUser, existingTenantByPhone);
+        }
+        if (existingTenantByPhone.isPresent()) {
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.provisioning.ownerPhoneConflict",
+                    "This phone number is already linked to an existing tenant. Use a different phone number for onboarding."
+            ));
+        }
+        if (existingUser.isPresent() && !canPromoteStandaloneUser(existingUser.get())) {
+            throw new IllegalStateException(messageService.get(
+                    "onboarding.provisioning.ownerEmailConflict",
+                    "This email is already linked to an existing tenant account. Sign in with that account or use another email."
+            ));
         }
 
         String displayName = resolveDisplayName(session);
@@ -156,7 +191,7 @@ public class TenantOnboardingProvisioningService {
 
         TenantEntity savedTenant = tenantRepository.save(tenant);
         provisionChurchIfNeeded(savedTenant, session);
-        UserEntity owner = provisionOwner(savedTenant, session);
+        UserEntity owner = provisionOwner(savedTenant, session, existingUser.orElse(null));
         seedWorkspaceIfRequested(savedTenant, session, owner);
 
         session.setProvisionedOwnerUserId(owner.getUuid());
@@ -208,7 +243,9 @@ public class TenantOnboardingProvisioningService {
         tenantRepository.save(tenant);
     }
 
-    private UserEntity provisionOwner(TenantEntity tenant, TenantOnboardingSessionEntity session) {
+    private UserEntity provisionOwner(TenantEntity tenant,
+                                      TenantOnboardingSessionEntity session,
+                                      UserEntity existingUser) {
         Role ownerRole = roleRepository.findByRoleName("OWNER")
                 .orElseThrow(() -> new IllegalStateException(messageService.get(
                         "role.owner.notFound",
@@ -221,16 +258,41 @@ public class TenantOnboardingProvisioningService {
                         "Primary admin role not found"
                 )));
 
-        UserEntity owner = UserEntity.builder()
-                .fullName(session.getOwnerName())
-                .email(session.getOwnerEmail())
-                .password(session.getDraftPasswordHash())
-                .affiliatedTenant(tenant)
-                .roles(new HashSet<>(Set.of(primaryAdminRole, ownerRole)))
-                .userType(UserType.TENANT)
-                .emailVerifiedAt(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? Instant.now() : null)
-                .status(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION)
-                .build();
+        UserEntity owner;
+        if (existingUser != null) {
+            owner = existingUser;
+            owner.setFullName(session.getOwnerName());
+            owner.setEmail(session.getOwnerEmail());
+            owner.setPassword(session.getDraftPasswordHash());
+            owner.setPhoneNumber(session.getOwnerPhone());
+            owner.assignAffiliatedTenant(tenant);
+            owner.setUserType(UserType.TENANT);
+            Set<Role> mergedRoles = new HashSet<>(owner.getRoles());
+            mergedRoles.add(primaryAdminRole);
+            mergedRoles.add(ownerRole);
+            owner.setRoles(mergedRoles);
+            boolean verified = owner.isVerified() || onboardingEmailVerificationService.isVerified(session.getOwnerEmail());
+            if (verified) {
+                owner.setVerified(true);
+                if (owner.getStatus() == null || owner.getStatus() == UserStatus.PENDING_VERIFICATION) {
+                    owner.setStatus(UserStatus.ACTIVE);
+                }
+            } else if (owner.getStatus() == null) {
+                owner.setStatus(UserStatus.PENDING_VERIFICATION);
+            }
+        } else {
+            owner = UserEntity.builder()
+                    .fullName(session.getOwnerName())
+                    .email(session.getOwnerEmail())
+                    .password(session.getDraftPasswordHash())
+                    .phoneNumber(session.getOwnerPhone())
+                    .affiliatedTenant(tenant)
+                    .roles(new HashSet<>(Set.of(primaryAdminRole, ownerRole)))
+                    .userType(UserType.TENANT)
+                    .emailVerifiedAt(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? Instant.now() : null)
+                    .status(onboardingEmailVerificationService.isVerified(session.getOwnerEmail()) ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION)
+                    .build();
+        }
         UserEntity savedOwner = userRepository.save(owner);
 
         TenantAdminAssignmentEntity primaryAdminAssignment = TenantAdminAssignmentEntity.builder()
@@ -324,6 +386,23 @@ public class TenantOnboardingProvisioningService {
             );
         }
         return message.length() > 1000 ? message.substring(0, 1000) : message;
+    }
+
+    private Optional<UserEntity> findExistingUser(String ownerEmail) {
+        if (!StringUtils.hasText(ownerEmail)) {
+            return Optional.empty();
+        }
+        return userRepository.findByEmailIgnoreCase(ownerEmail.trim());
+    }
+
+    private boolean canPromoteStandaloneUser(UserEntity user) {
+        if (user == null || user.getTenantId() != null) {
+            return false;
+        }
+        return user.getStatus() != UserStatus.DELETED
+                && user.getStatus() != UserStatus.DISABLED
+                && user.getStatus() != UserStatus.SUSPENDED
+                && user.getStatus() != UserStatus.LOCKED;
     }
 
     private record DraftTenantPayload(ChurchDTO church, WorkspaceInitializationMode workspaceInitializationMode) {}

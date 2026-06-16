@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @LenientMockitoTest
@@ -84,6 +85,7 @@ class TenantOnboardingBillingServiceTest {
 
         assertThat(response.getSessionId()).isNotNull();
         assertThat(response.getOnboardingAccessToken()).isNotBlank();
+        verify(onboardingProvisioningService).assertOwnerIdentityEligible("owner@example.com", "+15555550123");
     }
 
     @Test
