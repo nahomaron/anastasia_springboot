@@ -338,7 +338,7 @@ public class AuthServiceImpl implements AuthService {
                     .emailVerifiedAt(Instant.now())
                     .status(UserStatus.ACTIVE)
                     .userType(UserType.GUEST)
-                    .roles(Set.of(userRole))
+                    .roles(new LinkedHashSet<>(Set.of(userRole)))
                     .build();
             attachTenantFromContextIfMissing(user);
         } else {

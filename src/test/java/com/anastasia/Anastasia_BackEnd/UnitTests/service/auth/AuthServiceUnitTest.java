@@ -52,6 +52,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -535,6 +536,10 @@ public class AuthServiceUnitTest {
         AuthenticationResponse response = authService.authenticateGoogleUser("google-123", "Test@Example.com", "Test User");
 
         assertEquals("access", response.getAccessToken());
+        ArgumentCaptor<UserEntity> savedUserCaptor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(savedUserCaptor.capture());
+        assertDoesNotThrow(() -> savedUserCaptor.getValue().getRoles().add(Role.builder().id(2L).roleName("ADMIN").build()));
+        assertInstanceOf(LinkedHashSet.class, savedUserCaptor.getValue().getRoles());
         verify(userRepository).findByEmailIgnoreCase("test@example.com");
         verify(userProfileRepository).save(any(UserProfileEntity.class));
         verify(userPreferencesRepository).save(any(UserPreferencesEntity.class));
