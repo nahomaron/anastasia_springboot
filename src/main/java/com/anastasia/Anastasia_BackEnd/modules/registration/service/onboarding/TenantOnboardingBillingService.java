@@ -146,6 +146,11 @@ public class TenantOnboardingBillingService {
         return toResponse(session);
     }
 
+    @Transactional(readOnly = true)
+    public void validateOwnerIdentity(String ownerEmail, String ownerPhone) {
+        onboardingProvisioningService.assertOwnerIdentityEligible(ownerEmail, ownerPhone);
+    }
+
     @Transactional
     public AuthenticationResponse autoLogin(UUID sessionId, String accessToken) {
         TenantOnboardingSessionEntity session = requireAuthorizedSession(sessionId, accessToken);

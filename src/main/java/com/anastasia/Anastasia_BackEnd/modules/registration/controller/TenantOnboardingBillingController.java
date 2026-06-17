@@ -145,10 +145,26 @@ public class TenantOnboardingBillingController {
         return ResponseEntity.ok(authResponse);
     }
 
+    @PostMapping("/eligibility")
+    public ResponseEntity<Map<String, Object>> validateEligibility(
+            @Valid @RequestBody OnboardingEligibilityRequest request
+    ) {
+        onboardingBillingService.validateOwnerIdentity(request.ownerEmail(), request.phoneNumber());
+        return ResponseEntity.ok(Map.of(
+                "eligible", true,
+                "message", "Owner identity is eligible for onboarding."
+        ));
+    }
+
     private String resolveOnboardingAccessToken(String onboardingAccessToken, HttpServletRequest request) {
         if (onboardingAccessToken != null && !onboardingAccessToken.isBlank()) {
             return onboardingAccessToken;
         }
         return onboardingSessionAccessService.extractAccessToken(request).orElse(null);
     }
+
+    public record OnboardingEligibilityRequest(
+            @NotBlank String ownerEmail,
+            @NotBlank String phoneNumber
+    ) {}
 }

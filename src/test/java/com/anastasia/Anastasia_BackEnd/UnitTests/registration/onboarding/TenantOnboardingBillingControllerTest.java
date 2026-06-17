@@ -110,4 +110,20 @@ class TenantOnboardingBillingControllerTest {
         assertThat(body.getRefreshToken()).isNull();
         verify(refreshTokenCookieService).addRefreshTokenCookie(response, "refresh-token");
     }
+
+    @Test
+    void validateEligibilityDelegatesToBillingService() {
+        var response = controller.validateEligibility(
+                new TenantOnboardingBillingController.OnboardingEligibilityRequest(
+                        "owner@example.com",
+                        "+15551234567"
+                )
+        );
+
+        assertThat(response.getBody()).isEqualTo(Map.of(
+                "eligible", true,
+                "message", "Owner identity is eligible for onboarding."
+        ));
+        verify(onboardingBillingService).validateOwnerIdentity("owner@example.com", "+15551234567");
+    }
 }
