@@ -8,6 +8,8 @@ import com.anastasia.Anastasia_BackEnd.core.notification.repository.Notification
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationInboxService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.TenantEntitlementAccessService;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +40,9 @@ class NotificationInboxServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private TenantEntitlementAccessService entitlementAccessService;
 
     @InjectMocks
     private NotificationInboxService notificationInboxService;
@@ -55,6 +61,7 @@ class NotificationInboxServiceTest {
 
         when(userRepository.findByEmailIgnoreCase("member@example.com")).thenReturn(Optional.of(user));
         when(notificationRepository.countUnread(tenantId, userId)).thenReturn(7L);
+        doNothing().when(entitlementAccessService).requireFeature(TenantFeature.NOTIFICATIONS);
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("member@example.com", null, List.of())
@@ -75,6 +82,7 @@ class NotificationInboxServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(notificationRepository.countUnread(tenantId, userId)).thenReturn(3L);
+        doNothing().when(entitlementAccessService).requireFeature(TenantFeature.NOTIFICATIONS);
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())

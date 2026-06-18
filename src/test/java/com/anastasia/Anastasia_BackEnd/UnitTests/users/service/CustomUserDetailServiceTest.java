@@ -69,9 +69,8 @@ class CustomUserDetailServiceTest {
                 .roles(Set.of(platformAdminRole))
                 .build();
 
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(permissionGrantRepository.findByUserIdAndTenantId(user.getUuid(), null)).thenReturn(java.util.List.of());
         when(memberEffectivePermissionService.resolvePermissions(user)).thenReturn(Set.of());
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
 
         UserPrincipal principal = (UserPrincipal) service.loadUserByUsername(user.getEmail());
 
@@ -98,7 +97,7 @@ class CustomUserDetailServiceTest {
                 .build();
         user.setTenantId(tenantId);
 
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
         when(assignmentRepository.findByTenant_IdAndUserId(tenantId, user.getUuid()))
                 .thenThrow(new InvalidDataAccessResourceUsageException("tenant_admin_assignments missing"));
         when(permissionGrantRepository.findByUserIdAndTenantId(user.getUuid(), tenantId)).thenReturn(List.of());
@@ -126,7 +125,7 @@ class CustomUserDetailServiceTest {
                 .build();
         user.setTenantId(tenantId);
 
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
         when(assignmentRepository.findByTenant_IdAndUserId(tenantId, user.getUuid())).thenReturn(Optional.empty());
         when(memberEffectivePermissionService.resolvePermissions(user)).thenReturn(Set.of());
         when(permissionGrantRepository.findByUserIdAndTenantId(user.getUuid(), tenantId))
