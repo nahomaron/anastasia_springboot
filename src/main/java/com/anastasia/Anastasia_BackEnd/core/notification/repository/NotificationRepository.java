@@ -24,8 +24,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
           and n.channel = :channel
           and n.archivedAt is null
           and (
-            (:tenantId is null and n.tenant is null)
-            or n.tenant.id = :tenantId
+            n.tenant is null
+            or (:tenantId is not null and n.tenant.id = :tenantId)
           )
         order by n.createdAt desc
     """)
@@ -44,8 +44,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
           and n.archivedAt is null
           and n.type in :types
           and (
-            (:tenantId is null and n.tenant is null)
-            or n.tenant.id = :tenantId
+            n.tenant is null
+            or (:tenantId is not null and n.tenant.id = :tenantId)
           )
         order by n.createdAt desc
     """)
@@ -65,8 +65,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
           and n.archivedAt is null
           and n.readAt is null
           and (
-            (:tenantId is null and n.tenant is null)
-            or n.tenant.id = :tenantId
+            n.tenant is null
+            or (:tenantId is not null and n.tenant.id = :tenantId)
           )
     """)
     long countUnread(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId);
@@ -78,8 +78,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
           and n.recipientUserId = :userId
           and n.archivedAt is null
           and (
-            (:tenantId is null and n.tenant is null)
-            or n.tenant.id = :tenantId
+            n.tenant is null
+            or (:tenantId is not null and n.tenant.id = :tenantId)
           )
     """)
     Optional<NotificationEntity> findByIdAndScope(@Param("id") Long id,
@@ -94,8 +94,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
           and n.archivedAt is null
           and n.readAt is null
           and (
-            (:tenantId is null and n.tenant is null)
-            or n.tenant.id = :tenantId
+            n.tenant is null
+            or (:tenantId is not null and n.tenant.id = :tenantId)
           )
     """)
     @Modifying

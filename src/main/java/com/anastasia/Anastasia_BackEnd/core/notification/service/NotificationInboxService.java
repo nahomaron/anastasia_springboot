@@ -13,6 +13,8 @@ import com.anastasia.Anastasia_BackEnd.core.notification.dto.NotificationPrefere
 import com.anastasia.Anastasia_BackEnd.core.notification.dto.UpdateNotificationPreferencesRequest;
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationPreferenceRepository;
 import com.anastasia.Anastasia_BackEnd.core.notification.repository.NotificationRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
+import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.TenantEntitlementAccessService;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -41,10 +43,12 @@ public class NotificationInboxService {
     private final NotificationRepository notificationRepository;
     private final NotificationPreferenceRepository preferenceRepository;
     private final UserRepository userRepository;
+    private final TenantEntitlementAccessService entitlementAccessService;
 
     @Transactional(readOnly = true)
     public NotificationInboxPageResponse listInbox(String status, String type, int page, int size) {
         ActorScope scope = resolveActorScope();
+        UUID effectiveTenantId = effectiveNotificationTenantId(scope);
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 200);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -52,9 +56,9 @@ public class NotificationInboxService {
         Set<NotificationType> types = parseTypes(type);
         Page<NotificationEntity> rows = types.isEmpty()
                 ? notificationRepository.findInbox(
-                scope.userId(), scope.tenantId(), NotificationChannelType.IN_APP, pageable)
+                scope.userId(), effectiveTenantId, NotificationChannelType.IN_APP, pageable)
                 : notificationRepository.findInboxByTypes(
-                scope.userId(), scope.tenantId(), NotificationChannelType.IN_APP, types, pageable);
+                scope.userId(), effectiveTenantId, NotificationChannelType.IN_APP, types, pageable);
 
         List<NotificationInboxItemResponse> items = rows.getContent().stream()
                 .filter(n -> !"UNREAD".equalsIgnoreCase(status) || n.getReadAt() == null)
@@ -62,7 +66,7 @@ public class NotificationInboxService {
                 .map(this::toInboxItem)
                 .toList();
 
-        long unreadCount = notificationRepository.countUnread(scope.tenantId(), scope.userId());
+        long unreadCount = notificationRepository.countUnread(effectiveTenantId, scope.userId());
 
         return new NotificationInboxPageResponse(
                 items,
@@ -78,14 +82,15 @@ public class NotificationInboxService {
     @Transactional(readOnly = true)
     public long unreadCount() {
         ActorScope scope = resolveActorScope();
-        return notificationRepository.countUnread(scope.tenantId(), scope.userId());
+        return notificationRepository.countUnread(effectiveNotificationTenantId(scope), scope.userId());
     }
 
     @Transactional
     public NotificationInboxItemResponse markRead(Long notificationId) {
         ActorScope scope = resolveActorScope();
+        UUID effectiveTenantId = effectiveNotificationTenantId(scope);
         NotificationEntity entity = notificationRepository
-                .findByIdAndScope(notificationId, scope.userId(), scope.tenantId())
+                .findByIdAndScope(notificationId, scope.userId(), effectiveTenantId)
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
 
         if (entity.getReadAt() == null) {
@@ -97,14 +102,15 @@ public class NotificationInboxService {
     @Transactional
     public int markAllRead() {
         ActorScope scope = resolveActorScope();
-        return notificationRepository.markAllRead(scope.tenantId(), scope.userId(), Instant.now());
+        return notificationRepository.markAllRead(effectiveNotificationTenantId(scope), scope.userId(), Instant.now());
     }
 
     @Transactional
     public void archive(Long notificationId) {
         ActorScope scope = resolveActorScope();
+        UUID effectiveTenantId = effectiveNotificationTenantId(scope);
         NotificationEntity entity = notificationRepository
-                .findByIdAndScope(notificationId, scope.userId(), scope.tenantId())
+                .findByIdAndScope(notificationId, scope.userId(), effectiveTenantId)
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
         entity.setArchivedAt(Instant.now());
         notificationRepository.save(entity);
@@ -113,7 +119,7 @@ public class NotificationInboxService {
     @Transactional(readOnly = true)
     public NotificationPreferencesResponse getPreferences() {
         ActorScope scope = resolveActorScope();
-        return findPreference(scope.tenantId(), scope.userId())
+        return findPreference(effectiveNotificationTenantId(scope), scope.userId())
                 .map(this::toPreferenceResponse)
                 .orElseGet(this::defaultPreferenceResponse);
     }
@@ -121,7 +127,7 @@ public class NotificationInboxService {
     @Transactional
     public NotificationPreferencesResponse updatePreferences(UpdateNotificationPreferencesRequest request) {
         ActorScope scope = resolveActorScope();
-        NotificationPreferenceEntity preference = findOrCreatePreference(scope.tenantId(), scope.userId());
+        NotificationPreferenceEntity preference = findOrCreatePreference(effectiveNotificationTenantId(scope), scope.userId());
         preference.setEmailEnabled(Boolean.TRUE.equals(request.getEmailEnabled()));
         preference.setSmsEnabled(Boolean.TRUE.equals(request.getSmsEnabled()));
         preference.setInAppEnabled(Boolean.TRUE.equals(request.getInAppEnabled()));
@@ -203,6 +209,18 @@ public class NotificationInboxService {
 
     private NotificationPreferencesResponse defaultPreferenceResponse() {
         return new NotificationPreferencesResponse(true, false, true, Set.of());
+    }
+
+    private UUID effectiveNotificationTenantId(ActorScope scope) {
+        if (scope == null || scope.tenantId() == null) {
+            return null;
+        }
+        try {
+            entitlementAccessService.requireFeature(TenantFeature.NOTIFICATIONS);
+            return scope.tenantId();
+        } catch (AccessDeniedException ex) {
+            return null;
+        }
     }
 
     private Set<NotificationType> parseTypes(String typeQuery) {

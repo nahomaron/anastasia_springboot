@@ -58,15 +58,15 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return; // Exit early
         }
-        if (authHeader.startsWith("Bearer ")){
-            token = authHeader.substring(7);
-            try {
-                username = jwtUtil.extractUsername(token);
-            } catch (Exception e) {
-                sendErrorResponse(response, "Invalid or expired token", HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
+
+        token = authHeader.substring(7);
+        try {
+            username = jwtUtil.extractUsername(token);
+        } catch (Exception e) {
+            sendErrorResponse(response, "Invalid or expired token", HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
+
 //
 //        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
 //

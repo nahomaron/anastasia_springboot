@@ -6,8 +6,6 @@ import com.anastasia.Anastasia_BackEnd.core.notification.dto.NotificationPrefere
 import com.anastasia.Anastasia_BackEnd.core.notification.dto.UnreadCountResponse;
 import com.anastasia.Anastasia_BackEnd.core.notification.dto.UpdateNotificationPreferencesRequest;
 import com.anastasia.Anastasia_BackEnd.core.notification.service.NotificationInboxService;
-import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantFeature;
-import com.anastasia.Anastasia_BackEnd.modules.registration.service.entitlement.RequiresTenantFeature;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +26,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/notifications")
 @PreAuthorize("isAuthenticated()")
-@RequiresTenantFeature(TenantFeature.NOTIFICATIONS)
 public class NotificationController {
 
     private final NotificationInboxService notificationInboxService;
