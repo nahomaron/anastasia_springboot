@@ -84,9 +84,10 @@ jobs:
           }
 
           cache_corruption_detected() {
+            local log_file="${1:-target/dependency-check.log}"
             grep -Eq \
               'MVStoreException|ClosedChannelException|Data source is closed|NoDataException: No documents exist|connectionPool" is null' \
-              target/dependency-check.log
+              "${log_file}"
           }
 
           nvd_transient_failure_detected() {
@@ -109,13 +110,29 @@ jobs:
 
             if grep -q 'Value too long for column "URL CHARACTER VARYING(1000)"' target/dependency-check.log; then
               fallback_to_cached_data
-              exit $?
+              fallback_status=${PIPESTATUS[0]}
+              if (( fallback_status != 0 )) && cache_corruption_detected target/dependency-check-fallback.log && (( cache_reset_attempted == 0 )); then
+                cache_reset_attempted=1
+                usable_cache_available=0
+                reset_dc_cache
+                attempt=1
+                continue
+              fi
+              exit ${fallback_status}
             fi
 
             if nvd_transient_failure_detected; then
               if (( usable_cache_available == 1 )) || has_usable_dc_database; then
                 fallback_to_cached_data
-                exit $?
+                fallback_status=${PIPESTATUS[0]}
+                if (( fallback_status != 0 )) && cache_corruption_detected target/dependency-check-fallback.log && (( cache_reset_attempted == 0 )); then
+                  cache_reset_attempted=1
+                  usable_cache_available=0
+                  reset_dc_cache
+                  attempt=1
+                  continue
+                fi
+                exit ${fallback_status}
               fi
 
               if (( attempt < max_attempts )); then
@@ -130,6 +147,7 @@ jobs:
             if cache_corruption_detected; then
               if (( cache_reset_attempted == 0 )); then
                 cache_reset_attempted=1
+                usable_cache_available=0
                 reset_dc_cache
                 attempt=1
                 continue
