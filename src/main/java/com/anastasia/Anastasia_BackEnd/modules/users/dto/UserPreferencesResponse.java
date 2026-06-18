@@ -10,6 +10,7 @@ import java.util.UUID;
 public class UserPreferencesResponse {
     UUID userId;
     String themeMode;
+    String language;
     String locale;
     String dateFormat;
     String firstDayOfWeek;

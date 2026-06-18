@@ -81,6 +81,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.security.Principal;
 import java.security.SecureRandom;
@@ -904,9 +905,16 @@ public class UserServiceImpl implements UserService {
 
     public UUID getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof UserPrincipal userPrincipal) {
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal userPrincipal && userPrincipal.getUserUuid() != null) {
             return userPrincipal.getUserUuid(); // or userPrincipal.getId();
         }
+
+        if (auth != null && StringUtils.hasText(auth.getName())) {
+            return userRepository.findByEmailIgnoreCase(auth.getName())
+                    .map(UserEntity::getUuid)
+                    .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found"));
+        }
+
         throw new RuntimeException(messageService.get("auth.user.notAuthenticated", "No authenticated user found."));
     }
 
@@ -1311,6 +1319,7 @@ public class UserServiceImpl implements UserService {
         return UserPreferencesResponse.builder()
                 .userId(preferences.getUserId())
                 .themeMode(preferences.getThemeMode())
+                .language(preferences.getLanguage())
                 .locale(preferences.getLocale())
                 .dateFormat(preferences.getDateFormat())
                 .firstDayOfWeek(preferences.getFirstDayOfWeek())

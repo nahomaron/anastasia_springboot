@@ -8,11 +8,16 @@ import com.anastasia.Anastasia_BackEnd.core.auth.dto.ChangePasswordRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.TokenRepository;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.AssignRolesRequest;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserPreferencesEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
+import com.anastasia.Anastasia_BackEnd.modules.users.model.UserProfileEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserResponseIDs;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.SimpleUserDTO;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserType;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserPreferencesRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserProfileRepository;
+import com.anastasia.Anastasia_BackEnd.modules.users.repository.UserTwoFactorBackupCodeRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.service.TenantUserAccessPolicy;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.RoleRepository;
@@ -28,6 +33,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
@@ -44,6 +50,9 @@ public class UserServiceUnitTest {
     @Mock private TokenRepository tokenRepository;
     @Mock private LocalizedMessageService messageService;
     @Mock private TenantUserAccessPolicy accessPolicy;
+    @Mock private UserProfileRepository userProfileRepository;
+    @Mock private UserPreferencesRepository userPreferencesRepository;
+    @Mock private UserTwoFactorBackupCodeRepository backupCodeRepository;
     @InjectMocks private UserServiceImpl userService;
 
     private UserEntity testUser;
@@ -233,6 +242,48 @@ public class UserServiceUnitTest {
 
         // Verify userRepository.save is never called
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void getCurrentUserProfile_resolvesNamedAuthenticationPrincipal() {
+        Authentication namedAuthentication = mock(Authentication.class);
+        UserProfileEntity profile = UserProfileEntity.builder()
+                .user(testUser)
+                .phoneVerified(false)
+                .twoFactorEnabled(false)
+                .build();
+        when(namedAuthentication.getName()).thenReturn(testUser.getEmail());
+        when(namedAuthentication.getPrincipal()).thenReturn("user");
+        when(userRepository.findByEmailIgnoreCase(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(userProfileRepository.findById(testUserId)).thenReturn(Optional.of(profile));
+        when(backupCodeRepository.countUnusedByUserId(testUserId)).thenReturn(0L);
+
+        SecurityContextHolder.getContext().setAuthentication(namedAuthentication);
+
+        var response = userService.getCurrentUserProfile();
+
+        assertEquals(testUserId, response.getUserId());
+        assertEquals(testUser.getEmail(), response.getEmail());
+    }
+
+    @Test
+    void getCurrentUserPreferences_includesLanguage() {
+        UserPreferencesEntity preferences = UserPreferencesEntity.builder()
+                .user(testUser)
+                .themeMode("SYSTEM")
+                .language("en")
+                .locale("en-US")
+                .dateFormat("MMM d, yyyy")
+                .firstDayOfWeek("SUNDAY")
+                .build();
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(userPreferencesRepository.findById(testUserId)).thenReturn(Optional.of(preferences));
+        SecurityContextHolder.getContext().setAuthentication(mockAuthentication);
+
+        var response = userService.getCurrentUserPreferences();
+
+        assertEquals("en", response.getLanguage());
     }
 
     @Test
