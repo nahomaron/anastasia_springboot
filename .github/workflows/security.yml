@@ -66,8 +66,10 @@ jobs:
               "$@"
           }
 
-          has_cached_dc_data() {
-            find "${DC_DATA_DIR}" -mindepth 1 -print -quit 2>/dev/null | grep -q .
+          has_usable_dc_database() {
+            find "${DC_DATA_DIR}" -type f \
+              \( -name '*.mv.db' -o -name '*.h2.db' -o -name '*.script' \) \
+              -print -quit 2>/dev/null | grep -q .
           }
 
           fallback_to_cached_data() {
@@ -87,9 +89,19 @@ jobs:
               target/dependency-check.log
           }
 
+          nvd_transient_failure_detected() {
+            grep -Eq \
+              'NVD Returned Status Code: (429|502|503|504)|NVD API request failures are occurring' \
+              target/dependency-check.log
+          }
+
           max_attempts=3
           attempt=1
           cache_reset_attempted=0
+          usable_cache_available=0
+          if has_usable_dc_database; then
+            usable_cache_available=1
+          fi
           while true; do
             run_dc 2>&1 | tee target/dependency-check.log
             status=${PIPESTATUS[0]}
@@ -100,18 +112,18 @@ jobs:
               exit $?
             fi
 
-            if grep -q 'NVD Returned Status Code: 503' target/dependency-check.log; then
+            if nvd_transient_failure_detected; then
+              if (( usable_cache_available == 1 )) || has_usable_dc_database; then
+                fallback_to_cached_data
+                exit $?
+              fi
+
               if (( attempt < max_attempts )); then
                 sleep_seconds=$(( attempt * 30 ))
-                echo "Dependency-Check hit transient NVD 503, retrying in ${sleep_seconds}s (attempt ${attempt}/${max_attempts})."
+                echo "Dependency-Check hit transient NVD/API failures without a usable local database, retrying in ${sleep_seconds}s (attempt ${attempt}/${max_attempts})."
                 sleep "${sleep_seconds}"
                 attempt=$(( attempt + 1 ))
                 continue
-              fi
-
-              if has_cached_dc_data; then
-                fallback_to_cached_data
-                exit $?
               fi
             fi
 
@@ -136,8 +148,20 @@ jobs:
             target/dependency-check.log
             target/dependency-check-fallback.log
           if-no-files-found: ignore
+      - name: Check Dependency-Check cache health
+        if: always()
+        id: dependency-check-cache-health
+        shell: bash
+        run: |
+          if find "${DC_DATA_DIR}" -type f \
+            \( -name '*.mv.db' -o -name '*.h2.db' -o -name '*.script' \) \
+            -print -quit 2>/dev/null | grep -q .; then
+            echo "has-db=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has-db=false" >> "${GITHUB_OUTPUT}"
+          fi
       - name: Save Dependency-Check data
-        if: always() && steps.dependency-check-cache-restore.outputs.cache-hit != 'true'
+        if: always() && steps.dependency-check-cache-restore.outputs.cache-hit != 'true' && steps.dependency-check-cache-health.outputs.has-db == 'true'
         uses: actions/cache/save@v4
         with:
           path: ${{ env.DC_DATA_DIR }}
