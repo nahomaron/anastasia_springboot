@@ -43,9 +43,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.DC_DATA_DIR }}
-          key: ${{ runner.os }}-dependency-check-v4
+          key: ${{ runner.os }}-dependency-check-v5-${{ github.ref_name }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-dependency-check-
+            ${{ runner.os }}-dependency-check-v5-${{ github.ref_name }}-
+            ${{ runner.os }}-dependency-check-v5-
       - name: Grant Maven wrapper permission
         run: chmod +x ./mvnw
       - name: Run OWASP Dependency-Check
@@ -179,7 +180,7 @@ jobs:
             echo "has-db=false" >> "${GITHUB_OUTPUT}"
           fi
       - name: Save Dependency-Check data
-        if: always() && steps.dependency-check-cache-restore.outputs.cache-hit != 'true' && steps.dependency-check-cache-health.outputs.has-db == 'true'
+        if: success() && steps.dependency-check-cache-health.outputs.has-db == 'true'
         uses: actions/cache/save@v4
         with:
           path: ${{ env.DC_DATA_DIR }}
