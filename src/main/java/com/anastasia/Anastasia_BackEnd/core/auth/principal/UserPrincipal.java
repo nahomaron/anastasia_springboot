@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.core.auth.principal;
 
 import com.anastasia.Anastasia_BackEnd.core.auth.permission.Permission;
 import com.anastasia.Anastasia_BackEnd.core.auth.role.Role;
+import com.anastasia.Anastasia_BackEnd.core.auth.role.RoleType;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserStatus;
 import lombok.Getter;
@@ -79,6 +80,7 @@ public class UserPrincipal implements UserDetails {
 
                 String roleName = role.getRoleName();
                 names.add(roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName);
+                addDefaultRoleAuthorities(names, roleName);
 
                 if (role.getPermissions() != null) {
                     for (Permission permission : role.getPermissions()) {
@@ -99,6 +101,21 @@ public class UserPrincipal implements UserDetails {
         }
 
         return Set.copyOf(names);
+    }
+
+    private void addDefaultRoleAuthorities(Set<String> names, String roleName) {
+        if (roleName == null || roleName.isBlank()) {
+            return;
+        }
+
+        try {
+            RoleType roleType = RoleType.valueOf(roleName.startsWith("ROLE_") ? roleName.substring(5) : roleName);
+            roleType.getPermissions().stream()
+                    .map(Enum::name)
+                    .forEach(names::add);
+        } catch (IllegalArgumentException ignored) {
+            // Custom tenant roles may not map to the built-in role enum.
+        }
     }
 
     @Override
