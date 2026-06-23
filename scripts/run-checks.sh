@@ -55,9 +55,12 @@ if [[ "${RUN_DEPENDENCY_CHECK}" == "true" ]]; then
   DC_DATA_DIR="${DC_DATA_DIR:-${PWD}/target/dependency-check-data}"
   DC_SUPPRESSION_FILE="${DC_SUPPRESSION_FILE:-.github/dependency-check-suppressions.xml}"
   DC_VERSION="${DC_VERSION:-12.2.1}"
+  CLEAR_DC_DATA="${CLEAR_DC_DATA:-false}"
 
   mkdir -p "${DC_DATA_DIR}" target/dependency-check-reports
-  find "${DC_DATA_DIR}" -mindepth 1 -exec rm -rf {} +
+  if [[ "${CLEAR_DC_DATA}" == "true" ]]; then
+    find "${DC_DATA_DIR}" -mindepth 1 -exec rm -rf {} +
+  fi
 
   run_step "OWASP Dependency-Check" \
     run_maven -DskipTests \
