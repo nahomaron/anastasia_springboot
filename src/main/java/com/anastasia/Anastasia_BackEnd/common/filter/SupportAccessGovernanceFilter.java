@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 @Component
 @RequiredArgsConstructor
 public class SupportAccessGovernanceFilter extends OncePerRequestFilter {
+    private static final String USER_PREFERENCES_PATH = "/api/v1/users/me/preferences";
 
     private static final Pattern PLATFORM_SUBSCRIPTION_TENANT_PATTERN =
             Pattern.compile("^/api/v1/platform/subscriptions/([0-9a-fA-F\\-]{36})(/.*)?$");
@@ -43,6 +44,11 @@ public class SupportAccessGovernanceFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         AuthContext authContext = resolveAuthContext();
         if (authContext == null || !authContext.platformAdmin()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (isSupportSessionExempt(request)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -140,6 +146,16 @@ public class SupportAccessGovernanceFilter extends OncePerRequestFilter {
         return !"GET".equalsIgnoreCase(method)
                 && !"HEAD".equalsIgnoreCase(method)
                 && !"OPTIONS".equalsIgnoreCase(method);
+    }
+
+    private boolean isSupportSessionExempt(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (!USER_PREFERENCES_PATH.equals(uri)) {
+            return false;
+        }
+
+        return "GET".equalsIgnoreCase(request.getMethod())
+                || "PATCH".equalsIgnoreCase(request.getMethod());
     }
 
     private record AuthContext(UUID userId, boolean platformAdmin) {
