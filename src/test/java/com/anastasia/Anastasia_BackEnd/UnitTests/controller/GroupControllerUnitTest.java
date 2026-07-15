@@ -224,6 +224,61 @@ class GroupControllerUnitTest {
     }
 
     @Test
+    void listJoinRequests_shouldDelegateToServiceAfterAuthorization() {
+        Authentication authentication = mock(Authentication.class);
+        List<GroupJoinRequestResponse> expected = List.of(GroupJoinRequestResponse.builder()
+                .id(1L)
+                .groupId(5L)
+                .status("PENDING")
+                .build());
+        when(groupService.listJoinRequests(5L)).thenReturn(expected);
+
+        ResponseEntity<List<GroupJoinRequestResponse>> response = groupController.listJoinRequests(5L, authentication);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expected);
+        verify(groupService).listJoinRequests(5L);
+    }
+
+    @Test
+    void approveJoinRequest_shouldDelegateToServiceAfterAuthorization() {
+        Authentication authentication = mock(Authentication.class);
+        GroupJoinRequestDecisionRequest request = new GroupJoinRequestDecisionRequest("approved");
+        GroupJoinRequestResponse expected = GroupJoinRequestResponse.builder()
+                .id(1L)
+                .groupId(5L)
+                .status("APPROVED")
+                .build();
+        when(groupService.approveJoinRequest(5L, 1L, request)).thenReturn(expected);
+
+        ResponseEntity<GroupJoinRequestResponse> response =
+                groupController.approveJoinRequest(5L, 1L, request, authentication);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expected);
+        verify(groupService).approveJoinRequest(5L, 1L, request);
+    }
+
+    @Test
+    void rejectJoinRequest_shouldDelegateToServiceAfterAuthorization() {
+        Authentication authentication = mock(Authentication.class);
+        GroupJoinRequestDecisionRequest request = new GroupJoinRequestDecisionRequest("not eligible");
+        GroupJoinRequestResponse expected = GroupJoinRequestResponse.builder()
+                .id(1L)
+                .groupId(5L)
+                .status("REJECTED")
+                .build();
+        when(groupService.rejectJoinRequest(5L, 1L, request)).thenReturn(expected);
+
+        ResponseEntity<GroupJoinRequestResponse> response =
+                groupController.rejectJoinRequest(5L, 1L, request, authentication);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expected);
+        verify(groupService).rejectJoinRequest(5L, 1L, request);
+    }
+
+    @Test
     void listGroupMembers_shouldReturnPagedModel() {
         Page<SimpleUserDTO> page = new PageImpl<>(List.of(SimpleUserDTO.builder()
                 .uuid(UUID.randomUUID())

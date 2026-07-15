@@ -11,9 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @Profile("!test")
@@ -41,71 +42,46 @@ public class RoleAndPermissionSeeder {
         }
     }
 
+    @Transactional
     public void seedDefaultRoles() {
-        if (!roleRepository.existsByRoleName("USER")) {
-            createRole(RoleType.USER);
-//            System.out.println("USER role created");
+        for (RoleType roleType : RoleType.values()) {
+            upsertRole(roleType);
         }
-
-        if (!roleRepository.existsByRoleName("OWNER")) {
-            createRole(RoleType.OWNER);
-//            System.out.println("OWNER role created");
-        }
-
-        if (!roleRepository.existsByRoleName("PRIMARY_ADMIN")) {
-            createRole(RoleType.PRIMARY_ADMIN);
-        }
-
-        if (!roleRepository.existsByRoleName("ADMIN")) {
-            createRole(RoleType.ADMIN);
-//            System.out.println("ADMIN role created");
-        }
-
-        if (!roleRepository.existsByRoleName("MEMBER")) {
-            createRole(RoleType.MEMBER);
-//            System.out.println("MEMBER role created");
-        }
-
-        if (!roleRepository.existsByRoleName("STAFF")) {
-            createRole(RoleType.STAFF);
-        }
-
-        if (!roleRepository.existsByRoleName("PRIEST")) {
-            createRole(RoleType.PRIEST);
-//            System.out.println("PRIEST role created");
-        }
-
-        if (!roleRepository.existsByRoleName("PLATFORM_ADMIN")) {
-            createRole(RoleType.PLATFORM_ADMIN);
-//            System.out.println("PLATFORM_ADMIN role created");
-        }
-
-
     }
 
-    private void createRole(RoleType roleType) {
+    private void upsertRole(RoleType roleType) {
+        Set<Permission> permissions = resolvePermissions(roleType);
+        Role role = roleRepository.findByRoleName(roleType.name())
+                .orElseGet(() -> Role.builder()
+                        .roleName(roleType.name())
+                        .tenant(null)
+                        .permissions(Set.of())
+                        .build());
 
-        if(!roleRepository.existsByRoleName(roleType.name())) {
-
-
-            Set<String> permissionNames = roleType.getPermissions().stream()
-                    .map(PermissionType::name) // Converts ENUM to String
-                    .collect(Collectors.toSet());
-
-            Set<Permission> permissions = permissionNames.isEmpty()
-                    ? Set.of()
-                    : permissionRepository.findByNameIn(permissionNames);
-
-//            logger.info("Permissions {}", permissions);
-
-            Role role = Role.builder()
-                    .roleName(roleType.name())
-                    .description(roleType.getDescription())
-                    .permissions(permissions)
-                    .tenant(null) // Default roles are global
-                    .build();
-
-            roleRepository.save(role);
+        boolean changed = false;
+        if (!roleType.getDescription().equals(role.getDescription())) {
+            role.setDescription(roleType.getDescription());
+            changed = true;
         }
+        Set<Permission> mergedPermissions = new HashSet<>(role.getPermissions());
+        if (mergedPermissions.addAll(permissions)) {
+            role.setPermissions(mergedPermissions);
+            changed = true;
+        }
+        if (role.getId() == null || changed) {
+            roleRepository.save(role);
+            logger.debug("Synchronized role {}", roleType.name());
+        }
+    }
+
+    private Set<Permission> resolvePermissions(RoleType roleType) {
+        if (roleType.getPermissions().isEmpty()) {
+            return Set.of();
+        }
+        Set<Permission> permissions = permissionRepository.findByNameIn(roleType.getPermissions());
+        if (permissions.size() != roleType.getPermissions().size()) {
+            throw new IllegalStateException("Missing permissions while seeding role " + roleType.name());
+        }
+        return permissions;
     }
 }

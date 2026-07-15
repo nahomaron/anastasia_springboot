@@ -50,7 +50,7 @@ public class AppointmentController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'VIEW_APPOINTMENTS')")
     @GetMapping
     public ResponseEntity<List<AppointmentResponse>> listAppointments(
             @RequestParam(value = "start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
@@ -74,7 +74,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.listMyAppointments(userId, start, end, status, type));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_APPOINTMENT', 'VIEW_APPOINTMENTS')")
     @GetMapping("/{appointmentId}")
     public ResponseEntity<AppointmentResponse> getAppointment(@PathVariable UUID appointmentId) {
         return ResponseEntity.ok(appointmentService.getAppointment(appointmentId));

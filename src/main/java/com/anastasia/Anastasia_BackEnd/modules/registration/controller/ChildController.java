@@ -33,7 +33,7 @@ public class ChildController {
 
     private final ChildService childService;
 
-    @PreAuthorize("isAuthenticated() or @permissionEvaluator.hasAny(authentication, 'MANAGE_MEMBERS', 'ADD_MEMBERS')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/register-child")
     public ResponseEntity<Child_MemberResponse> registerChild(@Valid @RequestBody Child_MemberDTO childMemberDTO){
 

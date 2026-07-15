@@ -104,6 +104,17 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
     boolean existsByIdempotencyKeyAndChannel(String idempotencyKey, NotificationChannelType channel);
 
     @Query("""
+        select count(n) > 0
+        from NotificationEntity n
+        where n.recipientUserId = :userId
+          and n.tenant.id = :tenantId
+          and n.channel = com.anastasia.Anastasia_BackEnd.core.notification.domain.NotificationChannelType.IN_APP
+          and n.archivedAt is null
+    """)
+    boolean existsActiveTenantInboxNotificationForRecipient(@Param("tenantId") UUID tenantId,
+                                                           @Param("userId") UUID userId);
+
+    @Query("""
         select count(n)
         from NotificationEntity n
         where n.tenant.id = :tenantId

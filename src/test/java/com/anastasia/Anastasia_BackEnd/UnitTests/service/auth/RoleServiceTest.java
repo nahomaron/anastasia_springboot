@@ -58,7 +58,7 @@ public class RoleServiceTest {
         TenantEntity tenant = TenantEntity.builder().id(tenantId).build();
 
         when(roleRepository.existsByRoleNameAndTenantId(TEST_ROLE_NAME, tenantId)).thenReturn(false);
-        when(permissionRepository.findByNameIn(Set.of("VIEW_MEMBERS"))).thenReturn(Set.of(permission));
+        when(permissionRepository.findByNameIn(Set.of(PermissionType.VIEW_MEMBERS))).thenReturn(Set.of(permission));
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(tenant));
         when(roleRepository.save(any(Role.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

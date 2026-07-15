@@ -125,4 +125,26 @@ class SecurityConfigTest {
                 "/api/v1/auth/platform-admin/register"
         );
     }
+
+    @Test
+    void whitelist_shouldNotExposeTenantOrOnboardingNamespacesBroadly() {
+        String[] whitelist = (String[]) ReflectionTestUtils.getField(securityConfig, "WHITE_LIST_ENDPOINTS");
+
+        assertThat(whitelist).doesNotContain(
+                "/api/v1/tenant/**",
+                "/api/v1/onboarding/**",
+                "/api/v1/onboarding/billing/**"
+        );
+    }
+
+    @Test
+    void csrfIgnoreList_shouldNotExposeTenantOrOnboardingNamespacesBroadly() {
+        String[] ignored = (String[]) ReflectionTestUtils.getField(securityConfig, "CSRF_IGNORED_ENDPOINTS");
+
+        assertThat(ignored).doesNotContain(
+                "/api/v1/tenant/**",
+                "/api/v1/onboarding/**",
+                "/api/v1/onboarding/billing/**"
+        );
+    }
 }

@@ -1,5 +1,6 @@
 package com.anastasia.Anastasia_BackEnd.modules.registration.controller;
 
+import com.anastasia.Anastasia_BackEnd.common.utils.RateLimiterService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.dto.onboarding.OnboardingSessionResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantDTO;
 import com.anastasia.Anastasia_BackEnd.core.auth.dto.AuthenticationResponse;
@@ -27,6 +28,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.Map;
 
@@ -37,11 +40,15 @@ import java.util.Map;
 @Tag(name = "Tenant Onboarding Billing")
 public class TenantOnboardingBillingController {
 
+    private static final Duration SESSION_RATE_LIMIT_PERIOD = Duration.ofMinutes(15);
+    private static final Duration AUTO_LOGIN_RATE_LIMIT_PERIOD = Duration.ofMinutes(10);
+
     private final TenantOnboardingBillingService onboardingBillingService;
     private final StripeReadinessService stripeReadinessService;
     private final OnboardingBillingReadinessService onboardingBillingReadinessService;
     private final RefreshTokenCookieService refreshTokenCookieService;
     private final OnboardingSessionAccessService onboardingSessionAccessService;
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping("/sessions")
     public ResponseEntity<OnboardingSessionResponse> createOnboardingSession(
@@ -52,6 +59,15 @@ public class TenantOnboardingBillingController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
+        if (!consumeRateLimit(
+                "onboarding:billing:sessions",
+                request,
+                tenantDTO.getOwnerEmail(),
+                5,
+                SESSION_RATE_LIMIT_PERIOD
+        )) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
         OnboardingSessionResponse sessionResponse = onboardingBillingService.createSession(
                 tenantDTO,
                 idempotencyKey,
@@ -133,6 +149,15 @@ public class TenantOnboardingBillingController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
+        if (!consumeRateLimit(
+                "onboarding:billing:auto-login",
+                request,
+                sessionId.toString(),
+                5,
+                AUTO_LOGIN_RATE_LIMIT_PERIOD
+        )) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
         AuthenticationResponse authResponse = onboardingBillingService.autoLogin(
                 sessionId,
                 resolveOnboardingAccessToken(onboardingAccessToken, request)
@@ -161,6 +186,25 @@ public class TenantOnboardingBillingController {
             return onboardingAccessToken;
         }
         return onboardingSessionAccessService.extractAccessToken(request).orElse(null);
+    }
+
+    private boolean consumeRateLimit(
+            String scope,
+            HttpServletRequest request,
+            String subject,
+            long capacity,
+            Duration period
+    ) {
+        String clientIp = request != null ? normalizeKeyComponent(request.getRemoteAddr()) : "n/a";
+        String normalizedSubject = normalizeKeyComponent(subject);
+        return rateLimiterService.tryConsume(scope + ":" + clientIp + ":" + normalizedSubject, capacity, period);
+    }
+
+    private String normalizeKeyComponent(String value) {
+        if (value == null || value.isBlank()) {
+            return "anonymous";
+        }
+        return value.trim().toLowerCase(Locale.ROOT);
     }
 
     public record OnboardingEligibilityRequest(

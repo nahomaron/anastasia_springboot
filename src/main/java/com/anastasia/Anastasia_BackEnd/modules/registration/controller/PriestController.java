@@ -20,17 +20,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/priests")
 public class PriestController {
+
+    private static final Set<String> TENANT_OVERRIDE_AUTHORITIES = Set.of(
+            "MANAGE_TENANTS",
+            "VIEW_ALL_DATA"
+    );
 
     private final PriestService priestService;
     private final MemberService memberService;
@@ -71,7 +80,7 @@ public class PriestController {
         return new ResponseEntity<>(priests, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'VIEW_ALL_DATA', 'VIEW_PRIESTS')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'VIEW_ALL_DATA', 'VIEW_PRIESTS')")
     @GetMapping("/{priestId}")
     public ResponseEntity<PriestResponse> getPriest(@PathVariable Long priestId){
         Optional<PriestResponse> foundPriest = priestService.findPriestById(priestId);
@@ -83,7 +92,7 @@ public class PriestController {
         );
     }
 
-    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'MANAGE_PRIESTS')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_PRIESTS')")
     @PatchMapping("/{priestId}")
     public ResponseEntity<PriestResponse> updatePriestDetails(@PathVariable Long priestId,
                                                          @RequestBody Map<String, Object> payload){
@@ -96,7 +105,7 @@ public class PriestController {
         return new ResponseEntity<>(updatedPriest, HttpStatus.ACCEPTED);
     }
 
-    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_USERS', 'MANAGE_PRIESTS')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_PRIESTS')")
     @PostMapping("/delete/{priestId}")
     public ResponseEntity<?> deletePriest(@PathVariable Long priestId){
         priestService.deletePriest(priestId);
@@ -180,7 +189,15 @@ public class PriestController {
     }
 
     private UUID resolveTenantId(UUID tenantId) {
-        UUID effectiveTenantId = tenantId != null ? tenantId : TenantContext.getTenantId();
+        UUID contextTenantId = TenantContext.getTenantId();
+        if (tenantId != null && !tenantId.equals(contextTenantId) && !currentUserCanOverrideTenant()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Cross-tenant priest assignment lookup requires platform authority"
+            );
+        }
+
+        UUID effectiveTenantId = tenantId != null ? tenantId : contextTenantId;
         if (effectiveTenantId == null) {
             throw new IllegalStateException(messageService.get(
                     "tenant.context.missing",
@@ -188,5 +205,15 @@ public class PriestController {
             ));
         }
         return effectiveTenantId;
+    }
+
+    private boolean currentUserCanOverrideTenant() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(TENANT_OVERRIDE_AUTHORITIES::contains);
     }
 }

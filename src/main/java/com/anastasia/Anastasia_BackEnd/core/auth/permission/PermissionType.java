@@ -50,10 +50,13 @@ public enum PermissionType {
     /**/ EDIT_GROUPS("edit_groups", "Can edit existing groups"),
     /**/ADD_MEMBERS_TO_GROUPS("add_members_to_groups", "Can add members to groups"),
     /**/REMOVE_MEMBERS_FROM_GROUPS("remove_members_from_groups", "Can remove members from groups"),
+    DELETE_GROUPS("delete_groups", "Can delete groups"),
     MANAGE_REQUESTS("manage_requests", "Can manage group membership requests"),
 
     // Event Management
     MANAGE_EVENTS("manage_events", "can do everything with events"),
+    VIEW_CALENDAR("view_calendar", "Can view the calendar"),
+    MANAGE_CALENDAR("manage_calendar", "Can create and manage calendar entries"),
     CREATE_EDIT_EVENTS("create_edit_events", "Can create and edit events"),
     VIEW_EVENTS("view_events", "Can view events"),
     DELETE_EVENTS("delete_events", "Can delete events"),
@@ -77,6 +80,7 @@ public enum PermissionType {
 
     // Appointments
     MANAGE_APPOINTMENT("manage_appointment", "can do everything with bookings"),
+    VIEW_APPOINTMENTS("view_appointments", "Can view appointment schedules and details"),
     BOOK_APPOINTMENT("book_appointment", "Can book appointments"),
     CANCEL_APPOINTMENT("cancel_appointment", "Can cancel appointments"),
 

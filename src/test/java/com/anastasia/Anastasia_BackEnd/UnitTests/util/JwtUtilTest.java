@@ -93,6 +93,28 @@ class JwtUtilTest {
     }
 
     @Test
+    void roleAuthorities_shouldCarryNewCalendarPermissionsThroughPrincipal() {
+        Role priestRole = Role.builder()
+                .roleName("PRIEST")
+                .permissions(Set.of(Permission.builder().name(PermissionType.VIEW_CALENDAR).build()))
+                .build();
+
+        UserEntity priest = UserEntity.builder()
+                .uuid(UUID.randomUUID())
+                .email("calendar-priest@example.com")
+                .password("Password1!")
+                .roles(Set.of(priestRole))
+                .affiliatedTenant(TenantEntity.builder().id(userPrincipal.getTenantId()).build())
+                .build();
+
+        UserPrincipal priestPrincipal = new UserPrincipal(priest);
+        String token = jwtUtil.generateAccessToken(priestPrincipal);
+
+        assertThat(jwtUtil.extractRoles(token)).contains("ROLE_PRIEST");
+        assertThat(priestPrincipal.hasPermission("VIEW_CALENDAR")).isTrue();
+    }
+
+    @Test
     void isTokenExpired_shouldReturnTrueForExpiredToken() {
         String token = jwtUtil.buildToken(Map.of(), userPrincipal, -1000L);
 

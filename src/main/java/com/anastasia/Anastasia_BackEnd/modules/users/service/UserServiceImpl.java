@@ -165,6 +165,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<UserEntity> findEntity(UUID userId) {
+        UUID tenantId = TenantContext.getTenantId();
+        if (shouldEnforceTenantScope(tenantId)) {
+            return userRepository.findByUuidAndAffiliatedTenantId(userId, tenantId);
+        }
         return userRepository.findById(userId);
     }
 

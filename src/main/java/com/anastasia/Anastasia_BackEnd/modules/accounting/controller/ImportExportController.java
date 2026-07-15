@@ -19,12 +19,12 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/accounting/io")
 @RequiredArgsConstructor
-@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'IMPORT_FINANCIAL_DATA', 'EXPORT_FINANCIAL_DATA')")
 public class ImportExportController {
 
     private final ImportExportService importExportService;
     private final AccountingTenantResolver tenantResolver;
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'EXPORT_FINANCIAL_DATA')")
     @GetMapping("/export/quickbooks")
     public void exportToQuickBooks(
             @RequestParam(required = false) UUID tenantId,
@@ -45,6 +45,7 @@ public class ImportExportController {
         }
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'IMPORT_FINANCIAL_DATA')")
     @PostMapping("/import/quickbooks")
     public ResponseEntity<Void> importFromQuickBooks(
             @RequestParam(required = false) UUID tenantId,

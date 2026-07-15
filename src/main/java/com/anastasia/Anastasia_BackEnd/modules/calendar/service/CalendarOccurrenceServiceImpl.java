@@ -184,6 +184,7 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
                 "ROLE_STAFF",
                 "MANAGE_EVENTS",
                 "VIEW_EVENTS",
+                "VIEW_CALENDAR",
                 "MANAGE_APPOINTMENT",
                 "VIEW_ALL_DATA",
                 "MANAGE_SERVICES"
@@ -194,12 +195,13 @@ public class CalendarOccurrenceServiceImpl implements CalendarOccurrenceService 
         return hasAnyAuthority(authorities, Set.of(
                 "ROLE_OWNER",
                 "ROLE_PRIEST",
+                "VIEW_CALENDAR",
                 "VIEW_ALL_DATA"
         ));
     }
 
     private boolean hasAllAccess(Set<String> authorities) {
-        return hasAnyAuthority(authorities, Set.of("ROLE_OWNER", "VIEW_ALL_DATA"));
+        return hasAnyAuthority(authorities, Set.of("ROLE_OWNER", "VIEW_ALL_DATA", "MANAGE_CALENDAR"));
     }
 
     private boolean hasAnyAuthority(Set<String> authorities, Set<String> expected) {

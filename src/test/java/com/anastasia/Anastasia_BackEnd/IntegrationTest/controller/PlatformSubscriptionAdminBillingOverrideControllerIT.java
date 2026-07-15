@@ -122,8 +122,8 @@ class PlatformSubscriptionAdminBillingOverrideControllerIT {
                 .tenant(tenant)
                 .overrideType(BillingOverrideType.FREE_ACCESS)
                 .active(true)
-                .startsAt(Instant.parse("2026-06-01T00:00:00Z"))
-                .endsAt(Instant.parse("2026-07-01T00:00:00Z"))
+                .startsAt(Instant.now().minusSeconds(3600))
+                .endsAt(Instant.now().plusSeconds(86400))
                 .build());
 
         var request = TenantBillingOverrideRequestBody.percentDiscount();
@@ -174,10 +174,11 @@ class PlatformSubscriptionAdminBillingOverrideControllerIT {
         }
 
         static TenantBillingOverrideRequestBody percentDiscount() {
+            Instant now = Instant.now();
             return new TenantBillingOverrideRequestBody(
                     BillingOverrideType.PERCENT_DISCOUNT,
-                    Instant.parse("2026-06-01T00:00:00Z"),
-                    Instant.parse("2026-07-01T00:00:00Z"),
+                    now.minusSeconds(3600),
+                    now.plusSeconds(86400),
                     BigDecimal.valueOf(25),
                     null,
                     "USD",

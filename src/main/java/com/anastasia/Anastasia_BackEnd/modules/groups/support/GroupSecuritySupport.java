@@ -14,13 +14,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GroupSecuritySupport {
 
-    private static final Set<String> PRIVILEGED_ROLES = Set.of(
-            "ROLE_OWNER",
-            "ROLE_PRIMARY_ADMIN",
-            "ROLE_ADMIN",
-            "ROLE_PRIEST"
-    );
-
     private static final Set<String> MANAGEMENT_AUTHORITIES = Set.of(
             "MANAGE_GROUPS",
             "CREATE_GROUPS",
@@ -40,8 +33,7 @@ public class GroupSecuritySupport {
                 .map(GrantedAuthority::getAuthority)
                 .collect(java.util.stream.Collectors.toSet());
 
-        if (authorities.stream().anyMatch(PRIVILEGED_ROLES::contains)
-                || authorities.stream().anyMatch(MANAGEMENT_AUTHORITIES::contains)) {
+        if (authorities.stream().anyMatch(MANAGEMENT_AUTHORITIES::contains)) {
             return true;
         }
 

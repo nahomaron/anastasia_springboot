@@ -147,14 +147,7 @@ public class MembershipCardService {
 
     @Transactional(readOnly = true)
     public MembershipCardSummaryResponse getCurrentUserCardSummary() {
-        UserEntity user = requireCurrentUser();
-        Adult_MemberEntity membership = user.getMembership();
-        if (membership == null || membership.getId() == null || membership.getTenantId() == null) {
-            throw new EntityNotFoundException(messageService.get(
-                    "registration.membership.currentUser.missing",
-                    "No membership associated with current user"
-            ));
-        }
+        Adult_MemberEntity membership = requireCurrentUserMembership();
 
         MembershipCardEntity card = membershipCardRepository.findByTenantIdAndMemberId(membership.getTenantId(), membership.getId())
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get(
@@ -168,13 +161,7 @@ public class MembershipCardService {
     @Transactional
     public MembershipCardDownloadPayload downloadCurrentUserCard(String format) {
         UserEntity user = requireCurrentUser();
-        Adult_MemberEntity membership = user.getMembership();
-        if (membership == null || membership.getId() == null || membership.getTenantId() == null) {
-            throw new EntityNotFoundException(messageService.get(
-                    "registration.membership.currentUser.missing",
-                    "No membership associated with current user"
-            ));
-        }
+        Adult_MemberEntity membership = requireCurrentUserMembership(user);
         MembershipCardEntity card = membershipCardRepository.findByTenantIdAndMemberId(membership.getTenantId(), membership.getId())
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get(
                         "registration.membershipCard.notIssued",
@@ -561,6 +548,28 @@ public class MembershipCardService {
         UUID userId = currentUserId().orElseThrow(() -> new IllegalStateException("No authenticated user"));
         return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
+
+    private Adult_MemberEntity requireCurrentUserMembership() {
+        return requireCurrentUserMembership(requireCurrentUser());
+    }
+
+    private Adult_MemberEntity requireCurrentUserMembership(UserEntity user) {
+        UUID tenantId = requireTenantId();
+        Adult_MemberEntity membership = user.getMembership();
+        if (membership == null || membership.getId() == null || membership.getTenantId() == null) {
+            throw new EntityNotFoundException(messageService.get(
+                    "registration.membership.currentUser.missing",
+                    "No membership associated with current user"
+            ));
+        }
+        if (!tenantId.equals(membership.getTenantId())) {
+            throw new org.springframework.security.access.AccessDeniedException(messageService.get(
+                    "registration.membership.currentUser.tenantMismatch",
+                    "Current membership is not in the active tenant"
+            ));
+        }
+        return membership;
     }
 
     private Optional<UUID> currentUserId() {

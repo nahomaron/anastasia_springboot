@@ -20,7 +20,6 @@ import com.anastasia.Anastasia_BackEnd.modules.services.repository.BaptismReques
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -29,6 +28,7 @@ import com.anastasia.Anastasia_BackEnd.UnitTests.support.LenientMockitoTest;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -47,7 +47,6 @@ import static org.mockito.Mockito.when;
 
 @LenientMockitoTest
 @MockitoSettings(strictness = Strictness.LENIENT)
-@Tag("experimental")
 class BaptismRequestServiceImplUnitTest {
 
     @Mock private BaptismRequestRepository baptismRequestRepository;
@@ -76,10 +75,12 @@ class BaptismRequestServiceImplUnitTest {
 
     @Test
     void create_shouldNormalizeChurchNumberAndTrimValues() {
+        UUID tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
         ChurchEntity church = new ChurchEntity();
         church.setChurchNumber("\"CH-123\"");
         TenantEntity tenant = new TenantEntity();
-        tenant.setId(UUID.randomUUID());
+        tenant.setId(tenantId);
         church.setTenant(tenant);
         when(churchRepository.findByChurchNumber("CH-123")).thenReturn(Optional.of(church));
         when(baptismRequestRepository.existsByRequestNumber(any())).thenReturn(false);
@@ -117,6 +118,7 @@ class BaptismRequestServiceImplUnitTest {
 
     @Test
     void create_shouldRejectInvalidDates() {
+        TenantContext.setTenantId(UUID.randomUUID());
         when(churchRepository.findByChurchNumber(any())).thenReturn(Optional.of(new ChurchEntity()));
         BaptismServiceRequestCreateRequest request = new BaptismServiceRequestCreateRequest(
                 "CH-001",
@@ -159,7 +161,36 @@ class BaptismRequestServiceImplUnitTest {
     }
 
     @Test
+    void create_shouldRejectChurchOutsideCurrentTenant() {
+        UUID currentTenantId = UUID.randomUUID();
+        TenantContext.setTenantId(currentTenantId);
+        ChurchEntity church = new ChurchEntity();
+        TenantEntity otherTenant = new TenantEntity();
+        otherTenant.setId(UUID.randomUUID());
+        church.setTenant(otherTenant);
+        church.setChurchNumber("CH-222");
+        when(churchRepository.findByChurchNumber("CH-222")).thenReturn(Optional.of(church));
+        BaptismServiceRequestCreateRequest request = new BaptismServiceRequestCreateRequest(
+                "CH-222",
+                LocalDate.of(2019, 1, 1),
+                LocalDate.of(2019, 2, 1),
+                sampleLanguageDetails("Baby"),
+                sampleLanguageDetails("Baby"),
+                new UploadedDocumentRequest("url", null),
+                new UploadedDocumentRequest("url", null),
+                new UploadedDocumentRequest("url", null),
+                new UploadedDocumentRequest("url", null)
+        );
+
+        assertThatThrownBy(() -> baptismRequestService.create(request))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Church is not in the current tenant");
+    }
+
+    @Test
     void listMine_shouldMapRequests() {
+        UUID tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
         BaptismRequestEntity entity = new BaptismRequestEntity();
         entity.setId(5L);
         entity.setRequestNumber("BAP-123");
@@ -169,7 +200,7 @@ class BaptismRequestServiceImplUnitTest {
         entity.setChurch(new ChurchEntity());
         entity.getChurch().setChurchNameLocal("St. Paul");
         entity.setChurchNumber("CH-001");
-        when(baptismRequestRepository.findByRequestedByUser_UuidOrderByCreatedAtDesc(userUuid))
+        when(baptismRequestRepository.findByTenantIdAndRequestedByUser_UuidOrderByCreatedAtDesc(tenantId, userUuid))
                 .thenReturn(List.of(entity));
 
         List<MemberServiceRequestListItemResponse> responses = baptismRequestService.listMine();

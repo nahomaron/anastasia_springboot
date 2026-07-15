@@ -31,7 +31,6 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -91,11 +90,7 @@ public abstract class ServiceIntegrationTestBase {
     }
 
     protected Role createAdHocRole(String suffix, Set<PermissionType> permissions) {
-        Set<String> names = permissions.stream()
-                .map(PermissionType::name)
-                .collect(Collectors.toSet());
-
-        var permissionEntities = permissionRepository.findByNameIn(names);
+        var permissionEntities = permissionRepository.findByNameIn(permissions);
 
         return roleRepository.save(Role.builder()
                 .roleName("IT_ROLE_" + suffix + "_" + UUID.randomUUID())

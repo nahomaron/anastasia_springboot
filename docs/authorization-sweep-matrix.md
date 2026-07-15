@@ -11,6 +11,17 @@ Harden every production controller before launch so access is:
 
 This matrix is based on the current Spring Security configuration, controller mappings, seeded permissions, and test coverage in `Anastasia_BackEnd`.
 
+## Current Root Cause Summary
+
+The inconsistent 403s come from authorization drift rather than one broken mechanism:
+
+- Controllers mix `hasRole`, `hasAnyAuthority`, and the custom permission evaluator.
+- Some business areas are guarded by broader fallback permissions from other domains, which makes the effective access model hard to reason about.
+- Newer calendar authorization had no dedicated `VIEW_CALENDAR` / `MANAGE_CALENDAR` permissions, so it depended on event or appointment permissions instead of a calendar-specific contract.
+- Tenant isolation is enforced separately in `TenantFilter` and in service/repository queries, which is correct but means header/tenant mismatches can surface as 403s before controller logic runs.
+
+The stabilization approach in this pass is to keep tenant boundaries intact, add the missing calendar permissions, and make the calendar controller and occurrence service recognize them alongside the older event-based fallbacks.
+
 ## Non-Negotiables
 
 1. Remove broad whitelist patterns from `SecurityConfig`.
@@ -68,7 +79,6 @@ Current `PermissionType` covers older modules well enough, but newer domains are
 - `RESET_STAFF_CREDENTIALS`
 
 ### Calendar
-
 - `VIEW_CALENDAR`
 - `MANAGE_CALENDAR`
 
@@ -96,28 +106,28 @@ Current `PermissionType` covers older modules well enough, but newer domains are
 
 | Controller | Base path | Current posture | Target posture | Required work | Test priority |
 |---|---|---|---|---|---|
-| `TenantController` | `/api/v1/tenant` | Namespace is globally public; only some methods have `@PreAuthorize` | Split public registration routes from authenticated tenant routes | Remove namespace whitelist; explicitly mark only subscribe/verify/resend public; require auth for current-status/update/unsubscribe; verify tenant ownership on `{tenantId}` operations | P0 |
-| `TenantOnboardingBillingController` | `/api/v1/onboarding/billing` | Entire namespace public; no method security | Public only for session-bound onboarding flow | Replace broad whitelist with explicit routes; require signed or opaque session ownership for `checkout`, `finalize`, `getSession`, `auto-login`; rate-limit `sessions` and `auto-login` | P0 |
-| `OnboardingEmailVerificationController` | `/api/v1/onboarding/email-verification` | Public; no method security | Explicit public endpoints with abuse controls | Keep public intentionally, add rate limits, anti-enumeration, replay protection, attempt throttling | P0 |
-| `AccountController` | `/api/v1/accounting/accounts` | Authenticated fallback only | Permission-based tenant admin access | Add class-level guard using `MANAGE_FINANCE` plus new account permissions; replace request `tenantId` trust with tenant-context validation | P0 |
-| `FundController` | `/api/v1/accounting/funds` | Authenticated fallback only | Permission-based tenant admin access | Add read/write split with `VIEW_FUNDS` and `MANAGE_FUNDS`; enforce tenant context | P0 |
-| `TransactionController` | `/api/v1/accounting/transactions` | Authenticated fallback only | Permission-based finance access | Guard income/expense/transfer with `MANAGE_FINANCE` or `RECORD_TRANSACTIONS`; verify tenant scope server-side | P0 |
-| `ReportController` | `/api/v1/accounting/reports` | Authenticated fallback only | Permission-based reporting access | Require `VIEW_FINANCE_REPORT` or `GENERATE_FINANCE_REPORT`; verify report scope and tenant | P0 |
-| `ImportExportController` | `/api/v1/accounting/io` | Authenticated fallback only | Highly restricted finance admin access | Export needs `EXPORT_FINANCIAL_DATA`; import needs `IMPORT_FINANCIAL_DATA`; validate tenant and file safety | P0 |
-| `ReconciliationController` | `/api/v1/accounting/reconciliation` | Authenticated fallback only | Highly restricted finance admin access | Require `MANAGE_FINANCE` or `RECONCILE_ACCOUNTS`; do not trust body `tenantId`; bind to tenant context | P0 |
+| `TenantController` | `/api/v1/tenant` | Exact public routes only; tenant mutation paths guarded | Split public registration routes from authenticated tenant routes | Group C tenant ownership guard implemented for `{tenantId}` update/unsubscribe; matcher tests prevent broad `/api/v1/tenant/**` exposure | P0 |
+| `TenantOnboardingBillingController` | `/api/v1/onboarding/billing` | Explicit public self-service routes; session operations require onboarding token | Public only for session-bound onboarding flow | Session access token enforcement exists in service; public session creation and auto-login are now rate-limited and covered by focused tests | P0 |
+| `OnboardingEmailVerificationController` | `/api/v1/onboarding/email-verification` | Explicit public endpoints with rate limits | Explicit public endpoints with abuse controls | Keep public intentionally; send/verify rate limits and generic invalid-code response are covered by controller tests | P0 |
+| `AccountController` | `/api/v1/accounting/accounts` | Permission-based with tenant resolver | Permission-based tenant admin access | Uses accounting permissions and `AccountingTenantResolver`; focused resolver tests cover missing tenant context and cross-tenant override denial | P0 |
+| `FundController` | `/api/v1/accounting/funds` | Permission-based with tenant resolver | Permission-based tenant admin access | Uses `VIEW_FUNDS` / `MANAGE_FUNDS` plus tenant resolver; cross-tenant request tenant IDs are denied centrally | P0 |
+| `TransactionController` | `/api/v1/accounting/transactions` | Permission-based with tenant resolver | Permission-based finance access | Uses `MANAGE_FINANCE` / `RECORD_TRANSACTIONS` / read permissions plus tenant resolver; repository reads remain tenant-scoped | P0 |
+| `ReportController` | `/api/v1/accounting/reports` | Permission-based with tenant resolver | Permission-based reporting access | Uses report permissions plus tenant resolver; report aggregation queries are tenant-scoped | P0 |
+| `ImportExportController` | `/api/v1/accounting/io` | Permission-based with tenant resolver | Highly restricted finance admin access | Export/import use dedicated permissions and tenant resolver; file safety remains a separate non-auth hardening area | P0 |
+| `ReconciliationController` | `/api/v1/accounting/reconciliation` | Permission-based with tenant resolver | Highly restricted finance admin access | Uses `RECONCILE_ACCOUNTS` / `MANAGE_FINANCE` and tenant resolver; reconciliation account lookup is tenant-scoped | P0 |
 | `WebhookController` | `/webhooks/stripe` | Public by design | Explicit public system endpoint | Keep public, verify signature, add duplicate-event protection tests | P0 |
 
 ### P1: Mixed Or Incomplete Guarding
 
 | Controller | Base path | Current posture | Target posture | Required work | Test priority |
 |---|---|---|---|---|---|
-| `UserController` | `/api/v1/users` | Mixed; several endpoints have no `@PreAuthorize` | Split self-service, tenant admin, platform admin | Add guards to `/info`, `/update-user-details`, `/avatar`; fix inconsistent admin/user access; validate self-only semantics | P1 |
+| `UserController` | `/api/v1/users` | Mixed; several endpoints have no `@PreAuthorize` | Split self-service, tenant admin, platform admin | Group C shared user-entity lookup now respects active tenant unless caller has platform-wide read authority; remaining controller guard cleanup still applies to `/info`, `/update-user-details`, `/avatar` | P1 |
 | `ChurchController` | `/api/v1/churches` | Some public list/lookup endpoints, some protected | Explicit decision per lookup route | Decide whether `GET /churches` and `GET /by-number/*` are public or authenticated; if public, test enumeration risk and returned fields | P1 |
 | `StaffController` | `/api/v1/staff` | Class-level guard exists, but permission string drift is present | Stable class-level guard with normalized permissions | Remove lowercase permission alias, add read/write split if needed, add reset-credentials-specific permission | P1 |
 | `NotificationController` | `/api/v1/notifications` | Broad role-based class guard | Self-service authenticated access | Consider replacing broad role list with `isAuthenticated()` if service methods are self-scoped; otherwise keep permission-based admin paths separate | P1 |
-| `ImageAssetController` | `/api/v1/images` | `isAuthenticated()` only | Self-service plus ownership checks | Ensure upload/read is bound to owner object access rules, not just authentication | P1 |
+| `ImageAssetController` | `/api/v1/images` | Controller is authenticated; service now enforces owner-type read/write permissions | Self-service plus ownership checks | Implemented type-specific permission checks for user/member/child/church/group/event images; keep adding tests around ownership and tenant isolation | P1 |
 | `DashboardController` | `/api/v1/dashboard` | Role-based only | Role plus permission or service-scoped access | Fine for now, but confirm no data leakage across tenant/user scope | P1 |
-| `MembershipCardController` | `/api/v1/membership-cards` | Mostly guarded, one public token verify endpoint | Mixed public/protected by design | Keep `/verify/{token}` public; verify all member/admin actions enforce ownership or membership visibility | P1 |
+| `MembershipCardController` | `/api/v1/membership-cards` | Mostly guarded, one public token verify endpoint | Mixed public/protected by design | Keep `/verify/{token}` public; Group C self-service `/me` paths now validate current membership against active tenant before card lookup/download | P1 |
 | `TenantEntitlementController` | `/api/v1/subscriptions` | Reasonable auth; finance/subscription permissions mixed | Keep, but normalize intent | Use `OWN_SUBSCRIPTION` for owner-billing actions, `MANAGE_TENANT_BILLING` for delegated admins | P1 |
 | `PlatformSubscriptionAdminController` | `/api/v1/platform/subscriptions` | Platform admin only | Keep platform-only | Add tests for platform-only access and audit sensitive changes | P1 |
 | `DevEmailPreviewController` | `/dev/email` | Dev profile only, no auth | Dev-only support endpoint | Verify production profile cannot expose it; consider extra auth in shared dev/test envs | P1 |
@@ -128,15 +138,15 @@ Current `PermissionType` covers older modules well enough, but newer domains are
 |---|---|---|---|---|---|
 | `RoleController` | `/api/v1/admin` | Class-level `MANAGE_ROLES` plus role checks | Permission-first admin access | Keep permission requirement; confirm role checks are not redundant with desired delegated-admin behavior | P2 |
 | `TenantAdminAssignmentController` | `/api/v1/tenant/admin-assignments` | Role or `MANAGE_USERS` | Permission-first tenant admin access | Consider replacing role bypass with `MANAGE_TENANT_USERS` / `MANAGE_USERS`; add audit tests | P2 |
-| `MemberController` | `/api/v1/registrar/members` | Heavy role fallback with some permission use | Permission-first with self-service separation | Review `MEMBER` and `USER` access on family endpoints; ensure read/search/admin actions are not over-broad | P2 |
-| `ChildController` | `/api/v1/registrar/children` | Similar to member controller | Permission-first with self-service separation | Remove broad role reliance where specific child/member permissions exist | P2 |
-| `PriestController` | `/api/v1/priests` | Mixed; public registration and broad role access | Separate public registration, priest self-scope, and admin actions | Revisit whether `USER` should list priests by church; ensure priest-specific data is tenant-safe | P2 |
+| `MemberController` | `/api/v1/registrar/members` | Permission-first admin actions plus authenticated self-service routes | Permission-first with self-service separation | Self-registration is now authenticated-only; family relationship update/delete owner scoping has regression tests | P2 |
+| `ChildController` | `/api/v1/registrar/children` | Permission-first admin actions plus authenticated self-service registration | Permission-first with self-service separation | Self-registration is now authenticated-only; child admin actions remain explicit permission checks | P2 |
+| `PriestController` | `/api/v1/priests` | Mixed; public registration, authenticated church lists, permission-gated admin actions | Separate public registration, priest self-scope, and admin actions | Removed `MANAGE_USERS` fallback and blocked non-platform tenant override on assignment lookups; still revisit whether authenticated church priest lists should require `VIEW_PRIESTS` or remain member-facing discovery | P2 |
 | `MemberBulkActionController` | `/api/v1/registrar/members/bulk` | Stronger than most | Permission-first bulk ops | Consider more granular bulk communication/group permissions | P2 |
-| `MemberServiceRequestController` | `/api/v1/member-service-requests` | Role-based only | Self-service/member-service permission model | Confirm requests are only visible to requester or reviewers | P2 |
-| `GroupController` | `/api/v1/groups` | Mixed role checks and plain `isAuthenticated()` on request management | Permission-first with owner/moderator checks | Tighten join-request listing/approval/rejection so ordinary authenticated users cannot administer groups | P0 |
+| `MemberServiceRequestController` | `/api/v1/member-service-requests` | Role-based only | Self-service/member-service permission model | Group C baptism requests now require active tenant, reject church mismatch, and list current-user requests by tenant plus requester; broader reviewer/admin visibility still needs separate policy review | P2 |
+| `GroupController` | `/api/v1/groups` | Permission checks plus `GroupSecuritySupport` owner/moderator checks | Permission-first with owner/moderator checks | Retracted role-name shortcuts from `GroupSecuritySupport`; moderation now requires group permissions or assigned manager ownership and is covered by annotation/delegation tests | P0 |
 | `EventController` | `/api/v1/events` | Broad role fallback plus event permissions | Permission-first with event manager scope | Tighten member visibility vs manager/admin operations; validate event manager ownership | P2 |
 | `CalendarController` | `/api/v1/calendar` | Role fallback plus event permissions | Dedicated calendar permission model | Add `VIEW_CALENDAR` / `MANAGE_CALENDAR`, confirm recurrence edits are tenant-safe | P2 |
-| `AppointmentController` | `/api/v1/appointments` | Good base, but mostly role fallback | Permission-first with self-service member flow | Confirm `/me` endpoints cannot access other users' appointments; verify assignee/participant admin ops | P2 |
+| `AppointmentController` | `/api/v1/appointments` | Permission-first with separate self-service member flow | Permission-first with read/write split | Added `VIEW_APPOINTMENTS` for schedule/detail reads; mutations stay on `MANAGE_APPOINTMENT`; `/me` visibility has member-scope regression tests | P2 |
 | `PaymentController` | `/api/v1/payments` | Protected | Keep, with finance-specific permissions | Confirm donation vs subscription permissions and tenant context | P2 |
 | `PaymentQueryController` | `/api/v1/payments` | Protected | Keep, with read-specific finance permissions | Confirm summaries are tenant-safe and read-only | P2 |
 | `SubscriptionQueryController` | `/api/v1/payments/subscriptions` | Protected | Keep | Consider `OWN_SUBSCRIPTION` vs finance-report view split | P2 |
@@ -217,6 +227,21 @@ Add or expand API security tests for these controller families:
 - Add assigned-manager or participant checks where role-only checks are too broad.
 
 ### Phase 4: Regression Tests
+
+Status:
+
+- Implemented fast annotation regression tests for permission drift across accounting, payment, staff, platform-only, appointment, group, member, and child controllers.
+- Added payment tenant-context controller tests for missing tenant context and disabled stewardship entitlement.
+- Reused existing focused tests for tenant path ownership, onboarding token/rate-limit behavior, accounting tenant resolver mismatch denial, membership-card self-service tenant checks, baptism tenant scoping, group moderation, appointment member scope, image permissions, member self-service ownership, and user lookup tenant scoping.
+
+### Phase 5: Frontend Auth/Header Alignment
+
+Status:
+
+- Updated the Angular tenant interceptor so protected authenticated API calls include `X-Tenant-Id` when a tenant is active, preventing tenant-context 403s caused by missing headers.
+- Added auth-token and tenant-interceptor regression tests for protected API calls, public onboarding calls, explicit tenant headers, and non-API requests.
+- Synced frontend permission catalog with backend permissions added during the authorization sweep.
+- Updated tenant-admin navigation gates to include read permissions for staff, calendar, and appointments.
 
 - Add negative and positive security tests for every controller family.
 - Add cross-tenant denial tests.

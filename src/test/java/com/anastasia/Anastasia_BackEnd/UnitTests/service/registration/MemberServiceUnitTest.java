@@ -11,6 +11,9 @@ import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.A
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberResponse;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.MemberStatus;
+import com.anastasia.Anastasia_BackEnd.modules.registration.dto.family.UpdateFamilyRelationshipRequest;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyMemberSourceType;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.family.FamilyRelationshipEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.priest.PriestStatus;
 import com.anastasia.Anastasia_BackEnd.core.auth.principal.UserPrincipal;
@@ -54,6 +57,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @LenientMockitoTest
@@ -108,6 +112,8 @@ public class MemberServiceUnitTest {
                 });
         lenient().when(memberRepository.save(any(Adult_MemberEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(messageService.get(anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
     }
 
     @AfterEach
@@ -342,6 +348,65 @@ public class MemberServiceUnitTest {
     }
 
     @Test
+    void updateFamilyRelationship_shouldUseCurrentMemberAndTenantScope() {
+        UUID userId = UUID.randomUUID();
+        Adult_MemberEntity owner = Adult_MemberEntity.builder().id(101L).build();
+        authenticate(userId);
+        when(memberRepository.findByUserIdAndTenantId(userId, tenantId)).thenReturn(Optional.of(owner));
+        when(familyRelationshipRepository.countByOwnerMemberIdAndTenantId(owner.getId(), tenantId)).thenReturn(1L);
+        FamilyRelationshipEntity relationship = FamilyRelationshipEntity.builder()
+                .id(55L)
+                .tenantId(tenantId)
+                .ownerMember(owner)
+                .relationshipType(FamilyRelationshipType.PARENT)
+                .sourceType(FamilyMemberSourceType.EXTERNAL)
+                .displayName("Parent")
+                .active(true)
+                .build();
+        when(familyRelationshipRepository.findByIdAndOwnerMemberIdAndTenantId(55L, owner.getId(), tenantId))
+                .thenReturn(Optional.of(relationship));
+        when(familyRelationshipRepository.save(any(FamilyRelationshipEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        memberService.updateFamilyRelationship(55L, new UpdateFamilyRelationshipRequest(
+                null,
+                null,
+                null,
+                null,
+                "Updated Parent",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        ));
+
+        verify(familyRelationshipRepository).findByIdAndOwnerMemberIdAndTenantId(55L, owner.getId(), tenantId);
+        verify(familyRelationshipRepository).save(any(FamilyRelationshipEntity.class));
+    }
+
+    @Test
+    void deleteFamilyRelationship_shouldRejectRelationshipNotOwnedByCurrentMember() {
+        UUID userId = UUID.randomUUID();
+        Adult_MemberEntity owner = Adult_MemberEntity.builder().id(101L).build();
+        authenticate(userId);
+        when(memberRepository.findByUserIdAndTenantId(userId, tenantId)).thenReturn(Optional.of(owner));
+        when(familyRelationshipRepository.findByIdAndOwnerMemberIdAndTenantId(55L, owner.getId(), tenantId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> memberService.deleteFamilyRelationship(55L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Family relationship not found");
+
+        verify(familyRelationshipRepository).findByIdAndOwnerMemberIdAndTenantId(55L, owner.getId(), tenantId);
+        verify(familyRelationshipRepository, never()).delete(any());
+    }
+
+    @Test
     void mappedReadMethods_areTransactionalReadOnly() throws NoSuchMethodException {
         assertTransactionalReadOnly("findAll", org.springframework.data.domain.Pageable.class);
         assertTransactionalReadOnly("findAllSummary", org.springframework.data.domain.Pageable.class, String.class);
@@ -363,5 +428,16 @@ public class MemberServiceUnitTest {
 
         assertThat(transactional).isNotNull();
         assertThat(transactional.readOnly()).isTrue();
+    }
+
+    private void authenticate(UUID userId) {
+        UserEntity authenticatedUser = UserEntity.builder()
+                .uuid(userId)
+                .email("member@example.com")
+                .build();
+        UserPrincipal principal = new UserPrincipal(authenticatedUser);
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(principal);
+        when(securityContext.getAuthentication()).thenReturn(auth);
     }
 }

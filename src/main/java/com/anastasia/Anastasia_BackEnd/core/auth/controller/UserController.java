@@ -231,7 +231,7 @@ public class UserController {
         return ResponseEntity.ok(userService.searchUsers(query, roles));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'VIEW_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_TENANT_USERS', 'MANAGE_TENANT_USERS')")
     @GetMapping("/tenant-access")
     public ResponseEntity<TenantUsersPageResponse> listTenantUsers(
             @RequestParam(value = "q", required = false) String query,
@@ -243,13 +243,13 @@ public class UserController {
         return ResponseEntity.ok(userService.listTenantUsers(query, status, role, page, size));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'INVITE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'INVITE_TENANT_USERS', 'MANAGE_TENANT_USERS')")
     @PostMapping("/tenant-access/invitations")
     public ResponseEntity<TenantInviteResponse> inviteTenantUser(@Valid @RequestBody TenantInviteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.inviteUserToTenant(request.getEmail()));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANT_USERS')")
     @PatchMapping("/tenant-access/{userId}/membership")
     public ResponseEntity<TenantUserRowResponse> applyMembershipAction(
             @PathVariable UUID userId,
@@ -258,13 +258,13 @@ public class UserController {
         return ResponseEntity.ok(userService.applyMembershipAction(userId, request.getAction()));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_TENANT_USERS', 'MANAGE_TENANT_USERS')")
     @GetMapping("/tenant-access/{userId}/access")
     public ResponseEntity<TenantUserAccessResponse> getTenantUserAccess(@PathVariable UUID userId) {
         return ResponseEntity.ok(tenantUserAccessService.getUserAccess(userId));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANT_USERS')")
     @PutMapping("/tenant-access/{userId}/access/roles")
     public ResponseEntity<TenantUserAccessResponse> updateTenantUserRoles(
             @PathVariable UUID userId,
@@ -273,7 +273,7 @@ public class UserController {
         return ResponseEntity.ok(tenantUserAccessService.updateUserRoles(userId, request.getRoleIds()));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANT_USERS')")
     @PutMapping("/tenant-access/{userId}/access/permissions")
     public ResponseEntity<TenantUserAccessResponse> updateTenantUserPermissions(
             @PathVariable UUID userId,
@@ -282,7 +282,7 @@ public class UserController {
         return ResponseEntity.ok(tenantUserAccessService.updateUserPermissions(userId, request.getPermissions()));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANT_USERS')")
     @PostMapping("/tenant-access/{userId}/transfer-requests")
     public ResponseEntity<MemberTransferResponse> requestMemberTransfer(
             @PathVariable UUID userId,
@@ -296,7 +296,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANT_USERS')")
     @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/approve")
     public ResponseEntity<MemberTransferResponse> approveMemberTransfer(
             @PathVariable UUID transferRequestId,
@@ -306,7 +306,7 @@ public class UserController {
         return ResponseEntity.ok(userService.approveMemberTransferRequest(transferRequestId, note));
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_USERS', 'MANAGE_TENANT_USERS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_TENANT_USERS')")
     @PatchMapping("/tenant-access/transfer-requests/{transferRequestId}/reject")
     public ResponseEntity<MemberTransferResponse> rejectMemberTransfer(
             @PathVariable UUID transferRequestId,

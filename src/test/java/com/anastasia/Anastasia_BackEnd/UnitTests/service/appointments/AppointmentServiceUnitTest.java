@@ -6,6 +6,7 @@ import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentCreat
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentParticipantRequest;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentRescheduleRequest;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.AppointmentStatusUpdateRequest;
+import com.anastasia.Anastasia_BackEnd.modules.appointments.dto.MemberAppointmentResponse;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.mappers.AppointmentMapper;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentAssignmentEntity;
 import com.anastasia.Anastasia_BackEnd.modules.appointments.model.AppointmentEntity;
@@ -22,6 +23,7 @@ import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarEntryEntit
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
 import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.adult.Adult_MemberEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.member.child.Child_MemberEntity;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -276,6 +278,57 @@ class AppointmentServiceUnitTest {
         verify(appointmentRepository, times(0)).findMemberVisibleByIdAndTenantId(any(), any(), any());
     }
 
+    @Test
+    void getMyAppointment_shouldResolveOnlyCurrentMemberVisibleIds() {
+        TenantContext.setTenantId(tenantId);
+        UUID appointmentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Adult_MemberEntity membership = Adult_MemberEntity.builder().id(77L).build();
+        UserEntity user = new UserEntity();
+        user.setUuid(userId);
+        user.setTenantId(tenantId);
+        user.setMembership(membership);
+        Child_MemberEntity childInTenant = Child_MemberEntity.builder().id(88L).build();
+        childInTenant.setTenantId(tenantId);
+        Child_MemberEntity childOtherTenant = Child_MemberEntity.builder().id(99L).build();
+        childOtherTenant.setTenantId(UUID.randomUUID());
+        AppointmentEntity appointment = createMinimalAppointment(appointmentId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(childRepository.findByFatherIdOrMotherId(77L, 77L)).thenReturn(List.of(childInTenant, childOtherTenant));
+        when(appointmentRepository.findMemberVisibleByIdAndTenantId(eq(appointmentId), eq(tenantId), any()))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentMapper.toMemberResponse(appointment)).thenReturn(buildMemberResponse(appointment));
+
+        appointmentService.getMyAppointment(appointmentId, userId);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Set<Long>> memberIds = ArgumentCaptor.forClass(Set.class);
+        verify(appointmentRepository).findMemberVisibleByIdAndTenantId(eq(appointmentId), eq(tenantId), memberIds.capture());
+        assertThat(memberIds.getValue()).containsExactlyInAnyOrder(77L, 88L);
+    }
+
+    @Test
+    void getMyAppointment_shouldDenyWhenAppointmentIsNotVisibleToCurrentMember() {
+        TenantContext.setTenantId(tenantId);
+        UUID appointmentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Adult_MemberEntity membership = Adult_MemberEntity.builder().id(77L).build();
+        UserEntity user = new UserEntity();
+        user.setUuid(userId);
+        user.setTenantId(tenantId);
+        user.setMembership(membership);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(childRepository.findByFatherIdOrMotherId(77L, 77L)).thenReturn(List.of());
+        when(appointmentRepository.findMemberVisibleByIdAndTenantId(eq(appointmentId), eq(tenantId), any()))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> appointmentService.getMyAppointment(appointmentId, userId))
+                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class)
+                .hasMessageContaining("Appointment not found");
+    }
+
     private AppointmentEntity createMinimalAppointment(UUID id) {
         return AppointmentEntity.builder()
                 .id(id)
@@ -327,6 +380,32 @@ class AppointmentServiceUnitTest {
                 appointment.getCancellationReason(),
                 appointment.getOutcomeNotes(),
                 Set.of()
+        );
+    }
+
+    private MemberAppointmentResponse buildMemberResponse(AppointmentEntity appointment) {
+        return new MemberAppointmentResponse(
+                appointment.getId(),
+                appointment.getTitle(),
+                appointment.getDescription(),
+                appointment.getType(),
+                appointment.getStartAtUtc(),
+                appointment.getEndAtUtc(),
+                appointment.getTimezone(),
+                appointment.getLocationType(),
+                appointment.getLocationLabel(),
+                appointment.getStatus(),
+                appointment.getSource(),
+                null,
+                null,
+                appointment.getNotesForMember(),
+                appointment.getContactPhone(),
+                appointment.getContactEmail(),
+                appointment.getContactPreference(),
+                appointment.isFirstVisit(),
+                appointment.isSacramentRelated(),
+                appointment.getConfirmedAt(),
+                appointment.getCanceledAt()
         );
     }
 }

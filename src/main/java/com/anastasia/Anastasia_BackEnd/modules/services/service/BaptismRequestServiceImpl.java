@@ -40,15 +40,16 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
     @Transactional
     public BaptismServiceRequestResponse create(BaptismServiceRequestCreateRequest request) {
         UserEntity currentUser = getCurrentAuthenticatedUser();
+        UUID tenantId = requireTenantId();
         validateRequestDates(request);
 
         String normalizedChurchNumber = normalizeChurchNumber(request.churchNumber());
         ChurchEntity church = churchRepository.findByChurchNumber(normalizedChurchNumber)
                 .orElseThrow(() -> new IllegalStateException("Church not found for number: " + normalizedChurchNumber));
 
-        UUID tenantId = church.getTenant() != null ? church.getTenant().getId() : TenantContext.getTenantId();
-        if (tenantId == null) {
-            throw new IllegalStateException("Tenant context is required to submit a baptism request");
+        UUID churchTenantId = church.getTenant() != null ? church.getTenant().getId() : null;
+        if (!tenantId.equals(churchTenantId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Church is not in the current tenant");
         }
 
         BaptismRequestEntity entity = BaptismRequestEntity.builder()
@@ -87,8 +88,9 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
     @Transactional(readOnly = true)
     public List<MemberServiceRequestListItemResponse> listMine() {
         UserEntity currentUser = getCurrentAuthenticatedUser();
+        UUID tenantId = requireTenantId();
 
-        return baptismRequestRepository.findByRequestedByUser_UuidOrderByCreatedAtDesc(currentUser.getUuid())
+        return baptismRequestRepository.findByTenantIdAndRequestedByUser_UuidOrderByCreatedAtDesc(tenantId, currentUser.getUuid())
                 .stream()
                 .map(request -> new MemberServiceRequestListItemResponse(
                         request.getId(),
@@ -124,6 +126,14 @@ public class BaptismRequestServiceImpl implements BaptismRequestService {
 
         return userRepository.findById(principal.getUserUuid())
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+    }
+
+    private UUID requireTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant context is required to submit a baptism request");
+        }
+        return tenantId;
     }
 
     private String normalizeChurchNumber(String rawChurchNumber) {

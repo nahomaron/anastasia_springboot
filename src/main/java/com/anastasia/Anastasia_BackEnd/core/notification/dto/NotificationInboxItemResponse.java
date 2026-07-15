@@ -11,6 +11,7 @@ public record NotificationInboxItemResponse(
         NotificationType type,
         boolean read,
         Instant createdAt,
-        Instant readAt
+        Instant readAt,
+        java.util.UUID tenantId
 ) {
 }

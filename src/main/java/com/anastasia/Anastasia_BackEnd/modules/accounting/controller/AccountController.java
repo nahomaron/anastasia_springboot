@@ -22,19 +22,20 @@ import java.util.UUID;
 @RequestMapping("/api/v1/accounting/accounts")
 @RequiredArgsConstructor
 @RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
-@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_ACCOUNTS', 'MANAGE_ACCOUNTS')")
 public class AccountController {
 
     private final AccountService accountService;
     private final ChartOfAccountsService chartOfAccountsService;
     private final AccountingTenantResolver tenantResolver;
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_ACCOUNTS')")
     @PostMapping("/init-coa")
     public ResponseEntity<Void> createInitialChartOfAccounts(@RequestParam(required = false) UUID tenantId) {
         chartOfAccountsService.createInitialChartOfAccounts(tenantResolver.resolveTenant(tenantId));
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_ACCOUNTS')")
     @PostMapping
     public ResponseEntity<AccountDto> createAccount(@Valid @RequestBody CreateAccountRequest request) {
         request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
@@ -42,6 +43,7 @@ public class AccountController {
         return new ResponseEntity<>(createdAccount, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_ACCOUNTS', 'MANAGE_ACCOUNTS')")
     @GetMapping
     public ResponseEntity<List<AccountDto>> getAccounts(
             @RequestParam(required = false) UUID tenantId,
@@ -57,11 +59,13 @@ public class AccountController {
         return ResponseEntity.ok(accounts);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_ACCOUNTS', 'MANAGE_ACCOUNTS')")
     @GetMapping("/{id}")
     public ResponseEntity<AccountDto> getAccountById(@PathVariable Long id, @RequestParam(required = false) UUID tenantId) {
         return ResponseEntity.ok(accountService.getAccountById(id, tenantResolver.resolveTenant(tenantId)));
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_ACCOUNTS')")
     @PutMapping("/{id}")
     public ResponseEntity<AccountDto> updateAccount(
             @PathVariable Long id,
@@ -73,6 +77,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.updateAccount(id, effectiveTenantId, request));
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_ACCOUNTS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAccount(@PathVariable Long id, @RequestParam(required = false) UUID tenantId) {
         accountService.deleteAccount(id, tenantResolver.resolveTenant(tenantId));

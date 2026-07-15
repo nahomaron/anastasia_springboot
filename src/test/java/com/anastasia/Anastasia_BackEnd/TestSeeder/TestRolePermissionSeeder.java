@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @Profile("test")
@@ -46,25 +46,43 @@ public class TestRolePermissionSeeder {
 
     private void seedRoles() {
         for (RoleType roleType : RoleType.values()) {
-            if (roleRepository.existsByRoleName(roleType.name())) {
-                continue;
-            }
-
-            Set<String> permissionNames = roleType.getPermissions().stream()
-                    .map(PermissionType::name)
-                    .collect(Collectors.toSet());
-
-            Set<Permission> permissions = permissionRepository.findByNameIn(permissionNames);
-
-            Role role = Role.builder()
-                    .roleName(roleType.name())
-                    .description(roleType.getDescription())
-                    .permissions(permissions)
-                    .tenant(null)
-                    .build();
-
-            roleRepository.save(role);
-            log.debug("Seeding role {}", roleType.name());
+            upsertRole(roleType);
         }
+    }
+
+    private void upsertRole(RoleType roleType) {
+        Set<Permission> permissions = resolvePermissions(roleType);
+        Role role = roleRepository.findByRoleName(roleType.name())
+                .orElseGet(() -> Role.builder()
+                        .roleName(roleType.name())
+                        .tenant(null)
+                        .permissions(Set.of())
+                        .build());
+
+        boolean changed = false;
+        if (!roleType.getDescription().equals(role.getDescription())) {
+            role.setDescription(roleType.getDescription());
+            changed = true;
+        }
+        Set<Permission> mergedPermissions = new HashSet<>(role.getPermissions());
+        if (mergedPermissions.addAll(permissions)) {
+            role.setPermissions(mergedPermissions);
+            changed = true;
+        }
+        if (role.getId() == null || changed) {
+            roleRepository.save(role);
+            log.debug("Synchronized role {}", roleType.name());
+        }
+    }
+
+    private Set<Permission> resolvePermissions(RoleType roleType) {
+        if (roleType.getPermissions().isEmpty()) {
+            return Set.of();
+        }
+        Set<Permission> permissions = permissionRepository.findByNameIn(roleType.getPermissions());
+        if (permissions.size() != roleType.getPermissions().size()) {
+            throw new IllegalStateException("Missing permissions while seeding role " + roleType.name());
+        }
+        return permissions;
     }
 }

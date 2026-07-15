@@ -58,8 +58,77 @@ public class ImageAssetServiceImpl implements ImageAssetService {
     );
     private static final Set<String> ELEVATED_AUTHORITIES = Set.of(
             "MANAGE_TENANTS",
-            "VIEW_ALL_DATA",
             "MANAGE_STAFF"
+    );
+    private static final Set<String> USER_READ_AUTHORITIES = Set.of(
+            "VIEW_TENANT_USERS",
+            "MANAGE_TENANT_USERS",
+            "MANAGE_USERS",
+            "VIEW_ALL_DATA",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> USER_WRITE_AUTHORITIES = Set.of(
+            "MANAGE_TENANT_USERS",
+            "MANAGE_USERS",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> MEMBER_READ_AUTHORITIES = Set.of(
+            "VIEW_MEMBERS",
+            "MANAGE_MEMBERS",
+            "VIEW_ALL_DATA",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> MEMBER_WRITE_AUTHORITIES = Set.of(
+            "EDIT_MEMBERS",
+            "MANAGE_MEMBERS",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> CHILD_READ_AUTHORITIES = Set.of(
+            "VIEW_CHILDREN",
+            "MANAGE_MEMBERS",
+            "VIEW_ALL_DATA",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> CHILD_WRITE_AUTHORITIES = Set.of(
+            "EDIT_CHILDREN",
+            "MANAGE_MEMBERS",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> CHURCH_READ_AUTHORITIES = Set.of(
+            "OWN_SUBSCRIPTION",
+            "MANAGE_TENANT_BILLING",
+            "VIEW_ALL_DATA",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> CHURCH_WRITE_AUTHORITIES = Set.of(
+            "OWN_SUBSCRIPTION",
+            "MANAGE_TENANT_BILLING",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> GROUP_READ_AUTHORITIES = Set.of(
+            "VIEW_GROUPS",
+            "MANAGE_GROUPS",
+            "VIEW_ALL_DATA",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> GROUP_WRITE_AUTHORITIES = Set.of(
+            "CREATE_GROUPS",
+            "EDIT_GROUPS",
+            "MANAGE_GROUPS",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> EVENT_READ_AUTHORITIES = Set.of(
+            "VIEW_EVENTS",
+            "VIEW_EVENT_REPORTS",
+            "MANAGE_EVENTS",
+            "VIEW_ALL_DATA",
+            "MANAGE_TENANTS"
+    );
+    private static final Set<String> EVENT_WRITE_AUTHORITIES = Set.of(
+            "CREATE_EDIT_EVENTS",
+            "MANAGE_EVENTS",
+            "MANAGE_CALENDAR",
+            "MANAGE_TENANTS"
     );
 
     private final S3Service s3Service;
@@ -77,7 +146,7 @@ public class ImageAssetServiceImpl implements ImageAssetService {
         ImageAssetType imageAssetType = resolveImageAssetType(ownerType);
         UUID tenantId = requireTenantId();
         UUID currentUserId = requireCurrentUserId();
-        UUID resolvedOwnerId = resolveAndAuthorizeOwner(imageAssetType, ownerId, tenantId, currentUserId);
+        UUID resolvedOwnerId = resolveAndAuthorizeOwner(imageAssetType, ownerId, tenantId, currentUserId, ImageAssetAccess.WRITE);
         String normalizedContentType = normalizeAndValidateContentType(request);
         String sanitizedFileName = sanitizeFilename(request.getFileName());
         String objectKey = buildObjectKey(tenantId, imageAssetType, ownerId, normalizedContentType);
@@ -117,7 +186,7 @@ public class ImageAssetServiceImpl implements ImageAssetService {
         ImageAssetType imageAssetType = resolveImageAssetType(ownerType);
         UUID tenantId = requireTenantId();
         UUID currentUserId = requireCurrentUserId();
-        UUID resolvedOwnerId = resolveAndAuthorizeOwner(imageAssetType, ownerId, tenantId, currentUserId);
+        UUID resolvedOwnerId = resolveAndAuthorizeOwner(imageAssetType, ownerId, tenantId, currentUserId, ImageAssetAccess.WRITE);
 
         ImageAssetUploadIntentEntity intent = uploadIntentRepository.findByIdAndTenantId(request.getUploadId(), tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Upload intent not found"));
@@ -161,7 +230,7 @@ public class ImageAssetServiceImpl implements ImageAssetService {
     public ImageAssetDTO getImageAsset(String ownerType, String ownerId) {
         ImageAssetType imageAssetType = resolveImageAssetType(ownerType);
         UUID tenantId = requireTenantId();
-        UUID resolvedOwnerId = resolveAndAuthorizeOwner(imageAssetType, ownerId, tenantId, requireCurrentUserId());
+        UUID resolvedOwnerId = resolveAndAuthorizeOwner(imageAssetType, ownerId, tenantId, requireCurrentUserId(), ImageAssetAccess.READ);
 
         return imageAssetRepository.findByTenantIdAndOwnerIdAndImageAssetTypeAndDeletedAtIsNull(tenantId, resolvedOwnerId, imageAssetType)
                 .map(a -> new ImageAssetDTO(a.getImageUrl(), a.getImageSize()))
@@ -189,7 +258,13 @@ public class ImageAssetServiceImpl implements ImageAssetService {
         return tenantKey + ":" + imageAssetType.name() + ":" + ownerId;
     }
 
-    private UUID resolveAndAuthorizeOwner(ImageAssetType imageAssetType, String ownerId, UUID tenantId, UUID currentUserId) {
+    private UUID resolveAndAuthorizeOwner(
+            ImageAssetType imageAssetType,
+            String ownerId,
+            UUID tenantId,
+            UUID currentUserId,
+            ImageAssetAccess access
+    ) {
         String normalizedOwnerId = trimToNull(ownerId);
         if (normalizedOwnerId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ownerId must not be blank");
@@ -197,22 +272,37 @@ public class ImageAssetServiceImpl implements ImageAssetService {
 
         if (imageAssetType == ImageAssetType.USER) {
             UUID userOwnerId = parseUuidOwnerId(normalizedOwnerId);
-            if (!userOwnerId.equals(currentUserId) && !currentUserHasElevatedAuthority()) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot upload images for another user.");
+            Set<String> allowedAuthorities = access == ImageAssetAccess.READ ? USER_READ_AUTHORITIES : USER_WRITE_AUTHORITIES;
+            if (!userOwnerId.equals(currentUserId) && !currentUserHasAnyAuthority(allowedAuthorities)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access images for another user.");
             }
             return userOwnerId;
         }
 
-        if (imageAssetType == ImageAssetType.CHURCH || imageAssetType == ImageAssetType.MEMBER || imageAssetType == ImageAssetType.CHILD) {
-            if (!currentUserHasElevatedAuthority()) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires elevated privileges.");
+        if (imageAssetType == ImageAssetType.CHURCH) {
+            if (!currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? CHURCH_READ_AUTHORITIES : CHURCH_WRITE_AUTHORITIES)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires tenant profile privileges.");
+            }
+            return parseUuidOwnerId(normalizedOwnerId);
+        }
+
+        if (imageAssetType == ImageAssetType.MEMBER) {
+            if (!currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? MEMBER_READ_AUTHORITIES : MEMBER_WRITE_AUTHORITIES)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires member privileges.");
+            }
+            return parseUuidOwnerId(normalizedOwnerId);
+        }
+
+        if (imageAssetType == ImageAssetType.CHILD) {
+            if (!currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? CHILD_READ_AUTHORITIES : CHILD_WRITE_AUTHORITIES)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires child member privileges.");
             }
             return parseUuidOwnerId(normalizedOwnerId);
         }
 
         if (imageAssetType == ImageAssetType.GROUP) {
-            if (!currentUserHasElevatedAuthority()) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires elevated privileges.");
+            if (!currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? GROUP_READ_AUTHORITIES : GROUP_WRITE_AUTHORITIES)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires group privileges.");
             }
             Long groupId = parseLongOwnerId(normalizedOwnerId, imageAssetType);
             GroupEntity group = groupRepository.findByGroupIdAndTenantId(groupId, tenantId)
@@ -221,8 +311,8 @@ public class ImageAssetServiceImpl implements ImageAssetService {
         }
 
         if (imageAssetType == ImageAssetType.EVENT) {
-            if (!currentUserHasElevatedAuthority()) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires elevated privileges.");
+            if (!currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? EVENT_READ_AUTHORITIES : EVENT_WRITE_AUTHORITIES)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This image asset type requires event privileges.");
             }
             Long eventId = parseLongOwnerId(normalizedOwnerId, imageAssetType);
             EventEntity event = eventRepository.findById(eventId)
@@ -247,7 +337,8 @@ public class ImageAssetServiceImpl implements ImageAssetService {
         if (!intent.getOwnerId().equals(ownerId) || intent.getImageAssetType() != imageAssetType) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Upload intent does not match the target image asset.");
         }
-        if (!intent.getUploadedByUserId().equals(currentUserId) && !currentUserHasElevatedAuthority()) {
+        if (!intent.getUploadedByUserId().equals(currentUserId)
+                && !currentUserCanAccessImageType(imageAssetType, ImageAssetAccess.WRITE)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot complete another user's upload intent.");
         }
     }
@@ -341,13 +432,28 @@ public class ImageAssetServiceImpl implements ImageAssetService {
     }
 
     private boolean currentUserHasElevatedAuthority() {
+        return currentUserHasAnyAuthority(ELEVATED_AUTHORITIES);
+    }
+
+    private boolean currentUserCanAccessImageType(ImageAssetType imageAssetType, ImageAssetAccess access) {
+        return switch (imageAssetType) {
+            case USER -> currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? USER_READ_AUTHORITIES : USER_WRITE_AUTHORITIES);
+            case MEMBER -> currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? MEMBER_READ_AUTHORITIES : MEMBER_WRITE_AUTHORITIES);
+            case CHILD -> currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? CHILD_READ_AUTHORITIES : CHILD_WRITE_AUTHORITIES);
+            case CHURCH -> currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? CHURCH_READ_AUTHORITIES : CHURCH_WRITE_AUTHORITIES);
+            case GROUP -> currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? GROUP_READ_AUTHORITIES : GROUP_WRITE_AUTHORITIES);
+            case EVENT -> currentUserHasAnyAuthority(access == ImageAssetAccess.READ ? EVENT_READ_AUTHORITIES : EVENT_WRITE_AUTHORITIES);
+        };
+    }
+
+    private boolean currentUserHasAnyAuthority(Set<String> allowedAuthorities) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
             return false;
         }
         return authentication.getAuthorities().stream()
                 .map(granted -> granted.getAuthority())
-                .anyMatch(ELEVATED_AUTHORITIES::contains);
+                .anyMatch(allowedAuthorities::contains);
     }
 
     private String trimToNull(String value) {
@@ -383,5 +489,10 @@ public class ImageAssetServiceImpl implements ImageAssetService {
                 "http://localhost/mock-presigned-url",
                 contentType
         );
+    }
+
+    private enum ImageAssetAccess {
+        READ,
+        WRITE
     }
 }

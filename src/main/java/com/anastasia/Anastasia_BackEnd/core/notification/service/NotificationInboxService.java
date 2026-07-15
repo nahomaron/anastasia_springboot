@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -170,6 +171,10 @@ public class NotificationInboxService {
     }
 
     private NotificationInboxItemResponse toInboxItem(NotificationEntity entity) {
+        UUID tenantId = entity.getTenantId();
+        if (tenantId == null && entity.getTenant() != null) {
+            tenantId = entity.getTenant().getId();
+        }
         return new NotificationInboxItemResponse(
                 entity.getId(),
                 entity.getTitle(),
@@ -177,7 +182,8 @@ public class NotificationInboxService {
                 entity.getType(),
                 entity.getReadAt() != null,
                 entity.getCreatedAt(),
-                entity.getReadAt()
+                entity.getReadAt(),
+                tenantId
         );
     }
 
@@ -246,8 +252,14 @@ public class NotificationInboxService {
         UserEntity user = resolveAuthenticatedUser(auth, principal);
 
         UUID tenantId = resolveTenantId(principal, user);
-        if (tenantId != null && user.getTenantId() != null && !tenantId.equals(user.getTenantId())) {
-            throw new AccessDeniedException("Authenticated user is not in tenant scope");
+        if (tenantId != null && !hasPlatformScope(auth)) {
+            UUID userTenantId = user.getTenantId();
+            boolean explicitlyAddressedInTenant = userTenantId == null
+                    && notificationRepository.existsActiveTenantInboxNotificationForRecipient(tenantId, user.getUuid());
+            if ((userTenantId == null && !explicitlyAddressedInTenant)
+                    || (userTenantId != null && !tenantId.equals(userTenantId))) {
+                throw new AccessDeniedException("Authenticated user is not in tenant scope");
+            }
         }
 
         return new ActorScope(tenantId, user.getUuid());
@@ -276,6 +288,17 @@ public class NotificationInboxService {
             return principal.getTenantId();
         }
         return user.getTenantId();
+    }
+
+    private boolean hasPlatformScope(Authentication authentication) {
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> "ROLE_PLATFORM_ADMIN".equals(authority)
+                        || "MANAGE_TENANTS".equals(authority)
+                        || "VIEW_ALL_DATA".equals(authority));
     }
 
     private record ActorScope(UUID tenantId, UUID userId) {

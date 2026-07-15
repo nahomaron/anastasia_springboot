@@ -22,7 +22,7 @@ public class ReportController {
     private final ReportService reportService;
     private final AccountingTenantResolver tenantResolver;
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'GENERATE_FINANCE_REPORT')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'GENERATE_FINANCE_REPORT', 'VIEW_FINANCE_REPORT')")
     @PostMapping("/generate")
     public ResponseEntity<ReportResponseDto> generateReport(@Valid @RequestBody GenerateReportRequest request) {
         request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));

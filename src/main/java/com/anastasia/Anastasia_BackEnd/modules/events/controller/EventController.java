@@ -38,7 +38,7 @@ public class EventController {
     private final QrCheckInService qrCheckInService;
     private final LocalizedMessageService messageService;
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_EVENTS', 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/visible")
     public ResponseEntity<List<EventDTO>> getVisibleEventsForCurrentUser() {
         UUID userId = resolveCurrentUserId();
@@ -46,7 +46,7 @@ public class EventController {
         return ResponseEntity.ok(events);
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'VIEW_EVENTS', 'MANAGE_EVENTS', 'VIEW_EVENT_REPORTS')")
     @GetMapping("/{eventId}")
     public ResponseEntity<EventDTO> getEventById(@PathVariable Long eventId) {
         UUID userId = resolveCurrentUserId();
@@ -85,7 +85,7 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'VIEW_EVENTS')")
     @GetMapping("/{eventId}/managers")
     public ResponseEntity<List<EventManagerDTO>> listManagers(@PathVariable Long eventId) {
         List<EventManagerEntity> managers = eventService.getManagers(eventId);
@@ -95,7 +95,7 @@ public class EventController {
                 .toList(), HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS')")
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_EVENTS', 'DELETE_EVENTS')")
     @DeleteMapping("/{eventId}")
     public ResponseEntity<?> deleteEvent(@PathVariable Long eventId){
         eventService.deleteEvent(eventId);

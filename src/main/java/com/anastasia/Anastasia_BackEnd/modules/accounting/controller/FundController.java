@@ -23,13 +23,13 @@ import java.util.UUID;
 @RequestMapping("/api/v1/accounting/funds")
 @RequiredArgsConstructor
 @RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
-@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FUNDS', 'MANAGE_FUNDS')")
 @Tag(name = "Accounting Funds")
 public class FundController {
 
     private final FundService fundService;
     private final AccountingTenantResolver tenantResolver;
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_FUNDS')")
     @PostMapping
     public ResponseEntity<FundDto> createFund(@Valid @RequestBody CreateFundRequest request) {
         request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
@@ -37,16 +37,19 @@ public class FundController {
         return new ResponseEntity<>(createdFund, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FUNDS', 'MANAGE_FUNDS')")
     @GetMapping
     public ResponseEntity<List<FundDto>> getFunds(@RequestParam(required = false) UUID tenantId) {
         return ResponseEntity.ok(fundService.getFundsByTenantId(tenantResolver.resolveTenant(tenantId)));
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'VIEW_FUNDS', 'MANAGE_FUNDS')")
     @GetMapping("/{id}")
     public ResponseEntity<FundDto> getFundById(@PathVariable Long id, @RequestParam(required = false) UUID tenantId) {
         return ResponseEntity.ok(fundService.getFundById(id, tenantResolver.resolveTenant(tenantId)));
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_FUNDS')")
     @PutMapping("/{id}")
     @Operation(summary = "Update a tenant fund definition")
     public ResponseEntity<FundDto> updateFund(@PathVariable Long id, @Valid @RequestBody UpdateFundRequest request) {
@@ -54,6 +57,7 @@ public class FundController {
         return ResponseEntity.ok(fundService.updateFund(id, request));
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'MANAGE_FUNDS')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a tenant fund when it has no balance or ledger references")
     public ResponseEntity<Void> deleteFund(@PathVariable Long id, @RequestParam(required = false) UUID tenantId) {

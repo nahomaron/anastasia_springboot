@@ -12,6 +12,9 @@ import com.anastasia.Anastasia_BackEnd.modules.calendar.model.CalendarVisibility
 import com.anastasia.Anastasia_BackEnd.modules.calendar.repository.CalendarEntryRepository;
 import com.anastasia.Anastasia_BackEnd.modules.calendar.service.CalendarEntryServiceImpl;
 import com.anastasia.Anastasia_BackEnd.modules.groups.GroupRepository;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.church.ChurchEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantEntity;
+import com.anastasia.Anastasia_BackEnd.modules.registration.model.tenant.TenantType;
 import com.anastasia.Anastasia_BackEnd.modules.registration.repository.ChurchRepository;
 import com.anastasia.Anastasia_BackEnd.modules.users.model.UserEntity;
 import com.anastasia.Anastasia_BackEnd.core.auth.repository.UserRepository;
@@ -130,6 +133,88 @@ class CalendarEntryServiceImplUnitTest {
         assertThat(entry.getOwnerUser()).isSameAs(originalOwner);
         assertThat(entry.getOwnerUserId()).isEqualTo(originalOwnerId);
         verify(userRepository, never()).findById(updaterId);
+    }
+
+    @Test
+    void updateEntry_shouldAllowAppointmentScopedUsersToUpdateAppointmentEntries() {
+        UUID tenantId = UUID.randomUUID();
+        UUID entryId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken("user", "pw", "MANAGE_APPOINTMENT")
+        );
+
+        TenantEntity tenant = new TenantEntity();
+        tenant.setId(tenantId);
+
+        ChurchEntity church = new ChurchEntity();
+        church.setChurchId(1L);
+        church.setTenant(tenant);
+
+        UserEntity owner = new UserEntity();
+        owner.setUuid(ownerId);
+        owner.setTenantId(tenantId);
+
+        CalendarEntryEntity entry = CalendarEntryEntity.builder()
+                .id(entryId)
+                .tenantId(tenantId)
+                .church(church)
+                .ownerUser(owner)
+                .type(CalendarEntryType.APPOINTMENT)
+                .title("Appointment")
+                .calendarSystem(CalendarSystem.GREGORIAN)
+                .startAtUtc(Instant.parse("2026-01-01T10:00:00Z"))
+                .timezone("UTC")
+                .visibility(CalendarVisibility.PRIVATE)
+                .status(CalendarEntryStatus.SCHEDULED)
+                .sourceEntityType(CalendarEntrySourceType.MANUAL)
+                .build();
+
+        when(entryRepository.findById(entryId)).thenReturn(Optional.of(entry));
+        when(entryRepository.save(any(CalendarEntryEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateEntry(entryId, request(CalendarEntryType.APPOINTMENT), ownerId);
+
+        verify(entryRepository).save(entry);
+    }
+
+    @Test
+    void updateEntry_shouldRejectCrossTenantUpdates() {
+        UUID tenantId = UUID.randomUUID();
+        UUID otherTenantId = UUID.randomUUID();
+        UUID entryId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken("user", "pw", "MANAGE_EVENTS")
+        );
+
+        TenantEntity tenant = new TenantEntity();
+        tenant.setId(otherTenantId);
+
+        ChurchEntity church = new ChurchEntity();
+        church.setChurchId(1L);
+        church.setTenant(tenant);
+
+        CalendarEntryEntity entry = CalendarEntryEntity.builder()
+                .id(entryId)
+                .tenantId(otherTenantId)
+                .church(church)
+                .type(CalendarEntryType.EVENT)
+                .title("Existing")
+                .calendarSystem(CalendarSystem.GREGORIAN)
+                .startAtUtc(Instant.parse("2026-01-01T10:00:00Z"))
+                .timezone("UTC")
+                .visibility(CalendarVisibility.PUBLIC)
+                .status(CalendarEntryStatus.SCHEDULED)
+                .sourceEntityType(CalendarEntrySourceType.MANUAL)
+                .build();
+
+        when(entryRepository.findById(entryId)).thenReturn(Optional.of(entry));
+
+        assertThatThrownBy(() -> service.updateEntry(entryId, request(CalendarEntryType.EVENT), UUID.randomUUID()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("current tenant");
     }
 
     private CalendarEntryRequest request(CalendarEntryType type) {

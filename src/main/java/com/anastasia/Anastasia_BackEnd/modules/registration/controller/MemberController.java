@@ -39,7 +39,7 @@ public class MemberController {
     private final MemberService memberService;
 
     //
-    @PreAuthorize("isAuthenticated() or hasAuthority('ADD_MEMBERS')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/register-member")
     public ResponseEntity<Adult_MemberResponse> registerMember(@Valid @RequestBody Adult_MemberDTO adultMemberDTO){
 

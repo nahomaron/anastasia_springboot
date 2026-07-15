@@ -17,7 +17,7 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
 
     boolean existsByName(PermissionType perm);
 
-    Set<Permission> findByNameIn(Set<String> permissionNames);
+    Set<Permission> findByNameIn(Set<PermissionType> permissionNames);
 
     @Query("""
         SELECT p

@@ -114,7 +114,7 @@ class TenantWorkspaceLifecycleServiceUnitTest {
 
     @Test
     void syncTenantLifecycleSchedulesThirtyDayDeletionForPaidCancellationAtPeriodEnd() {
-        Instant currentPeriodEnd = Instant.parse("2026-07-01T00:00:00Z");
+        Instant currentPeriodEnd = Instant.now().plus(Duration.ofDays(15));
         TenantEntity tenant = paidTenant(
                 SubscriptionStatus.ACTIVE,
                 currentPeriodEnd,

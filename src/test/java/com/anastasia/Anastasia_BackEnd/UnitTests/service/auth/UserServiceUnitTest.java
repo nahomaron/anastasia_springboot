@@ -156,6 +156,40 @@ public class UserServiceUnitTest {
     }
 
     @Test
+    void testFindEntity_scopesResultsToCurrentTenant() {
+        TenantContext.setTenantId(tenantId);
+        UUID otherTenantUserId = UUID.randomUUID();
+
+        when(userRepository.findByUuidAndAffiliatedTenantId(otherTenantUserId, tenantId)).thenReturn(Optional.empty());
+
+        Optional<UserEntity> result = userService.findEntity(otherTenantUserId);
+
+        assertTrue(result.isEmpty());
+        verify(userRepository).findByUuidAndAffiliatedTenantId(otherTenantUserId, tenantId);
+        verify(userRepository, never()).findById(otherTenantUserId);
+    }
+
+    @Test
+    void testFindEntity_allowsPlatformReadAcrossTenants() {
+        TenantContext.setTenantId(tenantId);
+        UUID otherTenantUserId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.TestingAuthenticationToken(
+                        "platform",
+                        "pw",
+                        "VIEW_ALL_DATA"
+                )
+        );
+        when(userRepository.findById(otherTenantUserId)).thenReturn(Optional.of(testUser));
+
+        Optional<UserEntity> result = userService.findEntity(otherTenantUserId);
+
+        assertTrue(result.isPresent());
+        verify(userRepository).findById(otherTenantUserId);
+        verify(userRepository, never()).findByUuidAndAffiliatedTenantId(any(), any());
+    }
+
+    @Test
     void testUpdateUserDetails_success() {
         UserEntity updatedInfo = UserEntity.builder().fullName("Updated").email("updated@example.com").build();
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
@@ -225,6 +259,7 @@ public class UserServiceUnitTest {
     @AfterEach
     void tearDown() {
         TenantContext.clear();
+        SecurityContextHolder.clearContext();
     }
 
     @Test

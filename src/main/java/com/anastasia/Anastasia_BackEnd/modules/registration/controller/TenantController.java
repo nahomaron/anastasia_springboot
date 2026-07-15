@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -180,6 +181,7 @@ public class TenantController {
     @PreAuthorize("hasAnyAuthority('MANAGE_TENANTS', 'MANAGE_TENANT_BILLING', 'OWN_SUBSCRIPTION')")
     @PostMapping("/unsubscribe/{tenantId}")
     public ResponseEntity<?> unsubscribeTenant(@PathVariable UUID tenantId){
+        assertCanAccessTenant(tenantId);
         tenantService.unsubscribeTenant(tenantId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -201,8 +203,45 @@ public class TenantController {
                     "Password do not match"
             ));
         }
+        assertCanAccessTenant(tenantId);
         tenantService.updateTenant(tenantId, tenantDTO);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private void assertCanAccessTenant(UUID tenantId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new SecurityException(messageService.get(
+                    "auth.user.notAuthenticated",
+                    "Authenticated user context not found."
+            ));
+        }
+        if (hasAnyAuthority(authentication, "MANAGE_TENANTS", "VIEW_ALL_DATA")) {
+            return;
+        }
+        if (!(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            throw new SecurityException(messageService.get(
+                    "auth.user.notAuthenticated",
+                    "Authenticated user context not found."
+            ));
+        }
+        UUID currentTenantId = principal.getTenantId();
+        if (currentTenantId == null || !currentTenantId.equals(tenantId)) {
+            throw new org.springframework.security.access.AccessDeniedException(messageService.get(
+                    "tenant.access.denied",
+                    "Tenant access denied."
+            ));
+        }
+    }
+
+    private boolean hasAnyAuthority(Authentication authentication, String... authorities) {
+        if (authentication.getAuthorities() == null) {
+            return false;
+        }
+        java.util.Set<String> required = java.util.Set.of(authorities);
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(required::contains);
     }
 
     private String resolveCurrentTenantPhoneNumber() {

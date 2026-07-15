@@ -26,13 +26,13 @@ import java.util.UUID;
 @RequestMapping("/api/v1/accounting/transactions")
 @RequiredArgsConstructor
 @RequiresTenantFeature(TenantFeature.FINANCE_ACCOUNTING)
-@PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS')")
 @Tag(name = "Accounting Transactions")
 public class TransactionController {
 
     private final TransactionService transactionService;
     private final AccountingTenantResolver tenantResolver;
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS')")
     @PostMapping("/income")
     public ResponseEntity<TransactionDto> recordIncome(@Valid @RequestBody RecordIncomeRequest request) {
         request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
@@ -40,6 +40,7 @@ public class TransactionController {
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS')")
     @PostMapping("/expense")
     public ResponseEntity<TransactionDto> recordExpense(@Valid @RequestBody RecordExpenseRequest request) {
         request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
@@ -47,6 +48,7 @@ public class TransactionController {
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS')")
     @PostMapping("/transfer")
     public ResponseEntity<TransactionDto> transferFunds(@Valid @RequestBody TransferFundsRequest request) {
         request.setTenantId(tenantResolver.resolveTenant(request.getTenantId()));
@@ -54,6 +56,7 @@ public class TransactionController {
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS', 'VIEW_FINANCE_REPORT')")
     @GetMapping("/{transactionId}")
     @Operation(summary = "Retrieve a single transaction by tenant-scoped id")
     public ResponseEntity<TransactionDto> getTransactionById(
@@ -63,6 +66,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getTransactionById(transactionId, tenantResolver.resolveTenant(tenantId)));
     }
 
+    @PreAuthorize("@permissionEvaluator.hasAny(authentication, 'MANAGE_FINANCE', 'RECORD_TRANSACTIONS', 'VIEW_FINANCE_REPORT')")
     @GetMapping
     @Operation(summary = "List tenant transactions with optional date and account filters")
     public ResponseEntity<List<TransactionDto>> getTransactions(

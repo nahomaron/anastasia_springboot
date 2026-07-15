@@ -18,11 +18,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -111,15 +115,77 @@ class ImageAssetServiceImplUnitTest {
         TenantContext.clear();
     }
 
+    @Test
+    void requestPresignedUrl_shouldAllowMemberImageWhenUserCanEditMembers() {
+        UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        UUID memberId = UUID.fromString("00000000-0000-0000-0000-000000000003");
+        authenticate(userId, "EDIT_MEMBERS");
+        TenantContext.setTenantId(tenantId);
+        when(uploadIntentRepository.save(any(ImageAssetUploadIntentEntity.class))).thenAnswer(invocation -> {
+            ImageAssetUploadIntentEntity intent = invocation.getArgument(0);
+            intent.setId(UUID.randomUUID());
+            intent.setCreatedAt(Instant.now());
+            return intent;
+        });
+        when(s3Service.generatePresignedUploadUrl(anyString(), eq("image/png")))
+                .thenReturn(new PresignedUrlResponse(null, "placeholder", "http://localhost/object", "http://localhost/upload", "image/png"));
+        when(s3Service.buildObjectUrl(anyString())).thenAnswer(invocation -> "http://localhost/mock-bucket/" + invocation.getArgument(0));
+
+        PresignedUrlResponse response = imageAssetService.requestPresignedUrl(
+                "MEMBER",
+                memberId.toString(),
+                ImageUploadRequest.builder()
+                        .fileName("member.png")
+                        .contentType("image/png")
+                        .fileSizeBytes(1024L)
+                        .build()
+        );
+
+        assertThat(response.getObjectKey()).contains("/image-assets/member/" + memberId + "/");
+        SecurityContextHolder.clearContext();
+        TenantContext.clear();
+    }
+
+    @Test
+    void requestPresignedUrl_shouldRejectReadOnlyAuthorityForMemberImageWrites() {
+        UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        UUID memberId = UUID.fromString("00000000-0000-0000-0000-000000000003");
+        authenticate(userId, "VIEW_ALL_DATA");
+        TenantContext.setTenantId(tenantId);
+
+        assertThatThrownBy(() -> imageAssetService.requestPresignedUrl(
+                "MEMBER",
+                memberId.toString(),
+                ImageUploadRequest.builder()
+                        .fileName("member.png")
+                        .contentType("image/png")
+                        .fileSizeBytes(1024L)
+                        .build()
+        ))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("requires member privileges");
+        SecurityContextHolder.clearContext();
+        TenantContext.clear();
+    }
+
     private void authenticate(UUID userId) {
+        authenticate(userId, "USER");
+    }
+
+    private void authenticate(UUID userId, String... authorities) {
         UserEntity user = UserEntity.builder()
                 .uuid(userId)
                 .email("test@example.com")
                 .roles(Set.of(Role.builder().roleName("USER").build()))
                 .build();
         UserPrincipal principal = new UserPrincipal(user);
+        Collection<SimpleGrantedAuthority> grantedAuthorities = List.of(authorities).stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())
+                new UsernamePasswordAuthenticationToken(principal, null, grantedAuthorities)
         );
     }
 }

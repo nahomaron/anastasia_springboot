@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -136,11 +135,7 @@ public class RoleService {
             return Set.of();
         }
 
-        Set<String> enumNames = permissionTypes.stream()
-                .map(Enum::name)
-                .collect(Collectors.toSet());
-
-        return permissionRepository.findByNameIn(enumNames);
+        return permissionRepository.findByNameIn(permissionTypes);
     }
 
     private RoleResponse toRoleResponse(Role role, UUID tenantId) {
