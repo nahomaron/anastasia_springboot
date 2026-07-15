@@ -10,7 +10,7 @@ Source lives under `src/main/java/com/anastasia/Anastasia_BackEnd`, grouped by c
 - `docker compose -f compose.yaml up -d` — launch ancillary services (e.g., database, queues) expected by local development.
 
 ## Coding Style & Naming Conventions
-Use Java 23 with standard Spring Boot formatting (4-space indentation, braces on same line). Service beans end with `Service`, controllers with `Controller`, repositories extend Spring Data interfaces and use plural domain names. Prefer Lombok for boilerplate (`@Getter`, `@Builder`), MapStruct for DTO mapping, and keep DTOs in `mappers` and `model` packages.
+Use Java 21 with standard Spring Boot formatting (4-space indentation, braces on same line). Service beans end with `Service`, controllers with `Controller`, repositories extend Spring Data interfaces and use plural domain names. Prefer Lombok for boilerplate (`@Getter`, `@Builder`), MapStruct for DTO mapping, and keep DTOs in `mappers` and `model` packages.
 
 ## Testing Guidelines
 Write JUnit 5 tests alongside code in matching package paths. Name classes `*Tests` for Spring integration or `*Test` for pure unit tests. Use Mockito for mocking and REST Assured for API verification. Generate Allure results via `./mvnw test` and review HTML reports with `allure serve allure-results`. Maintain ≥80% line coverage; consult JaCoCo output before submitting PRs.

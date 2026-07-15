@@ -1,6 +1,9 @@
 package com.anastasia.Anastasia_BackEnd.modules.payments.stripe;
 
 import com.stripe.exception.StripeException;
+import com.stripe.model.BalanceTransaction;
+import com.stripe.model.Charge;
+import com.stripe.model.PaymentIntent;
 import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
@@ -211,6 +214,42 @@ public class StripeClient {
 
     public Subscription retrieveSubscription(String subscriptionId) throws StripeException {
         return Subscription.retrieve(subscriptionId, buildReadRequestOptions());
+    }
+
+    public CapturedChargeAmounts retrieveCapturedChargeAmounts(PaymentIntent paymentIntent, long fallbackGrossAmountMinor)
+            throws StripeException {
+        if (paymentIntent == null) {
+            return CapturedChargeAmounts.withoutFees(fallbackGrossAmountMinor);
+        }
+
+        String latestChargeId = paymentIntent.getLatestCharge();
+        if (latestChargeId == null || latestChargeId.isBlank()) {
+            return CapturedChargeAmounts.withoutFees(fallbackGrossAmountMinor);
+        }
+
+        RequestOptions options = buildReadRequestOptions();
+        Charge charge = paymentIntent.getLatestChargeObject() != null
+                ? paymentIntent.getLatestChargeObject()
+                : Charge.retrieve(latestChargeId, options);
+
+        BalanceTransaction balanceTransaction = charge.getBalanceTransactionObject();
+        if (balanceTransaction == null && charge.getBalanceTransaction() != null && !charge.getBalanceTransaction().isBlank()) {
+            balanceTransaction = BalanceTransaction.retrieve(charge.getBalanceTransaction(), options);
+        }
+        if (balanceTransaction == null) {
+            return CapturedChargeAmounts.withoutFees(fallbackGrossAmountMinor);
+        }
+
+        long gross = balanceTransaction.getAmount() != null ? balanceTransaction.getAmount() : fallbackGrossAmountMinor;
+        long fees = balanceTransaction.getFee() != null ? balanceTransaction.getFee() : 0L;
+        long net = balanceTransaction.getNet() != null ? balanceTransaction.getNet() : gross - fees;
+        return new CapturedChargeAmounts(gross, fees, net);
+    }
+
+    public record CapturedChargeAmounts(long grossAmountMinor, long feeAmountMinor, long netAmountMinor) {
+        public static CapturedChargeAmounts withoutFees(long grossAmountMinor) {
+            return new CapturedChargeAmounts(grossAmountMinor, 0L, grossAmountMinor);
+        }
     }
 
     private RequestOptions buildRequestOptions(String idempotencyKey) {

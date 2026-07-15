@@ -2,6 +2,7 @@ package com.anastasia.Anastasia_BackEnd.modules.payments.web.controller;
 
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.HandleSubscriptionWebhookUseCase;
 import com.anastasia.Anastasia_BackEnd.modules.payments.application.usecase.HandleWebhookEventUseCase;
+import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeClient;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.OnboardingStripeWebhookService;
 import com.anastasia.Anastasia_BackEnd.modules.registration.service.onboarding.TenantSubscriptionStripeWebhookService;
 import com.anastasia.Anastasia_BackEnd.modules.payments.stripe.StripeWebhookVerifier;
@@ -36,6 +37,7 @@ public class WebhookController {
     private final HandleSubscriptionWebhookUseCase subscriptionHandler;
     private final OnboardingStripeWebhookService onboardingStripeWebhookService;
     private final TenantSubscriptionStripeWebhookService tenantSubscriptionStripeWebhookService;
+    private final StripeClient stripeClient;
 
     @PostMapping
     public ResponseEntity<Void> handle(@RequestHeader("Stripe-Signature") String sigHeader,
@@ -148,18 +150,28 @@ public class WebhookController {
                     ? paymentIntent.getAmountReceived()
                     : paymentIntent.getAmount();
 
-            // Fees require Stripe Balance Transactions API; keep placeholder for now
+            StripeClient.CapturedChargeAmounts amounts = resolveCapturedChargeAmounts(paymentIntent, gross);
             paymentHandler.handleCaptured(
                     UUID.fromString(paymentId),
                     paymentIntent.getId(),
-                    gross,
-                    0L,
-                    gross,
+                    amounts.grossAmountMinor(),
+                    amounts.feeAmountMinor(),
+                    amounts.netAmountMinor(),
                     paymentIntent.getCurrency(),
                     event.getId(),
                     event.getType(),
                     event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : Instant.now()
             );
+        }
+    }
+
+    private StripeClient.CapturedChargeAmounts resolveCapturedChargeAmounts(PaymentIntent paymentIntent, long fallbackGross) {
+        try {
+            return stripeClient.retrieveCapturedChargeAmounts(paymentIntent, fallbackGross);
+        } catch (StripeException | IllegalStateException ex) {
+            log.warn("Unable to retrieve Stripe balance transaction fees for paymentIntent={}: {}",
+                    paymentIntent.getId(), ex.getMessage());
+            return StripeClient.CapturedChargeAmounts.withoutFees(fallbackGross);
         }
     }
 

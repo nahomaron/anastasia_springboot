@@ -89,7 +89,7 @@ public class PaymentCheckoutSaga {
                 PaymentEventType.PAYMENT_INITIATED,
                 tenantId,
                 intent.getId().toString(),
-                intent
+                payload
         );
 
         return intent;
