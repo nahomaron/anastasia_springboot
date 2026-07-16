@@ -1,0 +1,100 @@
+name: Backup DR Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment to verify
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      min_backup_retention_days:
+        description: Minimum RDS backup retention days
+        required: true
+        default: "7"
+      require_lifecycle:
+        description: Require S3 lifecycle rules
+        required: true
+        type: boolean
+        default: true
+      require_multi_az:
+        description: Require RDS Multi-AZ
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.environment }}
+    concurrency:
+      group: backup-dr-evidence-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+      DB_INSTANCE_ID: ${{ vars.BACKUP_DR_DB_INSTANCE_ID }}
+      S3_BUCKET: ${{ vars.BACKUP_DR_S3_BUCKET }}
+      BACKUP_VAULT_NAME: ${{ vars.BACKUP_DR_BACKUP_VAULT_NAME }}
+      BACKUP_PLAN_ID: ${{ vars.BACKUP_DR_BACKUP_PLAN_ID }}
+      BACKUP_RESOURCE_ARN: ${{ vars.BACKUP_DR_BACKUP_RESOURCE_ARN }}
+      MIN_BACKUP_RETENTION_DAYS: ${{ inputs.min_backup_retention_days }}
+      REQUIRE_LIFECYCLE: ${{ inputs.require_lifecycle }}
+      REQUIRE_MULTI_AZ: ${{ inputs.require_multi_az }}
+      REQUIRE_DELETION_PROTECTION: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate workflow configuration
+        run: |
+          set -euo pipefail
+          test -n "${{ vars.BACKUP_DR_AWS_ROLE_ARN }}"
+          test -n "${DB_INSTANCE_ID}"
+          test -n "${S3_BUCKET}"
+          test -n "${AWS_REGION}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.BACKUP_DR_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Prepare evidence scripts
+        run: chmod +x scripts/dr/*.sh
+
+      - name: Generate Backup DR evidence
+        run: scripts/dr/generate_backup_dr_evidence.sh
+
+      - name: Publish evidence summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Backup/DR Evidence"
+            echo
+            echo "- Environment: \`${{ inputs.environment }}\`"
+            echo "- RDS instance: \`${DB_INSTANCE_ID}\`"
+            echo "- S3 bucket: \`${S3_BUCKET}\`"
+            echo "- AWS Backup vault: \`${BACKUP_VAULT_NAME:-not-set}\`"
+            echo "- AWS Backup plan: \`${BACKUP_PLAN_ID:-not-set}\`"
+            echo
+            if compgen -G "build/backup-dr-evidence/*.md" > /dev/null; then
+              cat build/backup-dr-evidence/*.md
+            else
+              echo "No evidence report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-dr-evidence-${{ inputs.environment }}-${{ github.run_id }}
+          path: build/backup-dr-evidence
+          if-no-files-found: error
